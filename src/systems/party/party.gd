@@ -14,6 +14,7 @@ var members: Array[PartyMember] = []
 var trail := FormationTrail.new()
 
 var _waypoints: Array[Vector2] = []
+var _steered := false
 
 
 ## Each spec: {"data": Dictionary, "color": Color, "position": Vector2,
@@ -27,7 +28,7 @@ func spawn_members(specs: Array[Dictionary]) -> void:
 		var member := PartyMember.new()
 		var abilities: Array[String] = []
 		abilities.assign(spec.get("abilities", []))
-		member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities, spec.get("overlay", {}))
+		member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities, spec.get("overlay", {}), spec.get("sheet", null))
 		member.position = spec.get("position", Vector2.ZERO)
 		member.is_leader = i == 0
 		add_child(member)
@@ -80,10 +81,13 @@ func tick(delta: float) -> void:
 	var l := leader()
 	if l == null:
 		return
+	var leader_from := l.position
 	if not _waypoints.is_empty():
 		var result: Dictionary = Mover.advance(l.position, _waypoints, speed * delta)
 		_waypoints.assign(result["waypoints"])
 		_move_leader_to(result["position"])
+	l.set_motion(l.position != leader_from or _steered, l.facing)
+	_steered = false
 	for i: int in range(1, members.size()):
 		var distance_back := spacing * i
 		if not trail.has_distance(distance_back):
@@ -92,9 +96,11 @@ func tick(delta: float) -> void:
 		var single: Array[Vector2] = [trail.point_behind(distance_back)]
 		var result: Dictionary = Mover.advance(m.position, single, speed * delta)
 		var next: Vector2 = result["position"]
-		if next != m.position:
+		var moved := next != m.position
+		if moved:
 			m.facing = (next - m.position).normalized()
 			m.position = next
+		m.set_motion(moved, m.facing)
 
 
 func _process(delta: float) -> void:
@@ -109,3 +115,4 @@ func _move_leader_to(target: Vector2) -> void:
 	l.facing = (target - l.position).normalized()
 	l.position = target
 	trail.push(target)
+	_steered = true

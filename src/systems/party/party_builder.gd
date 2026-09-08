@@ -29,6 +29,7 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 			"data": data,
 			"color": class_color(registry, String(data.get("class", ""))),
 			"overlay": race.get("overlay", {}),
+			"sheet_id": String(Dictionary(race.get("art", {})).get("sheet", "")),
 			"position": spawn_positions[mini(i, spawn_positions.size() - 1)] if not spawn_positions.is_empty() else Vector2.ZERO,
 			"stats": StatBlock.for_member(cls, race, rules, extras),
 			"abilities": cls.get("abilities", []),

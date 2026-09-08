@@ -619,3 +619,31 @@ func test_creator_opens_at_home_only_and_confirms() -> void:
 	world.enter_shard("rusted_undercity", 7)
 	assert_false(world.open_creator(), "not in a Shard")
 	assert_eq(world.party.leader().display_name, "Kest", "the protagonist walks into the Shard")
+
+
+func test_sheet_actors_and_placeholder_actors_coexist() -> void:
+	var leader := world.party.leader()
+	assert_true(leader.uses_sheet(), "trueborn has a sheet")
+	assert_true(world.party.members[1].uses_sheet(), "Ash is trueborn too")
+	assert_false(world.party.members[2].uses_sheet(), "synth still uses the placeholder rig")
+	assert_eq(leader.sprite.animation, &"idle_s")
+	var scav := world.enemy_at(Vector2i(14, 2))
+	assert_true(scav.uses_sheet())
+	assert_eq(scav.tint, Color.html("#6b3f2e"), "biome recolour: scav -> rust")
+	assert_false(world.enemy_at(Vector2i(17, 6)).uses_sheet(), "drone keeps its orb")
+	assert_eq(world.sheets.size(), 2)
+
+
+func test_walking_drives_the_sheet_animation() -> void:
+	var leader := world.party.leader()
+	world.command_move(Vector2i(6, 12))
+	world.party.tick(DT)
+	assert_true(String(leader.sprite.animation).begins_with("walk_"), "moving: %s" % leader.sprite.animation)
+	_settle(3000)
+	world.party.tick(DT)
+	assert_true(String(leader.sprite.animation).begins_with("idle_"), "arrived: %s" % leader.sprite.animation)
+	leader.play_action("attack", Vector2(1, 0))
+	assert_eq(leader.sprite.animation, &"attack_w")
+	assert_true(leader.sprite.flip_h)
+	world.party.members[2].play_action("attack")
+	assert_false(world.party.members[2].uses_sheet(), "placeholder actors ignore actions")

@@ -24,6 +24,7 @@ registry does not care which exist, but systems expect the ones below.
 | `buildings` | beacon, medbay, workshop | Bastion buildings: `order`, `levels[]` of `{cost, effects, blurb}`; effect keys `depth`, `heal_fraction`, `hp_bonus`, `damage_bonus` (summed across buildings). |
 | `pickups` | salvage_cache, aether_shard | Collectibles: `grants` block (`salvage`/`aether`/`ciphers` as number or [min,max], `cipher_chance`, `xp`), `art.color`. Enemies use the same block under `loot`. |
 | `shards` | rusted_undercity | Procgen templates: `size`, `rooms`, `corridors`, `tiles` roles, `grate_patch_chance`, `debris_density`, `enemies` pool. See `src/systems/procgen/shard_generator.gd`. |
+| `sprites` | trueborn, scav | Sprite-sheet sidecars next to their PNGs (`image`, `frame`, `origin`, `directions`, `mirror`, `palette`, `animations`). See `docs/art-pipeline.md`. Races/enemies reference one via `art.sheet`; biomes may `recolors` a sheet to a palette role. |
 | `items`, `companions`, `dialogue`, `loot_tables`, `quests`, `factions` | later milestones | |
 
 Maps may also carry `"enemies": [{"type": "<enemy id>", "cell": [x, y]}]` and `"pickups": [{"type": "<pickup id>", "cell": [x, y]}]` placements, and generated Shards add `"extraction": [x, y]`. Classes carry `stats` and `abilities`; races carry `stat_mods`; tiles carry `blocks_sight`.

@@ -40,6 +40,9 @@ var bastion_menu: BastionMenu
 var protagonist: Dictionary = {}
 var creator_menu: CreatorMenu
 var creator_state: CreatorState
+## Loaded sprite sheets by id (`sprites` content kind). Missing or invalid
+## sheets fall back to the placeholder rig.
+var sheets: Dictionary = {}
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
 var combat: CombatController
@@ -65,6 +68,7 @@ func _ready() -> void:
 	if not ledger.load_error.is_empty():
 		push_warning(ledger.load_error)
 	bastion.setup(registry.get_all("buildings"), ledger.buildings)
+	load_sheets()
 	load_map_entry(registry.get_entry("maps", map_id))
 	highlighter = CellHighlighter.new()
 	highlighter.name = "Highlighter"
@@ -126,6 +130,21 @@ func abilities_by_id() -> Dictionary:
 	for ability: Dictionary in registry.get_all("abilities"):
 		out[ability["id"]] = ability
 	return out
+
+
+## Loads every `sprites` sidecar + image once; invalid ones are warned and skipped.
+func load_sheets() -> void:
+	sheets.clear()
+	for entry: Dictionary in registry.get_all("sprites"):
+		var sheet := SpriteSheet.load_entry(entry)
+		if sheet.is_valid():
+			sheets[sheet.id] = sheet
+		else:
+			push_warning("sprite sheet %s: %s" % [entry["id"], ", ".join(PackedStringArray(sheet.errors))])
+
+
+func sheet_for(id: String) -> SpriteSheet:
+	return sheets.get(id)
 
 
 func load_map_entry(entry: Dictionary) -> void:
@@ -329,7 +348,10 @@ func spawn_party(id: String) -> void:
 	var positions: Array[Vector2] = []
 	for cell: Vector2i in map_data.spawn_cells():
 		positions.append(map_view.cell_to_world(cell))
-	party.spawn_members(PartyBuilder.member_specs(registry, preset, protagonist, rules, positions))
+	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, positions)
+	for spec: Dictionary in specs:
+		spec["sheet"] = sheet_for(String(spec.get("sheet_id", "")))
+	party.spawn_members(specs)
 
 
 ## Fresh party (full HP) from the preset and the current protagonist.
@@ -402,7 +424,9 @@ func spawn_enemies() -> void:
 			push_warning("map %s places %s on blocked cell %s" % [map_data.id, type, cell])
 			continue
 		var actor := EnemyActor.new()
-		actor.setup(type, enemy_entry, cell, StatBlock.for_enemy(enemy_entry, rules), rules.awareness_default)
+		var art: Dictionary = enemy_entry.get("art", {})
+		var sheet_id := String(art.get("sheet", ""))
+		actor.setup(type, enemy_entry, cell, StatBlock.for_enemy(enemy_entry, rules), rules.awareness_default, sheet_for(sheet_id), biome_recolor(sheet_id))
 		actor.position = map_view.cell_to_world(cell)
 		enemies_node.add_child(actor)
 		enemies.append(actor)
@@ -427,6 +451,22 @@ func spawn_pickups() -> void:
 		actor.position = map_view.cell_to_world(cell)
 		pickups_node.add_child(actor)
 		pickups.append(actor)
+
+
+## Biome recolour for a sheet id: the biome's `recolors` maps sheet -> palette
+## role. Transparent when the biome has no opinion.
+func biome_recolor(sheet_id: String) -> Color:
+	if sheet_id.is_empty():
+		return Color.TRANSPARENT
+	var biome: Dictionary = registry.get_entry("biomes", map_data.biome_id)
+	var recolors: Dictionary = biome.get("recolors", {})
+	if not recolors.has(sheet_id):
+		return Color.TRANSPARENT
+	var palette: Dictionary = biome.get("palette", {})
+	var role := String(recolors[sheet_id])
+	if not palette.has(role):
+		return Color.TRANSPARENT
+	return Color.html(String(palette[role]))
 
 
 ## Neon colour of a class's primary branch (GDD §5: Arcane purple, Tech teal, Body coral).

@@ -22,7 +22,8 @@ Out of M1 scope (deferred to M2): Steam integration, exports on Windows/macOS be
 - S6 Save/load — done (PR #12).
 - S7 Full combat — done (PR #13).
 - S8 Classes 3–4 — done (PR #15).
-- S9 Creator v1 — done (this PR).
+- S9 Creator v1 — done (PR #16).
+- S10 Art pipeline — done (this PR): pipeline plus generated placeholder sheets for Trueborn and Scav; real art is a file-for-file replacement.
 
 ## Running assumptions
 - Placeholder art stays until S10; systems before it must not depend on sprite details.

@@ -278,3 +278,29 @@ func test_five_races_with_overlays_origins_and_attribute_rules() -> void:
 		assert_true(effects.has(n), "attribute %s has effects" % n)
 		for key: String in effects[n]:
 			assert_true(StatBlock.KEYS.has(key), "attribute %s effect '%s'" % [n, key])
+
+
+func test_sprite_sheets_exist_and_are_referenced_correctly() -> void:
+	var sheets := registry.get_all("sprites")
+	assert_true(sheets.size() >= 2, "one race and one enemy sheet")
+	for entry: Dictionary in sheets:
+		var dir := String(entry["_path"]).get_base_dir()
+		assert_true(FileAccess.file_exists(dir.path_join(String(entry.get("image", "")))), "sheet %s image" % entry["id"])
+		var sheet := SpriteSheet.load_entry(entry)
+		assert_eq(sheet.errors, [], "sheet %s" % entry["id"])
+		for anim: String in ["idle", "walk", "attack", "hit", "death"]:
+			assert_true(sheet.has_animation(anim), "sheet %s needs %s" % [entry["id"], anim])
+	for r: Dictionary in registry.get_all("races"):
+		var art: Dictionary = r.get("art", {})
+		if art.has("sheet"):
+			assert_true(registry.has_entry("sprites", String(art["sheet"])), "race %s sheet" % r["id"])
+	for e: Dictionary in registry.get_all("enemies"):
+		var art: Dictionary = e.get("art", {})
+		if art.has("sheet"):
+			assert_true(registry.has_entry("sprites", String(art["sheet"])), "enemy %s sheet" % e["id"])
+	for b: Dictionary in registry.get_all("biomes"):
+		var palette: Dictionary = b.get("palette", {})
+		var recolors: Dictionary = b.get("recolors", {})
+		for sheet_id: String in recolors:
+			assert_true(registry.has_entry("sprites", sheet_id), "biome %s recolors unknown sheet %s" % [b["id"], sheet_id])
+			assert_true(palette.has(String(recolors[sheet_id])), "biome %s recolor role" % b["id"])
