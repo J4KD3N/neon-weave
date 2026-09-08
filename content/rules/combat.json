@@ -21,5 +21,16 @@
   "corrosive_damage": 2,
   "ambush_hit_bonus": 20,
   "ambush_damage_mult": 1.5,
+  "elite_hp_mult": 1.5,
+  "elite_damage_bonus": 1,
+  "boss_hp_mult": 3.0,
+  "boss_damage_bonus": 2,
+  "boss_ap_bonus": 1,
+  "depth_hp_per_level": 0.15,
+  "depth_damage_every": 2,
+  "ai_cover_weight": 4,
+  "ai_elevation_weight": 4,
+  "ai_corrosive_penalty": 8,
+  "ai_mana_pool_weight": 3,
   "initiative_die": 20
 }

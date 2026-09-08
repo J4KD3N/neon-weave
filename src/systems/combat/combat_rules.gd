@@ -32,6 +32,20 @@ var corrosive_damage: int = 2
 ## Attacking from hiding: hit bonus and damage multiplier, then revealed.
 var ambush_hit_bonus: int = 20
 var ambush_damage_mult: float = 1.5
+## Enemy tiers (entry or placement `tier`): elite and boss multipliers.
+var elite_hp_mult: float = 1.5
+var elite_damage_bonus: int = 1
+var boss_hp_mult: float = 3.0
+var boss_damage_bonus: int = 2
+var boss_ap_bonus: int = 1
+## Depth scaling: HP x (1 + per_level x (depth - 1)); +1 damage every N depths past 1.
+var depth_hp_per_level: float = 0.15
+var depth_damage_every: int = 2
+## Enemy positioning weights (EnemyBrain scoring).
+var ai_cover_weight: int = 4
+var ai_elevation_weight: int = 4
+var ai_corrosive_penalty: int = 8
+var ai_mana_pool_weight: int = 3
 
 
 static func from_entry(entry: Dictionary) -> CombatRules:
@@ -57,4 +71,15 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.corrosive_damage = int(entry.get("corrosive_damage", r.corrosive_damage))
 	r.ambush_hit_bonus = int(entry.get("ambush_hit_bonus", r.ambush_hit_bonus))
 	r.ambush_damage_mult = float(entry.get("ambush_damage_mult", r.ambush_damage_mult))
+	r.elite_hp_mult = float(entry.get("elite_hp_mult", r.elite_hp_mult))
+	r.elite_damage_bonus = int(entry.get("elite_damage_bonus", r.elite_damage_bonus))
+	r.boss_hp_mult = float(entry.get("boss_hp_mult", r.boss_hp_mult))
+	r.boss_damage_bonus = int(entry.get("boss_damage_bonus", r.boss_damage_bonus))
+	r.boss_ap_bonus = int(entry.get("boss_ap_bonus", r.boss_ap_bonus))
+	r.depth_hp_per_level = float(entry.get("depth_hp_per_level", r.depth_hp_per_level))
+	r.depth_damage_every = int(entry.get("depth_damage_every", r.depth_damage_every))
+	r.ai_cover_weight = int(entry.get("ai_cover_weight", r.ai_cover_weight))
+	r.ai_elevation_weight = int(entry.get("ai_elevation_weight", r.ai_elevation_weight))
+	r.ai_corrosive_penalty = int(entry.get("ai_corrosive_penalty", r.ai_corrosive_penalty))
+	r.ai_mana_pool_weight = int(entry.get("ai_mana_pool_weight", r.ai_mana_pool_weight))
 	return r

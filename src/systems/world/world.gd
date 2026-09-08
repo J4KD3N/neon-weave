@@ -635,13 +635,43 @@ func spawn_enemies() -> void:
 		if not map_data.is_walkable(cell):
 			push_warning("map %s places %s on blocked cell %s" % [map_data.id, type, cell])
 			continue
-		var actor := EnemyActor.new()
-		var art: Dictionary = enemy_entry.get("art", {})
-		var sheet_id := String(art.get("sheet", ""))
-		actor.setup(type, enemy_entry, cell, StatBlock.for_enemy(enemy_entry, rules), rules.awareness_default, sheet_for(sheet_id), biome_recolor(sheet_id))
-		actor.position = map_view.cell_to_world(cell)
-		enemies_node.add_child(actor)
-		enemies.append(actor)
+		enemies.append(_make_enemy(type, enemy_entry, cell, String(p.get("tier", ""))))
+
+
+## Builds and places one enemy actor, scaled for this map's depth and the
+## placement's tier (elite/boss) or the entry's own.
+func _make_enemy(type: String, enemy_entry: Dictionary, cell: Vector2i, tier: String = "") -> EnemyActor:
+	var actor := EnemyActor.new()
+	var art: Dictionary = enemy_entry.get("art", {})
+	var sheet_id := String(art.get("sheet", ""))
+	actor.setup(type, enemy_entry, cell, StatBlock.for_enemy(enemy_entry, rules, map_depth(), tier), rules.awareness_default, sheet_for(sheet_id), biome_recolor(sheet_id))
+	actor.position = map_view.cell_to_world(cell)
+	enemies_node.add_child(actor)
+	return actor
+
+
+## Shard depth of the current map (handcrafted maps are depth 1).
+func map_depth() -> int:
+	var generation: Dictionary = map_entry.get("generation", {})
+	return maxi(int(generation.get("depth", 1)), 1)
+
+
+func enemies_by_id() -> Dictionary:
+	var out: Dictionary = {}
+	for e: Dictionary in registry.get_all("enemies"):
+		out[e["id"]] = e
+	return out
+
+
+## A minion called in mid-fight by a summoner: placed, tracked with the
+## other enemies (loot and XP on death), never part of the map entry.
+func spawn_summoned(kind: String, cell: Vector2i) -> EnemyActor:
+	var enemy_entry: Dictionary = registry.get_entry("enemies", kind)
+	if enemy_entry.is_empty() or not map_data.is_walkable(cell):
+		return null
+	var actor := _make_enemy(kind, enemy_entry, cell)
+	enemies.append(actor)
+	return actor
 
 
 func spawn_pickups() -> void:

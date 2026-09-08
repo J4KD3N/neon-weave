@@ -83,7 +83,7 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 
 	var enemy_spec: Dictionary = template.get("enemies", {})
 	var min_dist := int(enemy_spec.get("min_spawn_distance", 10))
-	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist, depth - 1)
+	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist, depth, exit_cell)
 	var taken: Array[Vector2i] = []
 	for e: Dictionary in enemies:
 		var raw: Array = e["cell"]
@@ -320,14 +320,25 @@ func _nearest_reachable(center: Vector2i, room: Rect2i, dist: PackedInt32Array) 
 
 # --- enemies ---------------------------------------------------------------
 
-func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, min_dist: int, extra_groups: int = 0) -> Array:
+## `depth` 1 is the base population; each depth past it adds a group, raises
+## the elite chance (`elite_chance_per_depth`, capped at `elite_chance_max`)
+## and, from `boss.min_depth`, posts the template's boss beside the pad.
+func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, min_dist: int, depth: int = 1, exit_cell: Vector2i = Vector2i(-1, -1)) -> Array:
 	var out: Array = []
 	var pool: Array = spec.get("pool", [])
 	if pool.is_empty() or rooms.size() < 2:
 		return out
+	var extra_groups := maxi(depth, 1) - 1
 	var groups := _pick(spec.get("groups", [4, 7])) + extra_groups
 	var size_range: Array = spec.get("group_size", [1, 3])
+	var elite_chance := minf(float(spec.get("elite_chance_per_depth", 0.0)) * float(extra_groups), float(spec.get("elite_chance_max", 0.0)))
 	var taken: Dictionary = {}
+	var boss: Dictionary = spec.get("boss", {})
+	if not boss.is_empty() and depth >= int(boss.get("min_depth", 99)) and exit_cell.x >= 0:
+		var post := _boss_post(exit_cell, spawns, min_dist, dist)
+		if post.x >= 0:
+			taken[post] = true
+			out.append({"type": String(boss.get("type", "")), "cell": [post.x, post.y], "tier": "boss"})
 	for _g: int in groups:
 		var room := rooms[rng.randi_range(1, rooms.size() - 1)]
 		var candidates: Array[Vector2i] = []
@@ -346,8 +357,30 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 			var cell: Vector2i = candidates[k]
 			candidates.remove_at(k)
 			taken[cell] = true
-			out.append({"type": _weighted_pick(pool), "cell": [cell.x, cell.y]})
+			var placement: Dictionary = {"type": _weighted_pick(pool), "cell": [cell.x, cell.y]}
+			if elite_chance > 0.0 and rng.randf() < elite_chance:
+				placement["tier"] = "elite"
+			out.append(placement)
 	return out
+
+
+## The floor cell nearest the extraction pad (not the pad itself) that is
+## reachable and far enough from every spawn; (-1, -1) when none.
+func _boss_post(exit_cell: Vector2i, spawns: Array[Vector2i], min_dist: int, dist: PackedInt32Array) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_d := 1 << 30
+	for y: int in height:
+		for x: int in width:
+			var p := Vector2i(x, y)
+			if p == exit_cell or not floor_chars.has(_cell_at(p)) or dist[_idx(p)] < 0:
+				continue
+			if _distance_to_any(p, spawns) < min_dist:
+				continue
+			var d := LineOfSight.distance(p, exit_cell)
+			if d < best_d or (d == best_d and (p.y < best.y or (p.y == best.y and p.x < best.x))):
+				best = p
+				best_d = d
+	return best
 
 
 ## Collectibles anywhere reachable except spawn, exit and enemy cells.

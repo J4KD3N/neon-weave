@@ -1045,3 +1045,61 @@ func test_weave_menu_rows_and_navigation() -> void:
 	assert_false(world.weave_menu.visible)
 	world.enter_shard("rusted_undercity", 7)
 	assert_false(world.open_weave(), "home only")
+
+
+
+func test_depth_three_is_measurably_harder_and_posts_a_boss() -> void:
+	var shallow := world.enter_shard("rusted_undercity", 7, 1)
+	var shallow_count := world.living_enemies().size()
+	var shallow_hp := 0
+	for e: EnemyActor in world.living_enemies():
+		shallow_hp += e.max_hp
+		assert_eq(e.tier, "", "no tiers at depth 1")
+	assert_eq(world.map_depth(), 1)
+	var deep := world.enter_shard("rusted_undercity", 7, 3)
+	assert_eq(world.map_depth(), 3)
+	assert_eq(deep["rows"], shallow["rows"], "same layout, different population")
+	var deep_hp := 0
+	var boss: EnemyActor = null
+	for e: EnemyActor in world.living_enemies():
+		deep_hp += e.max_hp
+		if e.tier == "boss":
+			boss = e
+	assert_true(world.living_enemies().size() > shallow_count, "more bodies")
+	assert_true(deep_hp > shallow_hp * 1.3, "and tougher ones: %d vs %d" % [deep_hp, shallow_hp])
+	assert_true(boss != null, "the Warlord guards depth 3")
+	assert_eq(boss.enemy_id, "undercity_warlord")
+	assert_eq(boss.max_hp, int(round(16 * 3.0 * 1.3)), "boss x3, depth x1.3")
+	assert_eq(boss.damage_bonus, 2 + 1)
+	assert_eq(boss.ap_bonus, 1)
+	assert_true(LineOfSight.distance(boss.cell, world.extraction_cell()) <= 3, "posted by the pad")
+	var scav := world.registry.get_entry("enemies", "scav")
+	var deep_scav := StatBlock.for_enemy(scav, world.rules, 3)
+	assert_true(int(deep_scav["hp"]) > int(scav["stats"]["hp"]), "every enemy scales with depth")
+
+
+func test_summoner_spawns_a_world_actor_mid_fight() -> void:
+	var mother := world.spawn_summoned("drone_mother", Vector2i(12, 4))
+	assert_true(mother != null)
+	assert_eq(mother.archetype, "summoner")
+	world.teleport_party(Vector2i(13, 4))
+	world.start_combat(false)
+	var s := world.combat.state
+	var before := world.living_enemies().size()
+	var guard := 0
+	while s.round_number < 3 and not s.finished and guard < 40:
+		guard += 1
+		if world.combat.current_is_player():
+			world.combat.end_player_turn()
+	var summoned := 0
+	for c: Combatant in s.combatants:
+		if c.summoned_by.is_empty():
+			continue
+		summoned += 1
+		var node: WorldActor = world.combat.actors.get(c.id)
+		assert_true(node != null and is_instance_valid(node), "summon %s has a world actor" % c.id)
+		assert_eq((node as EnemyActor).enemy_id, "feral_drone")
+		assert_true(world.enemies.has(node as EnemyActor), "tracked with the other enemies")
+	assert_true(summoned >= 1, "the Drone-Mother called at least one drone by round %d" % s.round_number)
+	assert_true(world.enemies.size() >= before + summoned - 0, "summons join the enemy list")
+	assert_any_contains(s.history, "calls in Feral Drone")

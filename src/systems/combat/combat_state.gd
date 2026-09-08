@@ -25,6 +25,11 @@ var rng := RandomNumberGenerator.new()
 var combatants: Array[Combatant] = []
 var order: Array[Combatant] = []
 var abilities: Dictionary = {} # ability id -> entry
+## `enemies` entries by id, for summons. Empty when nothing can summon.
+var enemy_entries: Dictionary = {}
+## Shard depth for summoned stats (1 = unscaled).
+var depth: int = 1
+var _summon_count: int = 0
 var round_number: int = 0
 var turn_index: int = 0
 var finished: bool = false
@@ -153,6 +158,8 @@ func move_path(actor: Combatant, to: Vector2i) -> Array[Vector2i]:
 func can_move(actor: Combatant, to: Vector2i) -> String:
 	if actor != current():
 		return "not your turn"
+	if actor.is_rooted():
+		return "rooted"
 	if actor.move_left <= 0:
 		return "no movement left"
 	if not reachable_cells(actor).has(to):
@@ -227,6 +234,13 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 				return "already hidden"
 			if bool(actor.resource_def.get("reveal_at_max", false)) and actor.resource >= actor.resource_max() and actor.resource_max() > 0:
 				return "overheated: cool down first"
+		if String(ability.get("effect", "")) == "summon":
+			if not enemy_entries.has(String(ability.get("summon", ""))):
+				return "nothing to summon"
+			if summons_of(actor).size() >= int(ability.get("summon_max", 1)):
+				return "swarm at its limit"
+			if free_adjacent(actor.cell) == Vector2i(-1, -1):
+				return "no room"
 		return ""
 	if target == actor:
 		return "cannot target self"
@@ -290,6 +304,22 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		actor.resource = maxi(actor.resource - resource_cost, 0)
 	var effect := String(ability.get("effect", ""))
 	var mark := String(ability.get("mark", ""))
+
+	if effect == "summon":
+		var kind := String(ability.get("summon", ""))
+		var cell := free_adjacent(actor.cell)
+		var entry: Dictionary = enemy_entries.get(kind, {})
+		_summon_count += 1
+		var stats := StatBlock.for_enemy(entry, rules, depth)
+		var minion := Combatant.make("e:s%d:%s" % [_summon_count, kind], String(entry.get("name", kind)), actor.team, cell, stats, Array(entry.get("abilities", []), TYPE_STRING, "", null), rules.ap_per_turn)
+		minion.archetype = String(entry.get("archetype", "rusher"))
+		minion.damage_bonus = int(stats.get("damage_bonus", 0))
+		minion.summoned_by = actor.id
+		combatants.append(minion)
+		order.append(minion)
+		var sm: Dictionary = {"type": "summon", "actor": actor.id, "summoned": minion.id, "kind": kind, "cell": cell, "ap_left": actor.ap}
+		_emit(sm)
+		return sm
 
 	if effect == "stealth":
 		actor.hide(int(ability.get("duration", 2)))
@@ -356,6 +386,10 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 			var turns := int(ability.get("duration", 1))
 			target.statuses["silenced"] = maxi(int(target.statuses.get("silenced", 0)), turns)
 			e["silenced"] = turns
+		if effect == "root" and target.is_active():
+			var turns := int(ability.get("duration", 1))
+			target.statuses["rooted"] = maxi(int(target.statuses.get("rooted", 0)), turns)
+			e["rooted"] = turns
 		if effect == "mark" and not mark.is_empty() and target.is_active():
 			var cap := int(actor.resource_def.get("max_per_target", 3))
 			target.marks[mark] = mini(target.mark_count(mark) + 1, cap)
@@ -561,6 +595,7 @@ func end_turn() -> void:
 	var actor := current()
 	_done[actor.id] = true
 	_undo = {}
+	actor.tick_statuses()
 	_emit({"type": "turn_end", "actor": actor.id})
 	# Another member of this group still to act: hand over without leaving the group.
 	for c: Combatant in group:
@@ -679,6 +714,24 @@ func _passable(cell: Vector2i) -> bool:
 	return map.is_walkable(cell) and occupant(cell) == null
 
 
+## Living combatants summoned by `actor`.
+func summons_of(actor: Combatant) -> Array[Combatant]:
+	var out: Array[Combatant] = []
+	for c: Combatant in combatants:
+		if c.summoned_by == actor.id and c.is_active():
+			out.append(c)
+	return out
+
+
+## First free walkable cell around `origin` (fixed direction order), or (-1, -1).
+func free_adjacent(origin: Vector2i) -> Vector2i:
+	for d: Vector2i in DIRS8:
+		var n := origin + d
+		if _passable(n):
+			return n
+	return Vector2i(-1, -1)
+
+
 ## Walking distance (steps, same adjacency as movement, occupants ignored)
 ## from every walkable cell to `goal`. Cells not in the result are cut off
 ## by walls. Used to approach around obstacles instead of straight at them.
@@ -732,6 +785,8 @@ func describe(e: Dictionary) -> String:
 				tags.append("%d absorbed" % int(e["absorbed"]))
 			if int(e.get("silenced", 0)) > 0:
 				tags.append("silenced %d" % int(e["silenced"]))
+			if int(e.get("rooted", 0)) > 0:
+				tags.append("rooted %d" % int(e["rooted"]))
 			if int(e.get("cover", 0)) > 0:
 				tags.append("cover")
 			if bool(e.get("elevated", false)):
@@ -757,6 +812,8 @@ func describe(e: Dictionary) -> String:
 			return s
 		"vent":
 			return "%s vents (+%d HP)." % [_name(e["actor"]), int(e["heal"])]
+		"summon":
+			return "%s calls in %s." % [_name(e["actor"]), _name(e["summoned"])]
 		"stealth":
 			if bool(e.get("revealed", false)):
 				return "%s tries to hide but overheats, lit up." % _name(e["actor"])

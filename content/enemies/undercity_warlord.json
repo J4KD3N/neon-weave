@@ -1,0 +1,13 @@
+{
+  "name": "Undercity Warlord",
+  "family": "rusted_undercity",
+  "archetype": "controller",
+  "tier": "boss",
+  "summary": "The scav who owns this stretch of pipe. Nets you, then closes with a fist of chrome.",
+  "stats": { "hp": 16, "move": 5, "evasion": 5, "initiative": 2 },
+  "abilities": ["net_launcher", "chrome_fist"],
+  "awareness": 6,
+  "xp": 30,
+  "loot": { "salvage": [6, 10], "aether": [2, 4], "cipher_chance": 0.5 },
+  "art": { "shape": "capsule", "color": "#ff4d6d" }
+}

@@ -38,7 +38,11 @@
       { "type": "scav", "weight": 5 },
       { "type": "feral_drone", "weight": 3 },
       { "type": "chrome_addict", "weight": 2 },
-      { "type": "wire_lurker", "weight": 2 }
-    ]
+      { "type": "wire_lurker", "weight": 2 },
+      { "type": "drone_mother", "weight": 1 }
+    ],
+    "elite_chance_per_depth": 0.12,
+    "elite_chance_max": 0.6,
+    "boss": { "type": "undercity_warlord", "min_depth": 3 }
   }
 }

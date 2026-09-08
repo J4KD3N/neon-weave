@@ -36,8 +36,10 @@ var downed: bool = false
 ## Stealth: hostile abilities cannot target a hidden combatant; attacking
 ## from hiding is an ambush and reveals; taking damage reveals.
 var hidden: bool = false
-## Timed statuses: name -> turns left, counted down at this combatant's turn start.
+## Timed statuses: name -> turns left, counted down when this combatant's turn ends.
 var statuses: Dictionary = {}
+## Id of the summoner that called this combatant in, if any.
+var summoned_by: String = ""
 
 
 static func make(p_id: String, p_name: String, p_team: String, p_cell: Vector2i, stats: Dictionary, p_abilities: Array[String], ap_per_turn: int) -> Combatant:
@@ -102,9 +104,19 @@ func reveal() -> void:
 	statuses.erase("hidden")
 
 
+func is_rooted() -> bool:
+	return int(statuses.get("rooted", 0)) > 0
+
+
 func begin_turn() -> void:
 	ap = ap_max
-	move_left = move_max
+	move_left = 0 if is_rooted() else move_max
+
+
+## Statuses last N of this combatant's own turns: they count down when its
+## turn ends, so "silenced 2" is two silenced turns and a stealth window of
+## 2 covers the enemy round and the whole of the next own turn.
+func tick_statuses() -> void:
 	for key: String in statuses.keys():
 		statuses[key] = int(statuses[key]) - 1
 		if int(statuses[key]) <= 0:
