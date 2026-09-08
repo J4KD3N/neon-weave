@@ -1,0 +1,6 @@
+{
+  "name": "Debris pile",
+  "layer": "wall",
+  "walkable": false,
+  "art": { "shape": "block", "height": 10, "top": "debris_top", "left": "debris_left", "right": "debris_right" }
+}

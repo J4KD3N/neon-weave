@@ -4,13 +4,15 @@ An open-source, moddable, party-based, isometric arcane-cyberpunk CRPG built in 
 
 Targets: Windows, Linux (Steam Deck friendly), macOS. Steam demo and 1.0 planned.
 
-**Status**: pre-M0 scaffolding. Nothing to play yet. See the [milestone roadmap](docs/GDD.md#14-milestone-roadmap).
+**Status**: M0 in progress. A placeholder-art isometric yard you can walk a four-Weaver party around. No combat yet. See the [milestone roadmap](docs/GDD.md#14-milestone-roadmap).
+
+**Controls**: left-click to move the leader (the party trails), WASD/arrows to steer directly, mouse wheel to zoom, F1 to dump the content registry.
 
 ## Build from source
 
 1. Install [Godot 4.6](https://godotengine.org/download) (standard build; no .NET needed).
 2. Clone this repo and open `project.godot` from the Godot project manager (**Import**).
-3. Press **Play**. The boot screen lists the loaded content and mods.
+3. Press **Play**. You get the Proto Yard with the prototype party; F1 lists loaded content and mods.
 
 The first editor open generates `.uid` sidecar files next to scripts. Commit them.
 

@@ -1,0 +1,22 @@
+{
+  "name": "Rusted Undercity",
+  "summary": "Collapsed industrial levels under the city: scav gangs, feral security drones, chrome-addicts.",
+  "palette": {
+    "floor": "#26232b",
+    "floor_edge": "#17151b",
+    "grate": "#1d1b22",
+    "grate_line": "#3b3742",
+    "wall_top": "#4a4550",
+    "wall_left": "#2b2730",
+    "wall_right": "#36313c",
+    "rust": "#6b3f2e",
+    "debris_top": "#3d3238",
+    "debris_left": "#251f23",
+    "debris_right": "#2f272c",
+    "neon_arcane": "#b58cff",
+    "neon_tech": "#33e0d6",
+    "neon_body": "#ff7a6b",
+    "blood": "#5a0f14",
+    "failing_light": "#8a7a3a"
+  }
+}

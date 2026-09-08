@@ -1,0 +1,10 @@
+{
+  "name": "Prototype party",
+  "summary": "M0 debug party: the two prototype classes twice over. Placeholder names, not canon.",
+  "members": [
+    { "id": "weaver", "name": "Weaver", "race": "trueborn", "class": "scrap_knight" },
+    { "id": "ash", "name": "Ash", "race": "trueborn", "class": "aetherbinder" },
+    { "id": "unit_9", "name": "Unit-9", "race": "synth", "class": "scrap_knight" },
+    { "id": "moth", "name": "Moth", "race": "synth", "class": "aetherbinder" }
+  ]
+}

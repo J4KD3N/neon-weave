@@ -73,3 +73,40 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 ## D-012 — Session scope: S0 = scaffolding + content registry
 **Date**: 2026-09-08
 **Decision**: This first session delivered repo scaffolding, the content registry (the architectural spine for moddability), the platform abstraction, tests, docs, and CI. No gameplay. Next session: M0 isometric map + party movement.
+
+## D-013 — Session S1 scope: M0 isometric map + party movement
+**Date**: 2026-09-08
+**Decision**: One handcrafted map rendered through `TileMapLayer`, click-to-move pathfinding, WASD steering, a four-member party with trail-following. No combat, no procgen, no elevation, no real art.
+
+## D-014 — Projection delegated to TileMapLayer
+**Date**: 2026-09-08
+**Decision**: The `TileSet` is isometric, diamond-down, 64×32. All cell<->world conversions go through `TileMapLayer.map_to_local` / `local_to_map` (wrapped by `MapView`); the game keeps no parallel projection math. Pathfinding runs in cell space (`AStarGrid2D`), so it is projection-independent.
+**Why**: One source of truth; the engine's conversions are already tested. `tests/unit/test_iso_projection.gd` pins the axis directions so a layout change cannot slip by.
+
+## D-015 — Placeholder art is generated at runtime from data
+**Date**: 2026-09-08
+**Decision**: Tiles carry an `art` block (`floor` or `block` shape, palette roles); `PlaceholderTiles` draws 64×64 regions into an atlas at startup using the biome palette. Party members are tinted capsules from `PlaceholderActorArt`.
+**Why**: No art pipeline yet (M1). Keeping the palette-per-biome and role indirection in data means real art slots into the same entries. The `art` block is the contract, the drawing code is disposable.
+**Revisit when**: M1 art pipeline. Replace `PlaceholderTiles.build` with an atlas loader; keep the entry shape.
+
+## D-016 — Y-sort strategy
+**Date**: 2026-09-08
+**Decision**: `Scene` is Y-sorted and contains `MapView` (Y-sorted; `Ground` layer at z_index −1, `Walls` layer Y-sorted) and `Party` (Y-sorted). Wall tiles and actors interleave by y; ground is forced beneath everything by z_index.
+**Revisit when**: elevation or multi-storey maps arrive; those need `y_sort_origin` per tile or separate layers per level.
+
+## D-017 — Movement model
+**Date**: 2026-09-08
+**Decision**: Leader: click-to-move along an A* cell path (diagonals allowed, no corner-cutting) or direct WASD steering with axis-sliding against walls. Followers: target points a fixed path-distance behind the leader on a breadcrumb trail (`FormationTrail`), so they only ever walk where the leader walked and never need their own collision. Speed 170 px/s, spacing 36 px, both exported on `Party`.
+**Alternatives**: NavigationAgent2D + avoidance; formation slots with per-follower pathing.
+**Why**: Deterministic, testable without physics, and cannot desync followers into walls. Good enough until combat needs per-member positioning (which is turn-based and grid-snapped anyway).
+**Revisit when**: real-time exploration needs followers to route around each other, or free-form formations are wanted.
+
+## D-018 — Input actions registered in code
+**Date**: 2026-09-08
+**Decision**: `InputActions.ensure()` adds actions to `InputMap` at scene start instead of an `[input]` block in `project.godot`.
+**Why**: Diffable, headless-safe, and settings UI can rebind at runtime later. Avoids hand-editing serialized `InputEventKey` blobs.
+
+## D-019 — CI screenshot job
+**Date**: 2026-09-08
+**Decision**: `ci.yml` gains a best-effort `screenshot` job: Xvfb + Mesa software GL, `--rendering-method gl_compatibility`, the scene saves the viewport after ten frames via `-- --screenshot=<path>` and quits; the PNG is an artifact. Not a required check.
+**Why**: No local Godot on the build machine. This is the only visual verification loop until the editor is opened.
