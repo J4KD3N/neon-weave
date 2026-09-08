@@ -1,0 +1,8 @@
+{
+  "name": "Trueborn",
+  "analog": "Human",
+  "identity": "Unaltered humans.",
+  "hooks": ["extra_talent_points"],
+  "faction_lean": "ashfound",
+  "milestone": "M0"
+}

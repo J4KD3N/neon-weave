@@ -1,0 +1,5 @@
+# .github/CODEOWNERS — these paths always need your review, even on Dependabot PRs.
+/.github/   @J4KD3N
+/src/       @J4KD3N
+/docs/GDD.md        @J4KD3N
+/docs/decisions.md  @J4KD3N

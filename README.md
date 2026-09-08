@@ -1,0 +1,51 @@
+# Neon Weave
+
+An open-source, moddable, party-based, isometric arcane-cyberpunk CRPG built in Godot 4.6 (GDScript). Centuries after a hyper-advanced civilization collapsed, its technology fused with leaking magic. You lead a party of Weavers, scavenger-mages delving procedurally generated ruins while a handcrafted campaign uncovers what ended the old world.
+
+Targets: Windows, Linux (Steam Deck friendly), macOS. Steam demo and 1.0 planned.
+
+**Status**: pre-M0 scaffolding. Nothing to play yet. See the [milestone roadmap](docs/GDD.md#14-milestone-roadmap).
+
+## Build from source
+
+1. Install [Godot 4.6](https://godotengine.org/download) (standard build; no .NET needed).
+2. Clone this repo and open `project.godot` from the Godot project manager (**Import**).
+3. Press **Play**. The boot screen lists the loaded content and mods.
+
+The first editor open generates `.uid` sidecar files next to scripts. Commit them.
+
+## Run the tests
+
+```bash
+godot --headless --path . --import
+godot --headless --path . -s tests/test_runner.gd
+```
+
+Exit code is non-zero on any failure. Tests live in `tests/unit/test_*.gd` and extend `tests/test_case.gd`.
+
+## Export
+
+Presets for all three platforms are in `export_presets.cfg`. Locally: **Project → Export**. In CI, pushing a `v*` tag builds all three and attaches them to a GitHub Release.
+
+## Layout
+
+```
+content/    base game data (JSON, one entry per file)   — CC-BY-SA 4.0
+mods/       development mod root + example mod
+src/        GDScript: core/ (registry, platform), systems/, ui/  — MIT
+scenes/     .tscn scenes
+tests/      headless unit tests + fixtures
+docs/       GDD.md (canonical design doc), decisions.md, gaps.md, modding.md
+```
+
+## Modding
+
+Every race, class, enemy, item, quest and line of dialogue is a data file loaded by the content registry, and mods override by id. See [docs/modding.md](docs/modding.md).
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Read `docs/GDD.md` and `docs/decisions.md` before starting anything.
+
+## License
+
+Code is [MIT](LICENSE). Content and art are [CC-BY-SA 4.0](LICENSE-CONTENT.md).

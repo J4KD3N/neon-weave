@@ -1,0 +1,7 @@
+{
+  "id": "example_mod",
+  "name": "Example Mod",
+  "version": "0.1.0",
+  "priority": 0,
+  "description": "Adds one race entry to show the mod layout. Safe to delete."
+}

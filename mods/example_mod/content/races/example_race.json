@@ -1,0 +1,8 @@
+{
+  "name": "Example Race",
+  "analog": "None",
+  "identity": "Exists only to prove mods load. Delete freely.",
+  "hooks": [],
+  "faction_lean": "none",
+  "milestone": "example"
+}

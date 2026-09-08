@@ -1,0 +1,12 @@
+{
+  "name": "Scrap-Knight",
+  "branches": ["body"],
+  "resource": {
+    "id": "vent_heat",
+    "name": "Vent Heat",
+    "summary": "Overheat / vent rhythm."
+  },
+  "subclass_level": 3,
+  "subclasses": ["juggernaut", "warden"],
+  "milestone": "M0"
+}

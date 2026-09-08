@@ -1,0 +1,70 @@
+# .github/workflows/ci.yml — proves the project on every PR and push to main.
+# Job name must stay "ci": branch protection references it.
+# Adapted from the dev-workflow standard for a Godot project: no package
+# manager, so Trivy scans the tree for secrets/misconfig and the SBOM is
+# generated from source.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  security-events: write # upload Trivy SARIF to the Security tab
+
+env:
+  GODOT_VERSION: 4.6-stable
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          set -euo pipefail
+          curl -sSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo install -m 0755 "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          godot --version
+
+      # First headless run imports resources (icon, scenes) and generates .uid files.
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Unit tests
+        run: godot --headless --path . -s tests/test_runner.gd
+
+      # --- security: nothing to resolve, so scan the source tree ---
+      - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          scanners: vuln,secret,misconfig
+      - name: Upload scan results
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with: { sarif_file: trivy.sarif }
+      - name: Keep SARIF as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: trivy-sarif, path: trivy.sarif }
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - uses: actions/upload-artifact@v4
+        with: { name: sbom, path: sbom.spdx.json }

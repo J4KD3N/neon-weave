@@ -1,0 +1,75 @@
+# Decisions log
+
+Append-only. One entry per decision the GDD does not settle. Newest at the
+bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
+
+---
+
+## D-001 — Engine version: Godot 4.6 stable, GDScript only
+**Date**: 2026-09-08
+**Decision**: Target Godot 4.6-stable. `project.godot` declares the `4.6` feature. CI pins the same version.
+**Alternatives**: 4.3 LTS-ish behaviour; tracking latest.
+**Why**: 4.6 is what the author's other Godot project already runs, so one editor serves both. GDScript static typing, typed for-loops, and `--import` headless all exist here.
+**Revisit when**: a 4.7 feature is needed for a system, or a 4.6 bug blocks exports.
+
+## D-002 — Static typing enforced by the compiler
+**Date**: 2026-09-08
+**Decision**: `debug/gdscript/warnings/untyped_declaration = 2` (error). Unsafe access/cast/call warnings on at warn level.
+**Why**: GDD §4 says static typing everywhere. Making it an error means CI catches it via the compile-all-scripts test instead of code review.
+**Revisit when**: never, ideally. Promote unsafe warnings to errors once the codebase is large enough to judge the noise.
+
+## D-003 — Renderer: Forward+
+**Date**: 2026-09-08
+**Decision**: Forward+ renderer.
+**Alternatives**: Mobile; Compatibility (OpenGL).
+**Why**: 2D lighting and WorldEnvironment glow (GDD §5) are best supported here, and all three desktop targets have Vulkan/Metal (via MoltenVK) drivers.
+**Revisit when**: Steam Deck performance profiling (M4) or macOS glow issues suggest Compatibility. Switching is a project setting, not a code change, as long as no Forward+-only shader features are used.
+
+## D-004 — Content format and layout
+**Date**: 2026-09-08
+**Decision**: Content is JSON, one entry per file, at `content/<kind>/<id>.json`. `id` = file stem unless the file sets `"id"`. Kinds are folder names. Every loaded entry gets `_kind`, `_source`, `_path` injected for provenance.
+**Alternatives**: `.tres` Resources (typed, editor-friendly, but unfriendly to modders and diffs); one big file per kind.
+**Why**: JSON is diff-friendly, mod-friendly, and needs no engine to author. Resources can be layered later for editor tooling by loading them into the same registry.
+**Revisit when**: a kind needs editor-side authoring (e.g. dialogue graphs) — add a `.tres` loader alongside JSON, not instead of it.
+
+## D-005 — Mod discovery and override precedence
+**Date**: 2026-09-08
+**Decision**: A mod is a folder with `mod.json` (`id`, `name`, `version`, `priority`) and a `content/` tree with the base layout. Roots scanned in order: `res://mods` (dev), `user://mods`, `<executable dir>/mods` (exported builds only). Mods load after base in ascending `priority`, ties broken by id; last write per (kind, id) wins, so the highest priority mod overrides. Duplicate mod ids are rejected after the first.
+**Alternatives**: explicit load-order file; dependency resolution.
+**Why**: Simple and predictable for M0–M2. Dependencies/conflicts UI can layer on top later.
+**Revisit when**: mods need to depend on other mods, or Steam Workshop lands.
+
+## D-006 — In-repo test harness instead of gdUnit4/GUT
+**Date**: 2026-09-08
+**Decision**: `tests/test_runner.gd` + `tests/test_case.gd`, ~150 lines, no addon dependency. Run with `godot --headless --path . -s tests/test_runner.gd`.
+**Alternatives**: gdUnit4, GUT.
+**Why**: Zero setup for contributors and CI; nothing to pin. Assertions cover what M0 needs.
+**Revisit when**: we want parameterised tests, scene tests with input simulation, or JUnit output for CI annotations. Migration is mechanical.
+
+## D-007 — Platform services behind `Platform` autoload
+**Date**: 2026-09-08
+**Decision**: `PlatformService` autoload with a `PlatformBackend` interface. Only `NullPlatformBackend` exists now. GodotSteam (GDExtension) is added at M2 as `SteamPlatformBackend`, selected when the `Steam` singleton exists.
+**Why**: GDD §4: the open repo must run Steam-free.
+**Revisit when**: M2.
+
+## D-008 — Autoload naming
+**Date**: 2026-09-08
+**Decision**: Autoloads are `Content` (ContentRegistry) and `Platform` (PlatformService). Autoload names must differ from `class_name`s (Godot rejects the clash), and `Steam` is reserved for GodotSteam's own singleton.
+
+## D-009 — Base resolution and pixel sampling
+**Date**: 2026-09-08
+**Decision**: 1920×1080 viewport, `canvas_items` stretch, `expand` aspect, nearest-neighbour default texture filter.
+**Revisit when**: the isometric camera/tile system lands (M0) and integer-scaling needs are known.
+
+## D-010 — Licenses
+**Date**: 2026-09-08
+**Decision**: Code (`src/`, `tests/`, `.github/`, `project.godot`) under MIT. Content and art (`content/`, `assets/`, `docs/` story material) under CC-BY-SA 4.0. See `LICENSE` and `LICENSE-CONTENT.md`.
+
+## D-011 — CI shape
+**Date**: 2026-09-08
+**Decision**: `ci.yml` on PR/push-to-main: download Godot 4.6 Linux, headless import, run unit tests, Trivy secret+misconfig scan, SBOM. `release.yml` on `v*` tags: install export templates, export Windows/Linux/macOS, attach to a GitHub Release. `security-scan.yml` weekly rescan. Adapted from the author's dev-workflow standard; commitlint step dropped because there is no Node toolchain in this repo.
+**Revisit when**: first tag proves or breaks the release job (see gaps).
+
+## D-012 — Session scope: S0 = scaffolding + content registry
+**Date**: 2026-09-08
+**Decision**: This first session delivered repo scaffolding, the content registry (the architectural spine for moddability), the platform abstraction, tests, docs, and CI. No gameplay. Next session: M0 isometric map + party movement.

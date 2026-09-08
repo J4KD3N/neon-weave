@@ -1,0 +1,27 @@
+# Godot 4
+.godot/
+*.import.tmp
+.import/
+export.cfg
+export_credentials.cfg
+*.translation
+
+# Exports
+build/
+*.pck
+*.exe
+*.x86_64
+*.dmg
+*.zip
+
+# Mods: dev root is for local testing; only the example ships
+mods/*
+!mods/README.md
+!mods/example_mod/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

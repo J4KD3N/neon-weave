@@ -1,0 +1,12 @@
+{
+  "name": "Aetherbinder",
+  "branches": ["arcane"],
+  "resource": {
+    "id": "surge",
+    "name": "Surge",
+    "summary": "Builds as you cast; overload risk."
+  },
+  "subclass_level": 3,
+  "subclasses": ["stormcaller", "wardweaver"],
+  "milestone": "M0"
+}

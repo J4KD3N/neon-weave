@@ -1,0 +1,8 @@
+{
+  "name": "Synth",
+  "analog": "Warforged",
+  "identity": "Awakened machines.",
+  "hooks": ["repair_with_parts", "immune_poison", "immune_bleed", "no_magic_healing"],
+  "faction_lean": "lattice",
+  "milestone": "M0"
+}
