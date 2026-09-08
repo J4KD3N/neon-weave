@@ -51,6 +51,7 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 		var c := Combatant.make("p:" + m.member_id, m.display_name, Combatant.TEAM_PARTY, party_cells[i], m.stats, m.abilities, world.rules.ap_per_turn)
 		c.hp = m.hp
 		c.downed = m.downed
+		c.damage_bonus = world.bastion.damage_bonus()
 		combatants.append(c)
 		actors[c.id] = m
 		m.show_hp = true

@@ -166,7 +166,7 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		"damage": 0, "target_hp": target.hp, "downed": false, "killed": false, "ap_left": actor.ap,
 	}
 	if e["hit"]:
-		var dmg := roll_damage(ability, flanked)
+		var dmg := roll_damage(ability, flanked, actor.damage_bonus)
 		target.hp = maxi(target.hp - dmg, 0)
 		e["damage"] = dmg
 		e["target_hp"] = target.hp
@@ -188,11 +188,11 @@ func hit_chance(actor: Combatant, ability: Dictionary, target: Combatant, flanke
 	return clampi(chance, rules.min_hit_chance, rules.max_hit_chance)
 
 
-func roll_damage(ability: Dictionary, flanked: bool) -> int:
+func roll_damage(ability: Dictionary, flanked: bool, bonus: int = 0) -> int:
 	var span: Array = ability.get("damage", [1, 1])
 	var lo := int(span[0]) if span.size() > 0 else 1
 	var hi := int(span[1]) if span.size() > 1 else lo
-	var dmg := rng.randi_range(mini(lo, hi), maxi(lo, hi))
+	var dmg := rng.randi_range(mini(lo, hi), maxi(lo, hi)) + bonus
 	if flanked:
 		dmg = int(round(dmg * rules.flank_damage_mult))
 	return maxi(dmg, 0)

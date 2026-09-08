@@ -320,3 +320,83 @@ func test_status_line_shows_extraction_prompt_on_the_pad() -> void:
 	world.teleport_party(world.extraction_cell())
 	assert_contains(world.status_line(), "press E to extract")
 	assert_contains(world.status_line(), "haul S0")
+
+
+func test_party_hp_persists_into_a_shard_and_the_medbay_heals_at_home() -> void:
+	var leader := world.party.leader()
+	var max_hp := leader.max_hp
+	leader.hp = 5
+	world.enter_shard("rusted_undercity", 7)
+	assert_eq(world.party.leader(), leader, "same party nodes")
+	assert_eq(world.party.leader().hp, 5, "wounds carry into the Shard")
+	assert_eq(world.leader_cell(), world.map_data.spawn_cells()[0])
+	world.enter_map("proto_yard")
+	var expected := mini(max_hp, 5 + int(ceil(max_hp * 0.25)))
+	assert_eq(world.party.leader().hp, expected, "Med-bay L0 restores a quarter")
+
+
+func test_wipe_returns_home_and_the_medbay_revives() -> void:
+	world.enter_shard("rusted_undercity", 7)
+	for m: PartyMember in world.party.members:
+		m.hp = 0
+		m.downed = true
+	world._on_combat_ended("defeat")
+	world.return_home()
+	assert_eq(world.mode, "explore")
+	for m: PartyMember in world.party.members:
+		assert_false(m.downed)
+		assert_eq(m.hp, int(ceil(m.max_hp * 0.25)), "revived to the Med-bay fraction")
+
+
+func test_workshop_upgrade_spends_persists_and_raises_max_hp() -> void:
+	var leader := world.party.leader()
+	assert_eq(leader.max_hp, 22)
+	leader.hp = 10
+	assert_false(world.upgrade_building("workshop"), "cannot afford")
+	world.ledger.bank({"salvage": 50})
+	assert_true(world.upgrade_building("workshop"))
+	assert_eq(world.ledger.total("salvage"), 38)
+	assert_eq(world.bastion.level("workshop"), 1)
+	assert_eq(leader.max_hp, 24, "+2 plating")
+	assert_eq(leader.hp, 12, "the upgrade heals by what it adds")
+	assert_eq(world.ledger.buildings, {"beacon": 0, "medbay": 0, "workshop": 1})
+	var saved := Ledger.load_or_new(LEDGER)
+	assert_eq(saved.buildings["workshop"], 1)
+	# A fresh scene picks the level back up from the ledger.
+	var packed: PackedScene = load("res://scenes/main.tscn")
+	var again := packed.instantiate() as ExploreWorld
+	again.ledger_path = LEDGER
+	_root().add_child(again)
+	assert_eq(again.bastion.level("workshop"), 1)
+	assert_eq(again.party.leader().max_hp, 24)
+	_root().remove_child(again)
+	again.free()
+
+
+func test_beacon_depth_scales_generated_shards() -> void:
+	var shallow := world.enter_shard("rusted_undercity", 7)
+	var shallow_enemies: Array = shallow["enemies"]
+	world.enter_map("proto_yard")
+	world.ledger.bank({"salvage": 100, "aether": 10, "ciphers": 2})
+	assert_true(world.upgrade_building("beacon"))
+	assert_true(world.upgrade_building("beacon"))
+	assert_eq(world.bastion.depth(), 3)
+	var deep := world.enter_shard("rusted_undercity", 7)
+	var generation: Dictionary = deep["generation"]
+	assert_eq(int(generation["depth"]), 3)
+	assert_contains(String(deep["name"]), "depth 3")
+	var deep_enemies: Array = deep["enemies"]
+	assert_true(deep_enemies.size() >= shallow_enemies.size(), "deeper is never emptier (%d vs %d)" % [deep_enemies.size(), shallow_enemies.size()])
+	assert_eq(ShardValidator.validate(deep, world.tiles_by_id()), [])
+
+
+func test_bastion_menu_opens_only_at_home() -> void:
+	assert_true(world.toggle_bastion())
+	assert_true(world.bastion_menu.visible)
+	assert_contains(world.bastion_menu.label.text, "[1] Beacon")
+	assert_false(world.toggle_bastion(), "second press closes")
+	assert_false(world.bastion_menu.visible)
+	world.enter_shard("rusted_undercity", 7)
+	assert_false(world.toggle_bastion(), "not in a Shard")
+	assert_false(world.bastion_menu.visible)
+	assert_contains(world.status_line(), "depth 1")

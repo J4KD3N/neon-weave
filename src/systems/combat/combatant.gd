@@ -22,6 +22,8 @@ var evasion: int = 0
 var initiative_bonus: int = 0
 var initiative: int = 0
 var abilities: Array[String] = []
+## Flat bonus added to every damage roll (Workshop edge-work).
+var damage_bonus: int = 0
 ## Party members under Story-Protected rules are knocked out, not killed.
 var downed: bool = false
 

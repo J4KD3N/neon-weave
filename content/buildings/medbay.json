@@ -1,0 +1,10 @@
+{
+  "name": "Med-bay",
+  "summary": "Patches the party up between expeditions. Wounds carry over from Shard to Shard; this is where they close.",
+  "order": 2,
+  "levels": [
+    { "cost": {}, "effects": { "heal_fraction": 0.25 }, "blurb": "Field dressings: restores a quarter of max HP on return." },
+    { "cost": { "salvage": 10 }, "effects": { "heal_fraction": 0.6 }, "blurb": "Autodoc: restores 60% on return." },
+    { "cost": { "salvage": 30, "aether": 3 }, "effects": { "heal_fraction": 1.0 }, "blurb": "Weft-stitch: full heal on return." }
+  ]
+}

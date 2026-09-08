@@ -183,3 +183,23 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `user://ledger.json`, `{"version": 1, ...}`, saved on every bank/wipe. `Ledger.migrate` is the migration hook (a pre-versioned flat shape is upgraded as the first example). Corrupt files are reported and ignored, never overwritten until the next save. Steam Cloud sync of this file is an M2 concern behind `Platform`.
 **Revisit when**: the full save system (slots, autosaves, party state) lands; the ledger becomes one section of it.
+
+## D-035 — M1 is planned as sessions S5–S12
+**Date**: 2026-09-08
+**Decision**: `docs/m1-plan.md` fixes the order: Bastion → save/load → full combat → classes 3–4 → creator → art pipeline → Sera → controller. Each is one session/PR. The yard stays the Bastion's grounds until the art/companion sessions decide on a dedicated map.
+
+## D-036 — Bastion buildings are levelled content entries
+**Date**: 2026-09-08
+**Decision**: `content/buildings/<id>.json` with `levels[]`; level 0 is free and always built; upgrading to level n pays `levels[n].cost` from the ledger. Effects are flat keys summed across buildings' current levels (`depth`, `heal_fraction`, `hp_bonus`, `damage_bonus`); the world applies them. Levels persist in the ledger (v2).
+**Why**: GDD §12 wants buildings that visibly upgrade; keeping effects as summed keys means a new building is a JSON file and possibly one new key handled in the world, never a new class.
+**Revisit when**: buildings need choices per level (branching upgrades) or visuals on the map.
+
+## D-037 — Party HP persists between runs; the Med-bay is the heal
+**Date**: 2026-09-08
+**Decision**: The party is spawned once per scene; entering any map repositions the same nodes. Arriving home applies the Med-bay's `heal_fraction` of max HP (minimum 1) and revives the downed. Victory still leaves the downed at 1 HP. Workshop `hp_bonus` raises max HP and current HP by the same amount.
+**Why**: Without persistence the Med-bay is meaningless and wounds have no weight; with it, "extract now or push on" becomes a real decision.
+
+## D-038 — Beacon depth is the only difficulty knob for now
+**Date**: 2026-09-08
+**Decision**: `ShardGenerator.generate(template, seed, depth)` adds `depth-1` enemy groups and pickups; layout is unchanged for a given seed. Enemy stats do not scale yet.
+**Revisit when**: S7 (full combat) or the balance pass wants scaling stats, elites, or per-depth pools.
