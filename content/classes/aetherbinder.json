@@ -6,6 +6,8 @@
     "name": "Surge",
     "summary": "Builds as you cast; overload risk."
   },
+  "stats": { "hp": 12, "move": 6, "evasion": 10, "initiative": 2 },
+  "abilities": ["strike", "arc_bolt"],
   "subclass_level": 3,
   "subclasses": ["stormcaller", "wardweaver"],
   "milestone": "M0"

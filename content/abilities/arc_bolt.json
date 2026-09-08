@@ -1,0 +1,10 @@
+{
+  "name": "Arc Bolt",
+  "summary": "Aetherbinder: a lance of Weft-charge. Needs a clear line.",
+  "ap": 2,
+  "range": 5,
+  "damage": [3, 6],
+  "accuracy": 90,
+  "damage_type": "arcane",
+  "requires_los": true
+}

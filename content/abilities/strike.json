@@ -1,0 +1,9 @@
+{
+  "name": "Strike",
+  "summary": "A basic melee blow anyone can make.",
+  "ap": 1,
+  "range": 1,
+  "damage": [2, 4],
+  "accuracy": 85,
+  "damage_type": "physical"
+}

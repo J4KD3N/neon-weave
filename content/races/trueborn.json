@@ -3,6 +3,7 @@
   "analog": "Human",
   "identity": "Unaltered humans.",
   "hooks": ["extra_talent_points"],
+  "stat_mods": { "hp": 2, "initiative": 1 },
   "faction_lean": "ashfound",
   "milestone": "M0"
 }

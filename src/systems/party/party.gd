@@ -7,6 +7,8 @@ extends Node2D
 @export var speed: float = 170.0
 ## Path distance between consecutive members while trailing.
 @export var spacing: float = 36.0
+## When false (combat), _process does not tick; the controller owns positions.
+var active: bool = true
 
 var members: Array[PartyMember] = []
 var trail := FormationTrail.new()
@@ -14,14 +16,19 @@ var trail := FormationTrail.new()
 var _waypoints: Array[Vector2] = []
 
 
-func spawn_members(datas: Array[Dictionary], colors: Array[Color], positions: Array[Vector2]) -> void:
+## Each spec: {"data": Dictionary, "color": Color, "position": Vector2,
+## "stats": Dictionary, "abilities": Array[String]}.
+func spawn_members(specs: Array[Dictionary]) -> void:
 	for m: PartyMember in members:
 		m.queue_free()
 	members.clear()
-	for i: int in datas.size():
+	for i: int in specs.size():
+		var spec: Dictionary = specs[i]
 		var member := PartyMember.new()
-		member.setup(datas[i], colors[i] if i < colors.size() else Color.WHITE)
-		member.position = positions[i] if i < positions.size() else Vector2.ZERO
+		var abilities: Array[String] = []
+		abilities.assign(spec.get("abilities", []))
+		member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities)
+		member.position = spec.get("position", Vector2.ZERO)
 		member.is_leader = i == 0
 		add_child(member)
 		members.append(member)
@@ -91,7 +98,8 @@ func tick(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-	tick(delta)
+	if active:
+		tick(delta)
 
 
 func _move_leader_to(target: Vector2) -> void:

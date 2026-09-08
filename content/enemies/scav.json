@@ -1,0 +1,11 @@
+{
+  "name": "Scav",
+  "family": "rusted_undercity",
+  "archetype": "rusher",
+  "summary": "Gang scavenger with a sharpened strut. Runs at whatever it sees.",
+  "stats": { "hp": 8, "move": 6, "evasion": 5, "initiative": 0 },
+  "abilities": ["strike"],
+  "awareness": 5,
+  "xp": 5,
+  "art": { "shape": "capsule", "color": "#c94b3a" }
+}

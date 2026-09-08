@@ -1,0 +1,10 @@
+{
+  "name": "Zap",
+  "summary": "Feral drone: a stuttering shock from a failing emitter.",
+  "ap": 1,
+  "range": 5,
+  "damage": [1, 4],
+  "accuracy": 75,
+  "damage_type": "tech",
+  "requires_los": true
+}

@@ -9,6 +9,13 @@ const BINDINGS: Dictionary = {
 	"move_left": [KEY_A, KEY_LEFT],
 	"move_right": [KEY_D, KEY_RIGHT],
 	"toggle_debug": [KEY_F1],
+	"ability_1": [KEY_1],
+	"ability_2": [KEY_2],
+	"ability_3": [KEY_3],
+	"ability_4": [KEY_4],
+	"end_turn": [KEY_SPACE],
+	"cancel": [KEY_ESCAPE],
+	"restart": [KEY_R],
 }
 
 
