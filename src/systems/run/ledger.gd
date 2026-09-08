@@ -4,7 +4,7 @@
 class_name Ledger
 extends RefCounted
 
-const VERSION := 1
+const VERSION := 2
 const RESOURCES: Array[String] = ["salvage", "aether", "ciphers"]
 
 var path: String = "user://ledger.json"
@@ -13,6 +13,8 @@ var xp: int = 0
 var runs_completed: int = 0
 var runs_wiped: int = 0
 var kills: int = 0
+## Bastion building levels (id -> level). Owned by BastionState at runtime.
+var buildings: Dictionary = {}
 ## Set when the last load found a file it could not read; the ledger
 ## starts fresh but the reason is kept for the UI/log.
 var load_error: String = ""
@@ -49,6 +51,10 @@ static func migrate(data: Dictionary) -> Dictionary:
 			res[key] = int(d.get(key, 0))
 		d["resources"] = d.get("resources", res)
 		d["version"] = 1
+	if version < 2:
+		# v2 adds Bastion building levels.
+		d["buildings"] = d.get("buildings", {})
+		d["version"] = 2
 	return d
 
 
@@ -60,6 +66,10 @@ func apply(d: Dictionary) -> void:
 	runs_completed = int(d.get("runs_completed", 0))
 	runs_wiped = int(d.get("runs_wiped", 0))
 	kills = int(d.get("kills", 0))
+	buildings.clear()
+	var saved: Dictionary = d.get("buildings", {})
+	for key: String in saved:
+		buildings[key] = int(saved[key])
 
 
 func to_dict() -> Dictionary:
@@ -70,6 +80,7 @@ func to_dict() -> Dictionary:
 		"runs_completed": runs_completed,
 		"runs_wiped": runs_wiped,
 		"kills": kills,
+		"buildings": buildings.duplicate(),
 	}
 
 
@@ -88,6 +99,22 @@ func save() -> Error:
 func bank(haul: Dictionary) -> void:
 	for key: String in RESOURCES:
 		resources[key] = int(resources[key]) + int(haul.get(key, 0))
+
+
+func can_afford(cost: Dictionary) -> bool:
+	for key: String in Ledger.RESOURCES:
+		if int(cost.get(key, 0)) > total(key):
+			return false
+	return true
+
+
+## Subtracts a cost; false (and nothing spent) when unaffordable.
+func spend(cost: Dictionary) -> bool:
+	if not can_afford(cost):
+		return false
+	for key: String in Ledger.RESOURCES:
+		resources[key] = total(key) - int(cost.get(key, 0))
+	return true
 
 
 func total(key: String) -> int:

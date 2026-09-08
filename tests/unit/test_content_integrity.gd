@@ -170,3 +170,20 @@ func test_pickups_have_valid_grants_and_placements() -> void:
 	var tiles := _tiles_by_id()
 	for m: Dictionary in registry.get_all("maps"):
 		assert_eq(ShardValidator.validate(m, tiles), [], "map %s placements" % m["id"])
+
+
+func test_buildings_have_free_base_levels_and_valid_costs_and_effects() -> void:
+	var buildings := registry.get_all("buildings")
+	assert_eq(buildings.size(), 3, "M1: Beacon, Med-bay, Workshop")
+	var effect_keys: Array[String] = ["depth", "heal_fraction", "hp_bonus", "damage_bonus"]
+	for b: Dictionary in buildings:
+		var levels: Array = b.get("levels", [])
+		assert_true(levels.size() >= 2, "building %s has upgrades" % b["id"])
+		var base: Dictionary = levels[0]
+		assert_eq(Dictionary(base.get("cost", {})).size(), 0, "building %s level 0 is free" % b["id"])
+		for lv: Dictionary in levels:
+			for key: String in lv.get("cost", {}):
+				assert_true(Ledger.RESOURCES.has(key), "building %s cost key '%s'" % [b["id"], key])
+			for key: String in lv.get("effects", {}):
+				assert_true(effect_keys.has(key), "building %s effect key '%s'" % [b["id"], key])
+			assert_false(String(lv.get("blurb", "")).is_empty(), "building %s level blurb" % b["id"])

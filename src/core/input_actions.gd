@@ -19,6 +19,7 @@ const BINDINGS: Dictionary = {
 	"new_shard": [KEY_N],
 	"go_home": [KEY_H],
 	"extract": [KEY_E],
+	"bastion": [KEY_B],
 }
 
 

@@ -2,12 +2,14 @@
 
 Updated every session. Remove items when closed; note the closing commit.
 
-## Open (as of 2026-09-08, session S4 — M0 loop complete)
+## Open (as of 2026-09-08, session S5 — M1 started, see docs/m1-plan.md)
 
-- **M0 question still open**: the loop exists end to end (yard → Shard → fight/collect → extract or wipe → yard) but nobody has played it. "Is the loop fun?" needs a person with the editor open. Balance numbers are all first guesses.
-- **Resources do nothing yet**: Salvage/Aether/Ciphers/XP accumulate in the ledger with nothing to spend them on (Bastion buildings, talents, merchants are M1+). No item loot, rarity or affixes.
+- **M0 question still open**: the loop exists end to end (yard → Shard → fight/collect → extract or wipe → yard → Bastion) but nobody has played it. "Is the loop fun?" needs a person with the editor open. Balance numbers are all first guesses, including building costs.
+- **XP and Ciphers have no sink**: Salvage and Aether buy building levels; XP (levels/talents) and Ciphers (rare keys/merchants) wait on later systems. No item loot, rarity or affixes.
+- **Bastion is a text screen** over the yard; no building visuals, no dedicated map (M1 art/companion sessions decide).
+- **Depth only adds bodies**: enemy stats and pools do not scale with Beacon depth (D-038).
 - **Shards are plain**: no secrets, vaults or merchants (GDD §11); one room style; corridors are 1 wide; enemy groups are random per room with no difficulty ramp by distance; pickups are two types.
-- **Entering a Shard resets the party** (respawned at full HP) and enemies on the previous map are forgotten; there is no Bastion/Beacon, so N/H are debug keys. A wipe returns you to the yard with a fresh party (stand-in for the Med-bay).
+- **Enemies on a previous map are forgotten** when you leave it; N (launch) and H (home) are still bare keys rather than a Beacon interaction on the map.
 - **Save is ledger-only**: no party/map state, no slots (GDD §13).
 - **Map format is ASCII-only** stays true for handcrafted maps; generated ones go through the same rows format by design (D-028).
 

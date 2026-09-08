@@ -30,12 +30,13 @@ var cells := PackedStringArray()
 var rooms: Array[Rect2i] = []
 
 
-static func generate(template: Dictionary, seed_value: int) -> Dictionary:
+## `depth` (Beacon level) adds depth-1 enemy groups and pickups.
+static func generate(template: Dictionary, seed_value: int, depth: int = 1) -> Dictionary:
 	var g := ShardGenerator.new()
-	return g._run(template, seed_value)
+	return g._run(template, seed_value, maxi(depth, 1))
 
 
-func _run(template: Dictionary, seed_value: int) -> Dictionary:
+func _run(template: Dictionary, seed_value: int, depth: int) -> Dictionary:
 	rng.seed = seed_value
 	var size: Dictionary = template.get("size", {})
 	width = _pick(size.get("width", [40, 52]))
@@ -76,12 +77,12 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 
 	var enemy_spec: Dictionary = template.get("enemies", {})
 	var min_dist := int(enemy_spec.get("min_spawn_distance", 10))
-	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist)
+	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist, depth - 1)
 	var taken: Array[Vector2i] = []
 	for e: Dictionary in enemies:
 		var raw: Array = e["cell"]
 		taken.append(Vector2i(int(raw[0]), int(raw[1])))
-	var pickups := _place_pickups(template.get("pickups", {}), spawns, dist, taken)
+	var pickups := _place_pickups(template.get("pickups", {}), spawns, dist, taken, depth - 1)
 
 	var tiles: Dictionary = template.get("tiles", {})
 	var template_id := String(template.get("id", "shard"))
@@ -90,7 +91,7 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 		room_list.append([r.position.x, r.position.y, r.size.x, r.size.y])
 	return {
 		"id": "%s_%d" % [template_id, seed_value],
-		"name": "%s #%d" % [String(template.get("name", "Shard")), seed_value],
+		"name": "%s #%d%s" % [String(template.get("name", "Shard")), seed_value, "" if depth <= 1 else " · depth %d" % depth],
 		"biome": String(template.get("biome", "")),
 		"spawn_marker": SPAWN,
 		"legend": {
@@ -106,7 +107,7 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 		"pickups": pickups,
 		"extraction": [exit_cell.x, exit_cell.y],
 		"rooms": room_list,
-		"generation": {"template": template_id, "seed": seed_value, "min_spawn_distance": min_dist},
+		"generation": {"template": template_id, "seed": seed_value, "depth": depth, "min_spawn_distance": min_dist},
 	}
 
 
@@ -306,12 +307,12 @@ func _nearest_reachable(center: Vector2i, room: Rect2i, dist: PackedInt32Array) 
 
 # --- enemies ---------------------------------------------------------------
 
-func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, min_dist: int) -> Array:
+func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, min_dist: int, extra_groups: int = 0) -> Array:
 	var out: Array = []
 	var pool: Array = spec.get("pool", [])
 	if pool.is_empty() or rooms.size() < 2:
 		return out
-	var groups := _pick(spec.get("groups", [4, 7]))
+	var groups := _pick(spec.get("groups", [4, 7])) + extra_groups
 	var size_range: Array = spec.get("group_size", [1, 3])
 	var taken: Dictionary = {}
 	for _g: int in groups:
@@ -337,12 +338,12 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 
 
 ## Collectibles anywhere reachable except spawn, exit and enemy cells.
-func _place_pickups(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, taken: Array[Vector2i]) -> Array:
+func _place_pickups(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, taken: Array[Vector2i], extra: int = 0) -> Array:
 	var out: Array = []
 	var pool: Array = spec.get("pool", [])
 	if pool.is_empty() or rooms.is_empty():
 		return out
-	var count := _pick(spec.get("count", [3, 6]))
+	var count := _pick(spec.get("count", [3, 6])) + extra
 	var used: Dictionary = {}
 	for c: Vector2i in taken:
 		used[c] = true

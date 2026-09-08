@@ -123,3 +123,19 @@ func test_validator_catches_broken_maps() -> void:
 func test_handcrafted_proto_yard_passes_the_solvability_checks() -> void:
 	var entry: Dictionary = registry.get_entry("maps", "proto_yard")
 	assert_eq(ShardValidator.validate(entry, tiles), [])
+
+
+func test_depth_adds_groups_and_pickups_and_stays_valid() -> void:
+	for seed_value: int in range(1, 16):
+		var d1 := ShardGenerator.generate(template, seed_value, 1)
+		var d3 := ShardGenerator.generate(template, seed_value, 3)
+		assert_eq(ShardValidator.validate(d3, tiles), [], "depth 3 seed %d" % seed_value)
+		assert_eq(d1["rows"], d3["rows"], "depth changes population, not layout")
+		var g: Dictionary = d3["generation"]
+		assert_eq(int(g["depth"]), 3)
+		assert_contains(String(d3["name"]), "depth 3")
+		assert_false(String(d1["name"]).contains("depth"))
+		var p1: Array = d1["pickups"]
+		var p3: Array = d3["pickups"]
+		assert_true(p1.size() >= 1 and p1.size() <= 6, "seed %d depth-1 pickups %d" % [seed_value, p1.size()])
+		assert_true(p3.size() >= 3 and p3.size() <= 8, "seed %d depth-3 pickups %d" % [seed_value, p3.size()])

@@ -31,6 +31,8 @@ var map_entry: Dictionary = {}
 var rules: CombatRules
 var ledger: Ledger
 var run := RunState.new()
+var bastion := BastionState.new()
+var bastion_menu: BastionMenu
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
 var combat: CombatController
@@ -52,6 +54,7 @@ func _ready() -> void:
 	ledger = Ledger.load_or_new(ledger_path)
 	if not ledger.load_error.is_empty():
 		push_warning(ledger.load_error)
+	bastion.setup(registry.get_all("buildings"), ledger.buildings)
 	load_map_entry(registry.get_entry("maps", map_id))
 	highlighter = CellHighlighter.new()
 	highlighter.name = "Highlighter"
@@ -59,11 +62,15 @@ func _ready() -> void:
 	map_view.add_child(highlighter)
 	run.begin("", 0)
 	spawn_party(party_id)
+	apply_bastion_bonuses()
 	spawn_enemies()
 	spawn_pickups()
 	hud = CombatHud.new()
 	hud.name = "CombatHud"
 	add_child(hud)
+	bastion_menu = BastionMenu.new()
+	bastion_menu.name = "BastionMenu"
+	add_child(bastion_menu)
 	combat = CombatController.new()
 	combat.name = "Combat"
 	add_child(combat)
@@ -114,7 +121,7 @@ func enter_shard(template_id: String, seed_value: int) -> Dictionary:
 	if template.is_empty():
 		push_warning("unknown shard template '%s'" % template_id)
 		return {}
-	var entry := ShardGenerator.generate(template, seed_value)
+	var entry := ShardGenerator.generate(template, seed_value, bastion.depth())
 	for err: String in ShardValidator.validate(entry, tiles_by_id()):
 		push_warning("shard %s: %s" % [entry.get("id"), err])
 	if _enter(entry):
@@ -123,7 +130,8 @@ func enter_shard(template_id: String, seed_value: int) -> Dictionary:
 
 
 ## Loads a handcrafted map by id and moves the party into it. Loot found on
-## handcrafted maps banks immediately (no extraction risk).
+## handcrafted maps banks immediately (no extraction risk). Arriving home
+## runs the Med-bay.
 func enter_map(id: String) -> bool:
 	var entry: Dictionary = registry.get_entry("maps", id)
 	if entry.is_empty():
@@ -131,6 +139,8 @@ func enter_map(id: String) -> bool:
 	if _enter(entry):
 		map_id = id
 		run.begin("", 0)
+		if id == HOME_MAP:
+			heal_party(bastion.heal_fraction())
 	return true
 
 
@@ -138,7 +148,11 @@ func _enter(entry: Dictionary) -> bool:
 	if mode == "combat":
 		return false
 	load_map_entry(entry)
-	spawn_party(party_id)
+	if party.members.is_empty():
+		spawn_party(party_id)
+		apply_bastion_bonuses()
+	else:
+		place_party(map_data.spawn_cells())
 	spawn_enemies()
 	spawn_pickups()
 	mode = "explore"
@@ -148,18 +162,84 @@ func _enter(entry: Dictionary) -> bool:
 	if hud != null:
 		hud.hide_message()
 		hud.visible = false
+	if bastion_menu != null:
+		bastion_menu.visible = false
 	if camera != null:
 		camera.target = party.leader()
 		camera.snap()
 	return true
 
 
-## After a wipe: back to the yard with a fresh party. Nothing banked is lost.
+## After a wipe: back to the yard. The Med-bay revives whoever is down.
+## Nothing banked is lost.
 func return_home() -> void:
 	if mode == "combat":
 		return
 	mode = "explore"
 	enter_map(HOME_MAP)
+
+
+## Moves the existing party (HP intact) onto a map's spawn cells.
+func place_party(cells: Array[Vector2i]) -> void:
+	for i: int in party.members.size():
+		var cell: Vector2i = cells[mini(i, cells.size() - 1)] if not cells.is_empty() else Vector2i.ZERO
+		party.members[i].position = map_view.cell_to_world(cell)
+		party.members[i].show_hp = false
+	party.stop()
+	if party.leader() != null:
+		party.trail.reset(party.leader().position)
+
+
+## Med-bay: restores `fraction` of max HP to everyone and revives the downed.
+func heal_party(fraction: float) -> void:
+	for m: PartyMember in party.members:
+		var amount := int(ceil(m.max_hp * fraction))
+		m.downed = false
+		m.hp = mini(m.max_hp, maxi(m.hp, 0) + amount)
+		if m.hp <= 0:
+			m.hp = 1
+
+
+func apply_bastion_bonuses() -> void:
+	for m: PartyMember in party.members:
+		m.set_hp_bonus(bastion.hp_bonus())
+
+
+func at_home() -> bool:
+	return not run.in_shard
+
+
+## Spends from the ledger, raises the building, persists, re-applies bonuses.
+func upgrade_building(id: String) -> bool:
+	var why := bastion.can_upgrade(id, ledger)
+	if not why.is_empty():
+		overlay.toast("%s: %s" % [bastion.name_of(id), why], 2.0)
+		return false
+	if not bastion.upgrade(id, ledger):
+		return false
+	ledger.buildings = bastion.to_dict()
+	var err := ledger.save()
+	if err != OK:
+		push_warning("ledger save failed: %s" % error_string(err))
+	apply_bastion_bonuses()
+	overlay.toast("%s upgraded to L%d — %s" % [bastion.name_of(id), bastion.level(id), bastion.blurb(id)], 3.0)
+	if bastion_menu != null and bastion_menu.visible:
+		bastion_menu.refresh(bastion, ledger)
+	return true
+
+
+## Opens/closes the Bastion screen; only at home while exploring.
+func toggle_bastion() -> bool:
+	if bastion_menu == null:
+		return false
+	if bastion_menu.visible:
+		bastion_menu.visible = false
+		return false
+	if mode != "explore" or not at_home():
+		return false
+	bastion_menu.refresh(bastion, ledger)
+	bastion_menu.visible = true
+	return true
 
 
 ## Extraction pad cell of the current map, or (-1,-1) when it has none.
@@ -385,7 +465,9 @@ func status_line() -> String:
 		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
 	]
 	var line2 := "%s  |  %s" % [run.summary() if run.in_shard else "at home: loot banks on pickup", ledger.summary()]
-	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard · H home · F1 registry"
+	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard (depth %d) · H home · F1 registry" % bastion.depth()
+	if at_home():
+		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · N new shard (depth %d) · F1 registry" % bastion.depth()
 	if can_extract():
 		line3 = "▶ ON THE EXTRACTION PAD — press E to extract ◀"
 	elif mode == "defeated":
@@ -473,9 +555,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	var clicked := mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
+	if bastion_menu != null and bastion_menu.visible:
+		if event.is_action_pressed("bastion") or event.is_action_pressed("cancel"):
+			toggle_bastion()
+		elif event.is_action_pressed("new_shard"):
+			bastion_menu.visible = false
+			enter_shard(DEFAULT_SHARD, int(randi() % 1000000))
+		else:
+			for i: int in mini(bastion.order.size(), 4):
+				if event.is_action_pressed("ability_%d" % (i + 1)):
+					upgrade_building(bastion.order[i])
+		return
 	match mode:
 		"explore":
-			if clicked:
+			if event.is_action_pressed("bastion"):
+				toggle_bastion()
+			elif clicked:
 				var cell := map_view.world_to_cell(get_global_mouse_position())
 				var enemy := enemy_at(cell)
 				if enemy != null and LineOfSight.distance(leader_cell(), cell) <= enemy.awareness:

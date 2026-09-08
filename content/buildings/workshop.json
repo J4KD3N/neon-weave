@@ -1,0 +1,10 @@
+{
+  "name": "Workshop",
+  "summary": "Salvage becomes plating and sharper edges for the whole party.",
+  "order": 3,
+  "levels": [
+    { "cost": {}, "effects": {}, "blurb": "A bench and a vice." },
+    { "cost": { "salvage": 12 }, "effects": { "hp_bonus": 2 }, "blurb": "Plating: +2 max HP for everyone." },
+    { "cost": { "salvage": 30, "aether": 4 }, "effects": { "hp_bonus": 4, "damage_bonus": 1 }, "blurb": "Edge-work: +4 max HP and +1 damage." }
+  ]
+}
