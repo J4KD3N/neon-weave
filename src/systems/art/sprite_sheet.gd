@@ -137,7 +137,7 @@ static func recolor(src: Image, swap: Dictionary) -> Image:
 			if p.a == 0.0:
 				continue
 			for k: Color in keys:
-				if p.is_equal_approx(k):
+				if absf(p.r - k.r) < 0.01 and absf(p.g - k.g) < 0.01 and absf(p.b - k.b) < 0.01: # RGB only: edges keep their alpha
 					var c: Color = swap[k]
 					out.set_pixel(x, y, Color(c.r, c.g, c.b, p.a))
 					break
