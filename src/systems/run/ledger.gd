@@ -4,7 +4,7 @@
 class_name Ledger
 extends RefCounted
 
-const VERSION := 2
+const VERSION := 3
 const RESOURCES: Array[String] = ["salvage", "aether", "ciphers"]
 
 var path: String = "user://ledger.json"
@@ -15,6 +15,8 @@ var runs_wiped: int = 0
 var kills: int = 0
 ## Bastion building levels (id -> level). Owned by BastionState at runtime.
 var buildings: Dictionary = {}
+## Per-member progression choices: member_id -> {"subclass": id, "talents": [ids]}.
+var builds: Dictionary = {}
 ## Set when the last load found a file it could not read; the ledger
 ## starts fresh but the reason is kept for the UI/log.
 var load_error: String = ""
@@ -55,6 +57,10 @@ static func migrate(data: Dictionary) -> Dictionary:
 		# v2 adds Bastion building levels.
 		d["buildings"] = d.get("buildings", {})
 		d["version"] = 2
+	if version < 3:
+		# v3 adds per-member builds (subclass, talents).
+		d["builds"] = d.get("builds", {})
+		d["version"] = 3
 	return d
 
 
@@ -70,6 +76,7 @@ func apply(d: Dictionary) -> void:
 	var saved: Dictionary = d.get("buildings", {})
 	for key: String in saved:
 		buildings[key] = int(saved[key])
+	builds = Dictionary(d.get("builds", {})).duplicate(true)
 
 
 func to_dict() -> Dictionary:
@@ -77,6 +84,7 @@ func to_dict() -> Dictionary:
 		"version": VERSION,
 		"resources": resources.duplicate(),
 		"xp": xp,
+		"builds": builds.duplicate(true),
 		"runs_completed": runs_completed,
 		"runs_wiped": runs_wiped,
 		"kills": kills,

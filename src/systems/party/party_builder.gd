@@ -8,8 +8,11 @@ const PROTAGONIST_ID := "protagonist"
 
 ## `companions`: recruited companion ids appended after the preset, up to
 ## `rules.party_max` members in total.
-static func member_specs(registry: ContentRegistry, preset: Dictionary, protagonist: Dictionary, rules: CombatRules, spawn_positions: Array[Vector2], companions: Array[String] = []) -> Array[Dictionary]:
+## `level` is the party level; `builds` maps member id -> {"subclass", "talents"}
+## (Ledger.builds). Both default to a fresh level-1 party.
+static func member_specs(registry: ContentRegistry, preset: Dictionary, protagonist: Dictionary, rules: CombatRules, spawn_positions: Array[Vector2], companions: Array[String] = [], level: int = 1, builds: Dictionary = {}) -> Array[Dictionary]:
 	var attr_rules: Dictionary = registry.get_entry("rules", "attributes")
+	var prog_rules: Dictionary = registry.get_entry("rules", "progression")
 	var members: Array = Array(preset.get("members", [])).duplicate()
 	for id: String in companions:
 		if members.size() >= rules.party_max:
@@ -34,14 +37,28 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 		var race: Dictionary = registry.get_entry("races", String(data.get("race", "")))
 		var resource: Dictionary = cls.get("resource", {})
 		data["resource_id"] = String(resource.get("id", ""))
+		var build: Dictionary = builds.get(String(data.get("id", "")), {})
+		var fx := Progression.build_effects(registry, cls, level, build, prog_rules)
+		var stats := StatBlock.for_member(cls, race, rules, extras)
+		var deltas: Dictionary = fx["stats"]
+		for key: String in deltas:
+			stats[key] = maxi(int(stats[key]) + int(deltas[key]), 1)
+		var abilities: Array[String] = []
+		abilities.assign(cls.get("abilities", []))
+		for id: String in fx["abilities"]:
+			if not abilities.has(id):
+				abilities.append(id)
+		data["level"] = level
+		data["subclass"] = String(build.get("subclass", "")) if level >= Progression.subclass_level(cls, prog_rules) else ""
+		data["damage_bonus"] = int(fx["damage_bonus"])
 		specs.append({
 			"data": data,
 			"color": class_color(registry, String(data.get("class", ""))),
 			"overlay": race.get("overlay", {}),
 			"sheet_id": String(Dictionary(race.get("art", {})).get("sheet", "")),
 			"position": spawn_positions[mini(i, spawn_positions.size() - 1)] if not spawn_positions.is_empty() else Vector2.ZERO,
-			"stats": StatBlock.for_member(cls, race, rules, extras),
-			"abilities": cls.get("abilities", []),
+			"stats": stats,
+			"abilities": abilities,
 		})
 	return specs
 

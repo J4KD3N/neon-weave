@@ -1,0 +1,9 @@
+{
+  "name": "Stormcaller",
+  "class": "aetherbinder",
+  "summary": "Chain and area lightning; the Surge goes wide.",
+  "abilities": ["storm_lance"],
+  "stat_mods": { "initiative": 1 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

@@ -14,6 +14,11 @@ var abilities: Array[String] = []
 var resource_id: String = ""
 ## Extra max HP from the Bastion (Workshop). Applied on top of stats.hp.
 var hp_bonus: int = 0
+## Progression: party level at spawn, chosen subclass, and the flat damage
+## bonus from subclass and talents (the Bastion's is added in combat).
+var level: int = 1
+var subclass_id: String = ""
+var damage_bonus: int = 0
 
 
 ## Re-derives max HP from base stats plus `bonus`; current HP shifts by the
@@ -36,6 +41,9 @@ func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities
 	stats = p_stats
 	abilities.assign(p_abilities)
 	resource_id = String(data.get("resource_id", ""))
+	level = int(data.get("level", 1))
+	subclass_id = String(data.get("subclass", ""))
+	damage_bonus = int(data.get("damage_bonus", 0))
 	max_hp = maxi(int(stats.get("hp", 1)), 1)
 	hp = max_hp
 	origin_id = String(data.get("origin", ""))

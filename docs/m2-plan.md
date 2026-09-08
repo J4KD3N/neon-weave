@@ -55,3 +55,4 @@ S13 first because playtest findings may reorder everything after it. S14 before 
 
 ## Progress
 - S13 playtest triage — done (camera pan, move undo, three-slot save picker, soak test in `test_soak.gd`). Human playtest findings still land here as follow-ups.
+- S14 Progression — done: party level from banked XP (cap 6), class growth/unlocks, eight subclasses with one ability each, six talents, the Arcanum, the Weave menu (T at home). D-064.

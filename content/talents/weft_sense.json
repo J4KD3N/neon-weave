@@ -1,0 +1,9 @@
+{
+  "name": "Weft Sense",
+  "branch": "arcane",
+  "tier": 1,
+  "cost": { "aether": 2 },
+  "effects": { "initiative": 2 },
+  "summary": "+2 initiative.",
+  "requires": []
+}

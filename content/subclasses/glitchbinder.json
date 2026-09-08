@@ -1,0 +1,9 @@
+{
+  "name": "Glitchbinder",
+  "class": "circuit_witch",
+  "summary": "Turns enemy tech; hexes that bite machines.",
+  "abilities": ["override_hex"],
+  "stat_mods": { "evasion": 3 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Arcanum",
+  "summary": "Where the Weave is re-read: swap subclasses and talents, and get Aether back for the ones you drop.",
+  "order": 4,
+  "levels": [
+    { "cost": {}, "effects": {}, "blurb": "A locked reading room." },
+    { "cost": { "salvage": 10, "aether": 2 }, "effects": { "respec": 1, "respec_refund": 0.5 }, "blurb": "Respec at the Arcanum: half the Aether comes back." },
+    { "cost": { "salvage": 25, "aether": 6 }, "effects": { "respec_refund": 0.5 }, "blurb": "Full refunds: every Aether spent on a dropped talent returns." }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Plated Bones",
+  "branch": "body",
+  "tier": 2,
+  "cost": { "aether": 4 },
+  "effects": { "hp": 4, "damage_bonus": 1 },
+  "summary": "+4 max HP and +1 damage. Needs Iron Skin.",
+  "requires": ["iron_skin"]
+}

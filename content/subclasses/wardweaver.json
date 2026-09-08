@@ -1,0 +1,9 @@
+{
+  "name": "Wardweaver",
+  "class": "aetherbinder",
+  "summary": "Shields and denial; harder to hit, hits that pin.",
+  "abilities": ["ward_shard"],
+  "stat_mods": { "hp": 2, "evasion": 5 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

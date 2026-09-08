@@ -7,6 +7,8 @@
     "summary": "Stacking marks to detonate/exploit."
   },
   "stats": { "hp": 14, "move": 6, "evasion": 10, "initiative": 2 },
+  "growth": { "hp": 2 },
+  "unlocks": {},
   "abilities": ["strike", "hex_bolt", "detonate"],
   "subclass_level": 3,
   "subclasses": ["glitchbinder", "plaguecoder"],

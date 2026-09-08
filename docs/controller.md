@@ -19,7 +19,7 @@ fails the build if an action ever loses its pad path (D-059).
 
 The **system menu** (Start, or Esc on a keyboard while exploring) lists
 every keyboard-only key as an item: Extract, Launch a Shard (N), Return
-home (H), the Bastion (B), the Creator (C), Save / Load slot 1 (F5/F9),
+home (H), the Bastion (B), the Creator (C), the Weave (T), Save / Load slots 1–3 (F5/F9 for slot 1),
 Load autosave (F10), and the registry dump (F1). Items that would not
 work right now say why. There is no pausing a fight: the menu refuses to
 open in combat.

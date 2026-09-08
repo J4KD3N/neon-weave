@@ -1,0 +1,9 @@
+{
+  "name": "Weft Edge",
+  "branch": "arcane",
+  "tier": 2,
+  "cost": { "aether": 4 },
+  "effects": { "damage_bonus": 1, "initiative": 1 },
+  "summary": "+1 damage, +1 initiative. Needs Weft Sense.",
+  "requires": ["weft_sense"]
+}

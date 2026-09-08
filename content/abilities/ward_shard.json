@@ -1,0 +1,10 @@
+{
+  "name": "Ward Shard",
+  "summary": "Wardweaver: a cheap, sure shard of ward-light.",
+  "ap": 1,
+  "range": 4,
+  "damage": [2, 4],
+  "accuracy": 95,
+  "damage_type": "arcane",
+  "requires_los": true
+}
