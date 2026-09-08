@@ -8,6 +8,7 @@ var world: ExploreWorld
 
 
 const LEDGER := "user://test_ledger_scene.json"
+const SAVES := "user://test_saves_scene"
 
 
 func before_each() -> void:
@@ -16,6 +17,7 @@ func before_each() -> void:
 	world = packed.instantiate() as ExploreWorld
 	world.combat_seed = 1234
 	world.ledger_path = LEDGER
+	world.saves_dir = SAVES
 	_root().add_child(world)
 	world.combat.animate = false
 
@@ -29,6 +31,11 @@ func after_each() -> void:
 static func _remove_ledger() -> void:
 	if FileAccess.file_exists(LEDGER):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(LEDGER))
+	var d := DirAccess.open(SAVES)
+	if d != null:
+		for f: String in d.get_files():
+			d.remove(f)
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVES))
 
 
 static func _root() -> Window:
@@ -400,3 +407,136 @@ func test_bastion_menu_opens_only_at_home() -> void:
 	assert_false(world.toggle_bastion(), "not in a Shard")
 	assert_false(world.bastion_menu.visible)
 	assert_contains(world.status_line(), "depth 1")
+
+
+func _fresh_scene() -> ExploreWorld:
+	var packed: PackedScene = load("res://scenes/main.tscn")
+	var again := packed.instantiate() as ExploreWorld
+	again.combat_seed = 1234
+	again.ledger_path = LEDGER
+	again.saves_dir = SAVES
+	_root().add_child(again)
+	again.combat.animate = false
+	return again
+
+
+func _drop(scene: ExploreWorld) -> void:
+	_root().remove_child(scene)
+	scene.free()
+
+
+func test_save_is_refused_in_combat() -> void:
+	world.teleport_party(Vector2i(13, 4))
+	world.check_encounters()
+	assert_eq(world.mode, "combat")
+	assert_eq(world.save_slot(1), ERR_UNAVAILABLE)
+	assert_false(FileAccess.file_exists(world.save_path("slot_1")))
+	assert_true(FileAccess.file_exists(world.save_path("autosave")), "combat checkpoint written just before the fight")
+	var errors := world.load_slot(1)
+	assert_eq(errors.size(), 1)
+	assert_contains(errors[0], "no save at")
+
+
+func test_home_save_round_trip_into_a_fresh_scene() -> void:
+	var leader := world.party.leader()
+	world.ledger.bank({"salvage": 50, "aether": 3})
+	assert_true(world.upgrade_building("workshop"))
+	leader.hp = 9
+	world.party.members[2].downed = true
+	world.party.members[2].hp = 0
+	var scav := world.enemy_at(Vector2i(14, 2))
+	scav.dead = true
+	scav.queue_free()
+	world.teleport_party(Vector2i(5, 10))
+	assert_eq(world.check_pickups().size(), 1)
+	world.teleport_party(Vector2i(6, 12))
+	assert_eq(world.save_slot(1), OK)
+	var salvage := world.ledger.total("salvage")
+
+	var again := _fresh_scene()
+	assert_eq(again.load_slot(1), [])
+	assert_eq(again.map_data.name, "Proto Yard")
+	assert_eq(again.mode, "explore")
+	assert_false(again.run.in_shard)
+	assert_eq(again.bastion.level("workshop"), 1)
+	assert_eq(again.ledger.total("salvage"), salvage)
+	assert_eq(again.party.leader().max_hp, 24, "Workshop plating restored before HP")
+	assert_eq(again.party.leader().hp, 9, "wound survives the Med-bay because the save wins")
+	assert_true(again.party.members[2].downed)
+	assert_eq(again.party.members[2].hp, 0)
+	assert_eq(again.leader_cell(), Vector2i(6, 12))
+	assert_eq(again.living_enemies().size(), 3)
+	assert_true(again.enemy_at(Vector2i(14, 2)) == null, "the dead scav stays dead")
+	assert_eq(again.remaining_pickups().size(), 1)
+	assert_eq(Ledger.load_or_new(LEDGER).total("salvage"), salvage, "ledger file rewritten from the save")
+	_drop(again)
+
+
+func test_shard_save_round_trip_keeps_seed_depth_haul_and_deltas() -> void:
+	world.ledger.bank({"salvage": 100, "aether": 10, "ciphers": 2})
+	assert_true(world.upgrade_building("beacon"))
+	var entry := world.enter_shard("rusted_undercity", 7)
+	assert_contains(String(entry["name"]), "depth 2")
+	world.run.collect({"salvage": 6, "aether": 1, "xp": 3})
+	world.run.kills = 1
+	var first := world.enemies[0]
+	first.dead = true
+	first.queue_free()
+	world.teleport_party(world.extraction_cell())
+	assert_eq(world.save_slot(2), OK)
+	assert_true(world.upgrade_building("beacon"), "depth moves on after the save")
+	assert_eq(world.bastion.depth(), 3)
+
+	var again := _fresh_scene()
+	assert_eq(again.bastion.depth(), 3, "fresh scene reads the newer ledger first")
+	assert_eq(again.load_slot(2), [])
+	assert_eq(again.map_data.name, String(entry["name"]), "same shard at the saved depth")
+	assert_eq(again.map_entry["rows"], entry["rows"])
+	assert_true(again.run.in_shard)
+	assert_eq(again.run.haul, {"salvage": 6, "aether": 1, "ciphers": 0})
+	assert_eq(again.run.xp, 3)
+	assert_eq(again.run.kills, 1)
+	var placements: Array = entry["enemies"]
+	assert_eq(again.living_enemies().size(), placements.size() - 1)
+	assert_true(again.enemies[0].dead or not is_instance_valid(again.enemies[0]))
+	assert_eq(again.leader_cell(), again.extraction_cell())
+	assert_true(again.can_extract())
+	assert_eq(again.bastion.depth(), 2, "the save's ledger wins over the newer file")
+	assert_eq(Ledger.load_or_new(LEDGER).buildings["beacon"], 1)
+	_drop(again)
+
+
+func test_autosave_marks_the_checkpoints() -> void:
+	assert_false(FileAccess.file_exists(world.save_path("autosave")))
+	world.enter_shard("rusted_undercity", 7)
+	var a := SaveSystem.read(world.save_path("autosave"))
+	assert_eq(Dictionary(a["location"])["kind"], "shard")
+	assert_eq(int(Dictionary(a["location"])["seed"]), 7)
+	world.teleport_party(world.extraction_cell())
+	assert_true(world.extract())
+	var b := SaveSystem.read(world.save_path("autosave"))
+	assert_eq(Dictionary(b["location"])["kind"], "map")
+	assert_eq(Dictionary(b["location"])["id"], "proto_yard")
+	assert_eq(int(Dictionary(b["ledger"])["runs_completed"]), 1)
+
+
+func test_loading_the_checkpoint_after_a_wipe_replays_the_fight() -> void:
+	world.enter_shard("rusted_undercity", 7)
+	var before := world.living_enemies().size()
+	var target: EnemyActor = world.living_enemies()[0]
+	world.teleport_party(target.cell + Vector2i(1, 0) if world.map_data.is_walkable(target.cell + Vector2i(1, 0)) else target.cell + Vector2i(0, 1))
+	assert_true(world.check_encounters(), "adjacent enemy sees us")
+	assert_eq(world.mode, "combat")
+	var cp := SaveSystem.read(world.save_path("autosave"))
+	assert_eq(Dictionary(cp["location"])["kind"], "shard")
+	world._on_combat_ended("defeat")
+	assert_eq(world.mode, "defeated")
+	assert_eq(world.load_from(SaveSystem.AUTOSAVE), [])
+	assert_eq(world.mode, "explore")
+	assert_true(world.run.in_shard)
+	assert_eq(world.living_enemies().size(), before, "nobody died in the checkpoint")
+	for m: PartyMember in world.party.members:
+		assert_true(world.map_data.is_walkable(world.member_cell(m)))
+	assert_false(FileAccess.file_exists(world.save_path("slot_1")), "a load never writes a slot")
+	var again := SaveSystem.read(world.save_path("autosave"))
+	assert_eq(again["party"], cp["party"], "loading did not overwrite the checkpoint it read")

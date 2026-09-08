@@ -20,6 +20,9 @@ const BINDINGS: Dictionary = {
 	"go_home": [KEY_H],
 	"extract": [KEY_E],
 	"bastion": [KEY_B],
+	"quick_save": [KEY_F5],
+	"quick_load": [KEY_F9],
+	"load_autosave": [KEY_F10],
 }
 
 

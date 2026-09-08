@@ -17,6 +17,10 @@ One system per session (GDD §15). Order chosen by dependency and by what makes 
 
 Out of M1 scope (deferred to M2): Steam integration, exports on Windows/macOS beyond CI, Act 1 content, factions, 6 classes, second biome.
 
+## Progress
+- S5 Bastion — done (PR #11).
+- S6 Save/load — done (this PR).
+
 ## Running assumptions
 - Placeholder art stays until S10; systems before it must not depend on sprite details.
 - The yard (`proto_yard`) is the Bastion's grounds until a dedicated Bastion map exists (S10/S11 decide).
