@@ -118,7 +118,7 @@ func test_followers_trail_leader_over_walkable_cells() -> void:
 	for _i: int in 600:
 		world.party.tick(DT)
 	var leader := world.party.leader()
-	for i: int in range(1, 4):
+	for i: int in range(1, world.party.members.size()):
 		var m := world.party.members[i]
 		var cell := world.map_view.world_to_cell(m.position)
 		assert_true(world.map_data.is_walkable(cell), "follower %d stands on %s" % [i, cell])
@@ -231,7 +231,7 @@ func test_enter_shard_generates_a_solvable_level_and_home_returns() -> void:
 	assert_eq(ShardValidator.validate(entry, world.tiles_by_id()), [])
 	var placements: Array = entry["enemies"]
 	assert_eq(world.living_enemies().size(), placements.size())
-	assert_eq(world.party.members.size(), 4)
+	assert_eq(world.party.members.size(), 3)
 	assert_eq(world.leader_cell(), world.map_data.spawn_cells()[0])
 	var exit_cell := world.extraction_cell()
 	assert_true(world.map_data.is_walkable(exit_cell))

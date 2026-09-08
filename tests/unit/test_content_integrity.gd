@@ -155,7 +155,10 @@ func test_pickups_have_valid_grants_and_placements() -> void:
 	var allowed: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp"]
 	for p: Dictionary in pickups:
 		var grants: Dictionary = p.get("grants", {})
-		assert_true(grants.size() >= 1, "pickup %s grants" % p["id"])
+		if p.has("dialogue"):
+			assert_true(registry.has_entry("dialogue", String(p["dialogue"])), "pickup %s dialogue" % p["id"])
+		else:
+			assert_true(grants.size() >= 1, "pickup %s grants" % p["id"])
 		for key: String in grants:
 			assert_true(allowed.has(key), "pickup %s unknown grant '%s'" % [p["id"], key])
 		var art: Dictionary = p.get("art", {})
