@@ -2,11 +2,13 @@
 
 Updated every session. Remove items when closed; note the closing commit.
 
-## Open (as of 2026-09-08, session S3)
+## Open (as of 2026-09-08, session S4 — M0 loop complete)
 
-- **Shards have no loop yet**: the extraction pad is placed and reachable but standing on it does nothing; no loot, XP, Salvage or "unbanked resources lost on wipe". Next session.
-- **Shards are plain**: no secrets, vaults or merchants (GDD §11); one room style; corridors are 1 wide; enemy groups are random per room with no difficulty ramp by distance.
-- **Entering a Shard resets the party** (respawned at full HP) and enemies on the previous map are forgotten; there is no Bastion/Beacon, so N/H are debug keys.
+- **M0 question still open**: the loop exists end to end (yard → Shard → fight/collect → extract or wipe → yard) but nobody has played it. "Is the loop fun?" needs a person with the editor open. Balance numbers are all first guesses.
+- **Resources do nothing yet**: Salvage/Aether/Ciphers/XP accumulate in the ledger with nothing to spend them on (Bastion buildings, talents, merchants are M1+). No item loot, rarity or affixes.
+- **Shards are plain**: no secrets, vaults or merchants (GDD §11); one room style; corridors are 1 wide; enemy groups are random per room with no difficulty ramp by distance; pickups are two types.
+- **Entering a Shard resets the party** (respawned at full HP) and enemies on the previous map are forgotten; there is no Bastion/Beacon, so N/H are debug keys. A wipe returns you to the yard with a fresh party (stand-in for the Med-bay).
+- **Save is ledger-only**: no party/map state, no slots (GDD §13).
 - **Map format is ASCII-only** stays true for handcrafted maps; generated ones go through the same rows format by design (D-028).
 
 - **Combat is the M0 skeleton only**: no cover, elevation or surfaces (GDD §9); no class resources (Surge, Vent Heat); no XP, loot or extraction; no stealth openers; no difficulty settings; enemies never move in exploration; awareness is a radius, not a cone.

@@ -77,6 +77,11 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 	var enemy_spec: Dictionary = template.get("enemies", {})
 	var min_dist := int(enemy_spec.get("min_spawn_distance", 10))
 	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist)
+	var taken: Array[Vector2i] = []
+	for e: Dictionary in enemies:
+		var raw: Array = e["cell"]
+		taken.append(Vector2i(int(raw[0]), int(raw[1])))
+	var pickups := _place_pickups(template.get("pickups", {}), spawns, dist, taken)
 
 	var tiles: Dictionary = template.get("tiles", {})
 	var template_id := String(template.get("id", "shard"))
@@ -98,6 +103,7 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 		},
 		"rows": _rows(),
 		"enemies": enemies,
+		"pickups": pickups,
 		"extraction": [exit_cell.x, exit_cell.y],
 		"rooms": room_list,
 		"generation": {"template": template_id, "seed": seed_value, "min_spawn_distance": min_dist},
@@ -327,6 +333,35 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 			candidates.remove_at(k)
 			taken[cell] = true
 			out.append({"type": _weighted_pick(pool), "cell": [cell.x, cell.y]})
+	return out
+
+
+## Collectibles anywhere reachable except spawn, exit and enemy cells.
+func _place_pickups(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, taken: Array[Vector2i]) -> Array:
+	var out: Array = []
+	var pool: Array = spec.get("pool", [])
+	if pool.is_empty() or rooms.is_empty():
+		return out
+	var count := _pick(spec.get("count", [3, 6]))
+	var used: Dictionary = {}
+	for c: Vector2i in taken:
+		used[c] = true
+	for s: Vector2i in spawns:
+		used[s] = true
+	for _i: int in count:
+		var room := rooms[rng.randi_range(0, rooms.size() - 1)]
+		var candidates: Array[Vector2i] = []
+		for y: int in range(room.position.y, room.end.y):
+			for x: int in range(room.position.x, room.end.x):
+				var p := Vector2i(x, y)
+				var ch := _cell_at(p)
+				if (ch == FLOOR or ch == GRATE) and dist[_idx(p)] >= 0 and not used.has(p):
+					candidates.append(p)
+		if candidates.is_empty():
+			continue
+		var cell: Vector2i = candidates[rng.randi_range(0, candidates.size() - 1)]
+		used[cell] = true
+		out.append({"type": _weighted_pick(pool), "cell": [cell.x, cell.y]})
 	return out
 
 

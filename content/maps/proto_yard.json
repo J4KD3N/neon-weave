@@ -27,6 +27,10 @@
     "#..................#",
     "####################"
   ],
+  "pickups": [
+    { "type": "salvage_cache", "cell": [5, 10] },
+    { "type": "aether_shard", "cell": [16, 13] }
+  ],
   "enemies": [
     { "type": "scav", "cell": [14, 2] },
     { "type": "scav", "cell": [16, 3] },

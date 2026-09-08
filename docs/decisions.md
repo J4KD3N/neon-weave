@@ -165,3 +165,21 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: Templates carry `size`, `rooms` (count/min/max/attempts), `corridors.extra_loops`, `tiles` roles (wall/floor/grate/debris/extraction), `grate_patch_chance`, `debris_density`, and `enemies` (groups, group_size, min_spawn_distance, weighted pool). Ranges are `[min, max]` inclusive and rolled from the seed.
 **Revisit when**: a second biome needs different room shapes (caverns, datacore halls); add a `style` switch rather than a second generator.
+
+## D-031 — Session S4 scope: the extraction loop
+**Date**: 2026-09-08
+**Decision**: Run haul + persistent ledger, loot on kills, pickups in Shards and on the yard, extraction on the pad, wipe = haul lost. This completes the M0 loop: yard → Shard → fight/collect → extract or wipe → yard. Deferred: XP spending/levels, Bastion buildings, merchants, item loot, the death-stakes setup UI.
+
+## D-032 — Haul vs ledger
+**Date**: 2026-09-08
+**Decision**: `RunState` holds the unbanked haul (Salvage, Aether, Ciphers, XP, kills) for one expedition; `Ledger` holds banked totals and lifetime counts and is the only thing saved. Extraction banks and records a run; a wipe inside a Shard clears the haul, records the wipe, and still counts kills. On handcrafted maps (home) there is no extraction risk, so gains bank immediately.
+**Why**: GDD §11: "unbanked resources lost on wipe, story progress never lost". Keeping the two objects separate makes the rule a data flow rather than a set of flags.
+
+## D-033 — Grant blocks are the loot vocabulary
+**Date**: 2026-09-08
+**Decision**: Enemies carry `loot`, pickups carry `grants`; both use the same block: a number or `[min, max]` per resource, `cipher_chance` for a bonus Cipher, `xp`. Rolled by `RunState` with an RNG seeded from the Shard id and seed, so a seed reproduces its loot. No item drops yet; rarity/affixes (GDD §12) come with the item system.
+
+## D-034 — Ledger persistence
+**Date**: 2026-09-08
+**Decision**: `user://ledger.json`, `{"version": 1, ...}`, saved on every bank/wipe. `Ledger.migrate` is the migration hook (a pre-versioned flat shape is upgraded as the first example). Corrupt files are reported and ignored, never overwritten until the next save. Steam Cloud sync of this file is an M2 concern behind `Platform`.
+**Revisit when**: the full save system (slots, autosaves, party state) lands; the ledger becomes one section of it.

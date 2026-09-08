@@ -14,6 +14,13 @@
   },
   "grate_patch_chance": 0.35,
   "debris_density": 0.04,
+  "pickups": {
+    "count": [3, 6],
+    "pool": [
+      { "type": "salvage_cache", "weight": 6 },
+      { "type": "aether_shard", "weight": 2 }
+    ]
+  },
   "enemies": {
     "groups": [4, 7],
     "group_size": [1, 3],
