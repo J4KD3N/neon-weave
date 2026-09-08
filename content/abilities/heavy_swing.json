@@ -1,0 +1,9 @@
+{
+  "name": "Heavy Swing",
+  "summary": "Scrap-Knight: a two-handed haymaker. Slower, hits hard.",
+  "ap": 2,
+  "range": 1,
+  "damage": [4, 8],
+  "accuracy": 80,
+  "damage_type": "physical"
+}

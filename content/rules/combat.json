@@ -1,0 +1,16 @@
+{
+  "name": "Combat rules",
+  "summary": "Tunables for turn-based combat (GDD §9). Loaded by CombatRules with these defaults.",
+  "ap_per_turn": 4,
+  "base_move": 6,
+  "min_hit_chance": 5,
+  "max_hit_chance": 95,
+  "flank_hit_bonus": 15,
+  "flank_damage_mult": 1.25,
+  "friendly_fire": true,
+  "story_protected": true,
+  "awareness_default": 5,
+  "engage_radius": 7,
+  "first_strike_initiative_bonus": 10,
+  "initiative_die": 20
+}

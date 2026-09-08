@@ -79,6 +79,36 @@ func is_walkable(cell: Vector2i) -> bool:
 	return not tile.is_empty() and bool(tile.get("walkable", false))
 
 
+## Tall terrain blocks line of sight. Defaults to "not walkable" so walls
+## block and low debris can opt out with `"blocks_sight": false`.
+func blocks_sight(cell: Vector2i) -> bool:
+	if not in_bounds(cell):
+		return true
+	var tile: Dictionary = tile_at(cell)
+	if tile.is_empty():
+		return true
+	return bool(tile.get("blocks_sight", not bool(tile.get("walkable", false))))
+
+
+## Nearest walkable cells to `origin` in BFS order (8-connected), skipping
+## `taken`. Used to settle a party onto distinct cells when combat starts.
+func nearest_free_cells(origin: Vector2i, count: int, taken: Array[Vector2i]) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	var seen: Dictionary = {origin: true}
+	var frontier: Array[Vector2i] = [origin]
+	while not frontier.is_empty() and out.size() < count:
+		var cur: Vector2i = frontier.pop_front()
+		if is_walkable(cur) and not taken.has(cur) and not out.has(cur):
+			out.append(cur)
+		for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]:
+			var n := cur + d
+			if seen.has(n) or not in_bounds(n) or not is_walkable(n):
+				continue
+			seen[n] = true
+			frontier.append(n)
+	return out
+
+
 ## Spawn cells in reading order (top-left to bottom-right).
 func spawn_cells() -> Array[Vector2i]:
 	var out: Array[Vector2i] = []

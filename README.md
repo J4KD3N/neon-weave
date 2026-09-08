@@ -4,9 +4,9 @@ An open-source, moddable, party-based, isometric arcane-cyberpunk CRPG built in 
 
 Targets: Windows, Linux (Steam Deck friendly), macOS. Steam demo and 1.0 planned.
 
-**Status**: M0 in progress. A placeholder-art isometric yard you can walk a four-Weaver party around. No combat yet. See the [milestone roadmap](docs/GDD.md#14-milestone-roadmap).
+**Status**: M0 in progress. A placeholder-art isometric yard with a four-Weaver party and three enemy types; walking into an enemy's awareness (or clicking one) starts turn-based combat. See the [milestone roadmap](docs/GDD.md#14-milestone-roadmap).
 
-**Controls**: left-click to move the leader (the party trails), WASD/arrows to steer directly, mouse wheel to zoom, F1 to dump the content registry.
+**Controls**: left-click to move the leader (the party trails), WASD/arrows to steer directly, mouse wheel to zoom, F1 to dump the content registry. In combat: click a highlighted cell to move, click an enemy to attack, 1–4 pick an ability then click a target, Space ends the turn, Esc clears, R restarts after a wipe.
 
 ## Build from source
 

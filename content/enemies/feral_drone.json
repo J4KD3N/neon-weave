@@ -1,0 +1,11 @@
+{
+  "name": "Feral Drone",
+  "family": "rusted_undercity",
+  "archetype": "ranged",
+  "summary": "Security drone whose leash rotted away. Keeps its distance and zaps.",
+  "stats": { "hp": 6, "move": 5, "evasion": 15, "initiative": 3 },
+  "abilities": ["zap"],
+  "awareness": 6,
+  "xp": 6,
+  "art": { "shape": "drone", "color": "#8fb8b0" }
+}

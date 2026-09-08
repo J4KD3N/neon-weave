@@ -1,0 +1,11 @@
+{
+  "name": "Chrome-Addict",
+  "family": "rusted_undercity",
+  "archetype": "rusher",
+  "summary": "Too much bolt-on chrome, not enough body left to run it. Slow, tough, wild.",
+  "stats": { "hp": 14, "move": 5, "evasion": 0, "initiative": -1 },
+  "abilities": ["chrome_fist"],
+  "awareness": 4,
+  "xp": 8,
+  "art": { "shape": "capsule", "color": "#b0653f" }
+}

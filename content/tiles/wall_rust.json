@@ -2,5 +2,6 @@
   "name": "Rusted bulkhead",
   "layer": "wall",
   "walkable": false,
+  "blocks_sight": true,
   "art": { "shape": "block", "height": 32, "top": "wall_top", "left": "wall_left", "right": "wall_right" }
 }

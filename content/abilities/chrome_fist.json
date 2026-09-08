@@ -1,0 +1,9 @@
+{
+  "name": "Chrome Fist",
+  "summary": "Chrome-addict: a bolted-on arm swung with no regard for the shoulder.",
+  "ap": 1,
+  "range": 1,
+  "damage": [3, 6],
+  "accuracy": 70,
+  "damage_type": "physical"
+}

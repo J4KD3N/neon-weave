@@ -2,7 +2,13 @@
 
 Updated every session. Remove items when closed; note the closing commit.
 
-## Open (as of 2026-09-08, session S1)
+## Open (as of 2026-09-08, session S2)
+
+- **Combat is the M0 skeleton only**: no cover, elevation or surfaces (GDD §9); no class resources (Surge, Vent Heat); no XP, loot or extraction; no stealth openers; no difficulty settings; enemies never move in exploration; awareness is a radius, not a cone.
+- **Death-stakes mode has no setup UI**: `rules/combat.json` `story_protected` is the only switch. Downed members revive at 1 HP after victory; there is no healing yet, so HP only goes down between fights.
+- **Only two AI archetypes** (rusher, ranged). Summoner, stealther, controller wait on their mechanics.
+- **Party settling can look odd**: members snap to the nearest free cells around their exploration positions with no animation.
+- **Balance is unplaytested**: numbers in `content/rules/combat.json`, class stats and enemy stats are first guesses; the seeded scene test wins 4v3 but that is one seed.
 
 - **Not yet opened in the editor.** No Godot executable on the build machine. CI runs the unit tests (including a headless instantiation of the exploration scene) and the `screenshot` job renders the scene under Xvfb; that PNG is the only visual check so far. Still unproven: real-time feel, input on a real window, `.uid` sidecars. First local action: open in Godot 4.6, press Play, commit the `.uid` files.
 - **Movement is placeholder-simple**: no elevation, no facing sprites (8-direction mirroring waits on art), followers pass through each other, no actor-vs-actor collision, and WASD steering lets you stand visually "behind" a tall wall's top face.
