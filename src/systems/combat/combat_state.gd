@@ -35,6 +35,8 @@ var history: Array[String] = []
 var group: Array[Combatant] = []
 var _done: Dictionary = {} # id -> true once that member ended its turn this group
 var _begun: Dictionary = {} # id -> true once begin_turn ran for it this group
+## The last move, undoable until anything else happens: {"actor", "from", "cost"}.
+var _undo: Dictionary = {}
 
 
 func setup(p_map: MapData, p_rules: CombatRules, p_abilities: Dictionary, p_combatants: Array[Combatant], p_seed: int) -> void:
@@ -98,6 +100,7 @@ func switch_to(id: String) -> String:
 	if c == current():
 		return ""
 	turn_index = order.find(c)
+	_undo = {}
 	_emit({"type": "switch", "actor": c.id})
 	_lazy_begin(c)
 	return ""
@@ -165,7 +168,28 @@ func move(actor: Combatant, to: Vector2i) -> bool:
 	actor.move_left -= path.size()
 	var from := actor.cell
 	actor.cell = to
+	_undo = {"actor": actor.id, "from": from, "cost": path.size()}
 	_emit({"type": "move", "actor": actor.id, "from": from, "to": to, "path": path, "move_left": actor.move_left})
+	return true
+
+
+## True while the current combatant's last move can still be taken back:
+## nothing has happened since it (no ability, no swap, no turn end).
+func can_undo_move(actor: Combatant) -> bool:
+	return not finished and not _undo.is_empty() and actor == current() and String(_undo["actor"]) == actor.id
+
+
+## Steps the current combatant back to where its last move started and
+## refunds the Move. Returns false when there is nothing to undo.
+func undo_move() -> bool:
+	var actor := current()
+	if actor == null or not can_undo_move(actor):
+		return false
+	var to := actor.cell
+	actor.cell = _undo["from"]
+	actor.move_left += int(_undo["cost"])
+	_undo = {}
+	_emit({"type": "undo", "actor": actor.id, "from": to, "to": actor.cell, "move_left": actor.move_left})
 	return true
 
 
@@ -247,6 +271,7 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 	var ability: Dictionary = abilities[ability_id]
 	var target := occupant(target_cell)
 	actor.ap -= int(ability.get("ap", 1))
+	_undo = {}
 	var resource_cost := int(ability.get("resource_cost", 0))
 	if resource_cost > 0:
 		actor.resource = maxi(actor.resource - resource_cost, 0)
@@ -474,6 +499,7 @@ func end_turn() -> void:
 		return
 	var actor := current()
 	_done[actor.id] = true
+	_undo = {}
 	_emit({"type": "turn_end", "actor": actor.id})
 	# Another member of this group still to act: hand over without leaving the group.
 	for c: Combatant in group:
@@ -532,6 +558,7 @@ func _begin_turn() -> void:
 		end_turn()
 		return
 	actor.begin_turn()
+	_undo = {}
 	_emit({"type": "turn_begin", "actor": actor.id, "team": actor.team, "round": round_number})
 	var surface := map.surface_at(actor.cell)
 	var surface_gains: Dictionary = actor.resource_def.get("gain_on_surface", {})
@@ -667,6 +694,8 @@ func describe(e: Dictionary) -> String:
 			return s
 		"turn_end", "switch":
 			return ""
+		"undo":
+			return "%s steps back to %s." % [_name(e["actor"]), e["to"]]
 		"end":
 			return "Victory." if e["result"] == "victory" else "The party is wiped out."
 	return str(e)

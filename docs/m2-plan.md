@@ -54,4 +54,4 @@ S13 first because playtest findings may reorder everything after it. S14 before 
 - **No balance pass before S27**; sessions may adjust `content/rules/` for their own feature.
 
 ## Progress
-- (none yet; S13 waits on the M1 playtest)
+- S13 playtest triage — done (camera pan, move undo, three-slot save picker, soak test in `test_soak.gd`). Human playtest findings still land here as follow-ups.
