@@ -55,7 +55,11 @@ func _level_entry(id: String, n: int) -> Dictionary:
 func next_cost(id: String) -> Dictionary:
 	if not has(id) or level(id) >= max_level(id):
 		return {}
-	return _level_entry(id, level(id) + 1).get("cost", {})
+	var raw: Dictionary = _level_entry(id, level(id) + 1).get("cost", {})
+	var cost: Dictionary = {}
+	for key: String in raw:
+		cost[key] = int(raw[key]) # JSON numbers arrive as floats
+	return cost
 
 
 func can_upgrade(id: String, ledger: Ledger) -> String:
