@@ -301,3 +301,13 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `CombatState.preview()` computes the to-hit chance and damage span for an ability on a target with every modifier the roll would use (flanking, cover, elevation, mana pool, resource stacks, marks, Workshop) and the reason it would be refused. The controller shows it on hover, along with a path preview for moves and a hover marker; refusals go to the hint line in red with the ability and reason spelled out. The preview and the roll share one bonus function so they cannot drift.
 **Why**: A turn-based game with hidden odds is a guessing game. Same rule for every future ability: if it changes the roll, it changes the preview.
+
+## D-059 — One action set for keyboard and pad, routed by mode
+**Date**: 2026-09-08
+**Decision**: Gamepad events join the existing keyboard actions in `InputActions.BINDINGS` rather than forming a second set. Bindings may overlap across actions (Esc is `cancel` and `menu`; Start is `end_turn` and `menu`) because `ExploreWorld` only checks the actions its current mode uses. Mouse-only paths get pad equivalents: a cell cursor in combat (stick/D-pad/WASD, Enter/A confirms, mouse motion releases it), Enter/A as "interact" in exploration (extract on the pad, talk to a companion within two cells), and cursors in the dialogue and Bastion menus. Every keyboard-only key (N, H, E, B, C, F1, F5, F9, F10) is an item of the system menu on Start/Esc; `PAD_ROUTES` documents each route and a test enforces that every action is pad-bound or routed.
+**Why**: "Every input path has a pad binding" is the M1 exit criterion. A separate pad action set would double every routing branch; overlapping bindings cost nothing when routing is already per mode.
+
+## D-060 — Steam Deck layout is the default pad layout
+**Date**: 2026-09-08
+**Decision**: The default pad layout is designed for the Deck first: left stick and D-pad move/cursor, A confirm, B cancel, X/Y/L1/R1 abilities 1–4, L2/R2 zoom, Start system menu / end turn, Select swap member. No Steam Input template ships until GodotSteam lands (M2); the layout above is what that template will mirror. Documented in `docs/controller.md`.
+**Why**: The Deck is the reference pad device for the Steam target (GDD §3). Designing for its buttons first keeps the layout inside what every XInput pad also has.
