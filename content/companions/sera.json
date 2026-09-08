@@ -1,0 +1,16 @@
+{
+  "name": "Sera Voss",
+  "short_name": "Sera",
+  "race": "trueborn",
+  "class": "scrap_knight",
+  "summary": "Ex-Ashfound purge soldier; gruff shield, guilt she won't name.",
+  "faction": "ashfound",
+  "romanceable": true,
+  "dialogue": {
+    "recruit": "sera_recruit",
+    "talk": "sera_recruit",
+    "banter": "sera_banter"
+  },
+  "quest": "sera_purge_village",
+  "approval_start": 0
+}

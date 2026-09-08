@@ -1,0 +1,13 @@
+{
+  "name": "The Ninth Stair",
+  "companion": "sera",
+  "summary": "Sera wants to stand in the village she purged on Ashfound orders.",
+  "start": "start",
+  "stages": {
+    "start": { "summary": "Find the Ninth Stair. Sera says it lies somewhere in the Undercity Shards.", "shard_site": { "pickup": "sera_village_site" } },
+    "seen": { "summary": "You found the village. Sera is standing in it." },
+    "done": { "summary": "Sera stood in the Ninth Stair. She wants the roll of names next.", "complete": true },
+    "done_alone": { "summary": "You found the Ninth Stair without Sera. The purge-mark is noted.", "complete": true },
+    "done_posthumous": { "summary": "Sera died before she could see it. You carried the names out for her.", "complete": true }
+  }
+}

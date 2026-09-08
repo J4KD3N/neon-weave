@@ -6,9 +6,18 @@ extends RefCounted
 const PROTAGONIST_ID := "protagonist"
 
 
-static func member_specs(registry: ContentRegistry, preset: Dictionary, protagonist: Dictionary, rules: CombatRules, spawn_positions: Array[Vector2]) -> Array[Dictionary]:
+## `companions`: recruited companion ids appended after the preset, up to
+## `rules.party_max` members in total.
+static func member_specs(registry: ContentRegistry, preset: Dictionary, protagonist: Dictionary, rules: CombatRules, spawn_positions: Array[Vector2], companions: Array[String] = []) -> Array[Dictionary]:
 	var attr_rules: Dictionary = registry.get_entry("rules", "attributes")
-	var members: Array = preset.get("members", [])
+	var members: Array = Array(preset.get("members", [])).duplicate()
+	for id: String in companions:
+		if members.size() >= rules.party_max:
+			break
+		var c := registry.get_entry("companions", id)
+		if c.is_empty():
+			continue
+		members.append({"id": id, "name": String(c.get("short_name", c.get("name", id))), "race": String(c.get("race", "")), "class": String(c.get("class", "")), "companion": true})
 	var specs: Array[Dictionary] = []
 	for i: int in members.size():
 		var data: Dictionary = Dictionary(members[i]).duplicate()

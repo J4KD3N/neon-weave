@@ -111,12 +111,12 @@ func test_party_builder_default_and_with_protagonist() -> void:
 	var preset := registry.get_entry("parties", "prototype")
 	var positions: Array[Vector2] = [Vector2(0, 0), Vector2(10, 0), Vector2(20, 0), Vector2(30, 0)]
 	var plain := PartyBuilder.member_specs(registry, preset, {}, rules, positions)
-	assert_eq(plain.size(), 4)
+	assert_eq(plain.size(), 3)
 	assert_eq(Dictionary(plain[0]["data"])["id"], "weaver")
 	assert_eq(Dictionary(plain[0]["overlay"])["kind"], "none")
 	assert_eq(Dictionary(plain[2]["overlay"])["kind"], "plating", "synth rig overlay")
 	var with := PartyBuilder.member_specs(registry, preset, VEX, rules, positions)
-	assert_eq(with.size(), 4)
+	assert_eq(with.size(), 3)
 	var lead: Dictionary = with[0]
 	assert_eq(Dictionary(lead["data"])["id"], PartyBuilder.PROTAGONIST_ID)
 	assert_eq(Dictionary(lead["data"])["name"], "Vex")

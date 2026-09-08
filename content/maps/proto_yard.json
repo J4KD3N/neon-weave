@@ -31,6 +31,9 @@
     "#..................#",
     "####################"
   ],
+  "npcs": [
+    { "companion": "sera", "cell": [5, 3] }
+  ],
   "pickups": [
     { "type": "salvage_cache", "cell": [5, 10] },
     { "type": "aether_shard", "cell": [16, 13] }

@@ -65,9 +65,9 @@ func test_map_is_built_from_content() -> void:
 
 
 func test_party_spawns_on_spawn_cells_with_class_colours_and_stats() -> void:
-	assert_eq(world.party.members.size(), 4)
+	assert_eq(world.party.members.size(), 3, "three preset members; the fourth slot is for a recruit")
 	var spawns := world.map_data.spawn_cells()
-	for i: int in 4:
+	for i: int in 3:
 		var m := world.party.members[i]
 		assert_eq(m.position, world.map_view.cell_to_world(spawns[i]))
 		assert_eq(m.is_leader, i == 0)
@@ -79,7 +79,6 @@ func test_party_spawns_on_spawn_cells_with_class_colours_and_stats() -> void:
 	assert_eq(world.party.members[0].max_hp, 22, "Trueborn Scrap-Knight: 20 + 2")
 	assert_eq(world.party.members[2].max_hp, 20, "Synth Drone Shepherd: 16 + 4")
 	assert_eq(world.party.members[2].tint, Color.html("#33e0d6"), "Drone Shepherd is Tech teal")
-	assert_eq(world.party.members[3].resource_id, "hexes")
 	assert_eq(world.party.members[2].resource_id, "scrap_charge")
 	assert_eq(world.leader_cell(), spawns[0])
 
@@ -148,7 +147,7 @@ func test_awareness_triggers_combat_with_engaged_enemies_only() -> void:
 	assert_false(world.party.active)
 	assert_true(world.combat.is_active())
 	var s := world.combat.state
-	assert_eq(s.active("party").size(), 4)
+	assert_eq(s.active("party").size(), 3)
 	assert_eq(s.active("enemy").size(), 3, "the chrome-addict at (12,12) is beyond the engage radius")
 	var cells: Array[Vector2i] = []
 	for c: Combatant in s.combatants:
@@ -212,7 +211,7 @@ func test_full_encounter_resolves_and_returns_to_exploration() -> void:
 			assert_false(m.show_hp)
 	else:
 		assert_eq(world.mode, "defeated")
-	assert_eq(s.result, "victory", "seeded fight 4 vs 3 is expected to be won; seed %d" % world.combat_seed)
+	assert_eq(s.result, "victory", "seeded fight 3 vs 3 is expected to be won; seed %d" % world.combat_seed)
 
 
 func test_status_line_mentions_map_mode_and_leader() -> void:
@@ -583,7 +582,7 @@ func test_protagonist_replaces_the_leader_and_persists_through_saves() -> void:
 	assert_eq(l.tint, Color.html("#b58cff"))
 	assert_eq(l.max_hp, 17)
 	assert_true(l.is_leader)
-	assert_eq(world.party.members.size(), 4)
+	assert_eq(world.party.members.size(), 3)
 	assert_eq(world.party.members[1].member_id, "ash")
 	assert_eq(world.leader_cell(), world.map_data.spawn_cells()[0])
 	assert_eq(world.save_slot(1), OK)

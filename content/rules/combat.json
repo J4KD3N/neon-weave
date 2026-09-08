@@ -2,6 +2,7 @@
   "name": "Combat rules",
   "summary": "Tunables for turn-based combat (GDD §9). Loaded by CombatRules with these defaults.",
   "ap_per_turn": 4,
+  "party_max": 4,
   "base_move": 6,
   "min_hit_chance": 5,
   "max_hit_chance": 95,

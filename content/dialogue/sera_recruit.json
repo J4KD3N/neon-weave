@@ -1,0 +1,66 @@
+{
+  "name": "Sera — the yard",
+  "start": [
+    { "node": "recruited", "requires": { "recruited": "sera" } },
+    { "node": "refused", "requires": { "flags": { "sera_refused": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "sera",
+      "text": "You're the Weavers running the Beacon. I've watched three crews go down that hole. You're the first that came back with the same faces.",
+      "choices": [
+        { "text": "We're short a shield. You look like one.", "next": "why" },
+        { "text": "[Undercity] I know that Ashfound patch. You purged the Ninth Stair.", "requires": { "origin_tag": "undercity" }, "effects": { "approval": { "sera": -1 }, "flags": { "sera_knows_you_know": true } }, "next": "why" },
+        { "text": "[Vault] You've got bunker shoulders. Who sealed you in?", "requires": { "origin_tag": "vault" }, "effects": { "approval": { "sera": 1 } }, "next": "why" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "why": {
+      "speaker": "sera",
+      "text": "I was Ashfound. Purge detail. There's a village on the Undercity's third depth that I burned on orders, and the orders were wrong. I want to see what's left of it. Take me down there and I'll hold your line for as long as you need.",
+      "choices": [
+        { "text": "Come with us. We'll find your village.", "effects": { "recruit": "sera", "approval": { "sera": 1 }, "flags": { "sera_recruited": true }, "quest": { "id": "sera_purge_village", "stage": "start" } }, "end": true },
+        { "text": "Why should we trust an Ashfound torch?", "next": "trust" },
+        { "text": "We don't carry guilt for other people.", "effects": { "approval": { "sera": -2 }, "flags": { "sera_refused": true } }, "end": true }
+      ]
+    },
+    "trust": {
+      "speaker": "sera",
+      "text": "You shouldn't. Trust the shield, not the woman. The shield hasn't lied yet.",
+      "choices": [
+        { "text": "Good enough. You're in.", "effects": { "recruit": "sera", "flags": { "sera_recruited": true }, "quest": { "id": "sera_purge_village", "stage": "start" } }, "end": true },
+        { "text": "Not good enough.", "effects": { "approval": { "sera": -1 }, "flags": { "sera_refused": true } }, "end": true }
+      ]
+    },
+    "refused": {
+      "speaker": "sera",
+      "text": "Changed your mind, or just short a shield again?",
+      "choices": [
+        { "text": "Both. Come with us.", "effects": { "recruit": "sera", "flags": { "sera_recruited": true, "sera_refused": false }, "quest": { "id": "sera_purge_village", "stage": "start" } }, "end": true },
+        { "text": "Just checking you're still here.", "end": true }
+      ]
+    },
+    "recruited": {
+      "speaker": "sera",
+      "text": "Say the word and we go down.",
+      "choices": [
+        { "text": "How are you holding up?", "next": "holding" },
+        { "text": "Later.", "end": true }
+      ]
+    },
+    "holding": {
+      "speaker": "sera",
+      "text": "Same as the plating. Dented. Serviceable.",
+      "choices": [
+        { "text": "That's not an answer.", "requires": { "approval": { "sera": { "min": 2 } } }, "effects": { "approval": { "sera": 1 }, "flags": { "sera_opened_up": true } }, "next": "opened" },
+        { "text": "Fair.", "end": true }
+      ]
+    },
+    "opened": {
+      "speaker": "sera",
+      "text": "No. It isn't. Ask me again after the village.",
+      "choices": [ { "text": "I will.", "end": true } ]
+    }
+  }
+}
