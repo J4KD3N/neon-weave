@@ -20,7 +20,7 @@ var _buttons: Array[Button] = []
 func _ready() -> void:
 	layer = 5
 	turn_label = _label(Vector2(0, 44), Vector2(1920, 32), 24, HORIZONTAL_ALIGNMENT_CENTER)
-	order_label = _label(Vector2(16, 84), Vector2(700, 200), 16, HORIZONTAL_ALIGNMENT_LEFT)
+	order_label = _label(Vector2(16, 120), Vector2(700, 240), 16, HORIZONTAL_ALIGNMENT_LEFT)
 	log_label = _label(Vector2(1440, 84), Vector2(464, 700), 15, HORIZONTAL_ALIGNMENT_LEFT)
 	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	log_label.add_theme_color_override("font_color", Color(0.75, 0.72, 0.85))
