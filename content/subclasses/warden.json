@@ -1,0 +1,9 @@
+{
+  "name": "Warden",
+  "class": "scrap_knight",
+  "summary": "Taunts and protection; the wall that stays.",
+  "abilities": ["shield_bash"],
+  "stat_mods": { "hp": 4 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

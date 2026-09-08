@@ -1,0 +1,12 @@
+{
+  "name": "Override Hex",
+  "summary": "Glitchbinder: a tech-flavoured hex; leaves a mark.",
+  "ap": 1,
+  "range": 5,
+  "damage": [2, 3],
+  "accuracy": 90,
+  "damage_type": "tech",
+  "requires_los": true,
+  "effect": "mark",
+  "mark": "hex"
+}

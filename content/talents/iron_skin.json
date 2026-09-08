@@ -1,0 +1,9 @@
+{
+  "name": "Iron Skin",
+  "branch": "body",
+  "tier": 1,
+  "cost": { "aether": 2 },
+  "effects": { "hp": 3 },
+  "summary": "+3 max HP.",
+  "requires": []
+}

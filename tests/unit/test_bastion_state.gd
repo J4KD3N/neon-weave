@@ -18,7 +18,7 @@ func after_each() -> void:
 
 
 func test_setup_orders_buildings_and_starts_at_level_zero() -> void:
-	assert_eq(bastion.order, ["beacon", "medbay", "workshop"])
+	assert_eq(bastion.order, ["beacon", "medbay", "workshop", "arcanum"])
 	for id: String in bastion.order:
 		assert_eq(bastion.level(id), 0)
 		assert_eq(bastion.max_level(id), 2)
@@ -34,7 +34,7 @@ func test_saved_levels_are_restored_and_clamped() -> void:
 	assert_eq(b.level("beacon"), 1)
 	assert_eq(b.level("workshop"), 2, "clamped to max")
 	assert_false(b.has("ghost"))
-	assert_eq(b.to_dict(), {"beacon": 1, "medbay": 0, "workshop": 2})
+	assert_eq(b.to_dict(), {"beacon": 1, "medbay": 0, "workshop": 2, "arcanum": 0})
 
 
 func test_upgrade_needs_the_cost_and_spends_it() -> void:
@@ -89,11 +89,12 @@ func test_ledger_v2_persists_buildings_and_migrates_v1() -> void:
 	var l := Ledger.new()
 	l.buildings = {"beacon": 1}
 	var d := l.to_dict()
-	assert_eq(d["version"], 2)
+	assert_eq(d["version"], Ledger.VERSION)
 	assert_eq(d["buildings"], {"beacon": 1})
 	var v1 := {"version": 1, "resources": {"salvage": 3, "aether": 0, "ciphers": 0}, "xp": 2, "runs_completed": 1, "runs_wiped": 0, "kills": 4}
 	var migrated := Ledger.migrate(v1)
-	assert_eq(migrated["version"], 2)
+	assert_eq(migrated["version"], Ledger.VERSION)
+	assert_eq(migrated["builds"], {}, "v3 adds empty builds")
 	assert_eq(migrated["buildings"], {})
 	var back := Ledger.new()
 	back.apply(migrated)

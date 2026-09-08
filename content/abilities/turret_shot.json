@@ -1,0 +1,10 @@
+{
+  "name": "Turret Shot",
+  "summary": "Artificer: a long, patient shot.",
+  "ap": 1,
+  "range": 7,
+  "damage": [2, 5],
+  "accuracy": 90,
+  "damage_type": "tech",
+  "requires_los": true
+}

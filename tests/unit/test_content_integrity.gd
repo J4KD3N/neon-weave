@@ -178,8 +178,8 @@ func test_pickups_have_valid_grants_and_placements() -> void:
 
 func test_buildings_have_free_base_levels_and_valid_costs_and_effects() -> void:
 	var buildings := registry.get_all("buildings")
-	assert_eq(buildings.size(), 3, "M1: Beacon, Med-bay, Workshop")
-	var effect_keys: Array[String] = ["depth", "heal_fraction", "hp_bonus", "damage_bonus"]
+	assert_eq(buildings.size(), 4, "Beacon, Med-bay, Workshop, Arcanum")
+	var effect_keys: Array[String] = ["depth", "heal_fraction", "hp_bonus", "damage_bonus", "respec", "respec_refund"]
 	for b: Dictionary in buildings:
 		var levels: Array = b.get("levels", [])
 		assert_true(levels.size() >= 2, "building %s has upgrades" % b["id"])

@@ -1,0 +1,9 @@
+{
+  "name": "Shield Bash",
+  "summary": "Warden: a bash that always lands.",
+  "ap": 1,
+  "range": 1,
+  "damage": [2, 4],
+  "accuracy": 100,
+  "damage_type": "physical"
+}

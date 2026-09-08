@@ -1,0 +1,9 @@
+{
+  "name": "Artificer",
+  "class": "drone_shepherd",
+  "summary": "Warframe and turrets; long, patient shots.",
+  "abilities": ["turret_shot"],
+  "stat_mods": { "hp": 2, "evasion": 2 },
+  "damage_bonus": 1,
+  "milestone": "M2"
+}

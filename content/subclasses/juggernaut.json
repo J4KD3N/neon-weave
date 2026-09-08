@@ -1,0 +1,9 @@
+{
+  "name": "Juggernaut",
+  "class": "scrap_knight",
+  "summary": "Charges; the wall that moves.",
+  "abilities": ["charge_slam"],
+  "stat_mods": { "move": 1 },
+  "damage_bonus": 1,
+  "milestone": "M2"
+}

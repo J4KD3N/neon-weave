@@ -49,6 +49,7 @@ var narrative := NarrativeState.new()
 var npcs: Array[NpcActor] = []
 var dialogue_menu: DialogueMenu
 var system_menu: SystemMenu
+var weave_menu: WeaveMenu
 var dialogue: DialogueRunner
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
@@ -102,6 +103,9 @@ func _ready() -> void:
 	system_menu = SystemMenu.new()
 	system_menu.name = "SystemMenu"
 	add_child(system_menu)
+	weave_menu = WeaveMenu.new()
+	weave_menu.name = "WeaveMenu"
+	add_child(weave_menu)
 	spawn_npcs()
 	combat = CombatController.new()
 	combat.name = "Combat"
@@ -119,6 +123,11 @@ func _ready() -> void:
 			open_creator()
 		elif arg.begins_with("--talk="):
 			talk_to(arg.get_slice("=", 1))
+		elif arg == "--weave":
+			ledger.xp = 40 # level 3 so the subclass rows are live in the shot
+			ledger.bank({"aether": 4})
+			refresh_progression()
+			open_weave()
 
 
 func _exit_tree() -> void:
@@ -247,6 +256,8 @@ func _enter(entry: Dictionary) -> bool:
 		bastion_menu.visible = false
 	if system_menu != null:
 		system_menu.close()
+	if weave_menu != null:
+		weave_menu.visible = false
 	if combat != null:
 		combat.release_cursor()
 	if camera != null:
@@ -390,7 +401,7 @@ func spawn_party(id: String) -> void:
 	var positions: Array[Vector2] = []
 	for cell: Vector2i in map_data.spawn_cells():
 		positions.append(map_view.cell_to_world(cell))
-	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, positions, narrative.recruited)
+	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, positions, narrative.recruited, party_level(), ledger.builds)
 	for spec: Dictionary in specs:
 		spec["sheet"] = sheet_for(String(spec.get("sheet_id", "")))
 	party.spawn_members(specs)
@@ -781,8 +792,11 @@ func _gain(grants: Dictionary) -> Dictionary:
 
 
 func _bank(take: Dictionary, count_run: bool) -> void:
+	var level_before := party_level()
 	ledger.bank(take)
 	ledger.xp += int(take.get("xp", 0))
+	if party_level() > level_before:
+		_on_level_up(level_before, party_level())
 	ledger.kills += run.kills
 	if count_run:
 		ledger.runs_completed += 1
@@ -968,6 +982,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("ui_down"):
 			system_menu.move(1)
 		return
+	if weave_menu != null and weave_menu.visible:
+		if event.is_action_pressed("weave") or event.is_action_pressed("cancel"):
+			close_weave()
+		elif event.is_action_pressed("confirm"):
+			confirm_weave()
+		elif event.is_action_pressed("ui_up"):
+			weave_menu.move(-1)
+			refresh_weave()
+		elif event.is_action_pressed("ui_down"):
+			weave_menu.move(1)
+			refresh_weave()
+		elif event.is_action_pressed("ui_left"):
+			weave_member(-1)
+		elif event.is_action_pressed("ui_right"):
+			weave_member(1)
+		return
 	if creator_menu != null and creator_menu.visible:
 		if event.is_action_pressed("creator") or event.is_action_pressed("ui_cancel"):
 			close_creator()
@@ -1013,6 +1043,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				toggle_bastion()
 			elif event.is_action_pressed("creator"):
 				open_creator()
+			elif event.is_action_pressed("weave"):
+				open_weave()
 			elif event.is_action_pressed("confirm"):
 				interact()
 			elif clicked:
@@ -1111,7 +1143,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1128,6 +1160,7 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "go_home", "label": "Return to the yard (haul is lost)", "enabled": not home, "why": "already home"})
 	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
 	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
+	items.append({"id": "weave", "label": "The Weave (level %d · %s)" % [party_level(), xp_line()], "enabled": home, "why": "only at home"})
 	var saves := SaveSystem.list_saves(saves_dir)
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
@@ -1179,6 +1212,8 @@ func activate_system_item(id: String) -> bool:
 			return toggle_bastion()
 		"creator":
 			return open_creator()
+		"weave":
+			return open_weave()
 		"save_1", "save_2", "save_3":
 			return save_slot(int(id.get_slice("_", 1))) == OK
 		"load_1", "load_2", "load_3":
@@ -1239,3 +1274,211 @@ func _tick_cursor(dir: Vector2, delta: float) -> void:
 		if _cursor_hold <= 0.0:
 			combat.move_cursor(dir)
 			_cursor_hold = CURSOR_REPEAT
+
+
+# --- progression: party level, builds, the Weave menu -----------------------
+
+func progression_rules() -> Dictionary:
+	return registry.get_entry("rules", "progression")
+
+
+func party_level() -> int:
+	return Progression.level_for_xp(ledger.xp, progression_rules())
+
+
+func xp_line() -> String:
+	var next := Progression.xp_to_next(ledger.xp, progression_rules())
+	return "XP %d, cap reached" % ledger.xp if next < 0 else "XP %d, %d to next" % [ledger.xp, next]
+
+
+func build_for(member_id: String) -> Dictionary:
+	var b: Dictionary = ledger.builds.get(member_id, {})
+	return {"subclass": String(b.get("subclass", "")), "talents": Array(b.get("talents", [])).duplicate()}
+
+
+func can_respec() -> bool:
+	return bastion.effect("respec", 0.0) >= 1.0
+
+
+## Re-derives every member from the current level and builds without
+## respawning: stats, abilities, subclass, damage bonus. Max HP shifts and
+## current HP moves with it, like a Workshop upgrade.
+func refresh_progression() -> void:
+	var preset: Dictionary = registry.get_entry("parties", party_id)
+	var none: Array[Vector2] = []
+	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, none, narrative.recruited, party_level(), ledger.builds)
+	for spec: Dictionary in specs:
+		var data: Dictionary = spec["data"]
+		for m: PartyMember in party.members:
+			if m.member_id != String(data.get("id", "")):
+				continue
+			m.stats = spec["stats"]
+			m.abilities.assign(spec["abilities"])
+			m.level = int(data.get("level", 1))
+			m.subclass_id = String(data.get("subclass", ""))
+			m.damage_bonus = int(data.get("damage_bonus", 0))
+			m.set_hp_bonus(bastion.hp_bonus())
+
+
+func _on_level_up(from_level: int, to_level: int) -> void:
+	refresh_progression()
+	var note := "Level %d!" % to_level
+	var sub_lv := int(progression_rules().get("subclass_level", 3))
+	if from_level < sub_lv and to_level >= sub_lv:
+		note += " Subclasses open in the Weave (T at home)."
+	overlay.toast(note, 4.0)
+
+
+## Empty string on success, else the reason. Changing an existing subclass
+## needs the Arcanum; talents are kept.
+func choose_subclass(member_id: String, sub_id: String) -> String:
+	var m := member_by_id(member_id)
+	if m == null:
+		return "no such member"
+	var cls: Dictionary = registry.get_entry("classes", m.class_id)
+	var why := Progression.can_choose_subclass(registry, cls, party_level(), build_for(member_id), sub_id, progression_rules(), can_respec())
+	if not why.is_empty():
+		return why
+	var b := build_for(member_id)
+	b["subclass"] = sub_id
+	ledger.builds[member_id] = b
+	ledger.save()
+	refresh_progression()
+	return ""
+
+
+func buy_talent(member_id: String, talent_id: String) -> String:
+	if member_by_id(member_id) == null:
+		return "no such member"
+	var why := Progression.can_buy_talent(registry, party_level(), build_for(member_id), talent_id, progression_rules(), ledger.total("aether"))
+	if not why.is_empty():
+		return why
+	var cost := int(Dictionary(registry.get_entry("talents", talent_id).get("cost", {})).get("aether", 0))
+	if not ledger.spend({"aether": cost}):
+		return "needs %d Aether" % cost
+	var b := build_for(member_id)
+	b["talents"].append(talent_id)
+	ledger.builds[member_id] = b
+	ledger.save()
+	refresh_progression()
+	return ""
+
+
+## Drops the subclass and every talent; refunds Aether at the Arcanum rate.
+func respec(member_id: String) -> String:
+	if member_by_id(member_id) == null:
+		return "no such member"
+	if not can_respec():
+		return "needs the Arcanum"
+	var b := build_for(member_id)
+	if String(b["subclass"]).is_empty() and Array(b["talents"]).is_empty():
+		return "nothing to reset"
+	var refund := Progression.refund_for(registry, b, bastion.effect("respec_refund", 0.0))
+	ledger.resources["aether"] = ledger.total("aether") + refund
+	ledger.builds[member_id] = {"subclass": "", "talents": []}
+	ledger.save()
+	refresh_progression()
+	overlay.toast("%s reset; %d Aether returned" % [member_by_id(member_id).display_name, refund], 2.5)
+	return ""
+
+
+func member_by_id(member_id: String) -> PartyMember:
+	for m: PartyMember in party.members:
+		if m.member_id == member_id:
+			return m
+	return null
+
+
+## Rows for one member: subclass options, talents, respec.
+func weave_rows(member_id: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var m := member_by_id(member_id)
+	if m == null:
+		return rows
+	var cls: Dictionary = registry.get_entry("classes", m.class_id)
+	var build := build_for(member_id)
+	var level := party_level()
+	var prules := progression_rules()
+	for sub_id: String in cls.get("subclasses", []):
+		var sub := registry.get_entry("subclasses", sub_id)
+		var why := Progression.can_choose_subclass(registry, cls, level, build, sub_id, prules, can_respec())
+		var label := "%s — %s" % [sub.get("name", sub_id), sub.get("summary", "")]
+		if String(build["subclass"]) == sub_id:
+			label = "✓ " + label
+		rows.append({"kind": "subclass", "id": sub_id, "label": label, "enabled": why.is_empty(), "why": why})
+	var talents := registry.get_all("talents")
+	talents.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a.get("tier", 1)) != int(b.get("tier", 1)):
+			return int(a.get("tier", 1)) < int(b.get("tier", 1))
+		return String(a["id"]) < String(b["id"]))
+	for t: Dictionary in talents:
+		var id := String(t["id"])
+		var why := Progression.can_buy_talent(registry, level, build, id, prules, ledger.total("aether"))
+		var cost := int(Dictionary(t.get("cost", {})).get("aether", 0))
+		var label := "T%d %s — %s (%d Aether)" % [int(t.get("tier", 1)), t.get("name", id), t.get("summary", ""), cost]
+		if Array(build["talents"]).has(id):
+			label = "✓ " + label
+		rows.append({"kind": "talent", "id": id, "label": label, "enabled": why.is_empty(), "why": why})
+	var respec_why := "" if can_respec() else "needs the Arcanum"
+	var refund_pct := int(round(bastion.effect("respec_refund", 0.0) * 100.0))
+	rows.append({"kind": "respec", "id": member_id, "label": "Reset subclass and talents (%d%% Aether back)" % refund_pct, "enabled": respec_why.is_empty(), "why": respec_why})
+	return rows
+
+
+func open_weave() -> bool:
+	if weave_menu == null or mode != "explore" or not at_home() or in_dialogue():
+		return false
+	if (creator_menu != null and creator_menu.visible) or (bastion_menu != null and bastion_menu.visible):
+		return false
+	if system_menu != null:
+		system_menu.close()
+	weave_menu.member_index = clampi(weave_menu.member_index, 0, party.members.size() - 1)
+	refresh_weave()
+	return true
+
+
+func close_weave() -> void:
+	if weave_menu != null:
+		weave_menu.visible = false
+
+
+func weave_member(delta: int) -> void:
+	if weave_menu == null or party.members.is_empty():
+		return
+	weave_menu.member_index = posmod(weave_menu.member_index + delta, party.members.size())
+	weave_menu.cursor = 0
+	refresh_weave()
+
+
+func refresh_weave() -> void:
+	if weave_menu == null or party.members.is_empty():
+		return
+	var m := party.members[clampi(weave_menu.member_index, 0, party.members.size() - 1)]
+	var sub := String(build_for(m.member_id)["subclass"])
+	var sub_name := "no subclass" if sub.is_empty() else String(registry.get_entry("subclasses", sub).get("name", sub))
+	var header := "Party level %d · %s · Aether %d\n%s — %s %s (%s) · HP %d/%d · abilities: %s" % [
+		party_level(), xp_line(), ledger.total("aether"), m.display_name, String(registry.get_entry("races", m.race_id).get("name", m.race_id)),
+		String(registry.get_entry("classes", m.class_id).get("name", m.class_id)), sub_name, m.hp, m.max_hp, ", ".join(PackedStringArray(m.abilities))]
+	weave_menu.show_rows(header, weave_rows(m.member_id))
+
+
+## Enter / A on the Weave screen: runs the selected row for the shown member.
+func confirm_weave() -> bool:
+	if weave_menu == null or not weave_menu.visible or party.members.is_empty():
+		return false
+	var row := weave_menu.selected()
+	if row.is_empty():
+		return false
+	var m := party.members[clampi(weave_menu.member_index, 0, party.members.size() - 1)]
+	var why := ""
+	match String(row.get("kind", "")):
+		"subclass":
+			why = choose_subclass(m.member_id, String(row["id"]))
+		"talent":
+			why = buy_talent(m.member_id, String(row["id"]))
+		"respec":
+			why = respec(m.member_id)
+	if not why.is_empty():
+		overlay.toast("%s: %s" % [row.get("label", row.get("id", "")), why], 2.0)
+	refresh_weave()
+	return why.is_empty()

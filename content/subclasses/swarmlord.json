@@ -1,0 +1,9 @@
+{
+  "name": "Swarmlord",
+  "class": "drone_shepherd",
+  "summary": "A drone swarm; volleys that spend Scrap.",
+  "abilities": ["swarm_volley"],
+  "stat_mods": { "move": 1 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

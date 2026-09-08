@@ -1,0 +1,9 @@
+{
+  "name": "Charge Slam",
+  "summary": "Juggernaut: two cells of momentum ending in a shoulder.",
+  "ap": 2,
+  "range": 2,
+  "damage": [5, 8],
+  "accuracy": 85,
+  "damage_type": "physical"
+}

@@ -119,6 +119,19 @@ func has_entry(kind: String, id: String) -> bool:
 	return by_id.has(id)
 
 
+## Inserts or replaces one entry at runtime (tests, fixtures, tools). The
+## entry gets the same provenance fields a loaded file would, source "runtime".
+func put(kind: String, id: String, entry: Dictionary) -> void:
+	if not _entries.has(kind):
+		_entries[kind] = {}
+	var copy := entry.duplicate(true)
+	copy["id"] = id
+	copy["_kind"] = kind
+	copy["_source"] = "runtime"
+	copy["_path"] = ""
+	_entries[kind][id] = copy
+
+
 ## Every entry of a kind, sorted by id for determinism.
 func get_all(kind: String) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []

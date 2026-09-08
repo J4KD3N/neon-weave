@@ -1,0 +1,9 @@
+{
+  "name": "Ghost Gait",
+  "branch": "tech",
+  "tier": 2,
+  "cost": { "aether": 4 },
+  "effects": { "evasion": 5 },
+  "summary": "+5 evasion. Needs Quick Step.",
+  "requires": ["quick_step"]
+}

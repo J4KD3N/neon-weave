@@ -368,7 +368,7 @@ func test_workshop_upgrade_spends_persists_and_raises_max_hp() -> void:
 	assert_eq(world.bastion.level("workshop"), 1)
 	assert_eq(leader.max_hp, 24, "+2 plating")
 	assert_eq(leader.hp, 12, "the upgrade heals by what it adds")
-	assert_eq(world.ledger.buildings, {"beacon": 0, "medbay": 0, "workshop": 1})
+	assert_eq(world.ledger.buildings, {"beacon": 0, "medbay": 0, "workshop": 1, "arcanum": 0})
 	var saved := Ledger.load_or_new(LEDGER)
 	assert_eq(saved.buildings["workshop"], 1)
 	# A fresh scene picks the level back up from the ledger.
@@ -926,3 +926,122 @@ func test_system_menu_offers_all_three_slots() -> void:
 		if String(item["id"]) == "save_1":
 			blocked = not bool(item["enabled"])
 	assert_true(blocked, "saving is unavailable in combat")
+
+
+
+func test_level_up_on_extraction_grows_stats_in_place() -> void:
+	var weaver := world.member_by_id("weaver")
+	assert_eq(world.party_level(), 1)
+	assert_eq(weaver.level, 1)
+	assert_eq(weaver.max_hp, 22)
+	world.ledger.xp = 14
+	world.enter_shard("rusted_undercity", 7)
+	world.run.collect({"xp": 30})
+	weaver.hp = 10
+	world.teleport_party(world.extraction_cell())
+	assert_true(world.extract())
+	assert_eq(world.ledger.xp, 44)
+	assert_eq(world.party_level(), 3, "44 XP is level 3 on the base curve")
+	assert_eq(weaver.level, 3)
+	assert_eq(weaver.max_hp, 26, "+2 HP per level after the first")
+	assert_true(weaver.hp >= 14, "current HP moved with the max (then the Med-bay may have healed)")
+	assert_contains(world.xp_line(), "36 to next")
+	for m: PartyMember in world.party.members:
+		assert_eq(m.level, 3)
+		assert_eq(m.subclass_id, "", "no subclass until chosen")
+
+
+func test_subclass_and_talents_persist_through_save_and_load() -> void:
+	world.ledger.xp = 40
+	world.refresh_progression()
+	assert_eq(world.party_level(), 3)
+	assert_eq(world.choose_subclass("weaver", "juggernaut"), "")
+	var weaver := world.member_by_id("weaver")
+	assert_eq(weaver.subclass_id, "juggernaut")
+	assert_true(weaver.abilities.has("charge_slam"))
+	assert_eq(weaver.damage_bonus, 1)
+	assert_eq(weaver.stats["move"], 6, "Juggernaut +1 Move")
+	assert_eq(world.choose_subclass("weaver", "warden"), "needs the Arcanum to change")
+	assert_eq(world.choose_subclass("weaver", "stormcaller"), "not a subclass of this class")
+	assert_eq(world.choose_subclass("nobody", "warden"), "no such member")
+	assert_eq(world.buy_talent("weaver", "iron_skin"), "needs 2 Aether")
+	world.ledger.bank({"aether": 5})
+	assert_eq(world.buy_talent("weaver", "iron_skin"), "")
+	assert_eq(world.ledger.total("aether"), 3)
+	assert_eq(weaver.max_hp, 26 + 3)
+	assert_eq(world.buy_talent("weaver", "plated_bones"), "tier 2 opens later")
+	assert_eq(world.buy_talent("weaver", "iron_skin"), "already learned")
+	assert_eq(world.build_for("weaver"), {"subclass": "juggernaut", "talents": ["iron_skin"]})
+	assert_eq(world.save_slot(1), OK)
+	var again := _fresh_scene()
+	assert_eq(again.load_slot(1), [])
+	var back := again.member_by_id("weaver")
+	assert_eq(back.level, 3)
+	assert_eq(back.subclass_id, "juggernaut")
+	assert_true(back.abilities.has("charge_slam"))
+	assert_eq(back.max_hp, 29)
+	assert_eq(back.damage_bonus, 1)
+	again.teleport_party(Vector2i(13, 4))
+	again.start_combat(true)
+	var c := again.combat.state.by_id("p:weaver")
+	assert_eq(c.damage_bonus, 1, "subclass damage bonus reaches combat")
+	assert_true(c.abilities.has("charge_slam"))
+	_drop(again)
+
+
+func test_respec_needs_the_arcanum_and_refunds_aether() -> void:
+	world.ledger.xp = 40
+	world.ledger.bank({"aether": 2})
+	world.refresh_progression()
+	assert_eq(world.choose_subclass("weaver", "warden"), "")
+	assert_eq(world.buy_talent("weaver", "iron_skin"), "")
+	var weaver := world.member_by_id("weaver")
+	assert_eq(weaver.max_hp, 26 + 4 + 3)
+	assert_eq(world.respec("weaver"), "needs the Arcanum")
+	world.ledger.bank({"salvage": 10, "aether": 2})
+	assert_true(world.upgrade_building("arcanum"))
+	assert_true(world.can_respec())
+	assert_eq(world.respec("weaver"), "")
+	assert_eq(world.ledger.total("aether"), 1, "half of the 2 Aether talent came back")
+	assert_eq(world.build_for("weaver"), {"subclass": "", "talents": []})
+	assert_eq(weaver.subclass_id, "")
+	assert_false(weaver.abilities.has("shield_bash"))
+	assert_eq(weaver.max_hp, 26)
+	assert_eq(world.respec("weaver"), "nothing to reset")
+	assert_eq(world.choose_subclass("weaver", "juggernaut"), "", "free to pick again")
+	assert_eq(world.choose_subclass("weaver", "warden"), "", "the Arcanum allows changing")
+
+
+func test_weave_menu_rows_and_navigation() -> void:
+	assert_true(world.open_weave())
+	assert_true(world.weave_menu.visible)
+	var text: String = world.weave_menu.label.text
+	assert_contains(text, "THE WEAVE")
+	assert_contains(text, "Party level 1")
+	assert_contains(text, "Weaver — Trueborn Scrap-Knight (no subclass)")
+	assert_contains(text, "Juggernaut — Charges; the wall that moves.  (needs level 3)")
+	assert_contains(text, "T1 Iron Skin — +3 max HP. (2 Aether)  (needs 2 Aether)")
+	assert_contains(text, "Reset subclass and talents (0% Aether back)  (needs the Arcanum)")
+	world.weave_member(1)
+	assert_contains(world.weave_menu.label.text, "Ash —")
+	world.weave_member(-1)
+	assert_contains(world.weave_menu.label.text, "Weaver —")
+	assert_false(world.confirm_weave(), "a disabled row does nothing")
+	world.ledger.xp = 40
+	world.ledger.bank({"aether": 2})
+	world.refresh_progression()
+	world.refresh_weave()
+	assert_eq(world.weave_menu.cursor, 0)
+	assert_true(world.confirm_weave(), "row 0 is the first subclass")
+	assert_eq(world.member_by_id("weaver").subclass_id, "juggernaut")
+	assert_contains(world.weave_menu.label.text, "✓ Juggernaut")
+	var rows := world.weave_rows("weaver")
+	var kinds: PackedStringArray = []
+	for r: Dictionary in rows:
+		if not kinds.has(String(r["kind"])):
+			kinds.append(String(r["kind"]))
+	assert_eq(kinds, PackedStringArray(["subclass", "talent", "respec"]))
+	world.close_weave()
+	assert_false(world.weave_menu.visible)
+	world.enter_shard("rusted_undercity", 7)
+	assert_false(world.open_weave(), "home only")

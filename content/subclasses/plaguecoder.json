@@ -1,0 +1,9 @@
+{
+  "name": "Plaguecoder",
+  "class": "circuit_witch",
+  "summary": "Spreading rot; hexes at range.",
+  "abilities": ["plague_hex"],
+  "stat_mods": { "hp": 2 },
+  "damage_bonus": 1,
+  "milestone": "M2"
+}

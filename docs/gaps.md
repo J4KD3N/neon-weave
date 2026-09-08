@@ -20,7 +20,7 @@ Updated every session. Remove items when closed; note the closing commit.
 - **Death-stakes mode has no setup UI**: `rules/combat.json` `story_protected` is the only switch. Downed members revive at 1 HP after victory; there is no healing yet, so HP only goes down between fights.
 - **Only two AI archetypes** (rusher, ranged). Summoner, stealther, controller wait on their mechanics.
 - **Drone Shepherd has no drones**: no summons or turrets yet (Swarmlord/Artificer are subclasses, M2+); the class is a Scrap-spending gunner for now. Circuit-Witch has no Glitchbinder/Plaguecoder spread mechanics.
-- **Subclasses, multiclassing, the Weave Tree and levels** (GDD §8) do not exist; classes are flat ability lists.
+- **Progression is shallow** (S14): one party-wide level, subclasses are one ability plus stat mods, talents are six flat stat buffs in two tiers, no multiclassing or capstones; subclass identities (chain lightning, taunts, drone swarms, turrets) need mechanics the ability vocabulary does not have yet. XP now has a sink; Ciphers still do not.
 - **Party settling can look odd**: members snap to the nearest free cells around their exploration positions with no animation.
 - **Balance is unplaytested**: numbers in `content/rules/combat.json`, class stats and enemy stats are first guesses; the seeded scene test wins 4v3 but that is one seed.
 
