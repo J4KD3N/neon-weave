@@ -4,6 +4,8 @@ class_name CombatRules
 extends RefCounted
 
 var ap_per_turn: int = 4
+## Protagonist plus companions (GDD §7: party of up to 4).
+var party_max: int = 4
 var base_move: int = 6
 var min_hit_chance: int = 5
 var max_hit_chance: int = 95
@@ -32,6 +34,7 @@ var corrosive_damage: int = 2
 static func from_entry(entry: Dictionary) -> CombatRules:
 	var r := CombatRules.new()
 	r.ap_per_turn = int(entry.get("ap_per_turn", r.ap_per_turn))
+	r.party_max = int(entry.get("party_max", r.party_max))
 	r.base_move = int(entry.get("base_move", r.base_move))
 	r.min_hit_chance = int(entry.get("min_hit_chance", r.min_hit_chance))
 	r.max_hit_chance = int(entry.get("max_hit_chance", r.max_hit_chance))

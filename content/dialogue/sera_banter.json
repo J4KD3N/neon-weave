@@ -1,0 +1,12 @@
+{
+  "name": "Sera — banter",
+  "kind": "banter",
+  "lines": [
+    { "trigger": "enter_shard", "text": "Shields up. Corridors first, rooms second. I've buried people who did it the other way round.", "once": "sera_banter_first_shard" },
+    { "trigger": "enter_shard", "text": "Third depth is where the village is. Deeper Beacon, deeper hole.", "requires": { "quest": { "id": "sera_purge_village", "stage": "start" } }, "once": "sera_banter_depth" },
+    { "trigger": "victory", "text": "Clean. Nobody carried.", "requires": { "flags": { "sera_opened_up": false } }, "once": "sera_banter_first_win" },
+    { "trigger": "victory", "text": "That one nearly had me. Good line-holding.", "requires": { "approval": { "sera": { "min": 3 } } }, "effects": { "approval": { "sera": 1 } }, "once": "sera_banter_praise" },
+    { "trigger": "extract", "text": "Home. Never thought I'd say it about a scrap yard." },
+    { "trigger": "enter_shard", "text": "Watch the grates. Drones nest under them." }
+  ]
+}

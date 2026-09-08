@@ -269,3 +269,25 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: Facings are screen-space names (e, s, w, n and diagonals); sheets declare which rows they draw and which facings mirror onto them. Animations build as `<animation>_<row>`; the runtime resolves any direction vector to the nearest facing. Required set: idle, walk, attack, hit, death; optional cast (arcane abilities). Colour roles fill/outline/highlight are swapped from the actor tint; biomes may override an enemy sheet's tint via `recolors: {sheet: palette role}`.
 **Revisit when**: real art wants per-direction frame counts, race overlay compositing, or shader-based palette swaps.
+
+## D-052 — Session S11 scope: Sera and the narrative data model
+**Date**: 2026-09-08
+**Decision**: `companions`, `dialogue`, `quests` content kinds; `NarrativeState` (flags, approval, quest stages, recruits) saved under `narrative`; a text dialogue panel; Sera recruitable in the yard; her quest reaching into Shards as a placed site; banter on triggers; approval on the HUD. Both death-stakes paths are data. Deferred: romance, dialogue portraits/voice, companion AI personalities, a quest journal UI, dialogue on the map beyond companions.
+
+## D-053 — Dialogue format
+**Date**: 2026-09-08
+**Decision**: A dialogue is `{start, nodes}`. `start` is a node id or an ordered list of `{node, requires}` (first passing wins; the last must be unconditional). A node is `{speaker, text, choices}`; a choice is `{text, requires, effects, next | end}`. `requires` keys: `flags`, `origin_tag`, `race`, `class`, `approval{min,max}`, `recruited`, `not_recruited`, `quest{id,stage}`. `effects` keys: `approval`, `flags`, `recruit`, `quest`. Banter dialogues are `{kind: "banter", lines: [{trigger, text, requires, effects, once}]}`; the first matching unspent line plays. Every node must keep at least one unconditional choice so no player can dead-end (enforced by the content test).
+**Why**: Small enough to hand-write and validate in CI; expressive enough for gated lines, approval, recruitment and quest stages. The `DialogueRunner` is pure and the panel only renders it.
+
+## D-054 — Quests and Shard sites
+**Date**: 2026-09-08
+**Decision**: A quest is `{companion, start, stages: {id: {summary, shard_site?, complete?}}}`; the narrative stores one stage per quest. A stage with `shard_site: {pickup}` asks the generator to place that pickup once in every new Shard; a pickup with `dialogue` opens it on touch instead of granting loot. Saves keep the placed extras in the location so a reload regenerates the same layout even after the stage moves on.
+**Why**: "Companion quests intersect the main plot" starts with quests intersecting the loop. Sites as pickups reuse placement, validation, deltas and saves unchanged.
+
+## D-055 — Death-stakes in data and in the roster
+**Date**: 2026-09-08
+**Decision**: With `story_protected` off, a companion killed in a won fight leaves the party, is un-recruited, and sets `<id>_dead`; a dead leader is a wipe. Quest dialogues branch on `sera_dead` / `recruited` from their start list, so every companion quest ships the Story-Protected path, the never-recruited path and the posthumous path as nodes (GDD §7, §15).
+
+## D-056 — Party of four means three preset members plus a recruit
+**Date**: 2026-09-08
+**Decision**: `parties/prototype.json` is three members; `rules/combat.party_max` is 4; recruits append in order until full. Moth the Circuit-Witch leaves the debug preset (the creator can still make one).

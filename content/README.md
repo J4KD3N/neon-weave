@@ -25,9 +25,12 @@ registry does not care which exist, but systems expect the ones below.
 | `pickups` | salvage_cache, aether_shard | Collectibles: `grants` block (`salvage`/`aether`/`ciphers` as number or [min,max], `cipher_chance`, `xp`), `art.color`. Enemies use the same block under `loot`. |
 | `shards` | rusted_undercity | Procgen templates: `size`, `rooms`, `corridors`, `tiles` roles, `grate_patch_chance`, `debris_density`, `enemies` pool. See `src/systems/procgen/shard_generator.gd`. |
 | `sprites` | trueborn, scav | Sprite-sheet sidecars next to their PNGs (`image`, `frame`, `origin`, `directions`, `mirror`, `palette`, `animations`). See `docs/art-pipeline.md`. Races/enemies reference one via `art.sheet`; biomes may `recolors` a sheet to a palette role. |
-| `items`, `companions`, `dialogue`, `loot_tables`, `quests`, `factions` | later milestones | |
+| `companions` | sera | `race`, `class`, `dialogue{recruit,talk,banter}`, `quest`, `faction`. |
+| `dialogue` | sera_recruit, sera_village, sera_banter | Node graphs (`start`, `nodes` with `speaker/text/choices`; choices carry `requires`/`effects`/`next`/`end`) or banter (`kind: "banter"`, `lines`). See D-053. |
+| `quests` | sera_purge_village | `companion`, `start`, `stages{id: {summary, shard_site{pickup}, complete}}`. |
+| `items`, `loot_tables`, `factions` | later milestones | |
 
-Maps may also carry `"enemies": [{"type": "<enemy id>", "cell": [x, y]}]` and `"pickups": [{"type": "<pickup id>", "cell": [x, y]}]` placements, and generated Shards add `"extraction": [x, y]`. Classes carry `stats` and `abilities`; races carry `stat_mods`; tiles carry `blocks_sight`.
+Maps may also carry `"enemies": [{"type": "<enemy id>", "cell": [x, y]}]`, `"pickups": [{"type": "<pickup id>", "cell": [x, y]}]` and `"npcs": [{"companion": "<id>", "cell": [x, y]}]` placements, and generated Shards add `"extraction": [x, y]`. Classes carry `stats` and `abilities`; races carry `stat_mods`; tiles carry `blocks_sight`.
 
 `tests/unit/test_content_integrity.gd` cross-checks every id reference above; add a check there when you add a referencing field.
 

@@ -38,6 +38,31 @@ func spawn_members(specs: Array[Dictionary]) -> void:
 	_waypoints.clear()
 
 
+## Appends one member from a spec (see spawn_members); recruits join here.
+func add_member(spec: Dictionary) -> PartyMember:
+	var member := PartyMember.new()
+	var abilities: Array[String] = []
+	abilities.assign(spec.get("abilities", []))
+	member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities, spec.get("overlay", {}), spec.get("sheet", null))
+	member.position = spec.get("position", Vector2.ZERO)
+	member.is_leader = members.is_empty()
+	add_child(member)
+	members.append(member)
+	if members.size() == 1:
+		trail.reset(member.position)
+	return member
+
+
+## Drops a member (death in Mortal mode). The leader can never be removed here.
+func remove_member(m: PartyMember) -> bool:
+	var i := members.find(m)
+	if i <= 0:
+		return false
+	members.remove_at(i)
+	m.queue_free()
+	return true
+
+
 func leader() -> PartyMember:
 	return members[0] if not members.is_empty() else null
 

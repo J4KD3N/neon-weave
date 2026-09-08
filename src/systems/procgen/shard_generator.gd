@@ -34,12 +34,13 @@ var floor_chars: Dictionary = {FLOOR: true, GRATE: true}
 
 
 ## `depth` (Beacon level) adds depth-1 enemy groups and pickups.
-static func generate(template: Dictionary, seed_value: int, depth: int = 1) -> Dictionary:
+## `extra_pickups`: pickup ids placed once each (quest sites), after the pool.
+static func generate(template: Dictionary, seed_value: int, depth: int = 1, extra_pickups: Array[String] = []) -> Dictionary:
 	var g := ShardGenerator.new()
-	return g._run(template, seed_value, maxi(depth, 1))
+	return g._run(template, seed_value, maxi(depth, 1), extra_pickups)
 
 
-func _run(template: Dictionary, seed_value: int, depth: int) -> Dictionary:
+func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Array[String] = []) -> Dictionary:
 	rng.seed = seed_value
 	var size: Dictionary = template.get("size", {})
 	width = _pick(size.get("width", [40, 52]))
@@ -88,6 +89,10 @@ func _run(template: Dictionary, seed_value: int, depth: int) -> Dictionary:
 		var raw: Array = e["cell"]
 		taken.append(Vector2i(int(raw[0]), int(raw[1])))
 	var pickups := _place_pickups(template.get("pickups", {}), spawns, dist, taken, depth - 1)
+	for p: Dictionary in pickups:
+		var raw: Array = p["cell"]
+		taken.append(Vector2i(int(raw[0]), int(raw[1])))
+	pickups.append_array(_place_extra_pickups(extra_pickups, spawns, dist, taken))
 
 	var tiles: Dictionary = template.get("tiles", {})
 	var template_id := String(template.get("id", "shard"))
@@ -115,7 +120,7 @@ func _run(template: Dictionary, seed_value: int, depth: int) -> Dictionary:
 		"pickups": pickups,
 		"extraction": [exit_cell.x, exit_cell.y],
 		"rooms": room_list,
-		"generation": {"template": template_id, "seed": seed_value, "depth": depth, "min_spawn_distance": min_dist},
+		"generation": {"template": template_id, "seed": seed_value, "depth": depth, "min_spawn_distance": min_dist, "extra_pickups": extra_pickups.duplicate()},
 	}
 
 
@@ -483,3 +488,35 @@ func _weighted_index(pool: Array) -> int:
 		if roll <= 0.0:
 			return i
 	return pool.size() - 1
+
+
+## One placement per id in rooms other than the spawn room, far from spawn
+## when possible; falls back to any reachable floor cell.
+func _place_extra_pickups(ids: Array[String], spawns: Array[Vector2i], dist: PackedInt32Array, taken: Array[Vector2i]) -> Array:
+	var out: Array = []
+	if ids.is_empty():
+		return out
+	var used: Dictionary = {}
+	for c: Vector2i in taken:
+		used[c] = true
+	for s: Vector2i in spawns:
+		used[s] = true
+	for id: String in ids:
+		var candidates: Array[Vector2i] = []
+		for i: int in range(1 if rooms.size() > 1 else 0, rooms.size()):
+			var r := rooms[i]
+			for y: int in range(r.position.y, r.end.y):
+				for x: int in range(r.position.x, r.end.x):
+					var p := Vector2i(x, y)
+					if floor_chars.has(_cell_at(p)) and dist[_idx(p)] >= 0 and not used.has(p):
+						candidates.append(p)
+		if candidates.is_empty():
+			continue
+		candidates.sort_custom(func(a: Vector2i, b: Vector2i) -> bool:
+			var da := dist[_idx(a)]
+			var db := dist[_idx(b)]
+			return da > db if da != db else (a.y < b.y if a.y != b.y else a.x < b.x))
+		var cell: Vector2i = candidates[rng.randi_range(0, mini(candidates.size() - 1, 5))]
+		used[cell] = true
+		out.append({"type": id, "cell": [cell.x, cell.y]})
+	return out

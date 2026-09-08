@@ -41,7 +41,7 @@ static func capture(world: ExploreWorld) -> Dictionary:
 	var location: Dictionary
 	if world.run.in_shard:
 		var gen: Dictionary = world.map_entry.get("generation", {})
-		location = {"kind": "shard", "template": String(gen.get("template", "")), "seed": int(gen.get("seed", 0)), "depth": int(gen.get("depth", 1))}
+		location = {"kind": "shard", "template": String(gen.get("template", "")), "seed": int(gen.get("seed", 0)), "depth": int(gen.get("depth", 1)), "extras": Array(gen.get("extra_pickups", [])).duplicate()}
 	else:
 		location = {"kind": "map", "id": world.map_id}
 	return {
@@ -53,6 +53,7 @@ static func capture(world: ExploreWorld) -> Dictionary:
 		"run": {"haul": world.run.haul.duplicate(), "xp": world.run.xp, "kills": world.run.kills, "pickups": world.run.pickups},
 		"party": members,
 		"protagonist": world.protagonist.duplicate(true),
+		"narrative": world.narrative.to_dict(),
 		"dead_enemies": dead,
 		"collected_pickups": collected,
 	}
@@ -78,6 +79,7 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 		errors.append("ledger save failed: %s" % error_string(err))
 	world.bastion.setup(world.registry.get_all("buildings"), world.ledger.buildings)
 	world.protagonist = Dictionary(data.get("protagonist", {})).duplicate(true)
+	world.narrative = NarrativeState.from_dict(data.get("narrative", {}))
 	world.respawn_party()
 
 	world.mode = "explore"
@@ -86,7 +88,9 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 	var entered := true
 	match String(location.get("kind", "map")):
 		"shard":
-			var entry := world.enter_shard(String(location.get("template", "")), int(location.get("seed", 0)), maxi(int(location.get("depth", 1)), 1))
+			var extras: Array[String] = []
+			extras.assign(location.get("extras", []))
+			var entry := world.enter_shard(String(location.get("template", "")), int(location.get("seed", 0)), maxi(int(location.get("depth", 1)), 1), extras)
 			if entry.is_empty():
 				errors.append("unknown shard template '%s'" % location.get("template"))
 				entered = false

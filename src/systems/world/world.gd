@@ -23,6 +23,7 @@ const DEFAULT_SHARD := "rusted_undercity"
 @onready var party: Party = $Scene/Party
 @onready var enemies_node: Node2D = $Scene/Enemies
 @onready var pickups_node: Node2D = $Scene/Pickups
+@onready var npcs_node: Node2D = $Scene/Npcs
 @onready var camera: FollowCamera = $Camera
 @onready var overlay: DebugOverlay = $Hud/DebugOverlay
 
@@ -43,6 +44,11 @@ var creator_state: CreatorState
 ## Loaded sprite sheets by id (`sprites` content kind). Missing or invalid
 ## sheets fall back to the placeholder rig.
 var sheets: Dictionary = {}
+## Flags, approval, quest stages, recruits. Saved under "narrative".
+var narrative := NarrativeState.new()
+var npcs: Array[NpcActor] = []
+var dialogue_menu: DialogueMenu
+var dialogue: DialogueRunner
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
 var combat: CombatController
@@ -88,6 +94,10 @@ func _ready() -> void:
 	creator_menu = CreatorMenu.new()
 	creator_menu.name = "CreatorMenu"
 	add_child(creator_menu)
+	dialogue_menu = DialogueMenu.new()
+	dialogue_menu.name = "DialogueMenu"
+	add_child(dialogue_menu)
+	spawn_npcs()
 	combat = CombatController.new()
 	combat.name = "Combat"
 	add_child(combat)
@@ -102,6 +112,8 @@ func _ready() -> void:
 			enter_shard(DEFAULT_SHARD, int(arg.get_slice("=", 1)))
 		elif arg == "--creator":
 			open_creator()
+		elif arg.begins_with("--talk="):
+			talk_to(arg.get_slice("=", 1))
 
 
 func _exit_tree() -> void:
@@ -158,18 +170,35 @@ func load_map_entry(entry: Dictionary) -> void:
 ## Generates a Shard from a `shards` template and moves the party into it.
 ## `depth` 0 means the Beacon's current depth; loads pass the saved depth.
 ## Returns the generated map entry ({} when the template is unknown).
-func enter_shard(template_id: String, seed_value: int, depth: int = 0) -> Dictionary:
+func enter_shard(template_id: String, seed_value: int, depth: int = 0, extras: Array[String] = []) -> Dictionary:
 	var template: Dictionary = registry.get_entry("shards", template_id)
 	if template.is_empty():
 		push_warning("unknown shard template '%s'" % template_id)
 		return {}
-	var entry := ShardGenerator.generate(template, seed_value, depth if depth > 0 else bastion.depth())
+	var sites := extras if not extras.is_empty() else quest_sites()
+	var entry := ShardGenerator.generate(template, seed_value, depth if depth > 0 else bastion.depth(), sites)
 	for err: String in ShardValidator.validate(entry, tiles_by_id()):
 		push_warning("shard %s: %s" % [entry.get("id"), err])
 	if _enter(entry):
 		run.begin(String(entry["id"]), seed_value)
 		autosave()
+		banter("enter_shard")
 	return entry
+
+
+## Pickup ids of quest sites that should appear in the next Shard: every
+## quest whose current stage declares `shard_site`.
+func quest_sites() -> Array[String]:
+	var out: Array[String] = []
+	for quest_id: String in narrative.quests:
+		var quest: Dictionary = registry.get_entry("quests", quest_id)
+		var stages: Dictionary = quest.get("stages", {})
+		var stage: Dictionary = stages.get(narrative.stage_of(quest_id), {})
+		var site: Dictionary = stage.get("shard_site", {})
+		var pickup := String(site.get("pickup", ""))
+		if not pickup.is_empty() and registry.has_entry("pickups", pickup):
+			out.append(pickup)
+	return out
 
 
 ## Loads a handcrafted map by id and moves the party into it. Loot found on
@@ -198,8 +227,12 @@ func _enter(entry: Dictionary) -> bool:
 		place_party(map_data.spawn_cells())
 	spawn_enemies()
 	spawn_pickups()
+	spawn_npcs()
 	mode = "explore"
 	party.active = true
+	if dialogue_menu != null:
+		dialogue_menu.visible = false
+	dialogue = null
 	if highlighter != null:
 		highlighter.clear_all()
 	if hud != null:
@@ -348,10 +381,168 @@ func spawn_party(id: String) -> void:
 	var positions: Array[Vector2] = []
 	for cell: Vector2i in map_data.spawn_cells():
 		positions.append(map_view.cell_to_world(cell))
-	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, positions)
+	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, positions, narrative.recruited)
 	for spec: Dictionary in specs:
 		spec["sheet"] = sheet_for(String(spec.get("sheet_id", "")))
 	party.spawn_members(specs)
+
+
+## Companions standing on the map (`npcs` placements) who are not recruited.
+func spawn_npcs() -> void:
+	for n: NpcActor in npcs:
+		if is_instance_valid(n):
+			n.queue_free()
+	npcs.clear()
+	if npcs_node == null:
+		return
+	var placements: Array = map_entry.get("npcs", [])
+	for p: Dictionary in placements:
+		var id := String(p.get("companion", ""))
+		var entry: Dictionary = registry.get_entry("companions", id)
+		if entry.is_empty() or narrative.is_recruited(id):
+			continue
+		var raw: Array = p.get("cell", [0, 0])
+		var cell := Vector2i(int(raw[0]), int(raw[1]))
+		if not map_data.is_walkable(cell):
+			push_warning("map %s places npc %s on blocked %s" % [map_data.id, id, cell])
+			continue
+		var race: Dictionary = registry.get_entry("races", String(entry.get("race", "")))
+		var actor := NpcActor.new()
+		actor.setup(id, entry, cell, class_color(String(entry.get("class", ""))), sheet_for(String(Dictionary(race.get("art", {})).get("sheet", ""))), race.get("overlay", {}))
+		actor.position = map_view.cell_to_world(cell)
+		npcs_node.add_child(actor)
+		npcs.append(actor)
+
+
+func npc_at(cell: Vector2i) -> NpcActor:
+	for n: NpcActor in npcs:
+		if is_instance_valid(n) and n.cell == cell:
+			return n
+	return null
+
+
+## Adds a recruited companion to the party next to the leader (no respawn,
+## so nobody's HP resets) and removes their NPC stand-in.
+func add_companion(id: String) -> bool:
+	if party.members.size() >= rules.party_max:
+		overlay.toast("The party is full.", 2.0)
+		return false
+	var preset := {"members": []}
+	var specs := PartyBuilder.member_specs(registry, preset, {}, rules, [], [id])
+	if specs.is_empty():
+		return false
+	var spec := specs[0]
+	spec["sheet"] = sheet_for(String(spec.get("sheet_id", "")))
+	var blocked: Array[Vector2i] = []
+	for m: PartyMember in party.members:
+		blocked.append(member_cell(m))
+	var free := map_data.nearest_free_cells(leader_cell(), 1, blocked)
+	spec["position"] = map_view.cell_to_world(free[0]) if not free.is_empty() else party.leader().position
+	var member := party.add_member(spec)
+	member.set_hp_bonus(bastion.hp_bonus())
+	for n: NpcActor in npcs:
+		if is_instance_valid(n) and n.companion_id == id:
+			n.queue_free()
+	var kept: Array[NpcActor] = []
+	for n: NpcActor in npcs:
+		if is_instance_valid(n) and n.companion_id != id:
+			kept.append(n)
+	npcs = kept
+	return true
+
+
+# --- dialogue ----------------------------------------------------------------
+
+## Evaluation context for conditions: narrative + the leader's origin tag,
+## race and class.
+func dialogue_ctx() -> Dictionary:
+	var l := party.leader()
+	var origin_tag := ""
+	if l != null and not l.origin_id.is_empty():
+		origin_tag = String(registry.get_entry("origins", l.origin_id).get("dialogue_tag", ""))
+	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "class": l.class_id if l != null else ""}
+
+
+func speaker_names() -> Dictionary:
+	var names: Dictionary = {"narrator": "—", "player": party.leader().display_name if party.leader() != null else "You"}
+	for c: Dictionary in registry.get_all("companions"):
+		names[c["id"]] = String(c.get("short_name", c.get("name", c["id"])))
+	return names
+
+
+## Opens a `dialogue` entry. False when unknown, in combat, or no start node applies.
+func open_dialogue(dialogue_id: String) -> bool:
+	if mode != "explore":
+		return false
+	var entry: Dictionary = registry.get_entry("dialogue", dialogue_id)
+	if entry.is_empty():
+		push_warning("unknown dialogue '%s'" % dialogue_id)
+		return false
+	var runner := DialogueRunner.new()
+	if not runner.start(entry, dialogue_ctx()):
+		return false
+	dialogue = runner
+	party.stop()
+	dialogue_menu.open(runner, speaker_names())
+	return true
+
+
+func in_dialogue() -> bool:
+	return dialogue != null and not dialogue.finished
+
+
+## Talks to a companion by id (their recruit or talk dialogue).
+func talk_to(companion_id: String) -> bool:
+	var entry: Dictionary = registry.get_entry("companions", companion_id)
+	if entry.is_empty():
+		return false
+	var d: Dictionary = entry.get("dialogue", {})
+	var id := String(d.get("talk" if narrative.is_recruited(companion_id) else "recruit", ""))
+	return open_dialogue(id)
+
+
+## Picks the n-th available choice of the open dialogue.
+func choose(index: int) -> bool:
+	if not in_dialogue():
+		return false
+	if not dialogue.choose(index):
+		return false
+	for id: String in dialogue.recruited:
+		add_companion(id)
+	dialogue.recruited.clear()
+	if dialogue.finished:
+		dialogue_menu.visible = false
+		autosave()
+	else:
+		dialogue_menu.refresh()
+	return true
+
+
+func leave_dialogue() -> bool:
+	if not in_dialogue():
+		return false
+	var exit := dialogue.exit_choice()
+	if exit < 0:
+		return false
+	return choose(exit)
+
+
+## Banter for a trigger from every recruited companion (first matching line
+## each). Returns the lines shown.
+func banter(trigger: String) -> Array[Dictionary]:
+	var shown: Array[Dictionary] = []
+	for id: String in narrative.recruited:
+		var c: Dictionary = registry.get_entry("companions", id)
+		var d: Dictionary = c.get("dialogue", {})
+		var banter_entry: Dictionary = registry.get_entry("dialogue", String(d.get("banter", "")))
+		if banter_entry.is_empty():
+			continue
+		var line := DialogueRunner.pick_banter(banter_entry, trigger, dialogue_ctx())
+		if line.is_empty():
+			continue
+		overlay.toast("%s: %s" % [c.get("short_name", id), line.get("text", "")], 3.5)
+		shown.append(line)
+	return shown
 
 
 ## Fresh party (full HP) from the preset and the current protagonist.
@@ -550,6 +741,11 @@ func check_pickups() -> Array[Dictionary]:
 			continue
 		p.collected = true
 		p.queue_free()
+		var site_dialogue := String(p.entry.get("dialogue", ""))
+		if not site_dialogue.is_empty():
+			open_dialogue(site_dialogue)
+			gained.append({"pickup": p.pickup_id, "dialogue": site_dialogue})
+			continue
 		run.pickups += 1
 		var got := _gain(p.grants())
 		got["pickup"] = p.pickup_id
@@ -600,6 +796,7 @@ func extract() -> bool:
 	run.clear()
 	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
 	enter_map(HOME_MAP)
+	banter("extract")
 	autosave()
 	return true
 
@@ -613,6 +810,9 @@ func status_line() -> String:
 		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
 	]
 	var line2 := "%s  |  %s" % [run.summary() if run.in_shard else "at home: loot banks on pickup", ledger.summary()]
+	for id: String in narrative.recruited:
+		var c: Dictionary = registry.get_entry("companions", id)
+		line2 += "  |  %s ♥%+d" % [c.get("short_name", id), narrative.approval_of(id)]
 	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard (depth %d) · H home · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
 	if at_home():
 		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · C creator · N new shard (depth %d) · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
@@ -679,6 +879,22 @@ func start_combat(first_strike: bool) -> void:
 
 func _on_combat_ended(result: String) -> void:
 	if result == "victory":
+		# Mortal mode: the dead stay dead. Companions leave the roster with a
+		# `<id>_dead` flag their quests can read; a dead leader is a wipe.
+		var fallen: Array[PartyMember] = []
+		for m: PartyMember in party.members:
+			if m.dead or (m.hp <= 0 and not m.downed):
+				fallen.append(m)
+		for m: PartyMember in fallen:
+			if m == party.leader():
+				mode = "defeated"
+				overlay.toast("%s is dead. The expedition ends here." % m.display_name, 4.0)
+				return
+			if narrative.is_recruited(m.member_id):
+				narrative.dismiss(m.member_id)
+				narrative.set_flag("%s_dead" % m.member_id, true)
+				overlay.toast("%s is dead." % m.display_name, 4.0)
+			party.remove_member(m)
 		for m: PartyMember in party.members:
 			if m.downed:
 				m.downed = false
@@ -686,6 +902,7 @@ func _on_combat_ended(result: String) -> void:
 		party.trail.reset(party.leader().position)
 		party.active = true
 		mode = "explore"
+		banter("victory")
 		return
 	mode = "defeated"
 	if run.in_shard:
@@ -716,6 +933,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	var clicked := mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
+	if in_dialogue():
+		if event.is_action_pressed("cancel"):
+			leave_dialogue()
+		else:
+			for i: int in 4:
+				if event.is_action_pressed("ability_%d" % (i + 1)):
+					choose(i)
+		return
 	if creator_menu != null and creator_menu.visible:
 		if event.is_action_pressed("creator") or event.is_action_pressed("ui_cancel"):
 			close_creator()
@@ -754,7 +979,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif clicked:
 				var cell := map_view.world_to_cell(get_global_mouse_position())
 				var enemy := enemy_at(cell)
-				if enemy != null and LineOfSight.distance(leader_cell(), cell) <= enemy.awareness:
+				var npc := npc_at(cell)
+				if npc != null and LineOfSight.distance(leader_cell(), cell) <= 2:
+					talk_to(npc.companion_id)
+				elif enemy != null and LineOfSight.distance(leader_cell(), cell) <= enemy.awareness:
 					start_combat(true)
 				else:
 					command_move(cell)
@@ -783,7 +1011,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-	if mode == "explore":
+	if mode == "explore" and not in_dialogue():
 		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		if dir != Vector2.ZERO:
 			party.steer_leader(dir, delta, map_view.is_walkable_world)

@@ -1,0 +1,44 @@
+{
+  "name": "Sera — the village",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "sera_dead": true } } },
+    { "node": "with_sera", "requires": { "recruited": "sera" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_sera": {
+      "speaker": "sera",
+      "text": "This is it. The Ninth Stair. They told us it was a Choir nest. That's a schoolroom. That's a cistern. Nobody here was singing.",
+      "choices": [
+        { "text": "You didn't know.", "effects": { "approval": { "sera": 1 }, "quest": { "id": "sera_purge_village", "stage": "seen" }, "flags": { "sera_village_seen": true } }, "next": "seen_kind" },
+        { "text": "You held the torch. Knowing doesn't change the ash.", "effects": { "approval": { "sera": -1 }, "quest": { "id": "sera_purge_village", "stage": "seen" }, "flags": { "sera_village_seen": true } }, "next": "seen_hard" },
+        { "text": "[Approval] Tell me what you need to do here.", "requires": { "approval": { "sera": { "min": 2 } } }, "effects": { "approval": { "sera": 2 }, "quest": { "id": "sera_purge_village", "stage": "done" }, "flags": { "sera_village_seen": true, "sera_village_mourned": true } }, "next": "mourned" }
+      ]
+    },
+    "seen_kind": {
+      "speaker": "sera",
+      "text": "I didn't. I still lit it. Give me a minute here, then we move.",
+      "choices": [ { "text": "Take your minute.", "effects": { "quest": { "id": "sera_purge_village", "stage": "done" } }, "end": true } ]
+    },
+    "seen_hard": {
+      "speaker": "sera",
+      "text": "No. It doesn't. That's why I'm standing in it.",
+      "choices": [ { "text": "Then stand. We'll wait.", "effects": { "quest": { "id": "sera_purge_village", "stage": "done" } }, "end": true } ]
+    },
+    "mourned": {
+      "speaker": "sera",
+      "text": "Names. I need the names. There's a roll in the cistern office if the damp left anything. Then I can stop calling it 'the village'.",
+      "choices": [ { "text": "We'll get the roll.", "end": true } ]
+    },
+    "alone": {
+      "speaker": "narrator",
+      "text": "A burned village on the third depth. A schoolroom, a cistern, an Ashfound purge-mark scorched into the gate. Someone should have been here to see it.",
+      "choices": [ { "text": "Note the place and move on.", "effects": { "quest": { "id": "sera_purge_village", "stage": "done_alone" }, "flags": { "sera_village_seen": true } }, "end": true } ]
+    },
+    "dead": {
+      "speaker": "narrator",
+      "text": "Sera's village. She never got to stand in it. You find the purge-mark on the gate and the roll of names in the cistern office, and you carry the roll out for her.",
+      "choices": [ { "text": "Carry the names out.", "effects": { "quest": { "id": "sera_purge_village", "stage": "done_posthumous" }, "flags": { "sera_village_seen": true, "sera_names_recovered": true } }, "end": true } ]
+    }
+  }
+}

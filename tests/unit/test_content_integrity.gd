@@ -155,7 +155,10 @@ func test_pickups_have_valid_grants_and_placements() -> void:
 	var allowed: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp"]
 	for p: Dictionary in pickups:
 		var grants: Dictionary = p.get("grants", {})
-		assert_true(grants.size() >= 1, "pickup %s grants" % p["id"])
+		if p.has("dialogue"):
+			assert_true(registry.has_entry("dialogue", String(p["dialogue"])), "pickup %s dialogue" % p["id"])
+		else:
+			assert_true(grants.size() >= 1, "pickup %s grants" % p["id"])
 		for key: String in grants:
 			assert_true(allowed.has(key), "pickup %s unknown grant '%s'" % [p["id"], key])
 		var art: Dictionary = p.get("art", {})
@@ -234,7 +237,7 @@ func test_surface_tiles_are_walkable_floors_with_known_surfaces() -> void:
 			chars.append(ch)
 
 
-func test_prototype_party_covers_four_distinct_classes_and_abilities_resolve() -> void:
+func test_prototype_party_covers_distinct_classes_and_abilities_resolve() -> void:
 	var classes := registry.get_all("classes")
 	assert_true(classes.size() >= 4, "M1: four classes")
 	var party := registry.get_entry("parties", "prototype")
@@ -243,7 +246,7 @@ func test_prototype_party_covers_four_distinct_classes_and_abilities_resolve() -
 		var cls := String(m["class"])
 		assert_false(seen.has(cls), "prototype party repeats %s" % cls)
 		seen.append(cls)
-	assert_eq(seen.size(), 4)
+	assert_eq(seen.size(), 3, "three preset classes; Sera brings the knight count to two")
 	for a: Dictionary in registry.get_all("abilities"):
 		var effect := String(a.get("effect", ""))
 		assert_true(["", "vent", "mark", "detonate"].has(effect), "ability %s effect '%s'" % [a["id"], effect])
