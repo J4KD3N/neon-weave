@@ -76,7 +76,7 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 
 	var enemy_spec: Dictionary = template.get("enemies", {})
 	var min_dist := int(enemy_spec.get("min_spawn_distance", 10))
-	var enemies := _place_enemies(enemy_spec, spawns[0], dist, min_dist)
+	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist)
 
 	var tiles: Dictionary = template.get("tiles", {})
 	var template_id := String(template.get("id", "shard"))
@@ -300,7 +300,7 @@ func _nearest_reachable(center: Vector2i, room: Rect2i, dist: PackedInt32Array) 
 
 # --- enemies ---------------------------------------------------------------
 
-func _place_enemies(spec: Dictionary, spawn: Vector2i, dist: PackedInt32Array, min_dist: int) -> Array:
+func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, min_dist: int) -> Array:
 	var out: Array = []
 	var pool: Array = spec.get("pool", [])
 	if pool.is_empty() or rooms.size() < 2:
@@ -316,7 +316,7 @@ func _place_enemies(spec: Dictionary, spawn: Vector2i, dist: PackedInt32Array, m
 				var p := Vector2i(x, y)
 				var ch := _cell_at(p)
 				if (ch == FLOOR or ch == GRATE) and dist[_idx(p)] >= 0 and not taken.has(p) \
-						and LineOfSight.distance(p, spawn) >= min_dist:
+						and _distance_to_any(p, spawns) >= min_dist:
 					candidates.append(p)
 		var n := rng.randi_range(int(size_range[0]), int(size_range[1]))
 		for _i: int in n:
@@ -328,6 +328,13 @@ func _place_enemies(spec: Dictionary, spawn: Vector2i, dist: PackedInt32Array, m
 			taken[cell] = true
 			out.append({"type": _weighted_pick(pool), "cell": [cell.x, cell.y]})
 	return out
+
+
+static func _distance_to_any(p: Vector2i, cells_list: Array[Vector2i]) -> int:
+	var best := 1 << 30
+	for c: Vector2i in cells_list:
+		best = mini(best, LineOfSight.distance(p, c))
+	return best
 
 
 func _weighted_pick(pool: Array) -> String:

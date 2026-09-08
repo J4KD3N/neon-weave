@@ -70,8 +70,12 @@ static func validate(entry: Dictionary, tiles_by_id: Dictionary) -> Array[String
 			errors.append("two enemies on %s" % cell)
 		if spawns.has(cell) or cell == exit_cell:
 			errors.append("enemy on spawn/extraction %s" % cell)
-		if min_dist > 0 and LineOfSight.distance(cell, spawns[0]) < min_dist:
-			errors.append("enemy %s too close to spawn (%d < %d)" % [p.get("type"), LineOfSight.distance(cell, spawns[0]), min_dist])
+		if min_dist > 0:
+			for s: Vector2i in spawns:
+				var d := LineOfSight.distance(cell, s)
+				if d < min_dist:
+					errors.append("enemy %s too close to spawn %s (%d < %d)" % [p.get("type"), s, d, min_dist])
+					break
 		seen.append(cell)
 	return errors
 
