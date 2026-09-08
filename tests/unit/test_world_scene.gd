@@ -313,7 +313,7 @@ func test_wipe_in_shard_loses_haul_but_not_the_books() -> void:
 	assert_eq(world.ledger.total("salvage"), 10, "banked salvage untouched")
 	assert_eq(world.ledger.xp, 0, "unbanked xp lost")
 	assert_eq(world.ledger.kills, 1, "kills still count")
-	assert_contains(world.status_line(), "press R")
+	assert_contains(world.status_line(), "R: return to the yard")
 	world.return_home()
 	assert_eq(world.mode, "explore")
 	assert_eq(world.map_data.name, "Proto Yard")
