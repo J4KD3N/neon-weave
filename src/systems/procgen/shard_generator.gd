@@ -64,7 +64,7 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 
 	var spawns := _spawn_cells(rooms[0], 4)
 	for s: Vector2i in spawns:
-		_set(s, SPAWN)
+		_put(s, SPAWN)
 
 	_scatter_debris(float(template.get("debris_density", 0.04)))
 
@@ -72,7 +72,7 @@ func _run(template: Dictionary, seed_value: int) -> Dictionary:
 	_wall_unreachable(dist)
 
 	var exit_cell := _extraction_cell(dist)
-	_set(exit_cell, EXIT)
+	_put(exit_cell, EXIT)
 
 	var enemy_spec: Dictionary = template.get("enemies", {})
 	var min_dist := int(enemy_spec.get("min_spawn_distance", 10))
@@ -140,8 +140,8 @@ func _carve_line(a: Vector2i, b: Vector2i) -> void:
 	var step := Vector2i(signi(b.x - a.x), signi(b.y - a.y))
 	var p := a
 	while true:
-		if _get(p) == WALL:
-			_set(p, FLOOR)
+		if _cell_at(p) == WALL:
+			_put(p, FLOOR)
 		if p == b:
 			break
 		p += step
@@ -154,8 +154,8 @@ func _grate_patch(r: Rect2i) -> void:
 	var y := rng.randi_range(r.position.y, maxi(r.position.y, r.end.y - h))
 	for yy: int in range(y, mini(y + h, r.end.y)):
 		for xx: int in range(x, mini(x + w, r.end.x)):
-			if _get(Vector2i(xx, yy)) == FLOOR:
-				_set(Vector2i(xx, yy), GRATE)
+			if _cell_at(Vector2i(xx, yy)) == FLOOR:
+				_put(Vector2i(xx, yy), GRATE)
 
 
 # --- spawn, debris, reachability ------------------------------------------
@@ -185,13 +185,13 @@ func _scatter_debris(density: float) -> void:
 	for y: int in range(1, height - 1):
 		for x: int in range(1, width - 1):
 			var p := Vector2i(x, y)
-			var ch := _get(p)
+			var ch := _cell_at(p)
 			if ch != FLOOR and ch != GRATE:
 				continue
 			if rng.randf() >= density:
 				continue
 			if _is_simple_point(p):
-				_set(p, DEBRIS)
+				_put(p, DEBRIS)
 
 
 ## True when removing `p` from the walkable set cannot disconnect anything:
@@ -245,9 +245,9 @@ func _wall_unreachable(dist: PackedInt32Array) -> void:
 		for x: int in width:
 			var p := Vector2i(x, y)
 			if _walkable(p) and dist[_idx(p)] < 0:
-				_set(p, WALL)
-			elif _get(p) == DEBRIS and dist[_idx(p)] < 0 and not _has_reachable_neighbour(p, dist):
-				_set(p, WALL)
+				_put(p, WALL)
+			elif _cell_at(p) == DEBRIS and dist[_idx(p)] < 0 and not _has_reachable_neighbour(p, dist):
+				_put(p, WALL)
 
 
 func _has_reachable_neighbour(p: Vector2i, dist: PackedInt32Array) -> bool:
@@ -276,7 +276,7 @@ func _extraction_cell(dist: PackedInt32Array) -> Vector2i:
 		for y: int in height:
 			for x: int in width:
 				var p := Vector2i(x, y)
-				if _get(p) == FLOOR and dist[_idx(p)] > best_d:
+				if _cell_at(p) == FLOOR and dist[_idx(p)] > best_d:
 					best_d = dist[_idx(p)]
 					far = p
 		return far
@@ -289,7 +289,7 @@ func _nearest_reachable(center: Vector2i, room: Rect2i, dist: PackedInt32Array) 
 	for y: int in range(room.position.y, room.end.y):
 		for x: int in range(room.position.x, room.end.x):
 			var p := Vector2i(x, y)
-			var ch := _get(p)
+			var ch := _cell_at(p)
 			if (ch == FLOOR or ch == GRATE) and dist[_idx(p)] >= 0:
 				var l := (p - center).length_squared()
 				if l < best_len:
@@ -314,7 +314,7 @@ func _place_enemies(spec: Dictionary, spawn: Vector2i, dist: PackedInt32Array, m
 		for y: int in range(room.position.y, room.end.y):
 			for x: int in range(room.position.x, room.end.x):
 				var p := Vector2i(x, y)
-				var ch := _get(p)
+				var ch := _cell_at(p)
 				if (ch == FLOOR or ch == GRATE) and dist[_idx(p)] >= 0 and not taken.has(p) \
 						and LineOfSight.distance(p, spawn) >= min_dist:
 					candidates.append(p)
@@ -364,7 +364,7 @@ func _pick(span: Variant) -> int:
 func _fill(r: Rect2i, ch: String) -> void:
 	for y: int in range(r.position.y, r.end.y):
 		for x: int in range(r.position.x, r.end.x):
-			_set(Vector2i(x, y), ch)
+			_put(Vector2i(x, y), ch)
 
 
 static func _center(r: Rect2i) -> Vector2i:
@@ -379,15 +379,15 @@ func _in_bounds(p: Vector2i) -> bool:
 	return p.x >= 0 and p.y >= 0 and p.x < width and p.y < height
 
 
-func _get(p: Vector2i) -> String:
+func _cell_at(p: Vector2i) -> String:
 	return cells[_idx(p)] if _in_bounds(p) else WALL
 
 
-func _set(p: Vector2i, ch: String) -> void:
+func _put(p: Vector2i, ch: String) -> void:
 	if _in_bounds(p):
 		cells[_idx(p)] = ch
 
 
 func _walkable(p: Vector2i) -> bool:
-	var ch := _get(p)
+	var ch := _cell_at(p)
 	return ch == FLOOR or ch == GRATE or ch == SPAWN or ch == EXIT
