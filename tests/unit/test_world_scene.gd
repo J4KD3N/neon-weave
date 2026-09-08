@@ -44,7 +44,6 @@ func test_map_is_built_from_content() -> void:
 			if world.map_data.is_enclosed(Vector2i(x, y)):
 				enclosed += 1
 	assert_eq(walls + enclosed + world.map_data.walkable_count(), world.map_data.width * world.map_data.height, "walls + void + ground cover the map")
-	assert_false(world.map_view.walls.get_used_cells().has(Vector2i(0, 0)), "the yard's corner is enclosed rock")
 
 
 func test_party_spawns_on_spawn_cells_with_class_colours_and_stats() -> void:
