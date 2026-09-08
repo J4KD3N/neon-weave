@@ -146,3 +146,22 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `EnemyBrain.next_action(state, actor)` returns one action (move / ability / end); the controller executes it, animates, and asks again. Archetypes: `rusher` (close to nearest hostile, use highest-damage usable ability) and `ranged` (kite to distance 2..range with LOS, then shoot). Unknown archetypes fall back to rusher.
 **Why**: Each decision sees the true state after the previous action, and the view gets natural animation beats. Summoner/stealther/controller wait on their mechanics.
+
+## D-027 — Session S3 scope: procgen Shard biome
+**Date**: 2026-09-08
+**Decision**: One generator (`ShardGenerator`) + one validator (`ShardValidator`) + one template (`content/shards/rusted_undercity.json`). Debug keys N (new Shard) and H (home) stand in for the Bastion's Beacon until it exists. Deferred: secrets, vaults, merchants, biome variety, the extraction loop itself (next session).
+
+## D-028 — Generated Shards are map entries
+**Date**: 2026-09-08
+**Decision**: The generator emits a dictionary in the exact shape of `content/maps/*.json` (rows, legend, spawn marker, enemy placements) plus `extraction`, `rooms` and `generation` metadata. The world loads both through the same `load_map_entry`; MapData, MapView, NavGrid, encounters and combat do not know whether a map was handcrafted.
+**Why**: One code path, one validator for both, and modders can author templates or hand maps with the same vocabulary.
+
+## D-029 — Solvability by construction plus an independent validator
+**Date**: 2026-09-08
+**Decision**: Rooms and L-corridors connect every room in placement order (plus random loops). Debris is only placed on "simple points": cells whose walkable ring neighbours stay 4-connected through the ring, so removing the cell cannot split the map. A final 4-connected flood from the spawn walls off anything unreachable. The validator re-checks everything under the exploration movement rules (8-connected, no corner cutting): closed border, 4 spawns, extraction reachable, every walkable cell reachable, enemies reachable/distinct/off spawn and exit/at least `min_spawn_distance` away. `tests/unit/test_shard_generator.gd` sweeps 80 seeds and a heavy-debris variant.
+**Why**: GDD §11 "guaranteed-solvable" and §4 "unit tests for procgen validity". The generator's local rule keeps generation O(cells); the validator is the safety net and also runs at load with warnings.
+
+## D-030 — Shard template vocabulary
+**Date**: 2026-09-08
+**Decision**: Templates carry `size`, `rooms` (count/min/max/attempts), `corridors.extra_loops`, `tiles` roles (wall/floor/grate/debris/extraction), `grate_patch_chance`, `debris_density`, and `enemies` (groups, group_size, min_spawn_distance, weighted pool). Ranges are `[min, max]` inclusive and rolled from the seed.
+**Revisit when**: a second biome needs different room shapes (caverns, datacore halls); add a `style` switch rather than a second generator.

@@ -194,3 +194,29 @@ func test_status_line_mentions_map_mode_and_leader() -> void:
 	assert_contains(line, "explore")
 	assert_contains(line, "leader (2, 2)")
 	assert_contains(line, "enemies 4")
+
+
+func test_enter_shard_generates_a_solvable_level_and_home_returns() -> void:
+	var entry := world.enter_shard("rusted_undercity", 7)
+	assert_false(entry.is_empty())
+	assert_eq(world.mode, "explore")
+	assert_contains(world.map_data.name, "Rusted Undercity Shard #7")
+	assert_eq(world.map_data.errors, [])
+	assert_eq(ShardValidator.validate(entry, world.tiles_by_id()), [])
+	var placements: Array = entry["enemies"]
+	assert_eq(world.living_enemies().size(), placements.size())
+	assert_eq(world.party.members.size(), 4)
+	assert_eq(world.leader_cell(), world.map_data.spawn_cells()[0])
+	var exit_cell := world.extraction_cell()
+	assert_true(world.map_data.is_walkable(exit_cell))
+	assert_true(world.command_move(exit_cell), "extraction is reachable by the exploration pathfinder")
+	assert_true(world.party.active)
+	assert_true(world.enter_map("proto_yard"))
+	assert_eq(world.map_data.name, "Proto Yard")
+	assert_eq(world.living_enemies().size(), 4)
+	assert_eq(world.extraction_cell(), Vector2i(-1, -1))
+
+
+func test_unknown_shard_template_is_refused() -> void:
+	assert_eq(world.enter_shard("nope", 1), {})
+	assert_eq(world.map_data.name, "Proto Yard")

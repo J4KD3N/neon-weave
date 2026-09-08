@@ -1,0 +1,121 @@
+## Seed sweep over the Shard generator: every seed must produce a map the
+## validator accepts, within the template's budgets.
+extends TestCase
+
+const SEEDS := 80
+
+var registry: ContentRegistry
+var template: Dictionary
+var tiles: Dictionary
+
+
+func before_each() -> void:
+	registry = ContentRegistry.new()
+	registry.load_from(ContentRegistry.BASE_ROOT, [])
+	template = registry.get_entry("shards", "rusted_undercity")
+	tiles = {}
+	for t: Dictionary in registry.get_all("tiles"):
+		tiles[t["id"]] = t
+
+
+func after_each() -> void:
+	registry.free()
+
+
+func test_template_exists() -> void:
+	assert_false(template.is_empty())
+
+
+func test_same_seed_same_shard() -> void:
+	var a := ShardGenerator.generate(template, 99)
+	var b := ShardGenerator.generate(template, 99)
+	assert_eq(a["rows"], b["rows"])
+	assert_eq(a["enemies"], b["enemies"])
+	assert_eq(a["extraction"], b["extraction"])
+	assert_eq(a["id"], "rusted_undercity_99")
+	assert_contains(String(a["name"]), "#99")
+
+
+func test_different_seeds_differ() -> void:
+	var a := ShardGenerator.generate(template, 1)
+	var b := ShardGenerator.generate(template, 2)
+	assert_ne(a["rows"], b["rows"])
+
+
+func test_entry_shape_matches_handcrafted_maps() -> void:
+	var e := ShardGenerator.generate(template, 5)
+	for key: String in ["id", "name", "biome", "spawn_marker", "legend", "rows", "enemies", "extraction", "rooms", "generation"]:
+		assert_true(e.has(key), "missing %s" % key)
+	assert_eq(e["biome"], "rusted_undercity")
+	var legend: Dictionary = e["legend"]
+	for ch: String in legend:
+		assert_true(tiles.has(legend[ch]), "legend '%s' -> unknown tile '%s'" % [ch, legend[ch]])
+	var map := MapData.parse(e, tiles)
+	assert_eq(map.errors, [])
+	var raw: Array = e["extraction"]
+	assert_eq(map.tile_id_at(Vector2i(int(raw[0]), int(raw[1]))), "extraction_pad")
+
+
+func test_seed_sweep_is_always_solvable_and_within_budget() -> void:
+	var size: Dictionary = template["size"]
+	var room_spec: Dictionary = template["rooms"]
+	var enemy_spec: Dictionary = template["enemies"]
+	var max_enemies := int(Array(enemy_spec["groups"])[1]) * int(Array(enemy_spec["group_size"])[1])
+	var total_enemies := 0
+	for seed_value: int in range(1, SEEDS + 1):
+		var e := ShardGenerator.generate(template, seed_value)
+		var errors := ShardValidator.validate(e, tiles)
+		assert_eq(errors, [], "seed %d" % seed_value)
+		var rows: Array = e["rows"]
+		var w := String(rows[0]).length()
+		var h := rows.size()
+		assert_true(w >= int(Array(size["width"])[0]) and w <= int(Array(size["width"])[1]), "seed %d width %d" % [seed_value, w])
+		assert_true(h >= int(Array(size["height"])[0]) and h <= int(Array(size["height"])[1]), "seed %d height %d" % [seed_value, h])
+		var rooms: Array = e["rooms"]
+		assert_true(rooms.size() >= 2 and rooms.size() <= int(Array(room_spec["count"])[1]), "seed %d rooms %d" % [seed_value, rooms.size()])
+		var enemies: Array = e["enemies"]
+		assert_true(enemies.size() >= 1, "seed %d has no enemies" % seed_value)
+		assert_true(enemies.size() <= max_enemies, "seed %d enemies %d" % [seed_value, enemies.size()])
+		total_enemies += enemies.size()
+		for p: Dictionary in enemies:
+			assert_true(registry.has_entry("enemies", String(p["type"])), "seed %d enemy type %s" % [seed_value, p["type"]])
+		var map := MapData.parse(e, tiles)
+		assert_true(map.walkable_count() > w * h / 8, "seed %d is too empty (%d walkable)" % [seed_value, map.walkable_count()])
+	assert_true(total_enemies > SEEDS * 3, "average well above three enemies per shard")
+
+
+func test_debris_never_blocks_corridors() -> void:
+	# A shard with heavy debris must still validate: the simple-point test
+	# keeps every corridor open.
+	var heavy := template.duplicate(true)
+	heavy["debris_density"] = 0.5
+	for seed_value: int in range(1, 21):
+		var e := ShardGenerator.generate(heavy, seed_value)
+		assert_eq(ShardValidator.validate(e, tiles), [], "seed %d" % seed_value)
+
+
+func test_validator_catches_broken_maps() -> void:
+	var e := ShardGenerator.generate(template, 3)
+	var rows: Array = e["rows"]
+	# Open the border.
+	var top := String(rows[0])
+	rows[0] = "." + top.substr(1)
+	assert_any_contains(ShardValidator.validate(e, tiles), "border open")
+	# Enemy on the spawn.
+	var f := ShardGenerator.generate(template, 3)
+	var map := MapData.parse(f, tiles)
+	var s := map.spawn_cells()[0]
+	var enemies: Array = f["enemies"]
+	enemies.append({"type": "scav", "cell": [s.x, s.y]})
+	var errors := ShardValidator.validate(f, tiles)
+	assert_any_contains(errors, "enemy on spawn")
+	assert_any_contains(errors, "too close to spawn")
+	# Unreachable extraction.
+	var g := ShardGenerator.generate(template, 3)
+	g["extraction"] = [0, 0]
+	assert_any_contains(ShardValidator.validate(g, tiles), "extraction (0, 0) is not walkable")
+
+
+func test_handcrafted_proto_yard_passes_the_solvability_checks() -> void:
+	var entry: Dictionary = registry.get_entry("maps", "proto_yard")
+	assert_eq(ShardValidator.validate(entry, tiles), [])

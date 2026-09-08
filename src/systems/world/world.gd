@@ -19,6 +19,8 @@ extends Node2D
 
 var registry: ContentRegistry
 var map_data: MapData
+## The map entry currently loaded: a `maps` content entry or a generated Shard.
+var map_entry: Dictionary = {}
 var rules: CombatRules
 var enemies: Array[EnemyActor] = []
 var combat: CombatController
@@ -37,7 +39,7 @@ func _ready() -> void:
 	registry = _resolve_registry()
 	overlay.registry = registry
 	rules = CombatRules.from_entry(registry.get_entry("rules", "combat"))
-	load_map(map_id)
+	load_map_entry(registry.get_entry("maps", map_id))
 	highlighter = CellHighlighter.new()
 	highlighter.name = "Highlighter"
 	highlighter.map_view = map_view
@@ -57,6 +59,8 @@ func _ready() -> void:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="):
 			_screenshot_path = arg.get_slice("=", 1)
+		elif arg.begins_with("--shard="):
+			enter_shard("rusted_undercity", int(arg.get_slice("=", 1)))
 
 
 func _exit_tree() -> void:
@@ -64,15 +68,68 @@ func _exit_tree() -> void:
 		registry.free()
 
 
-func load_map(id: String) -> void:
-	var entry: Dictionary = registry.get_entry("maps", id)
-	var tiles_by_id: Dictionary = {}
+func tiles_by_id() -> Dictionary:
+	var out: Dictionary = {}
 	for tile: Dictionary in registry.get_all("tiles"):
-		tiles_by_id[tile["id"]] = tile
-	map_data = MapData.parse(entry, tiles_by_id)
+		out[tile["id"]] = tile
+	return out
+
+
+func load_map_entry(entry: Dictionary) -> void:
+	map_entry = entry
+	map_data = MapData.parse(entry, tiles_by_id())
 	for err: String in map_data.errors:
 		push_warning(err)
 	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id))
+
+
+## Generates a Shard from a `shards` template and moves the party into it.
+## Returns the generated map entry ({} when the template is unknown).
+func enter_shard(template_id: String, seed_value: int) -> Dictionary:
+	var template: Dictionary = registry.get_entry("shards", template_id)
+	if template.is_empty():
+		push_warning("unknown shard template '%s'" % template_id)
+		return {}
+	var entry := ShardGenerator.generate(template, seed_value)
+	for err: String in ShardValidator.validate(entry, tiles_by_id()):
+		push_warning("shard %s: %s" % [entry.get("id"), err])
+	_enter(entry)
+	return entry
+
+
+## Loads a handcrafted map by id and moves the party into it.
+func enter_map(id: String) -> bool:
+	var entry: Dictionary = registry.get_entry("maps", id)
+	if entry.is_empty():
+		return false
+	map_id = id
+	_enter(entry)
+	return true
+
+
+func _enter(entry: Dictionary) -> void:
+	if mode == "combat":
+		return
+	load_map_entry(entry)
+	spawn_party(party_id)
+	spawn_enemies()
+	mode = "explore"
+	party.active = true
+	if highlighter != null:
+		highlighter.clear_all()
+	if hud != null:
+		hud.visible = false
+	if camera != null:
+		camera.target = party.leader()
+		camera.snap()
+
+
+## Extraction pad cell of the current map, or (-1,-1) when it has none.
+func extraction_cell() -> Vector2i:
+	if not map_entry.has("extraction"):
+		return Vector2i(-1, -1)
+	var raw: Array = map_entry["extraction"]
+	return Vector2i(int(raw[0]), int(raw[1]))
 
 
 func abilities_by_id() -> Dictionary:
@@ -106,18 +163,17 @@ func spawn_enemies() -> void:
 	for e: EnemyActor in enemies:
 		e.queue_free()
 	enemies.clear()
-	var entry: Dictionary = registry.get_entry("maps", map_id)
-	var placements: Array = entry.get("enemies", [])
+	var placements: Array = map_entry.get("enemies", [])
 	for p: Dictionary in placements:
 		var type: String = String(p.get("type", ""))
 		var enemy_entry: Dictionary = registry.get_entry("enemies", type)
 		var raw_cell: Array = p.get("cell", [0, 0])
 		var cell := Vector2i(int(raw_cell[0]), int(raw_cell[1]))
 		if enemy_entry.is_empty():
-			push_warning("map %s places unknown enemy '%s'" % [map_id, type])
+			push_warning("map %s places unknown enemy '%s'" % [map_data.id, type])
 			continue
 		if not map_data.is_walkable(cell):
-			push_warning("map %s places %s on blocked cell %s" % [map_id, type, cell])
+			push_warning("map %s places %s on blocked cell %s" % [map_data.id, type, cell])
 			continue
 		var actor := EnemyActor.new()
 		actor.setup(type, enemy_entry, cell, StatBlock.for_enemy(enemy_entry, rules), rules.awareness_default)
@@ -249,8 +305,12 @@ func _on_combat_ended(result: String) -> void:
 
 
 func status_line() -> String:
-	return "%s  |  %s  |  leader %s  hover %s  |  enemies %d  |  LMB move/attack · WASD steer · wheel zoom · F1 registry" % [
-		map_data.name, mode, leader_cell(), hovered_cell, living_enemies().size(),
+	var exit_note := ""
+	var exit_cell := extraction_cell()
+	if exit_cell.x >= 0:
+		exit_note = "  extraction %s (%d away)" % [exit_cell, LineOfSight.distance(leader_cell(), exit_cell)]
+	return "%s  |  %s  |  leader %s  hover %s%s  |  enemies %d  |  LMB move/attack · WASD steer · wheel zoom · N new shard · H home · F1 registry" % [
+		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(),
 	]
 
 
@@ -269,6 +329,10 @@ func _unhandled_input(event: InputEvent) -> void:
 					start_combat(true)
 				else:
 					command_move(cell)
+			elif event.is_action_pressed("new_shard"):
+				enter_shard("rusted_undercity", int(randi() % 1000000))
+			elif event.is_action_pressed("go_home"):
+				enter_map("proto_yard")
 		"combat":
 			if clicked:
 				combat.player_click(map_view.world_to_cell(get_global_mouse_position()))

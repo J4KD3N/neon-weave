@@ -16,6 +16,8 @@ const BINDINGS: Dictionary = {
 	"end_turn": [KEY_SPACE],
 	"cancel": [KEY_ESCAPE],
 	"restart": [KEY_R],
+	"new_shard": [KEY_N],
+	"go_home": [KEY_H],
 }
 
 
