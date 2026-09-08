@@ -7,5 +7,6 @@
   "abilities": ["chrome_fist"],
   "awareness": 4,
   "xp": 8,
+  "loot": { "salvage": [2, 4], "aether": [0, 1], "cipher_chance": 0.1 },
   "art": { "shape": "capsule", "color": "#b0653f" }
 }

@@ -44,7 +44,7 @@ func test_different_seeds_differ() -> void:
 
 func test_entry_shape_matches_handcrafted_maps() -> void:
 	var e := ShardGenerator.generate(template, 5)
-	for key: String in ["id", "name", "biome", "spawn_marker", "legend", "rows", "enemies", "extraction", "rooms", "generation"]:
+	for key: String in ["id", "name", "biome", "spawn_marker", "legend", "rows", "enemies", "pickups", "extraction", "rooms", "generation"]:
 		assert_true(e.has(key), "missing %s" % key)
 	assert_eq(e["biome"], "rusted_undercity")
 	var legend: Dictionary = e["legend"]
@@ -76,6 +76,10 @@ func test_seed_sweep_is_always_solvable_and_within_budget() -> void:
 		var enemies: Array = e["enemies"]
 		assert_true(enemies.size() >= 1, "seed %d has no enemies" % seed_value)
 		assert_true(enemies.size() <= max_enemies, "seed %d enemies %d" % [seed_value, enemies.size()])
+		var pickups: Array = e["pickups"]
+		assert_true(pickups.size() >= 1 and pickups.size() <= 6, "seed %d pickups %d" % [seed_value, pickups.size()])
+		for p: Dictionary in pickups:
+			assert_true(registry.has_entry("pickups", String(p["type"])), "seed %d pickup type %s" % [seed_value, p["type"]])
 		total_enemies += enemies.size()
 		for p: Dictionary in enemies:
 			assert_true(registry.has_entry("enemies", String(p["type"])), "seed %d enemy type %s" % [seed_value, p["type"]])

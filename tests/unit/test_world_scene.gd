@@ -7,10 +7,15 @@ const DT := 1.0 / 60.0
 var world: ExploreWorld
 
 
+const LEDGER := "user://test_ledger_scene.json"
+
+
 func before_each() -> void:
+	_remove_ledger()
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	world = packed.instantiate() as ExploreWorld
 	world.combat_seed = 1234
+	world.ledger_path = LEDGER
 	_root().add_child(world)
 	world.combat.animate = false
 
@@ -18,6 +23,12 @@ func before_each() -> void:
 func after_each() -> void:
 	_root().remove_child(world)
 	world.free()
+	_remove_ledger()
+
+
+static func _remove_ledger() -> void:
+	if FileAccess.file_exists(LEDGER):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(LEDGER))
 
 
 static func _root() -> Window:
@@ -226,3 +237,86 @@ func test_enter_shard_generates_a_solvable_level_and_home_returns() -> void:
 func test_unknown_shard_template_is_refused() -> void:
 	assert_eq(world.enter_shard("nope", 1), {})
 	assert_eq(world.map_data.name, "Proto Yard")
+
+
+func test_pickups_spawn_and_are_collected_by_walking_over() -> void:
+	assert_eq(world.remaining_pickups().size(), 2)
+	assert_eq(world.ledger.total("salvage"), 0, "fresh ledger")
+	world.teleport_party(Vector2i(5, 10))
+	var gained := world.check_pickups()
+	assert_eq(gained.size(), 1)
+	assert_eq(gained[0]["pickup"], "salvage_cache")
+	assert_true(int(gained[0]["salvage"]) >= 2 and int(gained[0]["salvage"]) <= 5, "cache rolls 2-5")
+	assert_eq(world.remaining_pickups().size(), 1)
+	assert_true(world.ledger.total("salvage") >= 2, "at home, loot banks immediately")
+	assert_true(world.run.is_empty())
+	assert_eq(world.check_pickups().size(), 0, "collected once")
+	assert_true(FileAccess.file_exists(LEDGER), "ledger saved on bank")
+
+
+func test_enemy_kill_adds_loot_xp_and_kills() -> void:
+	var scav := world.enemy_at(Vector2i(14, 2))
+	var got := world.on_enemy_killed(scav)
+	assert_true(int(got["salvage"]) >= 1 and int(got["salvage"]) <= 2)
+	assert_eq(int(got["xp"]), 5)
+	assert_eq(world.ledger.kills, 1)
+	assert_eq(world.ledger.xp, 5)
+	assert_true(world.ledger.total("salvage") >= 1)
+
+
+func test_extraction_banks_haul_records_run_and_returns_home() -> void:
+	var entry := world.enter_shard("rusted_undercity", 7)
+	assert_true(world.run.in_shard)
+	var placements: Array = entry["pickups"]
+	assert_true(placements.size() >= 3)
+	assert_eq(world.remaining_pickups().size(), placements.size())
+	world.run.collect({"salvage": 3, "aether": 1, "xp": 4})
+	world.run.kills = 2
+	assert_false(world.can_extract(), "not on the pad yet")
+	assert_false(world.extract())
+	world.teleport_party(world.extraction_cell())
+	assert_eq(world.leader_cell(), world.extraction_cell())
+	assert_true(world.can_extract())
+	assert_true(world.extract())
+	assert_eq(world.map_data.name, "Proto Yard")
+	assert_eq(world.mode, "explore")
+	assert_false(world.run.in_shard)
+	assert_true(world.run.is_empty())
+	assert_eq(world.ledger.total("salvage"), 3)
+	assert_eq(world.ledger.total("aether"), 1)
+	assert_eq(world.ledger.xp, 4)
+	assert_eq(world.ledger.kills, 2)
+	assert_eq(world.ledger.runs_completed, 1)
+	var reloaded := Ledger.load_or_new(LEDGER)
+	assert_eq(reloaded.runs_completed, 1)
+	assert_eq(reloaded.total("salvage"), 3)
+	assert_false(world.can_extract(), "no pad at home")
+
+
+func test_wipe_in_shard_loses_haul_but_not_the_books() -> void:
+	world.ledger.bank({"salvage": 10})
+	world.enter_shard("rusted_undercity", 7)
+	world.run.collect({"salvage": 5, "xp": 3})
+	world.run.kills = 1
+	world._on_combat_ended("defeat")
+	assert_eq(world.mode, "defeated")
+	assert_true(world.run.is_empty(), "haul lost")
+	assert_eq(world.ledger.runs_wiped, 1)
+	assert_eq(world.ledger.runs_completed, 0)
+	assert_eq(world.ledger.total("salvage"), 10, "banked salvage untouched")
+	assert_eq(world.ledger.xp, 0, "unbanked xp lost")
+	assert_eq(world.ledger.kills, 1, "kills still count")
+	assert_contains(world.status_line(), "press R")
+	world.return_home()
+	assert_eq(world.mode, "explore")
+	assert_eq(world.map_data.name, "Proto Yard")
+	for m: PartyMember in world.party.members:
+		assert_eq(m.hp, m.max_hp, "fresh party at home")
+	assert_eq(Ledger.load_or_new(LEDGER).runs_wiped, 1)
+
+
+func test_status_line_shows_extraction_prompt_on_the_pad() -> void:
+	world.enter_shard("rusted_undercity", 7)
+	world.teleport_party(world.extraction_cell())
+	assert_contains(world.status_line(), "press E to extract")
+	assert_contains(world.status_line(), "haul S0")

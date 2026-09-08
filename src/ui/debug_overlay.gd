@@ -22,6 +22,32 @@ func _ready() -> void:
 	_refresh()
 
 
+var _toast: Label
+
+
+## Big centred message that fades after `seconds`.
+func toast(message: String, seconds: float = 2.5) -> void:
+	if _toast == null:
+		_toast = Label.new()
+		_toast.name = "Toast"
+		_toast.position = Vector2(0, 150)
+		_toast.size = Vector2(1920, 80)
+		_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_toast.add_theme_font_size_override("font_size", 34)
+		_toast.add_theme_color_override("font_color", Color(0.95, 0.9, 1.0))
+		_toast.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+		_toast.add_theme_constant_override("shadow_offset_x", 2)
+		_toast.add_theme_constant_override("shadow_offset_y", 2)
+		get_parent().add_child(_toast)
+	_toast.text = message
+	_toast.modulate.a = 1.0
+	_toast.visible = true
+	var tween := _toast.create_tween()
+	tween.tween_interval(seconds)
+	tween.tween_property(_toast, "modulate:a", 0.0, 0.5)
+
+
 func toggle_registry() -> void:
 	show_registry = not show_registry
 	_refresh()

@@ -146,3 +146,27 @@ func test_shard_templates_reference_existing_tiles_enemies_and_biomes() -> void:
 		for p: Dictionary in pool:
 			assert_true(registry.has_entry("enemies", String(p.get("type", ""))), "shard %s pool type %s" % [t["id"], p.get("type")])
 			assert_true(float(p.get("weight", 0)) > 0.0, "shard %s pool weight" % t["id"])
+
+
+func test_pickups_have_valid_grants_and_placements() -> void:
+	var pickups := registry.get_all("pickups")
+	assert_true(pickups.size() >= 2)
+	var allowed: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp"]
+	for p: Dictionary in pickups:
+		var grants: Dictionary = p.get("grants", {})
+		assert_true(grants.size() >= 1, "pickup %s grants" % p["id"])
+		for key: String in grants:
+			assert_true(allowed.has(key), "pickup %s unknown grant '%s'" % [p["id"], key])
+		var art: Dictionary = p.get("art", {})
+		assert_true(Color.html_is_valid(String(art.get("color", ""))), "pickup %s colour" % p["id"])
+	for e: Dictionary in registry.get_all("enemies"):
+		var loot: Dictionary = e.get("loot", {})
+		for key: String in loot:
+			assert_true(allowed.has(key), "enemy %s unknown loot '%s'" % [e["id"], key])
+	for t: Dictionary in registry.get_all("shards"):
+		var spec: Dictionary = t.get("pickups", {})
+		for entry: Dictionary in spec.get("pool", []):
+			assert_true(registry.has_entry("pickups", String(entry.get("type", ""))), "shard %s pickup pool type" % t["id"])
+	var tiles := _tiles_by_id()
+	for m: Dictionary in registry.get_all("maps"):
+		assert_eq(ShardValidator.validate(m, tiles), [], "map %s placements" % m["id"])

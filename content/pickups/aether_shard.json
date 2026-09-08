@@ -1,0 +1,6 @@
+{
+  "name": "Aether shard",
+  "summary": "Crystallised Weft-leak. Sometimes a Cipher is fused inside.",
+  "grants": { "aether": [1, 2], "cipher_chance": 0.25, "xp": 2 },
+  "art": { "color": "#b58cff" }
+}

@@ -193,6 +193,9 @@ func _sync_actor(id: String) -> void:
 	node.downed = c.downed
 	if c.hp <= 0 and not c.downed and not node.dead:
 		node.dead = true
+		var enemy := node as EnemyActor
+		if enemy != null:
+			world.on_enemy_killed(enemy)
 		if animate:
 			var tween := node.create_tween()
 			tween.tween_property(node, "modulate:a", 0.0, 0.4)

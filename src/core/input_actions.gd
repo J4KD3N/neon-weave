@@ -18,6 +18,7 @@ const BINDINGS: Dictionary = {
 	"restart": [KEY_R],
 	"new_shard": [KEY_N],
 	"go_home": [KEY_H],
+	"extract": [KEY_E],
 }
 
 

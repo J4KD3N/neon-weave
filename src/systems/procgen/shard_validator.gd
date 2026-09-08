@@ -77,6 +77,24 @@ static func validate(entry: Dictionary, tiles_by_id: Dictionary) -> Array[String
 					errors.append("enemy %s too close to spawn %s (%d < %d)" % [p.get("type"), s, d, min_dist])
 					break
 		seen.append(cell)
+
+	var pickup_cells: Array[Vector2i] = []
+	var pickups: Array = entry.get("pickups", [])
+	for p: Dictionary in pickups:
+		var raw: Array = p.get("cell", [])
+		if raw.size() != 2:
+			errors.append("pickup placement without [x, y]")
+			continue
+		var cell := Vector2i(int(raw[0]), int(raw[1]))
+		if not map.is_walkable(cell):
+			errors.append("pickup %s on blocked %s" % [p.get("type"), cell])
+		elif not reach.has(cell):
+			errors.append("pickup %s unreachable at %s" % [p.get("type"), cell])
+		if pickup_cells.has(cell) or seen.has(cell):
+			errors.append("pickup shares %s" % cell)
+		if spawns.has(cell) or cell == exit_cell:
+			errors.append("pickup on spawn/extraction %s" % cell)
+		pickup_cells.append(cell)
 	return errors
 
 

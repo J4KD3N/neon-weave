@@ -1,19 +1,26 @@
-## Exploration scene root: loads a map, party preset and enemies from the
-## content registry, builds the view, routes input, and hands off to the
+## Exploration scene root: loads a map (handcrafted or generated Shard), a
+## party preset, enemies and pickups from the content registry, routes
+## input, runs the extraction loop, and hands off to the
 ## [CombatController] when an encounter starts.
 ##
 ## Modes: "explore" (real-time), "combat" (turn-based), "defeated".
 class_name ExploreWorld
 extends Node2D
 
-@export var map_id: String = "proto_yard"
+const HOME_MAP := "proto_yard"
+const DEFAULT_SHARD := "rusted_undercity"
+
+@export var map_id: String = HOME_MAP
 @export var party_id: String = "prototype"
 ## 0 = random per encounter. Tests pin it.
 @export var combat_seed: int = 0
+## Where the Bastion ledger persists. Tests point this at a scratch file.
+@export var ledger_path: String = "user://ledger.json"
 
 @onready var map_view: MapView = $Scene/MapView
 @onready var party: Party = $Scene/Party
 @onready var enemies_node: Node2D = $Scene/Enemies
+@onready var pickups_node: Node2D = $Scene/Pickups
 @onready var camera: FollowCamera = $Camera
 @onready var overlay: DebugOverlay = $Hud/DebugOverlay
 
@@ -22,7 +29,10 @@ var map_data: MapData
 ## The map entry currently loaded: a `maps` content entry or a generated Shard.
 var map_entry: Dictionary = {}
 var rules: CombatRules
+var ledger: Ledger
+var run := RunState.new()
 var enemies: Array[EnemyActor] = []
+var pickups: Array[PickupActor] = []
 var combat: CombatController
 var hud: CombatHud
 var highlighter: CellHighlighter
@@ -39,13 +49,18 @@ func _ready() -> void:
 	registry = _resolve_registry()
 	overlay.registry = registry
 	rules = CombatRules.from_entry(registry.get_entry("rules", "combat"))
+	ledger = Ledger.load_or_new(ledger_path)
+	if not ledger.load_error.is_empty():
+		push_warning(ledger.load_error)
 	load_map_entry(registry.get_entry("maps", map_id))
 	highlighter = CellHighlighter.new()
 	highlighter.name = "Highlighter"
 	highlighter.map_view = map_view
 	map_view.add_child(highlighter)
+	run.begin("", 0)
 	spawn_party(party_id)
 	spawn_enemies()
+	spawn_pickups()
 	hud = CombatHud.new()
 	hud.name = "CombatHud"
 	add_child(hud)
@@ -60,7 +75,7 @@ func _ready() -> void:
 		if arg.begins_with("--screenshot="):
 			_screenshot_path = arg.get_slice("=", 1)
 		elif arg.begins_with("--shard="):
-			enter_shard("rusted_undercity", int(arg.get_slice("=", 1)))
+			enter_shard(DEFAULT_SHARD, int(arg.get_slice("=", 1)))
 
 
 func _exit_tree() -> void:
@@ -68,10 +83,19 @@ func _exit_tree() -> void:
 		registry.free()
 
 
+# --- loading ---------------------------------------------------------------
+
 func tiles_by_id() -> Dictionary:
 	var out: Dictionary = {}
 	for tile: Dictionary in registry.get_all("tiles"):
 		out[tile["id"]] = tile
+	return out
+
+
+func abilities_by_id() -> Dictionary:
+	var out: Dictionary = {}
+	for ability: Dictionary in registry.get_all("abilities"):
+		out[ability["id"]] = ability
 	return out
 
 
@@ -93,35 +117,49 @@ func enter_shard(template_id: String, seed_value: int) -> Dictionary:
 	var entry := ShardGenerator.generate(template, seed_value)
 	for err: String in ShardValidator.validate(entry, tiles_by_id()):
 		push_warning("shard %s: %s" % [entry.get("id"), err])
-	_enter(entry)
+	if _enter(entry):
+		run.begin(String(entry["id"]), seed_value)
 	return entry
 
 
-## Loads a handcrafted map by id and moves the party into it.
+## Loads a handcrafted map by id and moves the party into it. Loot found on
+## handcrafted maps banks immediately (no extraction risk).
 func enter_map(id: String) -> bool:
 	var entry: Dictionary = registry.get_entry("maps", id)
 	if entry.is_empty():
 		return false
-	map_id = id
-	_enter(entry)
+	if _enter(entry):
+		map_id = id
+		run.begin("", 0)
 	return true
 
 
-func _enter(entry: Dictionary) -> void:
+func _enter(entry: Dictionary) -> bool:
 	if mode == "combat":
-		return
+		return false
 	load_map_entry(entry)
 	spawn_party(party_id)
 	spawn_enemies()
+	spawn_pickups()
 	mode = "explore"
 	party.active = true
 	if highlighter != null:
 		highlighter.clear_all()
 	if hud != null:
+		hud.hide_message()
 		hud.visible = false
 	if camera != null:
 		camera.target = party.leader()
 		camera.snap()
+	return true
+
+
+## After a wipe: back to the yard with a fresh party. Nothing banked is lost.
+func return_home() -> void:
+	if mode == "combat":
+		return
+	mode = "explore"
+	enter_map(HOME_MAP)
 
 
 ## Extraction pad cell of the current map, or (-1,-1) when it has none.
@@ -132,12 +170,7 @@ func extraction_cell() -> Vector2i:
 	return Vector2i(int(raw[0]), int(raw[1]))
 
 
-func abilities_by_id() -> Dictionary:
-	var out: Dictionary = {}
-	for ability: Dictionary in registry.get_all("abilities"):
-		out[ability["id"]] = ability
-	return out
-
+# --- spawning --------------------------------------------------------------
 
 func spawn_party(id: String) -> void:
 	var preset: Dictionary = registry.get_entry("parties", id)
@@ -161,7 +194,8 @@ func spawn_party(id: String) -> void:
 
 func spawn_enemies() -> void:
 	for e: EnemyActor in enemies:
-		e.queue_free()
+		if is_instance_valid(e):
+			e.queue_free()
 	enemies.clear()
 	var placements: Array = map_entry.get("enemies", [])
 	for p: Dictionary in placements:
@@ -182,6 +216,27 @@ func spawn_enemies() -> void:
 		enemies.append(actor)
 
 
+func spawn_pickups() -> void:
+	for p: PickupActor in pickups:
+		if is_instance_valid(p):
+			p.queue_free()
+	pickups.clear()
+	var placements: Array = map_entry.get("pickups", [])
+	for p: Dictionary in placements:
+		var type: String = String(p.get("type", ""))
+		var entry: Dictionary = registry.get_entry("pickups", type)
+		var raw_cell: Array = p.get("cell", [0, 0])
+		var cell := Vector2i(int(raw_cell[0]), int(raw_cell[1]))
+		if entry.is_empty():
+			push_warning("map %s places unknown pickup '%s'" % [map_data.id, type])
+			continue
+		var actor := PickupActor.new()
+		actor.setup(type, entry, cell)
+		actor.position = map_view.cell_to_world(cell)
+		pickups_node.add_child(actor)
+		pickups.append(actor)
+
+
 ## Neon colour of a class's primary branch (GDD §5: Arcane purple, Tech teal, Body coral).
 func class_color(class_id: String) -> Color:
 	var cls: Dictionary = registry.get_entry("classes", class_id)
@@ -200,12 +255,22 @@ func living_enemies() -> Array[EnemyActor]:
 	return out
 
 
+func remaining_pickups() -> Array[PickupActor]:
+	var out: Array[PickupActor] = []
+	for p: PickupActor in pickups:
+		if is_instance_valid(p) and not p.collected:
+			out.append(p)
+	return out
+
+
 func enemy_at(cell: Vector2i) -> EnemyActor:
 	for e: EnemyActor in living_enemies():
 		if e.cell == cell:
 			return e
 	return null
 
+
+# --- movement --------------------------------------------------------------
 
 ## Path the leader to `cell`. False when the cell is blocked or unreachable.
 func command_move(cell: Vector2i) -> bool:
@@ -242,6 +307,93 @@ func teleport_party(cell: Vector2i) -> void:
 	party.stop()
 	party.trail.reset(party.leader().position)
 
+
+# --- the loop: pickups, loot, extraction, wipes ------------------------------
+
+## Collects any pickup a party member is standing on. Returns what was gained.
+func check_pickups() -> Array[Dictionary]:
+	var gained: Array[Dictionary] = []
+	if mode != "explore":
+		return gained
+	var cells: Array[Vector2i] = []
+	for m: PartyMember in party.members:
+		cells.append(member_cell(m))
+	for p: PickupActor in remaining_pickups():
+		if not cells.has(p.cell):
+			continue
+		p.collected = true
+		p.queue_free()
+		run.pickups += 1
+		var got := _gain(p.grants())
+		got["pickup"] = p.pickup_id
+		gained.append(got)
+		overlay.toast("%s: %s" % [p.entry.get("name", p.pickup_id), RunState.describe(got)], 2.0)
+	return gained
+
+
+## Called by the combat controller when an enemy dies.
+func on_enemy_killed(enemy: EnemyActor) -> Dictionary:
+	run.kills += 1
+	var loot: Dictionary = enemy.entry.get("loot", {}).duplicate()
+	loot["xp"] = int(enemy.entry.get("xp", 0))
+	return _gain(loot)
+
+
+## Rolls a grant block into the run haul; banks straight away off-Shard.
+func _gain(grants: Dictionary) -> Dictionary:
+	var got := run.collect(grants)
+	if not run.in_shard:
+		_bank(run.take(), false)
+		run.clear()
+	return got
+
+
+func _bank(take: Dictionary, count_run: bool) -> void:
+	ledger.bank(take)
+	ledger.xp += int(take.get("xp", 0))
+	ledger.kills += run.kills
+	if count_run:
+		ledger.runs_completed += 1
+	var err := ledger.save()
+	if err != OK:
+		push_warning("ledger save failed: %s" % error_string(err))
+
+
+func can_extract() -> bool:
+	return mode == "explore" and run.in_shard and leader_cell() == extraction_cell()
+
+
+## Banks the haul, records the run, and brings the party home.
+func extract() -> bool:
+	if not can_extract():
+		return false
+	var take := run.take()
+	var kills := run.kills
+	_bank(take, true)
+	run.clear()
+	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
+	enter_map(HOME_MAP)
+	return true
+
+
+func status_line() -> String:
+	var exit_note := ""
+	var exit_cell := extraction_cell()
+	if exit_cell.x >= 0:
+		exit_note = "  extraction %s (%d away)" % [exit_cell, LineOfSight.distance(leader_cell(), exit_cell)]
+	var line1 := "%s  |  %s  |  leader %s  hover %s%s  |  enemies %d  pickups %d" % [
+		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
+	]
+	var line2 := "%s  |  %s" % [run.summary() if run.in_shard else "at home: loot banks on pickup", ledger.summary()]
+	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard · H home · F1 registry"
+	if can_extract():
+		line3 = "▶ ON THE EXTRACTION PAD — press E to extract ◀"
+	elif mode == "defeated":
+		line3 = "▶ press R to return to the yard ◀"
+	return "%s\n%s\n%s" % [line1, line2, line3]
+
+
+# --- encounters ------------------------------------------------------------
 
 ## Starts combat when any enemy can see a party member within its awareness.
 func check_encounters() -> bool:
@@ -300,19 +452,20 @@ func _on_combat_ended(result: String) -> void:
 		party.trail.reset(party.leader().position)
 		party.active = true
 		mode = "explore"
-	else:
-		mode = "defeated"
+		return
+	mode = "defeated"
+	if run.in_shard:
+		ledger.runs_wiped += 1
+		ledger.kills += run.kills
+		var lost := run.take()
+		run.clear()
+		var err := ledger.save()
+		if err != OK:
+			push_warning("ledger save failed: %s" % error_string(err))
+		overlay.toast("Wiped — the haul is lost (%s)" % RunState.describe(lost), 4.0)
 
 
-func status_line() -> String:
-	var exit_note := ""
-	var exit_cell := extraction_cell()
-	if exit_cell.x >= 0:
-		exit_note = "  extraction %s (%d away)" % [exit_cell, LineOfSight.distance(leader_cell(), exit_cell)]
-	return "%s  |  %s  |  leader %s  hover %s%s  |  enemies %d  |  LMB move/attack · WASD steer · wheel zoom · N new shard · H home · F1 registry" % [
-		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(),
-	]
-
+# --- input & frame ---------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_debug"):
@@ -329,10 +482,12 @@ func _unhandled_input(event: InputEvent) -> void:
 					start_combat(true)
 				else:
 					command_move(cell)
+			elif event.is_action_pressed("extract"):
+				extract()
 			elif event.is_action_pressed("new_shard"):
-				enter_shard("rusted_undercity", int(randi() % 1000000))
+				enter_shard(DEFAULT_SHARD, int(randi() % 1000000))
 			elif event.is_action_pressed("go_home"):
-				enter_map("proto_yard")
+				enter_map(HOME_MAP)
 		"combat":
 			if clicked:
 				combat.player_click(map_view.world_to_cell(get_global_mouse_position()))
@@ -346,7 +501,7 @@ func _unhandled_input(event: InputEvent) -> void:
 						combat.select_ability(i)
 		"defeated":
 			if event.is_action_pressed("restart"):
-				get_tree().reload_current_scene()
+				return_home()
 
 
 func _process(delta: float) -> void:
@@ -354,6 +509,7 @@ func _process(delta: float) -> void:
 		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		if dir != Vector2.ZERO:
 			party.steer_leader(dir, delta, map_view.is_walkable_world)
+		check_pickups()
 		check_encounters()
 	hovered_cell = map_view.world_to_cell(get_global_mouse_position())
 	overlay.status = status_line()
