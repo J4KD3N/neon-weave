@@ -24,7 +24,8 @@ Out of M1 scope (deferred to M2): Steam integration, exports on Windows/macOS be
 - S8 Classes 3–4 — done (PR #15).
 - S9 Creator v1 — done (PR #16).
 - S10 Art pipeline — done (PR #17): pipeline plus generated placeholder sheets for Trueborn and Scav; real art is a file-for-file replacement.
-- S11 Sera — done (this PR).
+- S11 Sera — done.
+- S11b Combat UX (turn groups, hover previews, readable refusals) — done, after the first playtest.
 
 ## Running assumptions
 - Placeholder art stays until S10; systems before it must not depend on sprite details.

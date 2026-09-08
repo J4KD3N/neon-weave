@@ -11,6 +11,7 @@ signal ended(result: String)
 const COLOR_REACH := Color(0.2, 0.88, 0.84, 0.18)
 const COLOR_TARGET := Color(1.0, 0.48, 0.42, 0.28)
 const COLOR_PATH := Color(0.71, 0.55, 1.0, 0.35)
+const COLOR_HOVER := Color(1.0, 0.95, 0.7, 0.22)
 
 var world: ExploreWorld
 var hud: CombatHud
@@ -19,6 +20,7 @@ var state: CombatState
 var animate: bool = true
 var busy: bool = false
 var selected_ability: String = ""
+var hovered := Vector2i(-1, -1)
 var actors: Dictionary = {} # combatant id -> WorldActor
 
 var _enemy_loop_running := false
@@ -85,20 +87,153 @@ func player_click(cell: Vector2i) -> void:
 		if why.is_empty():
 			_do_ability(actor, selected_ability, cell)
 		else:
-			hud.set_hint(why.capitalize())
+			_refuse("%s: %s" % [_ability_name(selected_ability), why])
 		return
 	if target != null and target != actor:
+		if target.team == actor.team and not actor.is_hostile_to(target):
+			var swap := state.switch_to(target.id)
+			if swap.is_empty():
+				_after_switch()
+			else:
+				_refuse("%s: %s" % [target.display_name, swap])
+			return
 		var id := EnemyBrain.usable_ability(state, actor, target)
 		if id.is_empty():
-			hud.set_hint("No usable ability on that target (select one, or move closer).")
+			_refuse(_out_of_reach_reason(actor, target))
 		else:
 			_do_ability(actor, id, cell)
+		return
+	if target == actor:
 		return
 	var why_move := state.can_move(actor, cell)
 	if why_move.is_empty():
 		_do_move(actor, cell)
 	else:
-		hud.set_hint(why_move.capitalize())
+		_refuse("Cannot move there: %s" % why_move)
+
+
+## Why no ability reaches `target`, phrased for the player: the nearest
+## thing to a reason from each ability, preferring range over the rest.
+func _out_of_reach_reason(actor: Combatant, target: Combatant) -> String:
+	var reasons: PackedStringArray = []
+	for id: String in actor.abilities:
+		var why := state.can_use(actor, id, target.cell)
+		if not why.is_empty():
+			reasons.append("%s %s" % [_ability_name(id), why])
+	if reasons.is_empty():
+		return "Nothing can target %s" % target.display_name
+	return "Cannot reach %s: %s" % [target.display_name, ", ".join(reasons)]
+
+
+func _ability_name(id: String) -> String:
+	var ability: Dictionary = state.abilities.get(id, {})
+	return String(ability.get("name", id))
+
+
+## Mouse over `cell` during the player turn: path preview for a move, hit
+## chance and damage for an attack, a marker on anything else.
+func hover(cell: Vector2i) -> void:
+	if cell == hovered:
+		return
+	hovered = cell
+	if busy or not is_active() or not current_is_player():
+		return
+	var actor := state.current()
+	var target := state.occupant(cell)
+	highlighter.clear_layer("c_path")
+	highlighter.clear_layer("d_hover")
+	if target != null and target != actor and actor.is_hostile_to(target):
+		var id := selected_ability if not selected_ability.is_empty() else EnemyBrain.usable_ability(state, actor, target)
+		if id.is_empty():
+			hud.set_hint(_out_of_reach_reason(actor, target), CombatHud.HINT_WARN)
+			return
+		var p := state.preview(actor, id, cell)
+		highlighter.set_layer("d_hover", [cell], COLOR_HOVER)
+		hud.set_hint(describe_preview(p, target), CombatHud.HINT_WARN if not String(p["why"]).is_empty() else CombatHud.HINT_PREVIEW)
+		return
+	if target != null and target != actor:
+		var swap := "click to swap" if state.switchable().has(target) else ("has acted" if state.has_acted(target) else "not in this turn group")
+		hud.set_hint("%s: %s" % [target.display_name, swap], CombatHud.HINT_PREVIEW)
+		return
+	if selected_ability.is_empty():
+		var path := state.move_path(actor, cell)
+		if not path.is_empty():
+			highlighter.set_layer("c_path", path, COLOR_PATH)
+			hud.set_hint("Move %d → %d Move left" % [path.size(), actor.move_left - path.size()], CombatHud.HINT_PREVIEW)
+			return
+	if world.map_data.is_walkable(cell):
+		highlighter.set_layer("d_hover", [cell], COLOR_HOVER)
+	hud.set_hint(default_hint())
+
+
+## "Strike → Scav: 85% to hit, 3–5 damage (flanked)" or the refusal.
+static func describe_preview(p: Dictionary, target: Combatant) -> String:
+	var name := String(p.get("name", p.get("ability", "?")))
+	if int(p.get("heal", 0)) > 0:
+		return "%s: vent Heat, +%d HP" % [name, int(p["heal"])]
+	var why := String(p.get("why", ""))
+	if not why.is_empty() and int(p.get("chance", 0)) == 0:
+		return "%s → %s: %s" % [name, target.display_name, why]
+	var tags: PackedStringArray = p.get("tags", PackedStringArray())
+	var tag_text := "" if tags.is_empty() else " (%s)" % ", ".join(tags)
+	var dmg := "%d" % int(p["max"]) if int(p["min"]) == int(p["max"]) else "%d–%d" % [int(p["min"]), int(p["max"])]
+	var s := "%s → %s: %d%% to hit, %s damage%s" % [name, target.display_name, int(p["chance"]), dmg, tag_text]
+	if bool(p.get("kills", false)):
+		s += " · lethal"
+	if not why.is_empty():
+		s += " · %s" % why
+	return s
+
+
+func default_hint() -> String:
+	if not is_active() or not current_is_player():
+		return ""
+	var others := state.switchable()
+	var swap := ""
+	if not others.is_empty():
+		var names: PackedStringArray = []
+		for c: Combatant in others:
+			names.append(c.display_name)
+		swap = " · Tab or click swaps to %s" % ", ".join(names)
+	return "Click a teal cell to move · click an enemy to attack, or [1-4] then a target · Space ends the turn%s" % swap
+
+
+func switch_to(id: String) -> bool:
+	if busy or not is_active() or not current_is_player():
+		return false
+	var why := state.switch_to(id)
+	if not why.is_empty():
+		_refuse(why.capitalize())
+		return false
+	_after_switch()
+	return true
+
+
+## Tab: the next group member after the current one in initiative order.
+func next_member() -> bool:
+	if busy or not is_active() or not current_is_player():
+		return false
+	var others := state.switchable()
+	if others.is_empty():
+		_refuse("Nobody else to swap to this turn")
+		return false
+	var cur := state.turn_index
+	var pick: Combatant = others[0]
+	for c: Combatant in others:
+		if state.order.find(c) > cur:
+			pick = c
+			break
+	return switch_to(pick.id)
+
+
+func _after_switch() -> void:
+	selected_ability = ""
+	hovered = Vector2i(-1, -1)
+	_after_state_change()
+
+
+func _refuse(text: String) -> void:
+	hud.set_hint(text, CombatHud.HINT_WARN)
 
 
 func select_ability(index: int) -> void:
@@ -228,6 +363,7 @@ func _after_state_change() -> void:
 	if state.finished:
 		_finish()
 		return
+	hovered = Vector2i(-1, -1)
 	if current_is_player():
 		_refresh_player_ui()
 	else:
@@ -291,11 +427,18 @@ func _refresh_player_ui() -> void:
 	var res_text := ""
 	if actor.has_resource():
 		res_text = "  %s %d/%d" % [actor.resource_def.get("name", actor.resource_id), actor.resource, actor.resource_max()]
-	hud.set_turn_text("Round %d — %s  |  AP %d/%d  Move %d/%d%s" % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max, res_text])
+	var swap_text := "" if state.switchable().is_empty() else "  |  Tab swaps"
+	hud.set_turn_text("Round %d — %s  |  AP %d/%d  Move %d/%d%s%s" % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max, res_text, swap_text])
 	var order: PackedStringArray = []
 	for i: int in state.order.size():
 		var c := state.order[i]
-		var mark := "▶ " if i == state.turn_index else "   "
+		var mark := "   "
+		if i == state.turn_index:
+			mark = "▶ "
+		elif state.group.has(c) and state.has_acted(c):
+			mark = "✓ "
+		elif state.group.has(c) and c.is_active():
+			mark = "⇄ "
 		var hp := "%d/%d" % [c.hp, c.max_hp] if c.is_active() else ("down" if c.downed else "dead")
 		var res := ""
 		if c.has_resource() and c.is_active():
@@ -307,7 +450,7 @@ func _refresh_player_ui() -> void:
 		var ability: Dictionary = state.abilities.get(id, {})
 		abilities.append({"id": id, "name": ability.get("name", id), "ap": int(ability.get("ap", 1)), "usable": actor.ap >= int(ability.get("ap", 1))})
 	hud.set_abilities(abilities, selected_ability)
-	hud.set_hint("Click a highlighted cell to move · click an enemy or pick an ability [1-4] then a target · Space ends the turn · Esc clears")
+	hud.set_hint(default_hint())
 	hud.set_log(state.history)
 
 

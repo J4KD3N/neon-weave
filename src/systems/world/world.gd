@@ -56,6 +56,7 @@ var hud: CombatHud
 var highlighter: CellHighlighter
 var mode: String = "explore"
 var hovered_cell := Vector2i(-1, -1)
+var hover_override := Vector2i(-1, -1) # screenshots and tests stand in for the mouse
 ## True while SaveSystem.restore rebuilds the world; suppresses autosaves so
 ## a load never overwrites the checkpoint it is reading.
 var loading: bool = false
@@ -997,6 +998,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				combat.player_click(map_view.world_to_cell(get_global_mouse_position()))
 			elif event.is_action_pressed("end_turn"):
 				combat.end_player_turn()
+			elif event.is_action_pressed("next_member"):
+				combat.next_member()
 			elif event.is_action_pressed("cancel"):
 				combat.cancel_selection()
 			else:
@@ -1017,7 +1020,9 @@ func _process(delta: float) -> void:
 			party.steer_leader(dir, delta, map_view.is_walkable_world)
 		check_pickups()
 		check_encounters()
-	hovered_cell = map_view.world_to_cell(get_global_mouse_position())
+	hovered_cell = hover_override if hover_override.x >= 0 else map_view.world_to_cell(get_global_mouse_position())
+	if mode == "combat":
+		combat.hover(hovered_cell)
 	overlay.status = status_line()
 	_maybe_screenshot()
 
@@ -1039,10 +1044,19 @@ func _maybe_screenshot() -> void:
 	if _screenshot_path.is_empty():
 		return
 	_frames += 1
-	if _frames == 2 and OS.get_cmdline_user_args().has("--screenshot-combat"):
+	var combat_shot := OS.get_cmdline_user_args().has("--screenshot-combat")
+	if _frames == 2 and combat_shot:
+		# Staged: everyone rolls 1 and the party strikes first, so the whole
+		# party is one turn group and the swap hint is in the shot.
 		combat.animate = false
+		combat_seed = 1234
+		rules.initiative_die = 1
 		teleport_party(Vector2i(13, 4))
-		check_encounters()
+		start_combat(true)
+	if _frames == 4 and combat_shot and mode == "combat" and combat.current_is_player():
+		var foe := EnemyBrain.nearest_hostile(combat.state, combat.state.current())
+		if foe != null:
+			hover_override = foe.cell # the attack preview instead of wherever the mouse is
 	if _frames < 12:
 		return
 	var img := get_viewport().get_texture().get_image()

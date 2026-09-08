@@ -7,6 +7,17 @@ extends CanvasLayer
 signal ability_pressed(index: int)
 signal end_turn_pressed
 
+## Hint kinds: the standing instructions, a hover preview, or a refusal.
+const HINT_NORMAL := "normal"
+const HINT_PREVIEW := "preview"
+const HINT_WARN := "warn"
+const HINT_COLORS: Dictionary = {
+	HINT_NORMAL: Color(0.72, 0.7, 0.82),
+	HINT_PREVIEW: Color(0.85, 1.0, 0.95),
+	HINT_WARN: Color(1.0, 0.55, 0.45),
+}
+
+var hint_kind: String = HINT_NORMAL
 var turn_label: Label
 var order_label: Label
 var log_label: Label
@@ -24,8 +35,8 @@ func _ready() -> void:
 	log_label = _label(Vector2(1440, 84), Vector2(464, 700), 15, HORIZONTAL_ALIGNMENT_LEFT)
 	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	log_label.add_theme_color_override("font_color", Color(0.75, 0.72, 0.85))
-	hint_label = _label(Vector2(0, 960), Vector2(1920, 24), 15, HORIZONTAL_ALIGNMENT_CENTER)
-	hint_label.add_theme_color_override("font_color", Color(0.6, 0.58, 0.7))
+	hint_label = _label(Vector2(0, 952), Vector2(1920, 32), 19, HORIZONTAL_ALIGNMENT_CENTER)
+	hint_label.add_theme_color_override("font_color", HINT_COLORS[HINT_NORMAL])
 	message_label = _label(Vector2(0, 460), Vector2(1920, 120), 52, HORIZONTAL_ALIGNMENT_CENTER)
 	message_label.visible = false
 
@@ -38,6 +49,7 @@ func _ready() -> void:
 	end_button = Button.new()
 	end_button.text = "End Turn  [Space]"
 	end_button.custom_minimum_size = Vector2(200, 48)
+	end_button.focus_mode = Control.FOCUS_NONE # Tab swaps members, never moves focus
 	end_button.pressed.connect(func() -> void: end_turn_pressed.emit())
 	bar.add_child(end_button)
 	visible = false
@@ -51,8 +63,10 @@ func set_order_text(text: String) -> void:
 	order_label.text = text
 
 
-func set_hint(text: String) -> void:
+func set_hint(text: String, kind: String = HINT_NORMAL) -> void:
 	hint_label.text = text
+	hint_kind = kind
+	hint_label.add_theme_color_override("font_color", HINT_COLORS.get(kind, HINT_COLORS[HINT_NORMAL]))
 
 
 func set_log(lines: Array[String], keep: int = 12) -> void:
@@ -73,6 +87,7 @@ func set_abilities(abilities: Array[Dictionary], selected: String) -> void:
 		var b := Button.new()
 		b.text = "[%d] %s  %dAP" % [i + 1, a.get("name", a.get("id", "?")), int(a.get("ap", 1))]
 		b.custom_minimum_size = Vector2(220, 48)
+		b.focus_mode = Control.FOCUS_NONE
 		b.toggle_mode = true
 		b.button_pressed = String(a.get("id", "")) == selected
 		b.disabled = not bool(a.get("usable", true))

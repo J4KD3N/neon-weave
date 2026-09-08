@@ -646,3 +646,95 @@ func test_walking_drives_the_sheet_animation() -> void:
 	assert_true(leader.sprite.flip_h)
 	world.party.members[2].play_action("attack")
 	assert_false(world.party.members[2].uses_sheet(), "placeholder actors ignore actions")
+
+
+## With a 1-sided initiative die and first strike, the whole party acts
+## first, in id order: p:ash, p:unit_9, p:weaver.
+func _party_first_fight() -> CombatState:
+	world.rules.initiative_die = 1
+	world.teleport_party(Vector2i(13, 4))
+	world.start_combat(true)
+	return world.combat.state
+
+
+func test_tab_and_clicks_swap_within_the_party_group() -> void:
+	var s := _party_first_fight()
+	assert_eq(s.current().id, "p:ash")
+	assert_eq(s.group.size(), 3, "three allies in a row form one group")
+	assert_contains(world.hud.hint_label.text, "Tab or click swaps to Unit-9, Weaver")
+	assert_true(world.combat.next_member())
+	assert_eq(s.current().id, "p:unit_9")
+	assert_contains(world.hud.turn_label.text, "Unit-9")
+	var weaver := s.by_id("p:weaver")
+	world.combat.player_click(weaver.cell)
+	assert_eq(s.current(), weaver, "clicking an ally hands over")
+	world.combat.end_player_turn()
+	assert_true(s.has_acted(weaver))
+	assert_eq(s.current().id, "p:ash", "the first member still to act")
+	assert_contains(world.hud.order_label.text, "✓ Weaver")
+	assert_contains(world.hud.order_label.text, "⇄ Unit-9")
+	world.combat.player_click(weaver.cell)
+	assert_eq(world.hud.hint_kind, CombatHud.HINT_WARN)
+	assert_contains(world.hud.hint_label.text, "already acted")
+	assert_eq(s.current().id, "p:ash")
+	assert_true(world.combat.next_member())
+	assert_eq(s.current().id, "p:unit_9")
+	world.combat.end_player_turn()
+	world.combat.end_player_turn()
+	assert_true(world.combat.current_is_player() or s.finished, "enemies ran their turns synchronously")
+	if not s.finished:
+		assert_eq(s.round_number, 2)
+
+
+func test_hover_previews_paths_attacks_and_swaps() -> void:
+	var s := _party_first_fight()
+	var actor := s.current()
+	var reach: Array = s.reachable_cells(actor).keys()
+	reach.sort()
+	var far := actor.cell
+	for cell: Vector2i in reach:
+		if s.move_path(actor, cell).size() > s.move_path(actor, far).size():
+			far = cell
+	world.combat.hover(far)
+	var path := world.highlighter.cells_in("c_path")
+	assert_eq(path.size(), s.move_path(actor, far).size())
+	assert_eq(path[path.size() - 1], far)
+	assert_eq(world.hud.hint_kind, CombatHud.HINT_PREVIEW)
+	assert_contains(world.hud.hint_label.text, "Move %d → %d Move left" % [path.size(), actor.move_left - path.size()])
+	var foe := EnemyBrain.nearest_hostile(s, actor)
+	world.combat.hover(foe.cell)
+	assert_true(world.highlighter.cells_in("c_path").is_empty(), "no path over an enemy")
+	if EnemyBrain.usable_ability(s, actor, foe).is_empty():
+		assert_eq(world.hud.hint_kind, CombatHud.HINT_WARN)
+		assert_contains(world.hud.hint_label.text, "Cannot reach %s" % foe.display_name)
+	else:
+		assert_eq(world.hud.hint_kind, CombatHud.HINT_PREVIEW)
+		assert_contains(world.hud.hint_label.text, "% to hit")
+	world.combat.hover(s.by_id("p:weaver").cell)
+	assert_contains(world.hud.hint_label.text, "Weaver: click to swap")
+	world.combat.hover(actor.cell)
+	assert_eq(world.hud.hint_kind, CombatHud.HINT_NORMAL)
+	assert_contains(world.hud.hint_label.text, "Space ends the turn")
+	world.combat.select_ability(1)
+	world.combat.hover(far)
+	assert_true(world.highlighter.cells_in("c_path").is_empty(), "no move preview while aiming")
+	world.combat.cancel_selection()
+
+
+func test_refused_clicks_explain_themselves_in_red() -> void:
+	var s := _party_first_fight()
+	var actor := s.current()
+	world.combat.player_click(Vector2i(0, 0))
+	assert_eq(world.hud.hint_kind, CombatHud.HINT_WARN)
+	assert_contains(world.hud.hint_label.text, "Cannot move there")
+	var farthest: Combatant = null
+	for c: Combatant in s.active("enemy"):
+		if farthest == null or LineOfSight.distance(actor.cell, c.cell) > LineOfSight.distance(actor.cell, farthest.cell):
+			farthest = c
+	if EnemyBrain.usable_ability(s, actor, farthest).is_empty():
+		world.combat.player_click(farthest.cell)
+		assert_eq(world.hud.hint_kind, CombatHud.HINT_WARN)
+		assert_contains(world.hud.hint_label.text, "Cannot reach %s" % farthest.display_name)
+		assert_contains(world.hud.hint_label.text, "out of range")
+	assert_eq(s.current(), actor, "refusals change nothing")
+	assert_eq(actor.ap, 4)
