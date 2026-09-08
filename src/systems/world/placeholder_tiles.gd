@@ -88,6 +88,8 @@ static func _draw_floor(img: Image, art: Dictionary, palette: Dictionary) -> voi
 				c = line
 			elif pattern == "cracked" and (x * 7 + y * 13) % 29 == 0:
 				c = edge
+			elif pattern == "pad" and (absi(x - FLOOR_CENTER.x) == half / 2 or (half > 0 and half / 2 == 0)):
+				c = line
 			img.set_pixel(x, y, c)
 
 

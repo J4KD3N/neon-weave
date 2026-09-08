@@ -1,0 +1,27 @@
+{
+  "name": "Rusted Undercity Shard",
+  "biome": "rusted_undercity",
+  "summary": "Collapsed industrial levels: rooms of concrete and grating joined by tight corridors, debris everywhere, scav gangs and feral drones between you and the extraction pad.",
+  "size": { "width": [40, 52], "height": [30, 40] },
+  "rooms": { "count": [7, 11], "min": [4, 3], "max": [10, 7], "attempts": 300 },
+  "corridors": { "extra_loops": [1, 3] },
+  "tiles": {
+    "wall": "wall_rust",
+    "floor": "floor_concrete",
+    "grate": "floor_grate",
+    "debris": "debris",
+    "extraction": "extraction_pad"
+  },
+  "grate_patch_chance": 0.35,
+  "debris_density": 0.04,
+  "enemies": {
+    "groups": [4, 7],
+    "group_size": [1, 3],
+    "min_spawn_distance": 10,
+    "pool": [
+      { "type": "scav", "weight": 5 },
+      { "type": "feral_drone", "weight": 3 },
+      { "type": "chrome_addict", "weight": 2 }
+    ]
+  }
+}

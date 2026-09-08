@@ -1,0 +1,8 @@
+{
+  "name": "Extraction pad",
+  "summary": "A Beacon-linked waypoint. Stand here to pull the party out of a Shard.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "art": { "shape": "floor", "fill": "grate", "edge": "neon_tech", "pattern": "pad", "pattern_color": "neon_tech" }
+}

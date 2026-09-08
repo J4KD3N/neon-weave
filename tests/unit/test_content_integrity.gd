@@ -129,3 +129,20 @@ func test_tile_art_roles_exist_in_every_biome_palette() -> void:
 			for biome: Dictionary in registry.get_all("biomes"):
 				var palette: Dictionary = biome.get("palette", {})
 				assert_true(palette.has(role), "tile %s role '%s' missing from biome %s" % [tile["id"], role, biome["id"]])
+
+
+func test_shard_templates_reference_existing_tiles_enemies_and_biomes() -> void:
+	var templates := registry.get_all("shards")
+	assert_true(templates.size() >= 1, "M0 wants one procgen biome")
+	for t: Dictionary in templates:
+		assert_true(registry.has_entry("biomes", String(t.get("biome", ""))), "shard %s biome" % t["id"])
+		var tiles: Dictionary = t.get("tiles", {})
+		for role: String in ["wall", "floor", "grate", "debris", "extraction"]:
+			assert_true(registry.has_entry("tiles", String(tiles.get(role, ""))), "shard %s tile role %s" % [t["id"], role])
+		assert_true(bool(registry.get_entry("tiles", String(tiles.get("extraction", ""))).get("walkable", false)), "extraction tile walkable")
+		var enemies: Dictionary = t.get("enemies", {})
+		var pool: Array = enemies.get("pool", [])
+		assert_true(pool.size() >= 1, "shard %s enemy pool" % t["id"])
+		for p: Dictionary in pool:
+			assert_true(registry.has_entry("enemies", String(p.get("type", ""))), "shard %s pool type %s" % [t["id"], p.get("type")])
+			assert_true(float(p.get("weight", 0)) > 0.0, "shard %s pool weight" % t["id"])
