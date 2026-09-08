@@ -738,3 +738,128 @@ func test_refused_clicks_explain_themselves_in_red() -> void:
 		assert_contains(world.hud.hint_label.text, "out of range")
 	assert_eq(s.current(), actor, "refusals change nothing")
 	assert_eq(actor.ap, 4)
+
+
+func test_pad_cursor_moves_confirms_and_the_mouse_releases_it() -> void:
+	assert_eq(world.combat.move_cursor(Vector2(1, 0)), Vector2i(-1, -1), "no cursor outside combat")
+	var s := _party_first_fight()
+	var actor := s.current()
+	var reach := s.reachable_cells(actor)
+	var dir := Vector2.ZERO
+	for candidate: Vector2 in [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1), Vector2(1, 1), Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1)]:
+		if reach.has(actor.cell + IsoCursor.step(candidate)):
+			dir = candidate
+			break
+	assert_true(dir != Vector2.ZERO, "some neighbour is reachable")
+	var origin := world.map_view.cell_to_world(actor.cell)
+	var right := world.map_view.cell_to_world(actor.cell + IsoCursor.step(Vector2(1, 0)))
+	var up := world.map_view.cell_to_world(actor.cell + IsoCursor.step(Vector2(0, -1)))
+	assert_true(right.x > origin.x and is_equal_approx(right.y, origin.y), "a step right stays level on screen")
+	assert_true(up.y < origin.y and is_equal_approx(up.x, origin.x), "a step up stays centred on screen")
+	var cell := world.combat.move_cursor(dir)
+	assert_eq(cell, actor.cell + IsoCursor.step(dir), "first step starts from the acting member")
+	assert_true(world.combat.cursor_active)
+	assert_eq(world.hover_override, cell)
+	assert_eq(world.highlighter.cells_in("e_cursor"), [cell])
+	assert_eq(world.highlighter.cells_in("c_path"), [cell], "the cursor hovers like a mouse")
+	assert_contains(world.hud.hint_label.text, "Move 1")
+	var move_before := actor.move_left
+	assert_true(world.combat.confirm())
+	assert_eq(actor.cell, cell, "confirm acts on the cursor cell")
+	assert_eq(actor.move_left, move_before - 1)
+	assert_eq(world.highlighter.cells_in("e_cursor"), [cell], "cursor survives the move")
+	var edge := world.combat.move_cursor(Vector2(0, -1))
+	for _i: int in 60:
+		edge = world.combat.move_cursor(Vector2(0, -1))
+	assert_true(world.map_data.in_bounds(edge), "clamped to the map")
+	world._unhandled_input(InputEventMouseMotion.new())
+	assert_false(world.combat.cursor_active)
+	assert_eq(world.hover_override, Vector2i(-1, -1))
+	assert_true(world.highlighter.cells_in("e_cursor").is_empty())
+	assert_false(world.combat.confirm(), "nothing to confirm without a cursor")
+
+
+func test_system_menu_routes_every_keyboard_only_action() -> void:
+	assert_true(world.open_system_menu())
+	assert_true(world.system_menu.visible)
+	var ids: PackedStringArray = []
+	for item: Dictionary in world.system_items():
+		ids.append(String(item["id"]))
+	assert_eq(ids, PackedStringArray(ExploreWorld.SYSTEM_ITEM_IDS))
+	assert_contains(world.system_menu.label.text, "▶ Resume")
+	assert_contains(world.system_menu.label.text, "Return to the yard (haul is lost)  (unavailable: already home)")
+	assert_contains(world.system_menu.label.text, "Load slot 1  (unavailable: no save yet)")
+	assert_false(world.activate_system_item("go_home"), "disabled items refuse")
+	assert_true(world.system_menu.visible, "and the menu stays open")
+	assert_true(world.activate_system_item("save_1"))
+	assert_false(world.system_menu.visible, "activating closes it")
+	assert_true(FileAccess.file_exists(world.save_path(SaveSystem.slot_name(1))))
+	assert_true(world.open_system_menu())
+	assert_true(world.activate_system_item("bastion"))
+	assert_true(world.bastion_menu.visible)
+	assert_false(world.open_system_menu(), "not over another menu")
+	world.toggle_bastion()
+	assert_true(world.open_system_menu())
+	assert_true(world.activate_system_item("new_shard"))
+	assert_false(world.at_home())
+	assert_true(world.open_system_menu())
+	assert_true(world.activate_system_item("go_home"))
+	assert_true(world.at_home())
+	assert_true(world.open_system_menu())
+	assert_true(world.activate_system_item("load_1"))
+	assert_true(world.at_home())
+	assert_false(world.activate_system_item("nonsense"))
+	world.teleport_party(Vector2i(13, 4))
+	world.start_combat(true)
+	assert_false(world.open_system_menu(), "no pausing a fight")
+	assert_eq(world.mode, "combat")
+
+
+func test_menus_take_a_cursor_and_confirm() -> void:
+	assert_true(world.talk_to("sera"))
+	assert_eq(world.dialogue_menu.cursor, 0)
+	assert_contains(world.dialogue_menu.label.text, "▶ [1]")
+	assert_eq(world.dialogue_menu.move(1), 1)
+	assert_contains(world.dialogue_menu.label.text, "▶ [2]")
+	assert_eq(world.dialogue_menu.move(1), 0, "wraps")
+	world.dialogue_menu.move(-1)
+	assert_eq(world.dialogue_menu.cursor, 1)
+	var node_before := world.dialogue.node_id
+	assert_true(world.confirm_dialogue())
+	assert_true(world.dialogue.node_id != node_before or not world.in_dialogue(), "confirm picked the cursor line")
+	if world.in_dialogue():
+		assert_eq(world.dialogue_menu.cursor, 0, "a new node resets the cursor")
+		world.leave_dialogue()
+	assert_false(world.confirm_dialogue(), "nothing to confirm outside dialogue")
+	assert_true(world.toggle_bastion())
+	assert_eq(world.bastion_menu.cursor, 0)
+	assert_contains(world.bastion_menu.label.text, "▶ [1] Beacon")
+	assert_eq(world.bastion_menu.move(1), 1)
+	world.bastion_menu.refresh(world.bastion, world.ledger)
+	assert_contains(world.bastion_menu.label.text, "▶ [2]")
+	var id := world.bastion.order[1]
+	var affordable := world.bastion.can_upgrade(id, world.ledger).is_empty()
+	var level := world.bastion.level(id)
+	assert_eq(world.confirm_bastion(), affordable)
+	assert_eq(world.bastion.level(id), level + 1 if affordable else level)
+	world.toggle_bastion()
+	assert_false(world.confirm_bastion())
+
+
+func test_interact_talks_nearby_and_extracts_on_the_pad() -> void:
+	world.teleport_party(Vector2i(9, 9))
+	assert_false(world.interact(), "nothing near")
+	world.teleport_party(Vector2i(5, 4))
+	assert_true(world.interact())
+	assert_true(world.in_dialogue())
+	assert_eq(world.dialogue.speaker(), "sera")
+	assert_false(world.interact(), "not while talking")
+	world.leave_dialogue()
+	world.enter_shard("rusted_undercity", 7)
+	world.teleport_party(world.extraction_cell())
+	assert_true(world.can_extract())
+	assert_true(world.interact())
+	assert_true(world.at_home(), "confirm on the pad extracts")
+	world.teleport_party(Vector2i(13, 4))
+	world.start_combat(true)
+	assert_false(world.interact(), "not in combat")

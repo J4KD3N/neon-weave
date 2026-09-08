@@ -48,6 +48,7 @@ var sheets: Dictionary = {}
 var narrative := NarrativeState.new()
 var npcs: Array[NpcActor] = []
 var dialogue_menu: DialogueMenu
+var system_menu: SystemMenu
 var dialogue: DialogueRunner
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
@@ -98,6 +99,9 @@ func _ready() -> void:
 	dialogue_menu = DialogueMenu.new()
 	dialogue_menu.name = "DialogueMenu"
 	add_child(dialogue_menu)
+	system_menu = SystemMenu.new()
+	system_menu.name = "SystemMenu"
+	add_child(system_menu)
 	spawn_npcs()
 	combat = CombatController.new()
 	combat.name = "Combat"
@@ -241,6 +245,10 @@ func _enter(entry: Dictionary) -> bool:
 		hud.visible = false
 	if bastion_menu != null:
 		bastion_menu.visible = false
+	if system_menu != null:
+		system_menu.close()
+	if combat != null:
+		combat.release_cursor()
 	if camera != null:
 		camera.target = party.leader()
 		camera.snap()
@@ -515,7 +523,7 @@ func choose(index: int) -> bool:
 		dialogue_menu.visible = false
 		autosave()
 	else:
-		dialogue_menu.refresh()
+		dialogue_menu.node_changed()
 	return true
 
 
@@ -932,15 +940,33 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("load_autosave"):
 		load_from(SaveSystem.AUTOSAVE)
 		return
+	if event is InputEventMouseMotion and hover_override.x >= 0:
+		combat.release_cursor() # the mouse moved: it is the pointer again
 	var mb := event as InputEventMouseButton
 	var clicked := mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
 	if in_dialogue():
 		if event.is_action_pressed("cancel"):
 			leave_dialogue()
+		elif event.is_action_pressed("confirm"):
+			confirm_dialogue()
+		elif event.is_action_pressed("ui_up"):
+			dialogue_menu.move(-1)
+		elif event.is_action_pressed("ui_down"):
+			dialogue_menu.move(1)
 		else:
 			for i: int in 4:
 				if event.is_action_pressed("ability_%d" % (i + 1)):
 					choose(i)
+		return
+	if system_menu != null and system_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("menu"):
+			close_system_menu()
+		elif event.is_action_pressed("confirm"):
+			activate_system_item(system_menu.selected_id())
+		elif event.is_action_pressed("ui_up"):
+			system_menu.move(-1)
+		elif event.is_action_pressed("ui_down"):
+			system_menu.move(1)
 		return
 	if creator_menu != null and creator_menu.visible:
 		if event.is_action_pressed("creator") or event.is_action_pressed("ui_cancel"):
@@ -966,6 +992,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("new_shard"):
 			bastion_menu.visible = false
 			enter_shard(DEFAULT_SHARD, int(randi() % 1000000))
+		elif event.is_action_pressed("confirm"):
+			confirm_bastion()
+		elif event.is_action_pressed("ui_up"):
+			bastion_menu.move(-1)
+			bastion_menu.refresh(bastion, ledger)
+		elif event.is_action_pressed("ui_down"):
+			bastion_menu.move(1)
+			bastion_menu.refresh(bastion, ledger)
 		else:
 			for i: int in mini(bastion.order.size(), 4):
 				if event.is_action_pressed("ability_%d" % (i + 1)):
@@ -973,10 +1007,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	match mode:
 		"explore":
-			if event.is_action_pressed("bastion"):
+			if event.is_action_pressed("menu"):
+				open_system_menu()
+			elif event.is_action_pressed("bastion"):
 				toggle_bastion()
 			elif event.is_action_pressed("creator"):
 				open_creator()
+			elif event.is_action_pressed("confirm"):
+				interact()
 			elif clicked:
 				var cell := map_view.world_to_cell(get_global_mouse_position())
 				var enemy := enemy_at(cell)
@@ -1000,6 +1038,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				combat.end_player_turn()
 			elif event.is_action_pressed("next_member"):
 				combat.next_member()
+			elif event.is_action_pressed("confirm"):
+				combat.confirm()
 			elif event.is_action_pressed("cancel"):
 				combat.cancel_selection()
 			else:
@@ -1007,7 +1047,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					if event.is_action_pressed("ability_%d" % (i + 1)):
 						combat.select_ability(i)
 		"defeated":
-			if event.is_action_pressed("restart"):
+			if event.is_action_pressed("restart") or event.is_action_pressed("confirm"):
 				return_home()
 			elif event.is_action_pressed("cancel"):
 				load_from(SaveSystem.AUTOSAVE)
@@ -1020,6 +1060,8 @@ func _process(delta: float) -> void:
 			party.steer_leader(dir, delta, map_view.is_walkable_world)
 		check_pickups()
 		check_encounters()
+	elif mode == "combat":
+		_tick_cursor(Input.get_vector("move_left", "move_right", "move_up", "move_down"), delta)
 	hovered_cell = hover_override if hover_override.x >= 0 else map_view.world_to_cell(get_global_mouse_position())
 	if mode == "combat":
 		combat.hover(hovered_cell)
@@ -1053,6 +1095,7 @@ func _maybe_screenshot() -> void:
 		rules.initiative_die = 1
 		teleport_party(Vector2i(13, 4))
 		start_combat(true)
+		camera.snap() # deterministic framing regardless of frame timing
 	if _frames == 4 and combat_shot and mode == "combat" and combat.current_is_player():
 		var foe := EnemyBrain.nearest_hostile(combat.state, combat.state.current())
 		if foe != null:
@@ -1064,3 +1107,129 @@ func _maybe_screenshot() -> void:
 	print("screenshot %s -> %s" % [_screenshot_path, error_string(err)])
 	_screenshot_path = ""
 	get_tree().quit(0 if err == OK else 1)
+
+
+# --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
+
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "save_1", "load_1", "load_autosave", "registry"]
+const CURSOR_FIRST_REPEAT := 0.28
+const CURSOR_REPEAT := 0.11
+
+var _cursor_hold := 0.0
+
+
+## Every keyboard-only action as a menu item, enabled where the key would work.
+func system_items() -> Array[Dictionary]:
+	var home := at_home()
+	var items: Array[Dictionary] = []
+	items.append({"id": "resume", "label": "Resume", "enabled": true})
+	items.append({"id": "extract", "label": "Extract (bank the haul)", "enabled": can_extract(), "why": "not on the extraction pad"})
+	items.append({"id": "new_shard", "label": "Launch a new Shard (depth %d)" % bastion.depth(), "enabled": true})
+	items.append({"id": "go_home", "label": "Return to the yard (haul is lost)", "enabled": not home, "why": "already home"})
+	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
+	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
+	items.append({"id": "save_1", "label": "Save to slot 1", "enabled": true})
+	items.append({"id": "load_1", "label": "Load slot 1", "enabled": FileAccess.file_exists(save_path(SaveSystem.slot_name(1))), "why": "no save yet"})
+	items.append({"id": "load_autosave", "label": "Load the autosave", "enabled": FileAccess.file_exists(save_path(SaveSystem.AUTOSAVE)), "why": "no autosave yet"})
+	items.append({"id": "registry", "label": "Content registry dump (debug)", "enabled": true})
+	return items
+
+
+## Start / Esc while exploring. Refused in combat, dialogue and other menus.
+func open_system_menu() -> bool:
+	if system_menu == null or mode != "explore" or in_dialogue():
+		return false
+	if (creator_menu != null and creator_menu.visible) or (bastion_menu != null and bastion_menu.visible):
+		return false
+	system_menu.open(system_items())
+	return true
+
+
+func close_system_menu() -> void:
+	if system_menu != null:
+		system_menu.close()
+
+
+## Runs a system menu item by id; the menu closes first. False when the
+## id is unknown or the item is disabled right now.
+func activate_system_item(id: String) -> bool:
+	if system_menu == null:
+		return false
+	for item: Dictionary in system_items():
+		if String(item["id"]) == id and not bool(item.get("enabled", true)):
+			overlay.toast("%s: %s" % [item["label"], item.get("why", "unavailable")], 1.5)
+			return false
+	system_menu.close()
+	match id:
+		"resume":
+			return true
+		"extract":
+			return extract()
+		"new_shard":
+			return not enter_shard(DEFAULT_SHARD, int(randi() % 1000000)).is_empty()
+		"go_home":
+			return enter_map(HOME_MAP)
+		"bastion":
+			return toggle_bastion()
+		"creator":
+			return open_creator()
+		"save_1":
+			return save_slot(1) == OK
+		"load_1":
+			return load_slot(1).is_empty()
+		"load_autosave":
+			return load_from(SaveSystem.AUTOSAVE).is_empty()
+		"registry":
+			overlay.toggle_registry()
+			return true
+	return false
+
+
+## Confirm (Enter / A) while exploring: extract on the pad, otherwise talk
+## to a companion within two cells. False when there is nothing to do.
+func interact() -> bool:
+	if mode != "explore" or in_dialogue():
+		return false
+	if can_extract():
+		return extract()
+	var here := leader_cell()
+	var best: NpcActor = null
+	for npc: NpcActor in npcs:
+		if not is_instance_valid(npc) or not npc.visible:
+			continue
+		var d := LineOfSight.distance(here, npc.cell)
+		if d <= 2 and (best == null or d < LineOfSight.distance(here, best.cell)):
+			best = npc
+	if best != null:
+		return talk_to(best.companion_id)
+	overlay.toast("Nothing to interact with here", 1.2)
+	return false
+
+
+func confirm_dialogue() -> bool:
+	if not in_dialogue():
+		return false
+	return choose(dialogue_menu.cursor)
+
+
+func confirm_bastion() -> bool:
+	if bastion_menu == null or not bastion_menu.visible:
+		return false
+	if bastion_menu.cursor < 0 or bastion_menu.cursor >= bastion.order.size():
+		return false
+	return upgrade_building(bastion.order[bastion_menu.cursor])
+
+
+## Held stick / D-pad / WASD steps the combat cursor with key-repeat pacing.
+func _tick_cursor(dir: Vector2, delta: float) -> void:
+	if dir == Vector2.ZERO:
+		_cursor_hold = 0.0
+		return
+	if _cursor_hold <= 0.0:
+		combat.move_cursor(dir)
+		_cursor_hold = CURSOR_FIRST_REPEAT if _cursor_hold == 0.0 else CURSOR_REPEAT
+	else:
+		_cursor_hold -= delta
+		if _cursor_hold <= 0.0:
+			combat.move_cursor(dir)
+			_cursor_hold = CURSOR_REPEAT

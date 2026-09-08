@@ -12,6 +12,7 @@ const COLOR_REACH := Color(0.2, 0.88, 0.84, 0.18)
 const COLOR_TARGET := Color(1.0, 0.48, 0.42, 0.28)
 const COLOR_PATH := Color(0.71, 0.55, 1.0, 0.35)
 const COLOR_HOVER := Color(1.0, 0.95, 0.7, 0.22)
+const COLOR_CURSOR := Color(1.0, 0.85, 0.3, 0.5)
 
 var world: ExploreWorld
 var hud: CombatHud
@@ -21,6 +22,10 @@ var animate: bool = true
 var busy: bool = false
 var selected_ability: String = ""
 var hovered := Vector2i(-1, -1)
+## Pad/keyboard cell cursor. While active it stands in for the mouse
+## (through `world.hover_override`); any mouse motion releases it.
+var cursor := Vector2i(-1, -1)
+var cursor_active: bool = false
 var actors: Dictionary = {} # combatant id -> WorldActor
 
 var _enemy_loop_running := false
@@ -236,6 +241,40 @@ func _refuse(text: String) -> void:
 	hud.set_hint(text, CombatHud.HINT_WARN)
 
 
+## Steps the cell cursor in a screen direction (stick, D-pad, WASD). The
+## first step also shows it, starting from the acting combatant. Returns
+## the cursor cell; unchanged outside the player turn.
+func move_cursor(dir: Vector2) -> Vector2i:
+	if busy or not is_active() or not current_is_player():
+		return cursor
+	if not cursor_active or not world.map_data.in_bounds(cursor):
+		cursor = state.current().cell
+		cursor_active = true
+	var next := cursor + IsoCursor.step(dir)
+	if world.map_data.in_bounds(next):
+		cursor = next
+	world.hover_override = cursor
+	hovered = Vector2i(-1, -1)
+	hover(cursor)
+	highlighter.set_layer("e_cursor", [cursor], COLOR_CURSOR)
+	return cursor
+
+
+## Confirm (Enter / A): acts on the cursor cell as a click would.
+func confirm() -> bool:
+	if not cursor_active:
+		return false
+	player_click(cursor)
+	return true
+
+
+## Mouse motion, or leaving combat: the mouse is the pointer again.
+func release_cursor() -> void:
+	cursor_active = false
+	world.hover_override = Vector2i(-1, -1)
+	highlighter.clear_layer("e_cursor")
+
+
 func select_ability(index: int) -> void:
 	if not is_active() or not current_is_player():
 		return
@@ -427,9 +466,10 @@ func _refresh_player_ui() -> void:
 	var res_text := ""
 	if actor.has_resource():
 		res_text = "  %s %d/%d" % [actor.resource_def.get("name", actor.resource_id), actor.resource, actor.resource_max()]
-	var swap_text := "" if state.switchable().is_empty() else "  |  Tab swaps"
-	hud.set_turn_text("Round %d — %s  |  AP %d/%d  Move %d/%d%s%s" % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max, res_text, swap_text])
+	hud.set_turn_text("Round %d — %s  |  AP %d/%d  Move %d/%d%s" % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max, res_text])
 	var order: PackedStringArray = []
+	if not state.switchable().is_empty():
+		order.append("⇄ Tab / Select swaps")
 	for i: int in state.order.size():
 		var c := state.order[i]
 		var mark := "   "
@@ -452,6 +492,8 @@ func _refresh_player_ui() -> void:
 	hud.set_abilities(abilities, selected_ability)
 	hud.set_hint(default_hint())
 	hud.set_log(state.history)
+	if cursor_active and world.map_data.in_bounds(cursor):
+		highlighter.set_layer("e_cursor", [cursor], COLOR_CURSOR)
 
 
 func _finish() -> void:

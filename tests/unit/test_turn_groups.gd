@@ -201,6 +201,10 @@ func test_preview_text() -> void:
 func test_tab_is_bound_to_next_member() -> void:
 	InputActions.ensure()
 	assert_true(InputMap.has_action("next_member"))
-	var keys: Array = InputMap.action_get_events("next_member")
+	var keys: Array[InputEventKey] = []
+	for e: InputEvent in InputMap.action_get_events("next_member"):
+		if e is InputEventKey:
+			keys.append(e)
 	assert_eq(keys.size(), 1)
-	assert_eq((keys[0] as InputEventKey).physical_keycode, KEY_TAB)
+	assert_eq(keys[0].physical_keycode, KEY_TAB)
+	assert_true(InputActions.has_pad_binding("next_member"), "Back/Select on a pad")

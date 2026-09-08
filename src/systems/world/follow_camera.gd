@@ -15,9 +15,14 @@ func _ready() -> void:
 		zoom = Vector2(1.5, 1.5)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if target != null:
 		global_position = target.global_position
+	# Held zoom: triggers on a pad, = / - on the keyboard. Wheel steps below.
+	if InputMap.has_action("zoom_in") and Input.is_action_pressed("zoom_in"):
+		zoom_by(pow(zoom_step, delta * 4.0))
+	elif InputMap.has_action("zoom_out") and Input.is_action_pressed("zoom_out"):
+		zoom_by(pow(1.0 / zoom_step, delta * 4.0))
 
 
 ## Jump to the target without smoothing (after spawning or teleporting).

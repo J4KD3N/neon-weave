@@ -26,6 +26,7 @@ Out of M1 scope (deferred to M2): Steam integration, exports on Windows/macOS be
 - S10 Art pipeline — done (PR #17): pipeline plus generated placeholder sheets for Trueborn and Scav; real art is a file-for-file replacement.
 - S11 Sera — done.
 - S11b Combat UX (turn groups, hover previews, readable refusals) — done, after the first playtest.
+- S12 Controller — done: every action pad-bound or routed through the system menu (`test_input_actions.gd` enforces it); combat cell cursor; menu cursors; Steam Deck layout in `docs/controller.md`. **M1 exit criteria met**; next is the M1 playtest and M2 planning.
 
 ## Running assumptions
 - Placeholder art stays until S10; systems before it must not depend on sprite details.
