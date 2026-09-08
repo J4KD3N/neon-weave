@@ -1,0 +1,9 @@
+{
+  "name": "Phantom",
+  "class": "wireghost",
+  "summary": "Infiltration and control; never where the shot lands.",
+  "abilities": ["ghost_hack"],
+  "stat_mods": { "evasion": 5 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

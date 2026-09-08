@@ -124,6 +124,7 @@ func _ready() -> void:
 		elif arg.begins_with("--talk="):
 			talk_to(arg.get_slice("=", 1))
 		elif arg == "--weave":
+			ledger.path = "user://screenshot_ledger.json" # never touch the real books
 			ledger.xp = 40 # level 3 so the subclass rows are live in the shot
 			ledger.bank({"aether": 4})
 			refresh_progression()

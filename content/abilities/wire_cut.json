@@ -1,0 +1,9 @@
+{
+  "name": "Wire Cut",
+  "summary": "Wireghost: a monofilament slash. From hiding it is an ambush.",
+  "ap": 1,
+  "range": 1,
+  "damage": [3, 5],
+  "accuracy": 90,
+  "damage_type": "tech"
+}

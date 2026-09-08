@@ -1,0 +1,10 @@
+{
+  "name": "Void Lash",
+  "summary": "Null Blade: spends 2 Null to lash out two cells.",
+  "ap": 2,
+  "range": 2,
+  "damage": [6, 9],
+  "accuracy": 85,
+  "damage_type": "physical",
+  "resource_cost": 2
+}

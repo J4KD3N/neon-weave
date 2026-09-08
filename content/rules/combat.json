@@ -19,5 +19,7 @@
   "mana_pool_amplify": 1.5,
   "conduit_chain_damage": 2,
   "corrosive_damage": 2,
+  "ambush_hit_bonus": 20,
+  "ambush_damage_mult": 1.5,
   "initiative_die": 20
 }

@@ -395,6 +395,8 @@ func _sync_actor(id: String) -> void:
 		return
 	node.hp = c.hp
 	node.downed = c.downed
+	if c.is_active():
+		node.modulate.a = 0.45 if c.hidden else 1.0 # hidden: faint, for both sides
 	if c.hp <= 0 and not c.downed and not node.dead:
 		node.dead = true
 		var enemy := node as EnemyActor
@@ -430,6 +432,7 @@ func _after_state_change() -> void:
 		_finish()
 		return
 	hovered = Vector2i(-1, -1)
+	_sync_all() # hidden/revealed alpha, statuses
 	if current_is_player():
 		_refresh_player_ui()
 	else:
@@ -512,6 +515,10 @@ func _refresh_player_ui() -> void:
 		var res := ""
 		if c.has_resource() and c.is_active():
 			res = " · %s %d" % [c.resource_def.get("name", c.resource_id), c.resource]
+		if c.hidden and c.is_active():
+			res += " · hidden"
+		if c.is_silenced():
+			res += " · silenced %d" % int(c.statuses["silenced"])
 		order.append("%s%s (%s)%s" % [mark, c.display_name, hp, res])
 	hud.set_order_text("\n".join(order))
 	var abilities: Array[Dictionary] = []

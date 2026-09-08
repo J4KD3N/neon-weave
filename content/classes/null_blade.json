@@ -1,0 +1,16 @@
+{
+  "name": "Null Blade",
+  "branches": ["body", "arcane"],
+  "resource": {
+    "id": "null",
+    "name": "Null",
+    "summary": "Absorbs magic damage as fuel."
+  },
+  "stats": { "hp": 18, "move": 6, "evasion": 5, "initiative": 1 },
+  "growth": { "hp": 2 },
+  "unlocks": {},
+  "abilities": ["strike", "null_cut", "void_lash", "null_pulse"],
+  "subclass_level": 3,
+  "subclasses": ["voidfencer", "suppressor"],
+  "milestone": "M2"
+}

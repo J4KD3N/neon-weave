@@ -1,0 +1,9 @@
+{
+  "name": "Razor Flurry",
+  "summary": "Razor: three cuts in one breath. Devastating from hiding.",
+  "ap": 2,
+  "range": 1,
+  "damage": [4, 8],
+  "accuracy": 85,
+  "damage_type": "physical"
+}

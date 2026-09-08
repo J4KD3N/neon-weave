@@ -1,0 +1,16 @@
+{
+  "name": "Wireghost",
+  "branches": ["tech", "body"],
+  "resource": {
+    "id": "heat",
+    "name": "Heat",
+    "summary": "Stealth and hacks build it; overheating reveals."
+  },
+  "stats": { "hp": 14, "move": 7, "evasion": 15, "initiative": 3 },
+  "growth": { "hp": 2 },
+  "unlocks": {},
+  "abilities": ["strike", "wire_cut", "shadow_step", "cool_down"],
+  "subclass_level": 3,
+  "subclasses": ["razor", "phantom"],
+  "milestone": "M2"
+}

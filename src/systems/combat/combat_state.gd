@@ -211,6 +211,10 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 	var resource_cost := int(ability.get("resource_cost", 0))
 	if resource_cost > 0 and actor.resource < resource_cost:
 		return "needs %d %s" % [resource_cost, actor.resource_def.get("name", "charge")]
+	if actor.is_silenced() and String(ability.get("damage_type", "")) == "arcane":
+		return "silenced"
+	if actor.statuses.has("cd:" + ability_id):
+		return "cooling down (%d)" % int(actor.statuses["cd:" + ability_id])
 	var target := occupant(target_cell)
 	if target == null:
 		return "no target"
@@ -218,11 +222,18 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 	if self_only:
 		if target != actor:
 			return "self only"
+		if String(ability.get("effect", "")) == "stealth":
+			if actor.hidden:
+				return "already hidden"
+			if bool(actor.resource_def.get("reveal_at_max", false)) and actor.resource >= actor.resource_max() and actor.resource_max() > 0:
+				return "overheated: cool down first"
 		return ""
 	if target == actor:
 		return "cannot target self"
 	if not actor.is_hostile_to(target) and not rules.friendly_fire:
 		return "friendly fire is off"
+	if target.hidden and actor.is_hostile_to(target):
+		return "target is hidden"
 	var range_cells := int(ability.get("range", 1))
 	if LineOfSight.distance(actor.cell, target_cell) > range_cells:
 		return "out of range"
@@ -272,11 +283,23 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 	var target := occupant(target_cell)
 	actor.ap -= int(ability.get("ap", 1))
 	_undo = {}
+	if int(ability.get("cooldown", 0)) > 0:
+		actor.statuses["cd:" + ability_id] = int(ability["cooldown"])
 	var resource_cost := int(ability.get("resource_cost", 0))
 	if resource_cost > 0:
 		actor.resource = maxi(actor.resource - resource_cost, 0)
 	var effect := String(ability.get("effect", ""))
 	var mark := String(ability.get("mark", ""))
+
+	if effect == "stealth":
+		actor.hide(int(ability.get("duration", 2)))
+		var gain := int(actor.resource_def.get("gain_on_stealth", 0))
+		if actor.has_resource() and gain > 0:
+			actor.resource = mini(actor.resource + gain, actor.resource_max())
+		var revealed := _check_reveal(actor)
+		var st: Dictionary = {"type": "stealth", "actor": actor.id, "ability": ability_id, "hidden": actor.hidden, "revealed": revealed, "resource_after": actor.resource, "ap_left": actor.ap}
+		_emit(st)
+		return st
 
 	if effect == "vent":
 		var heal := int(ability.get("heal", 0))
@@ -299,18 +322,20 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		return o
 
 	var flanked := is_flanked(target, actor)
+	var ambush := actor.hidden
 	var mods := attack_modifiers(actor, ability, target)
-	var chance := hit_chance(actor, ability, target, flanked, int(mods["hit"]))
+	var chance := hit_chance(actor, ability, target, flanked, int(mods["hit"]) + (rules.ambush_hit_bonus if ambush else 0))
 	var roll := rng.randi_range(1, 100)
 	var e: Dictionary = {
 		"type": "ability", "actor": actor.id, "ability": ability_id, "target": target.id,
-		"chance": chance, "roll": roll, "hit": roll <= chance, "flanked": flanked,
+		"chance": chance, "roll": roll, "hit": roll <= chance, "flanked": flanked, "ambush": ambush,
 		"cover": mods["cover"], "elevated": mods["elevated"], "uphill": mods["uphill"], "amplified": mods["amplified"],
 		"resource_stacks": actor.resource if builds else 0,
 		"resource_cost": resource_cost,
-		"marked": 0, "detonated": 0,
+		"marked": 0, "detonated": 0, "silenced": 0, "absorbed": 0,
 		"damage": 0, "target_hp": target.hp, "downed": false, "killed": false, "ap_left": actor.ap,
 	}
+	actor.reveal() # striking from hiding reveals, hit or miss
 	if e["hit"]:
 		var bonus := damage_bonus_for(actor, ability, target, mods)
 		if effect == "detonate" and not mark.is_empty():
@@ -319,11 +344,18 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		var dmg := roll_damage(ability, flanked, bonus)
 		if bool(mods["amplified"]):
 			dmg = int(round(dmg * rules.mana_pool_amplify))
-		var fate := _apply_damage(target, dmg)
-		e["damage"] = dmg
+		if ambush:
+			dmg = int(round(dmg * rules.ambush_damage_mult))
+		var fate := _apply_damage(target, dmg, String(ability.get("damage_type", "")))
+		e["damage"] = int(fate["dealt"])
+		e["absorbed"] = int(fate["absorbed"])
 		e["target_hp"] = target.hp
 		e["downed"] = fate["downed"]
 		e["killed"] = fate["killed"]
+		if effect == "silence" and target.is_active():
+			var turns := int(ability.get("duration", 1))
+			target.statuses["silenced"] = maxi(int(target.statuses.get("silenced", 0)), turns)
+			e["silenced"] = turns
 		if effect == "mark" and not mark.is_empty() and target.is_active():
 			var cap := int(actor.resource_def.get("max_per_target", 3))
 			target.marks[mark] = mini(target.mark_count(mark) + 1, cap)
@@ -374,7 +406,8 @@ func preview(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Dic
 		return out
 	var flanked := is_flanked(target, actor)
 	var mods := attack_modifiers(actor, ability, target)
-	out["chance"] = hit_chance(actor, ability, target, flanked, int(mods["hit"]))
+	var ambush := actor.hidden
+	out["chance"] = hit_chance(actor, ability, target, flanked, int(mods["hit"]) + (rules.ambush_hit_bonus if ambush else 0))
 	var bonus := damage_bonus_for(actor, ability, target, mods)
 	var span: Array = ability.get("damage", [1, 1])
 	var lo := int(span[0]) if span.size() > 0 else 1
@@ -387,9 +420,14 @@ func preview(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Dic
 	if bool(mods["amplified"]):
 		dmin = int(round(dmin * rules.mana_pool_amplify))
 		dmax = int(round(dmax * rules.mana_pool_amplify))
+	if ambush:
+		dmin = int(round(dmin * rules.ambush_damage_mult))
+		dmax = int(round(dmax * rules.ambush_damage_mult))
 	out["min"] = maxi(dmin, 0)
 	out["max"] = maxi(dmax, 0)
 	var tags: PackedStringArray = []
+	if ambush:
+		tags.append("ambush")
 	if flanked:
 		tags.append("flanked")
 	if int(mods["cover"]) > 0:
@@ -473,14 +511,37 @@ func _chain_shock(target: Combatant, source: Combatant) -> void:
 		var c := occupant(cell)
 		if c == null or c == target:
 			continue
-		var fate := _apply_damage(c, dmg)
-		_emit({"type": "chain", "actor": source.id, "target": c.id, "damage": dmg, "target_hp": c.hp, "downed": fate["downed"], "killed": fate["killed"]})
+		var fate := _apply_damage(c, dmg, "arcane")
+		_emit({"type": "chain", "actor": source.id, "target": c.id, "damage": int(fate["dealt"]), "absorbed": int(fate["absorbed"]), "target_hp": c.hp, "downed": fate["downed"], "killed": fate["killed"]})
 
 
-## Applies damage with Story-Protected knock-outs. Returns {"downed", "killed"}.
-func _apply_damage(c: Combatant, dmg: int) -> Dictionary:
-	var fate := {"downed": false, "killed": false}
+## A resource with `reveal_at_max` lights its owner up at the cap. Returns
+## true when this call revealed them.
+func _check_reveal(c: Combatant) -> bool:
+	if c.hidden and bool(c.resource_def.get("reveal_at_max", false)) and c.resource_max() > 0 and c.resource >= c.resource_max():
+		c.reveal()
+		return true
+	return false
+
+
+## Applies damage with Story-Protected knock-outs. A resource with
+## `absorb: {type, fraction}` swallows part of damage of that type and
+## stores it (`gain_per_absorbed`). Any damage taken reveals a hidden
+## combatant. Returns {"downed", "killed", "dealt", "absorbed"}.
+func _apply_damage(c: Combatant, dmg: int, damage_type: String = "") -> Dictionary:
+	var fate := {"downed": false, "killed": false, "dealt": 0, "absorbed": 0}
 	if dmg <= 0 or not c.is_active():
+		return fate
+	var absorb: Dictionary = c.resource_def.get("absorb", {})
+	if not absorb.is_empty() and not damage_type.is_empty() and String(absorb.get("type", "")) == damage_type:
+		var absorbed := int(floor(dmg * clampf(float(absorb.get("fraction", 0.0)), 0.0, 1.0)))
+		if absorbed > 0:
+			dmg -= absorbed
+			fate["absorbed"] = absorbed
+			c.resource = mini(c.resource + absorbed * int(c.resource_def.get("gain_per_absorbed", 1)), c.resource_max())
+	fate["dealt"] = dmg
+	c.reveal()
+	if dmg <= 0:
 		return fate
 	c.hp = maxi(c.hp - dmg, 0)
 	if c.hp == 0:
@@ -618,6 +679,27 @@ func _passable(cell: Vector2i) -> bool:
 	return map.is_walkable(cell) and occupant(cell) == null
 
 
+## Walking distance (steps, same adjacency as movement, occupants ignored)
+## from every walkable cell to `goal`. Cells not in the result are cut off
+## by walls. Used to approach around obstacles instead of straight at them.
+func distance_field(goal: Vector2i) -> Dictionary:
+	var dist: Dictionary = {goal: 0}
+	var frontier: Array[Vector2i] = [goal]
+	while not frontier.is_empty():
+		var cur: Vector2i = frontier.pop_front()
+		var c: int = dist[cur]
+		for d: Vector2i in DIRS8:
+			var n := cur + d
+			if dist.has(n) or not map.is_walkable(n):
+				continue
+			if d.x != 0 and d.y != 0:
+				if not (map.is_walkable(cur + Vector2i(d.x, 0)) and map.is_walkable(cur + Vector2i(0, d.y))):
+					continue
+			dist[n] = c + 1
+			frontier.append(n)
+	return dist
+
+
 func _emit(e: Dictionary) -> void:
 	var line := describe(e)
 	if not line.is_empty():
@@ -642,8 +724,14 @@ func describe(e: Dictionary) -> String:
 			var ab: Dictionary = abilities.get(e["ability"], {})
 			var ab_name: String = String(ab.get("name", e["ability"]))
 			var tags: PackedStringArray = []
+			if bool(e.get("ambush", false)):
+				tags.append("ambush")
 			if bool(e.get("flanked", false)):
 				tags.append("flanked")
+			if int(e.get("absorbed", 0)) > 0:
+				tags.append("%d absorbed" % int(e["absorbed"]))
+			if int(e.get("silenced", 0)) > 0:
+				tags.append("silenced %d" % int(e["silenced"]))
 			if int(e.get("cover", 0)) > 0:
 				tags.append("cover")
 			if bool(e.get("elevated", false)):
@@ -669,6 +757,10 @@ func describe(e: Dictionary) -> String:
 			return s
 		"vent":
 			return "%s vents (+%d HP)." % [_name(e["actor"]), int(e["heal"])]
+		"stealth":
+			if bool(e.get("revealed", false)):
+				return "%s tries to hide but overheats, lit up." % _name(e["actor"])
+			return "%s vanishes." % _name(e["actor"])
 		"harvest":
 			return "%s harvests %d from the %s." % [_name(e["actor"]), int(e["gain"]), String(e["surface"]).replace("_", " ")]
 		"overload":

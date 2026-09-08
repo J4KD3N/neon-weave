@@ -21,6 +21,7 @@ The first editor open generates `.uid` sidecar files next to scripts. Commit the
 ```bash
 godot --headless --path . --import
 godot --headless --path . -s tests/test_runner.gd
+godot --headless --path . -s tests/test_runner.gd -- --only=soak   # one file
 ```
 
 Exit code is non-zero on any failure. Tests live in `tests/unit/test_*.gd` and extend `tests/test_case.gd`.

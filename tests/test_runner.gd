@@ -33,8 +33,15 @@ func run_all() -> int:
 	var failed := 0
 	var files: PackedStringArray = DirAccess.get_files_at(TEST_DIR)
 	files.sort()
+	# `-- --only=soak` runs just the files whose name contains the fragment.
+	var only := ""
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--only="):
+			only = arg.get_slice("=", 1)
 	for file: String in files:
 		if not (file.begins_with("test_") and file.get_extension() == "gd"):
+			continue
+		if not only.is_empty() and not file.contains(only):
 			continue
 		var path: String = TEST_DIR.path_join(file)
 		var script: GDScript = load(path)
