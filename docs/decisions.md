@@ -116,3 +116,33 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Decision**: The runner executes tests from the first `_process` frame, not `_initialize`, because the root window is not in the tree during initialisation and scene nodes added then never get `_ready`. Since a GDScript runtime error aborts a method without recording a failure, the CI test step also fails on any `SCRIPT ERROR` in the log.
 **Why**: Discovered in S1: the scene tests "passed" while every line after the first error was skipped.
 **Revisit when**: moving to gdUnit4/GUT (D-006), which handle both.
+
+## D-021 — Session S2 scope: enemies + turn-based combat
+**Date**: 2026-09-08
+**Decision**: Three Rusted Undercity enemies, encounter triggers, a pure turn-based engine, rusher/ranged AI, a code-built HUD. Deferred: cover, elevation, surfaces, class resources (Surge/Vent Heat), stealth openers, XP/loot, extraction.
+
+## D-022 — Combat engine is pure and event-driven
+**Date**: 2026-09-08
+**Decision**: `CombatState` owns all rules over `MapData` + `Combatant` data + ability entries and emits `event` dictionaries; `CombatController` (a Node) maps combatant ids to `WorldActor`s, animates, and drives the HUD. With `animate = false` a whole fight resolves synchronously, which is how the scene test and the CI combat screenshot run.
+**Why**: Unit tests for every rule without nodes or timing; AI can be tested against the same object; determinism via a seeded `RandomNumberGenerator`.
+
+## D-023 — Turn economy and range metric
+**Date**: 2026-09-08
+**Decision**: Per turn: `ap_per_turn` (4) action points for abilities plus `move` cells of free movement. Reach is a BFS over walkable, unoccupied cells, diagonals allowed, no corner cutting (consistent with exploration pathing). Range and adjacency use Chebyshev distance. Line of sight is a Bresenham walk; only tiles with `blocks_sight` (walls) break it; low debris and combatants do not.
+**Alternatives**: AP-for-movement (XCOM style); Euclidean ranges.
+**Why**: GDD §9 says free movement + 4 AP. Chebyshev keeps melee 8-directional and matches the diagonal BFS.
+
+## D-024 — To-hit, flanking, friendly fire, knock-outs
+**Date**: 2026-09-08
+**Decision**: hit chance = ability `accuracy` − target `evasion` (+ `flank_hit_bonus` when another combatant hostile to the target is adjacent), clamped to [5, 95]; damage is uniform in `[min, max]`, ×`flank_damage_mult` when flanked. Abilities may target anyone but self (friendly fire on, rule-toggleable). Party members at 0 HP are `downed` under Story-Protected rules (default) and revived at 1 HP after a victory; Mortal mode kills. All numbers live in `content/rules/combat.json`.
+**Why**: Enough tactical texture (positioning matters via flanking and LOS) for M0's "is it fun?" without cover/elevation yet. Story-Protected vs Mortal is the GDD §7 setup choice; only the rule flag exists so far, no setup UI.
+
+## D-025 — Encounters
+**Date**: 2026-09-08
+**Decision**: An enemy that has a party member within its `awareness` (Chebyshev) with line of sight starts combat. Clicking an enemy within the leader's reach of its awareness starts combat with a first-strike initiative bonus for the party. Only enemies within `engage_radius` (7) of any party member join; the rest idle for later. Party members snap to distinct free cells (`CellSettler`) at combat start.
+**Revisit when**: stealth (GDD §9) lands — awareness should become a cone/noise model, and first strike should be a proper opener.
+
+## D-026 — Enemy AI is per-action, not per-turn
+**Date**: 2026-09-08
+**Decision**: `EnemyBrain.next_action(state, actor)` returns one action (move / ability / end); the controller executes it, animates, and asks again. Archetypes: `rusher` (close to nearest hostile, use highest-damage usable ability) and `ranged` (kite to distance 2..range with LOS, then shoot). Unknown archetypes fall back to rusher.
+**Why**: Each decision sees the true state after the previous action, and the view gets natural animation beats. Summoner/stealther/controller wait on their mechanics.
