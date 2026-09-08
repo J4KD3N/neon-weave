@@ -1,0 +1,9 @@
+{
+  "name": "Spore bed",
+  "summary": "Drifting spores. Whoever stands in them is harder to hit.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "surface": "spore",
+  "art": { "shape": "floor", "fill": "grate", "edge": "floor_edge", "pattern": "ripple", "pattern_color": "grate_line" }
+}

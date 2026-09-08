@@ -1,0 +1,12 @@
+{
+  "name": "Spore Mite",
+  "family": "verdant_datacore",
+  "archetype": "rusher",
+  "summary": "A fist-sized construct. Many.",
+  "stats": { "hp": 4, "move": 6, "evasion": 5, "initiative": 2 },
+  "abilities": ["thorn_bite"],
+  "awareness": 4,
+  "xp": 2,
+  "loot": { "salvage": [0, 1] },
+  "art": { "shape": "capsule", "color": "#7a9a2a" }
+}

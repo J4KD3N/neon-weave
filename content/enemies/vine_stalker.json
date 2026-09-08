@@ -1,0 +1,12 @@
+{
+  "name": "Vine Stalker",
+  "family": "verdant_datacore",
+  "archetype": "stealther",
+  "summary": "A hybrid that goes still as a root, then does not.",
+  "stats": { "hp": 9, "move": 6, "evasion": 10, "initiative": 3 },
+  "abilities": ["thorn_bite", "shadow_step"],
+  "awareness": 5,
+  "xp": 8,
+  "loot": { "salvage": [1, 3], "aether": [0, 1], "cipher_chance": 0.05 },
+  "art": { "shape": "capsule", "color": "#4de0a0" }
+}

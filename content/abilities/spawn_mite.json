@@ -1,0 +1,13 @@
+{
+  "name": "Spawn Mite",
+  "summary": "Hive Tender: releases a spore mite (three at a time).",
+  "ap": 2,
+  "range": 0,
+  "damage": [0, 0],
+  "accuracy": 100,
+  "targets": "self",
+  "effect": "summon",
+  "summon": "spore_mite",
+  "summon_max": 3,
+  "cooldown": 1
+}

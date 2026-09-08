@@ -353,3 +353,13 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `StatBlock.for_enemy(entry, rules, depth, tier)`: elite x1.5 HP +1 damage; boss x3 HP +2 damage +1 AP; every enemy gets HP x (1 + 0.15 x (depth - 1)) and +1 damage per two depths past the first. A placement may carry `tier`; an entry may declare its own (the Undercity Warlord is a boss). The generator rolls elites per placement (`elite_chance_per_depth`, capped) and, from `boss.min_depth`, posts the template boss on the floor cell nearest the extraction pad. Depth 3 is measurably harder than depth 1 in the scene test: more bodies, more than 1.3x the total HP, and a boss on the pad.
 **Why**: D-038 said depth only adds bodies. The demo needs a difficulty ramp the Beacon controls, and a boss at the pad turns extraction into a decision.
+
+## D-069 — Biomes are templates plus a palette; the Beacon unlocks them
+**Date**: 2026-09-08
+**Decision**: A second biome is a `biomes` palette (same sixteen roles), its own tiles (moss floor, root wall, sap pool, data vine, rootrot, canopy, spore bed) and a `shards` template that names them, its enemy family and its boss. Templates can ask for `rooms.style: "oval"` (ellipse hollows) and `corridors.width` (1–3). A template with `requires_unlock` is launchable only when a reached Bastion level lists that id under `unlocks` (Beacon level 2 finds the Verdant Datacore); the system menu lists every template and N launches the last chosen one. `--biome=<template>` before `--shard=` renders it in CI. No engine change was needed for the family: hybrids, constructs, a summoner and a controller boss reuse S15/S16 vocabulary.
+**Why**: The second biome is an M2 exit criterion and the first proof that biomes are data (GDD §15). Beacon-gated unlocks make the Bastion the place where the world grows.
+
+## D-070 — Spores: a surface that shrouds whoever stands in it
+**Date**: 2026-09-08
+**Decision**: `rules/combat.surface_evasion` maps a surface to evasion granted to a target standing on it (`spore`: 10). It applies in `attack_modifiers` (tag "spores" in previews and the log) and the enemy brain values such cells at half the bonus. Rootrot, sap pools and data vines are corrosive, mana-pool and conduit tiles under new names, so the Datacore reads differently without new mechanics.
+**Why**: One new surface mechanic per biome keeps the vocabulary growing slowly and the validator honest.

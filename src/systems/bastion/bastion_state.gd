@@ -96,6 +96,22 @@ func effect(key: String, default: float = 0.0) -> float:
 	return float(effects().get(key, default))
 
 
+## Every `unlocks` id declared by a reached level of any building
+## (e.g. the Beacon at level 2 finds the Verdant Datacore).
+func unlocks() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in order:
+		for n: int in range(0, level(id) + 1):
+			for key: String in _level_entry(id, n).get("unlocks", []):
+				if not out.has(key):
+					out.append(key)
+	return out
+
+
+func has_unlocked(key: String) -> bool:
+	return key.is_empty() or unlocks().has(key)
+
+
 func depth() -> int:
 	return maxi(int(effect("depth", 1.0)), 1)
 

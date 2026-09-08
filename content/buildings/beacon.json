@@ -4,7 +4,7 @@
   "order": 1,
   "levels": [
     { "cost": {}, "effects": { "depth": 1 }, "blurb": "Reaches the shallowest Shards." },
-    { "cost": { "salvage": 15, "aether": 2 }, "effects": { "depth": 2 }, "blurb": "Depth 2: one more enemy group and cache per Shard." },
+    { "cost": { "salvage": 15, "aether": 2 }, "effects": { "depth": 2 }, "unlocks": ["verdant_datacore"], "blurb": "Depth 2: one more enemy group and cache per Shard; the Beacon finds the Verdant Datacore." },
     { "cost": { "salvage": 40, "aether": 6, "ciphers": 1 }, "effects": { "depth": 3 }, "blurb": "Depth 3: two more groups and caches." }
   ]
 }

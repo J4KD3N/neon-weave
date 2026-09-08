@@ -41,6 +41,8 @@ var boss_ap_bonus: int = 1
 ## Depth scaling: HP x (1 + per_level x (depth - 1)); +1 damage every N depths past 1.
 var depth_hp_per_level: float = 0.15
 var depth_damage_every: int = 2
+## Evasion granted by standing on a surface (target side): {"spore": 10}.
+var surface_evasion: Dictionary = {}
 ## Enemy positioning weights (EnemyBrain scoring).
 var ai_cover_weight: int = 4
 var ai_elevation_weight: int = 4
@@ -78,6 +80,10 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.boss_ap_bonus = int(entry.get("boss_ap_bonus", r.boss_ap_bonus))
 	r.depth_hp_per_level = float(entry.get("depth_hp_per_level", r.depth_hp_per_level))
 	r.depth_damage_every = int(entry.get("depth_damage_every", r.depth_damage_every))
+	r.surface_evasion = {}
+	var se: Dictionary = entry.get("surface_evasion", {})
+	for key: String in se:
+		r.surface_evasion[key] = int(se[key])
 	r.ai_cover_weight = int(entry.get("ai_cover_weight", r.ai_cover_weight))
 	r.ai_elevation_weight = int(entry.get("ai_elevation_weight", r.ai_elevation_weight))
 	r.ai_corrosive_penalty = int(entry.get("ai_corrosive_penalty", r.ai_corrosive_penalty))

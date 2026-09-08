@@ -109,6 +109,7 @@ jobs:
           run_shot --screenshot="$PWD/build/screenshot.png"
           run_shot --screenshot="$PWD/build/screenshot-combat.png" --screenshot-combat
           run_shot --screenshot="$PWD/build/screenshot-shard.png" --shard=7
+          run_shot --screenshot="$PWD/build/screenshot-datacore.png" --shard=7 --biome=verdant_datacore
           run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
           run_shot --screenshot="$PWD/build/screenshot-dialogue.png" --talk=sera
           ls -la build

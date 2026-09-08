@@ -1,0 +1,9 @@
+{
+  "name": "Thorn Bite",
+  "summary": "Verdant hybrids: a bite of woody thorns.",
+  "ap": 1,
+  "range": 1,
+  "damage": [2, 4],
+  "accuracy": 85,
+  "damage_type": "physical"
+}

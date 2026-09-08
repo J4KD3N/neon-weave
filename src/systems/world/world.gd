@@ -10,6 +10,9 @@ extends Node2D
 const HOME_MAP := "proto_yard"
 const DEFAULT_SHARD := "rusted_undercity"
 
+## The Shard template N launches: the last one chosen in the system menu.
+var selected_shard: String = DEFAULT_SHARD
+
 @export var map_id: String = HOME_MAP
 @export var party_id: String = "prototype"
 ## 0 = random per encounter. Tests pin it.
@@ -115,10 +118,13 @@ func _ready() -> void:
 	camera.target = party.leader()
 	camera.snap()
 	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--biome="):
+			selected_shard = arg.get_slice("=", 1) # before --shard= on the command line
+	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="):
 			_screenshot_path = arg.get_slice("=", 1)
 		elif arg.begins_with("--shard="):
-			enter_shard(DEFAULT_SHARD, int(arg.get_slice("=", 1)))
+			enter_shard(selected_shard, int(arg.get_slice("=", 1)))
 		elif arg == "--creator":
 			open_creator()
 		elif arg.begins_with("--talk="):
@@ -1052,7 +1058,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_bastion()
 		elif event.is_action_pressed("new_shard"):
 			bastion_menu.visible = false
-			enter_shard(DEFAULT_SHARD, int(randi() % 1000000))
+			enter_shard(selected_shard, int(randi() % 1000000))
 		elif event.is_action_pressed("confirm"):
 			confirm_bastion()
 		elif event.is_action_pressed("ui_up"):
@@ -1091,7 +1097,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("extract"):
 				extract()
 			elif event.is_action_pressed("new_shard"):
-				enter_shard(DEFAULT_SHARD, int(randi() % 1000000))
+				enter_shard(selected_shard, int(randi() % 1000000))
 			elif event.is_action_pressed("go_home"):
 				enter_map(HOME_MAP)
 		"combat":
@@ -1187,7 +1193,13 @@ func system_items() -> Array[Dictionary]:
 	var items: Array[Dictionary] = []
 	items.append({"id": "resume", "label": "Resume", "enabled": true})
 	items.append({"id": "extract", "label": "Extract (bank the haul)", "enabled": can_extract(), "why": "not on the extraction pad"})
-	items.append({"id": "new_shard", "label": "Launch a new Shard (depth %d)" % bastion.depth(), "enabled": true})
+	items.append({"id": "new_shard", "label": "Launch a new Shard: %s (depth %d)" % [shard_name(selected_shard), bastion.depth()], "enabled": true})
+	for t: Dictionary in registry.get_all("shards"):
+		var id := String(t["id"])
+		if id == selected_shard:
+			continue
+		var need := String(t.get("requires_unlock", ""))
+		items.append({"id": "shard_" + id, "label": "Launch instead: %s" % t.get("name", id), "enabled": bastion.has_unlocked(need), "why": "the Beacon has not found it yet"})
 	items.append({"id": "go_home", "label": "Return to the yard (haul is lost)", "enabled": not home, "why": "already home"})
 	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
 	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
@@ -1236,7 +1248,7 @@ func activate_system_item(id: String) -> bool:
 		"extract":
 			return extract()
 		"new_shard":
-			return not enter_shard(DEFAULT_SHARD, int(randi() % 1000000)).is_empty()
+			return not enter_shard(selected_shard, int(randi() % 1000000)).is_empty()
 		"go_home":
 			return enter_map(HOME_MAP)
 		"bastion":
@@ -1254,6 +1266,8 @@ func activate_system_item(id: String) -> bool:
 		"registry":
 			overlay.toggle_registry()
 			return true
+	if id.begins_with("shard_"):
+		return launch_shard(id.trim_prefix("shard_"))
 	return false
 
 
@@ -1513,3 +1527,29 @@ func confirm_weave() -> bool:
 		overlay.toast("%s: %s" % [row.get("label", row.get("id", "")), why], 2.0)
 	refresh_weave()
 	return why.is_empty()
+
+
+# --- shard selection --------------------------------------------------------
+
+func shard_name(template_id: String) -> String:
+	return String(registry.get_entry("shards", template_id).get("name", template_id))
+
+
+## Why a template cannot be launched now; empty when it can.
+func shard_locked_reason(template_id: String) -> String:
+	var t: Dictionary = registry.get_entry("shards", template_id)
+	if t.is_empty():
+		return "unknown Shard"
+	if not bastion.has_unlocked(String(t.get("requires_unlock", ""))):
+		return "the Beacon has not found it yet"
+	return ""
+
+
+## Picks a template for N and launches it. False (with a toast) when locked.
+func launch_shard(template_id: String) -> bool:
+	var why := shard_locked_reason(template_id)
+	if not why.is_empty():
+		overlay.toast("%s: %s" % [shard_name(template_id), why], 2.0)
+		return false
+	selected_shard = template_id
+	return not enter_shard(selected_shard, int(randi() % 1000000)).is_empty()

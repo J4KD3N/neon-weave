@@ -1,0 +1,23 @@
+{
+  "name": "Verdant Datacore",
+  "summary": "A server-forest where the fusion grew roots through the racks: bio-machine hybrids, spore constructs, rogue Rootkin wilds.",
+  "palette": {
+    "floor": "#1f2a1e",
+    "floor_edge": "#131a12",
+    "grate": "#1a2419",
+    "grate_line": "#3a5a34",
+    "wall_top": "#4a6a3c",
+    "wall_left": "#25361f",
+    "wall_right": "#2f4527",
+    "rust": "#6b5a2e",
+    "debris_top": "#3a4a2c",
+    "debris_left": "#1f2a18",
+    "debris_right": "#2a3a20",
+    "neon_arcane": "#c48cff",
+    "neon_tech": "#4de0a0",
+    "neon_body": "#ffa06b",
+    "blood": "#4a1030",
+    "failing_light": "#9ab83a"
+  },
+  "recolors": { "scav": "rust" }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Rootrot",
+  "summary": "Fusion-rot in the root mass. Whoever starts a turn in it takes damage.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "surface": "corrosive",
+  "art": { "shape": "floor", "fill": "failing_light", "edge": "floor_edge", "pattern": "cracked" }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Data vine",
+  "summary": "A live cable-vine. Tech or arcane hits on it arc along the whole run.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "surface": "conduit",
+  "art": { "shape": "floor", "fill": "neon_tech", "edge": "floor_edge", "pattern": "grate" }
+}

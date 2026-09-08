@@ -1,0 +1,8 @@
+{
+  "name": "Root wall",
+  "summary": "Server racks split open by roots as thick as a torso.",
+  "layer": "wall",
+  "walkable": false,
+  "blocks_sight": true,
+  "art": { "shape": "block", "height": 32, "top": "wall_top", "left": "wall_left", "right": "wall_right" }
+}

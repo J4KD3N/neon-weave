@@ -32,5 +32,6 @@
   "ai_elevation_weight": 4,
   "ai_corrosive_penalty": 8,
   "ai_mana_pool_weight": 3,
+  "surface_evasion": { "spore": 10 },
   "initiative_die": 20
 }
