@@ -1,6 +1,6 @@
 # Neon Weave
 
-An open-source, moddable, party-based, isometric arcane-cyberpunk CRPG built in Godot 4.6 (GDScript). Centuries after a hyper-advanced civilization collapsed, its technology fused with leaking magic. You lead a party of Weavers, scavenger-mages delving procedurally generated ruins while a handcrafted campaign uncovers what ended the old world.
+An open-source, moddable, party-based, isometric arcane-cyberpunk CRPG built in Godot 4.7 (GDScript). Centuries after a hyper-advanced civilization collapsed, its technology fused with leaking magic. You lead a party of Weavers, scavenger-mages delving procedurally generated ruins while a handcrafted campaign uncovers what ended the old world.
 
 Targets: Windows, Linux (Steam Deck friendly), macOS. Steam demo and 1.0 planned.
 
@@ -10,7 +10,7 @@ Targets: Windows, Linux (Steam Deck friendly), macOS. Steam demo and 1.0 planned
 
 ## Build from source
 
-1. Install [Godot 4.6](https://godotengine.org/download) (standard build; no .NET needed).
+1. Install [Godot 4.7.2](https://godotengine.org/download) (standard build; no .NET needed).
 2. Clone this repo and open `project.godot` from the Godot project manager (**Import**).
 3. Press **Play**. You get the Proto Yard with the prototype party; F1 lists loaded content and mods.
 

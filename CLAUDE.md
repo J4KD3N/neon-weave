@@ -1,6 +1,6 @@
 # Neon Weave — session guide
 
-Godot 4.6 / GDScript CRPG. Read these first, every session:
+Godot 4.7 / GDScript CRPG. Read these first, every session:
 
 1. `docs/GDD.md` — canonical design document. It is the prompt.
 2. `docs/decisions.md` — settled decisions. Append, never silently deviate.

@@ -14,7 +14,7 @@ permissions:
   security-events: write # upload Trivy SARIF to the Security tab
 
 env:
-  GODOT_VERSION: 4.6-stable
+  GODOT_VERSION: 4.7.2-stable
 
 jobs:
   ci:

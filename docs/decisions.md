@@ -311,3 +311,9 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: The default pad layout is designed for the Deck first: left stick and D-pad move/cursor, A confirm, B cancel, X/Y/L1/R1 abilities 1–4, L2/R2 zoom, Start system menu / end turn, Select swap member. No Steam Input template ships until GodotSteam lands (M2); the layout above is what that template will mirror. Documented in `docs/controller.md`.
 **Why**: The Deck is the reference pad device for the Steam target (GDD §3). Designing for its buttons first keeps the layout inside what every XInput pad also has.
+
+## D-061 — Engine version moves to Godot 4.7.2 (supersedes D-001)
+**Date**: 2026-09-08
+**Decision**: Target Godot 4.7.2-stable. `project.godot` declares the `4.7` feature; `ci.yml` and `release.yml` download 4.7.2-stable and its export templates. No code changed: 4.7.2 ran the 4.6 project and all 240 tests unmodified.
+**Why**: The first playtest ran on the 4.7.2 editor, which rewrites `project.godot` (feature tag, comment stripping) on every open. Pinning CI and the editor to one version stops that churn and keeps "never break exports" checkable locally.
+**Revisit when**: a 4.8 feature is needed, or a 4.7 export bug blocks a release.
