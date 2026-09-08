@@ -9,5 +9,5 @@ Updated every session. Remove items when closed; note the closing commit.
 - **No per-kind content schemas yet.** The registry loads anything; validation (required fields, enum values, cross-references like `subclasses` ids) lands with each system. Track in `docs/content-schemas.md` when created.
 - **No GodotSteam.** `Platform` has only the null backend (D-007).
 - **Content is placeholder-thin**: 2 races and 2 classes carry only descriptive fields. Mechanical hooks (`hooks`, `resource`) are strings until the class/race systems define them.
-- **Branch protection / required `ci` check** not applied on https://github.com/J4KD3N/neon-weave (public repo created 2026-09-08).
+- ~~Branch protection~~ closed 2026-09-08: `main` requires a PR with a green, up-to-date `ci` check, enforced for admins, no force-pushes or deletions.
 - **No `.gdignore` for a `build/` dir**; exports write to `build/` which is git-ignored but the editor will still scan it if present locally. Add `build/.gdignore` when first exporting.
