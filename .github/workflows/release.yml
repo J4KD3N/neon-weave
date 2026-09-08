@@ -36,7 +36,10 @@ jobs:
         run: godot --headless --path . --import
 
       - name: Unit tests
-        run: godot --headless --path . -s tests/test_runner.gd
+        run: |
+          set -o pipefail
+          godot --headless --path . -s tests/test_runner.gd 2>&1 | tee test.log
+          ! grep -q "SCRIPT ERROR" test.log
 
       - name: Export all platforms
         run: |

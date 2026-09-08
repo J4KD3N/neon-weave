@@ -110,3 +110,9 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `ci.yml` gains a best-effort `screenshot` job: Xvfb + Mesa software GL, `--rendering-method gl_compatibility`, the scene saves the viewport after ten frames via `-- --screenshot=<path>` and quits; the PNG is an artifact. Not a required check.
 **Why**: No local Godot on the build machine. This is the only visual verification loop until the editor is opened.
+
+## D-020 — Runtime script errors fail CI; tests run in the first frame
+**Date**: 2026-09-08
+**Decision**: The runner executes tests from the first `_process` frame, not `_initialize`, because the root window is not in the tree during initialisation and scene nodes added then never get `_ready`. Since a GDScript runtime error aborts a method without recording a failure, the CI test step also fails on any `SCRIPT ERROR` in the log.
+**Why**: Discovered in S1: the scene tests "passed" while every line after the first error was skipped.
+**Revisit when**: moving to gdUnit4/GUT (D-006), which handle both.

@@ -35,8 +35,13 @@ jobs:
       - name: Import project
         run: godot --headless --path . --import
 
+      # A runtime script error aborts a test method without a recorded
+      # failure, so the log is also checked for SCRIPT ERROR.
       - name: Unit tests
-        run: godot --headless --path . -s tests/test_runner.gd
+        run: |
+          set -o pipefail
+          godot --headless --path . -s tests/test_runner.gd 2>&1 | tee test.log
+          ! grep -q "SCRIPT ERROR" test.log
 
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
