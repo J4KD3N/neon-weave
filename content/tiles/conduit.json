@@ -1,0 +1,9 @@
+{
+  "name": "Live conduit",
+  "summary": "Exposed power trunking. A tech or arcane hit on anyone standing on it arcs to everyone on the connected run.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "surface": "conduit",
+  "art": { "shape": "floor", "fill": "grate", "edge": "neon_tech", "pattern": "grate", "pattern_color": "neon_tech" }
+}

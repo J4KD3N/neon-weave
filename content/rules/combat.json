@@ -12,5 +12,11 @@
   "awareness_default": 5,
   "engage_radius": 7,
   "first_strike_initiative_bonus": 10,
+  "cover_hit_penalty": 20,
+  "elevation_hit_bonus": 10,
+  "elevation_damage_bonus": 1,
+  "mana_pool_amplify": 1.5,
+  "conduit_chain_damage": 2,
+  "corrosive_damage": 2,
   "initiative_die": 20
 }

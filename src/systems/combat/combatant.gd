@@ -24,6 +24,11 @@ var initiative: int = 0
 var abilities: Array[String] = []
 ## Flat bonus added to every damage roll (Workshop edge-work).
 var damage_bonus: int = 0
+## Class resource (Surge, Heat): definition from the `resources` kind and
+## the current stack count. Empty def = no resource.
+var resource_id: String = ""
+var resource_def: Dictionary = {}
+var resource: int = 0
 ## Party members under Story-Protected rules are knocked out, not killed.
 var downed: bool = false
 
@@ -53,6 +58,20 @@ func is_active() -> bool:
 
 func is_hostile_to(other: Combatant) -> bool:
 	return team != other.team
+
+
+func set_resource(def: Dictionary) -> void:
+	resource_def = def
+	resource_id = String(def.get("id", ""))
+	resource = 0
+
+
+func resource_max() -> int:
+	return int(resource_def.get("max", 0))
+
+
+func has_resource() -> bool:
+	return not resource_def.is_empty()
 
 
 func begin_turn() -> void:

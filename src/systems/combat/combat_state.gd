@@ -4,6 +4,9 @@
 ##
 ## Turn structure (GDD §9): initiative order; each turn the actor gets
 ## `ap_per_turn` action points and `move_max` cells of free movement.
+## Positioning texture: flanking, cover against ranged fire, elevation,
+## surfaces (mana pools, conduits, corrosive biogrowth). Class resources
+## (Surge, Heat) build per matching cast and pay out as damage.
 class_name CombatState
 extends RefCounted
 
@@ -13,6 +16,8 @@ const DIRS8: Array[Vector2i] = [
 	Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1),
 	Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1),
 ]
+const DIRS4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
+const CHAIN_TYPES: Array[String] = ["tech", "arcane"]
 
 var map: MapData
 var rules: CombatRules
@@ -81,6 +86,8 @@ func occupant(cell: Vector2i) -> Combatant:
 	return null
 
 
+# --- movement --------------------------------------------------------------
+
 ## Cells the actor can still reach this turn -> step cost. Excludes its own cell.
 func reachable_cells(actor: Combatant) -> Dictionary:
 	return _flood(actor)["costs"]
@@ -123,6 +130,8 @@ func move(actor: Combatant, to: Vector2i) -> bool:
 	return true
 
 
+# --- abilities -------------------------------------------------------------
+
 ## Empty string when the ability may be used on `target_cell`, else the reason.
 func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> String:
 	if actor != current():
@@ -133,9 +142,17 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 	var cost := int(ability.get("ap", 1))
 	if actor.ap < cost:
 		return "needs %d AP" % cost
+	var lock_ap := int(actor.resource_def.get("lock_ap_at_max", 0))
+	if lock_ap > 0 and actor.resource >= actor.resource_max() and cost >= lock_ap:
+		return "overheated: vent first"
 	var target := occupant(target_cell)
 	if target == null:
 		return "no target"
+	var self_only := String(ability.get("targets", "other")) == "self"
+	if self_only:
+		if target != actor:
+			return "self only"
+		return ""
 	if target == actor:
 		return "cannot target self"
 	if not actor.is_hostile_to(target) and not rules.friendly_fire:
@@ -148,7 +165,38 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 	return ""
 
 
-## Resolves an attack: to-hit roll, damage roll, flanking, knock-outs, outcome.
+## Positioning modifiers for an attack: elevation, cover, mana pool.
+## {"hit": int, "damage": int, "cover": int, "elevated": bool, "uphill": bool, "amplified": bool}
+func attack_modifiers(actor: Combatant, ability: Dictionary, target: Combatant) -> Dictionary:
+	var hit := 0
+	var damage := 0
+	var ah := map.height_at(actor.cell)
+	var th := map.height_at(target.cell)
+	var elevated := ah > th
+	var uphill := ah < th
+	if elevated:
+		hit += rules.elevation_hit_bonus
+		damage += rules.elevation_damage_bonus
+	elif uphill:
+		hit -= rules.elevation_hit_bonus
+	var cover := 0
+	if int(ability.get("range", 1)) > 1 and not elevated:
+		var d := actor.cell - target.cell
+		cover = map.cover_at(target.cell + Vector2i(signi(d.x), signi(d.y)))
+		if cover > 0:
+			hit -= rules.cover_hit_penalty
+	var amplified := map.surface_at(actor.cell) == "mana_pool" and String(ability.get("damage_type", "")) == "arcane"
+	return {"hit": hit, "damage": damage, "cover": cover, "elevated": elevated, "uphill": uphill, "amplified": amplified}
+
+
+## True when the ability's damage type feeds the actor's class resource.
+func builds_resource(actor: Combatant, ability: Dictionary) -> bool:
+	return actor.has_resource() and String(ability.get("damage_type", "")) == String(actor.resource_def.get("builds_on", ""))
+
+
+## Resolves an ability: vents, overloads, to-hit roll with flanking / cover /
+## elevation, damage roll with Workshop, resource and elevation bonuses,
+## mana-pool amplification, conduit chaining, knock-outs, outcome.
 ## Returns the resolution event (also emitted), or {} when refused.
 func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Dictionary:
 	var why := can_use(actor, ability_id, target_cell)
@@ -157,32 +205,62 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 	var ability: Dictionary = abilities[ability_id]
 	var target := occupant(target_cell)
 	actor.ap -= int(ability.get("ap", 1))
+
+	if String(ability.get("effect", "")) == "vent":
+		var heal := int(ability.get("heal", 0))
+		var before := actor.resource
+		actor.resource = 0
+		actor.hp = mini(actor.max_hp, actor.hp + heal)
+		var v: Dictionary = {"type": "vent", "actor": actor.id, "ability": ability_id, "heal": heal, "resource_before": before, "ap_left": actor.ap}
+		_emit(v)
+		return v
+
+	var builds := builds_resource(actor, ability)
+	var def := actor.resource_def
+	if builds and def.has("overload_at") and actor.resource >= int(def["overload_at"]) and rng.randf() < float(def.get("overload_chance", 0.0)):
+		var od := int(def.get("overload_damage", 0))
+		actor.resource = 0
+		var fate := _apply_damage(actor, od)
+		var o: Dictionary = {"type": "overload", "actor": actor.id, "ability": ability_id, "damage": od, "actor_hp": actor.hp, "downed": fate["downed"], "killed": fate["killed"], "ap_left": actor.ap}
+		_emit(o)
+		_check_outcome()
+		return o
+
 	var flanked := is_flanked(target, actor)
-	var chance := hit_chance(actor, ability, target, flanked)
+	var mods := attack_modifiers(actor, ability, target)
+	var chance := hit_chance(actor, ability, target, flanked, int(mods["hit"]))
 	var roll := rng.randi_range(1, 100)
 	var e: Dictionary = {
 		"type": "ability", "actor": actor.id, "ability": ability_id, "target": target.id,
 		"chance": chance, "roll": roll, "hit": roll <= chance, "flanked": flanked,
+		"cover": mods["cover"], "elevated": mods["elevated"], "uphill": mods["uphill"], "amplified": mods["amplified"],
+		"resource_stacks": actor.resource if builds else 0,
 		"damage": 0, "target_hp": target.hp, "downed": false, "killed": false, "ap_left": actor.ap,
 	}
 	if e["hit"]:
-		var dmg := roll_damage(ability, flanked, actor.damage_bonus)
-		target.hp = maxi(target.hp - dmg, 0)
+		var bonus := actor.damage_bonus + int(mods["damage"])
+		if builds:
+			bonus += actor.resource * int(def.get("damage_per_stack", 0))
+		var dmg := roll_damage(ability, flanked, bonus)
+		if bool(mods["amplified"]):
+			dmg = int(round(dmg * rules.mana_pool_amplify))
+		var fate := _apply_damage(target, dmg)
 		e["damage"] = dmg
 		e["target_hp"] = target.hp
-		if target.hp == 0:
-			if target.team == Combatant.TEAM_PARTY and rules.story_protected:
-				target.downed = true
-				e["downed"] = true
-			else:
-				e["killed"] = true
+		e["downed"] = fate["downed"]
+		e["killed"] = fate["killed"]
+	if builds:
+		actor.resource = mini(actor.resource + int(def.get("gain_per_cast", 1)), actor.resource_max())
+		e["resource_after"] = actor.resource
 	_emit(e)
+	if bool(e["hit"]) and int(e["damage"]) > 0 and map.surface_at(target.cell) == "conduit" and CHAIN_TYPES.has(String(ability.get("damage_type", ""))):
+		_chain_shock(target, actor)
 	_check_outcome()
 	return e
 
 
-func hit_chance(actor: Combatant, ability: Dictionary, target: Combatant, flanked: bool) -> int:
-	var chance := int(ability.get("accuracy", 85)) - target.evasion
+func hit_chance(actor: Combatant, ability: Dictionary, target: Combatant, flanked: bool, extra: int = 0) -> int:
+	var chance := int(ability.get("accuracy", 85)) - target.evasion + extra
 	if flanked:
 		chance += rules.flank_hit_bonus
 	return clampi(chance, rules.min_hit_chance, rules.max_hit_chance)
@@ -207,6 +285,53 @@ func is_flanked(target: Combatant, attacker: Combatant) -> bool:
 			return true
 	return false
 
+
+## Conduit cells 4-connected to `origin` (including it).
+func conduit_network(origin: Vector2i) -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	if map.surface_at(origin) != "conduit":
+		return out
+	var seen: Dictionary = {origin: true}
+	var frontier: Array[Vector2i] = [origin]
+	while not frontier.is_empty():
+		var cur: Vector2i = frontier.pop_front()
+		out.append(cur)
+		for d: Vector2i in DIRS4:
+			var n := cur + d
+			if not seen.has(n) and map.surface_at(n) == "conduit":
+				seen[n] = true
+				frontier.append(n)
+	return out
+
+
+func _chain_shock(target: Combatant, source: Combatant) -> void:
+	var dmg := rules.conduit_chain_damage
+	if dmg <= 0:
+		return
+	for cell: Vector2i in conduit_network(target.cell):
+		var c := occupant(cell)
+		if c == null or c == target:
+			continue
+		var fate := _apply_damage(c, dmg)
+		_emit({"type": "chain", "actor": source.id, "target": c.id, "damage": dmg, "target_hp": c.hp, "downed": fate["downed"], "killed": fate["killed"]})
+
+
+## Applies damage with Story-Protected knock-outs. Returns {"downed", "killed"}.
+func _apply_damage(c: Combatant, dmg: int) -> Dictionary:
+	var fate := {"downed": false, "killed": false}
+	if dmg <= 0 or not c.is_active():
+		return fate
+	c.hp = maxi(c.hp - dmg, 0)
+	if c.hp == 0:
+		if c.team == Combatant.TEAM_PARTY and rules.story_protected:
+			c.downed = true
+			fate["downed"] = true
+		else:
+			fate["killed"] = true
+	return fate
+
+
+# --- turns -----------------------------------------------------------------
 
 func end_turn() -> void:
 	if finished or order.is_empty():
@@ -236,6 +361,12 @@ func _begin_turn() -> void:
 		return
 	actor.begin_turn()
 	_emit({"type": "turn_begin", "actor": actor.id, "team": actor.team, "round": round_number})
+	if map.surface_at(actor.cell) == "corrosive" and rules.corrosive_damage > 0:
+		var fate := _apply_damage(actor, rules.corrosive_damage)
+		_emit({"type": "surface", "actor": actor.id, "surface": "corrosive", "damage": rules.corrosive_damage, "actor_hp": actor.hp, "downed": fate["downed"], "killed": fate["killed"]})
+		_check_outcome()
+		if not finished and not actor.is_active():
+			end_turn()
 
 
 func _check_outcome() -> void:
@@ -304,13 +435,50 @@ func describe(e: Dictionary) -> String:
 			var whom := _name(e["target"])
 			var ab: Dictionary = abilities.get(e["ability"], {})
 			var ab_name: String = String(ab.get("name", e["ability"]))
+			var tags: PackedStringArray = []
+			if bool(e.get("flanked", false)):
+				tags.append("flanked")
+			if int(e.get("cover", 0)) > 0:
+				tags.append("cover")
+			if bool(e.get("elevated", false)):
+				tags.append("high ground")
+			if bool(e.get("uphill", false)):
+				tags.append("uphill")
+			if bool(e.get("amplified", false)):
+				tags.append("mana pool")
+			if int(e.get("resource_stacks", 0)) > 0:
+				tags.append("%d stacks" % int(e["resource_stacks"]))
+			var tag_text := "" if tags.is_empty() else " (%s)" % ", ".join(tags)
 			if not bool(e["hit"]):
-				return "%s: %s on %s — miss (%d vs %d%%)." % [who, ab_name, whom, e["roll"], e["chance"]]
-			var s := "%s: %s hits %s for %d%s." % [who, ab_name, whom, e["damage"], " (flanked)" if bool(e["flanked"]) else ""]
+				return "%s: %s on %s — miss (%d vs %d%%)%s." % [who, ab_name, whom, e["roll"], e["chance"], tag_text]
+			var s := "%s: %s hits %s for %d%s." % [who, ab_name, whom, e["damage"], tag_text]
 			if bool(e["killed"]):
 				s += " %s dies." % whom
 			elif bool(e["downed"]):
 				s += " %s is down." % whom
+			return s
+		"vent":
+			return "%s vents (+%d HP)." % [_name(e["actor"]), int(e["heal"])]
+		"overload":
+			var s := "%s overloads! %d damage to self." % [_name(e["actor"]), int(e["damage"])]
+			if bool(e["killed"]):
+				s += " %s dies." % _name(e["actor"])
+			elif bool(e["downed"]):
+				s += " %s is down." % _name(e["actor"])
+			return s
+		"chain":
+			var s := "The conduit arcs: %s takes %d." % [_name(e["target"]), int(e["damage"])]
+			if bool(e["killed"]):
+				s += " %s dies." % _name(e["target"])
+			elif bool(e["downed"]):
+				s += " %s is down." % _name(e["target"])
+			return s
+		"surface":
+			var s := "%s burns in the biogrowth for %d." % [_name(e["actor"]), int(e["damage"])]
+			if bool(e["killed"]):
+				s += " %s dies." % _name(e["actor"])
+			elif bool(e["downed"]):
+				s += " %s is down." % _name(e["actor"])
 			return s
 		"turn_end":
 			return ""

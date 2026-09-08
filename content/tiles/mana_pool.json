@@ -1,0 +1,9 @@
+{
+  "name": "Mana pool",
+  "summary": "Pooled Weft-leak. Arcane casts made from inside it hit half again as hard.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "surface": "mana_pool",
+  "art": { "shape": "floor", "fill": "floor_edge", "edge": "neon_arcane", "pattern": "ripple", "pattern_color": "neon_arcane" }
+}

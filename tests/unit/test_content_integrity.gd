@@ -94,8 +94,9 @@ func test_enemies_reference_abilities_and_families() -> void:
 
 func test_abilities_are_well_formed() -> void:
 	for a: Dictionary in registry.get_all("abilities"):
-		assert_true(int(a.get("ap", 0)) >= 1, "ability %s ap" % a["id"])
-		assert_true(int(a.get("range", 0)) >= 1, "ability %s range" % a["id"])
+		var self_only := String(a.get("targets", "other")) == "self"
+		assert_true(int(a.get("ap", 0)) >= (0 if self_only else 1), "ability %s ap" % a["id"])
+		assert_true(int(a.get("range", 0)) >= (0 if self_only else 1), "ability %s range" % a["id"])
 		var dmg: Array = a.get("damage", [])
 		assert_eq(dmg.size(), 2, "ability %s damage is [min, max]" % a["id"])
 		if dmg.size() == 2:
@@ -187,3 +188,42 @@ func test_buildings_have_free_base_levels_and_valid_costs_and_effects() -> void:
 			for key: String in lv.get("effects", {}):
 				assert_true(effect_keys.has(key), "building %s effect key '%s'" % [b["id"], key])
 			assert_false(String(lv.get("blurb", "")).is_empty(), "building %s level blurb" % b["id"])
+
+
+func test_class_resources_exist_and_are_well_formed() -> void:
+	for cls: Dictionary in registry.get_all("classes"):
+		var res: Dictionary = cls.get("resource", {})
+		var id := String(res.get("id", ""))
+		assert_true(registry.has_entry("resources", id), "class %s resource '%s'" % [cls["id"], id])
+		var def := registry.get_entry("resources", id)
+		assert_true(["physical", "arcane", "tech"].has(String(def.get("builds_on", ""))), "resource %s builds_on" % id)
+		assert_true(int(def.get("max", 0)) >= 1, "resource %s max" % id)
+		if def.has("vent_ability"):
+			assert_true(registry.has_entry("abilities", String(def["vent_ability"])), "resource %s vent ability" % id)
+			var abilities: Array = cls.get("abilities", [])
+			assert_true(abilities.has(String(def["vent_ability"])), "class %s must carry its vent ability" % cls["id"])
+
+
+func test_surface_tiles_are_walkable_floors_with_known_surfaces() -> void:
+	var known: Array[String] = ["mana_pool", "conduit", "corrosive"]
+	var found := 0
+	for t: Dictionary in registry.get_all("tiles"):
+		if t.has("surface"):
+			found += 1
+			assert_true(known.has(String(t["surface"])), "tile %s surface" % t["id"])
+			assert_true(bool(t.get("walkable", false)), "surface tile %s walkable" % t["id"])
+		if t.has("cover"):
+			assert_false(bool(t.get("walkable", false)), "cover tile %s should block movement" % t["id"])
+		if t.has("height"):
+			assert_true(bool(t.get("walkable", false)), "raised tile %s walkable" % t["id"])
+	assert_eq(found, 3, "mana pool, conduit, biogrowth")
+	for s: Dictionary in registry.get_all("shards"):
+		var spec: Dictionary = s.get("surfaces", {})
+		var chars: Array[String] = []
+		for e: Dictionary in spec.get("pool", []):
+			assert_true(registry.has_entry("tiles", String(e.get("tile", ""))), "shard %s surface tile" % s["id"])
+			var ch := String(e.get("char", ""))
+			assert_eq(ch.length(), 1, "surface char")
+			assert_false(["#", ".", ",", "x", "P", "E"].has(ch), "surface char clashes with a generator char")
+			assert_false(chars.has(ch), "duplicate surface char")
+			chars.append(ch)

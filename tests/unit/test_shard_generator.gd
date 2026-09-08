@@ -139,3 +139,18 @@ func test_depth_adds_groups_and_pickups_and_stays_valid() -> void:
 		var p3: Array = d3["pickups"]
 		assert_true(p1.size() >= 1 and p1.size() <= 6, "seed %d depth-1 pickups %d" % [seed_value, p1.size()])
 		assert_true(p3.size() >= 3 and p3.size() <= 8, "seed %d depth-3 pickups %d" % [seed_value, p3.size()])
+
+
+func test_surface_patches_appear_and_stay_solvable() -> void:
+	var seen: Dictionary = {}
+	for seed_value: int in range(1, 31):
+		var e := ShardGenerator.generate(template, seed_value)
+		assert_eq(ShardValidator.validate(e, tiles), [], "seed %d" % seed_value)
+		var legend: Dictionary = e["legend"]
+		assert_eq(legend.get("m"), "mana_pool")
+		assert_eq(legend.get("k"), "catwalk")
+		for row: String in e["rows"]:
+			for ch: String in ["m", "c", "b", "k"]:
+				if row.contains(ch):
+					seen[ch] = true
+	assert_eq(seen.size(), 4, "every surface kind shows up across 30 seeds: %s" % [seen.keys()])
