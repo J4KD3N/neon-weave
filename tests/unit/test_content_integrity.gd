@@ -249,7 +249,7 @@ func test_prototype_party_covers_distinct_classes_and_abilities_resolve() -> voi
 	assert_eq(seen.size(), 3, "three preset classes; Sera brings the knight count to two")
 	for a: Dictionary in registry.get_all("abilities"):
 		var effect := String(a.get("effect", ""))
-		assert_true(["", "vent", "mark", "detonate", "stealth", "silence"].has(effect), "ability %s effect '%s'" % [a["id"], effect])
+		assert_true(["", "vent", "mark", "detonate", "stealth", "silence", "root", "summon"].has(effect), "ability %s effect '%s'" % [a["id"], effect])
 		if effect == "mark" or effect == "detonate":
 			assert_false(String(a.get("mark", "")).is_empty(), "ability %s needs a mark id" % a["id"])
 		assert_true(int(a.get("resource_cost", 0)) >= 0)

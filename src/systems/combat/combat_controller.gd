@@ -65,13 +65,16 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 		m.show_hp = true
 	for i: int in enemies.size():
 		var e := enemies[i]
-		var c := Combatant.make("e:%d:%s" % [i, e.enemy_id], e.display_name, Combatant.TEAM_ENEMY, e.cell, e.stats, e.abilities, world.rules.ap_per_turn)
+		var c := Combatant.make("e:%d:%s" % [i, e.enemy_id], e.display_name, Combatant.TEAM_ENEMY, e.cell, e.stats, e.abilities, world.rules.ap_per_turn + e.ap_bonus)
 		c.hp = e.hp
 		c.archetype = e.archetype
+		c.damage_bonus = e.damage_bonus
 		combatants.append(c)
 		actors[c.id] = e
 		e.show_hp = true
 	state = CombatState.new()
+	state.enemy_entries = world.enemies_by_id()
+	state.depth = world.map_depth()
 	state.setup(world.map_data, world.rules, world.abilities_by_id(), combatants, seed_value)
 	state.event.connect(_on_event)
 	hud.visible = true
@@ -413,6 +416,11 @@ func _sync_actor(id: String) -> void:
 func _on_event(e: Dictionary) -> void:
 	hud.set_log(state.history)
 	match String(e["type"]):
+		"summon":
+			var minion := world.spawn_summoned(String(e["kind"]), e["cell"])
+			if minion != null:
+				actors[String(e["summoned"])] = minion
+				minion.show_hp = true
 		"move":
 			if not animate:
 				var node: WorldActor = actors[e["actor"]]

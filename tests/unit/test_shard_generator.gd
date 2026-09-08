@@ -154,3 +154,33 @@ func test_surface_patches_appear_and_stay_solvable() -> void:
 				if row.contains(ch):
 					seen[ch] = true
 	assert_eq(seen.size(), 4, "every surface kind shows up across 30 seeds: %s" % [seen.keys()])
+
+
+
+func test_depth_posts_the_boss_and_rolls_elites_but_depth_one_has_neither() -> void:
+	var elites_seen := 0
+	for seed_value: int in range(1, 11):
+		var d1 := ShardGenerator.generate(template, seed_value, 1)
+		for p: Dictionary in d1["enemies"]:
+			assert_false(p.has("tier"), "seed %d depth 1 has no tiers" % seed_value)
+		var d3 := ShardGenerator.generate(template, seed_value, 3)
+		assert_eq(ShardValidator.validate(d3, tiles), [], "depth 3 seed %d" % seed_value)
+		var bosses := 0
+		var exit_raw: Array = d3["extraction"]
+		var exit_cell := Vector2i(int(exit_raw[0]), int(exit_raw[1]))
+		for p: Dictionary in d3["enemies"]:
+			var tier := String(p.get("tier", ""))
+			if tier == "boss":
+				bosses += 1
+				assert_eq(p["type"], "undercity_warlord")
+				var raw: Array = p["cell"]
+				assert_true(LineOfSight.distance(Vector2i(int(raw[0]), int(raw[1])), exit_cell) <= 3, "seed %d boss by the pad" % seed_value)
+			elif tier == "elite":
+				elites_seen += 1
+			else:
+				assert_eq(tier, "", "seed %d unknown tier %s" % [seed_value, tier])
+		assert_eq(bosses, 1, "seed %d posts exactly one boss at depth 3" % seed_value)
+		var d2 := ShardGenerator.generate(template, seed_value, 2)
+		for p: Dictionary in d2["enemies"]:
+			assert_true(String(p.get("tier", "")) != "boss", "seed %d: no boss before depth 3" % seed_value)
+	assert_true(elites_seen >= 3, "elites turn up at depth 3 (%d over ten seeds)" % elites_seen)

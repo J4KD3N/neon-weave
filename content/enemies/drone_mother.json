@@ -1,0 +1,12 @@
+{
+  "name": "Drone-Mother",
+  "family": "rusted_undercity",
+  "archetype": "summoner",
+  "summary": "A scav rig grown around a drone hive. Keeps its distance and keeps spawning.",
+  "stats": { "hp": 12, "move": 4, "evasion": 5, "initiative": 0 },
+  "abilities": ["spawn_drone", "zap"],
+  "awareness": 6,
+  "xp": 12,
+  "loot": { "salvage": [2, 4], "aether": [1, 2], "cipher_chance": 0.15 },
+  "art": { "shape": "capsule", "color": "#c9a23a" }
+}
