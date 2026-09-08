@@ -126,7 +126,7 @@ func swap_for_tint(tint: Color) -> Dictionary:
 
 
 static func recolor(src: Image, swap: Dictionary) -> Image:
-	var out := src.duplicate()
+	var out: Image = src.duplicate()
 	if swap.is_empty():
 		return out
 	var keys: Array[Color] = []

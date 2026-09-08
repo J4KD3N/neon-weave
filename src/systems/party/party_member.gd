@@ -7,7 +7,6 @@ var member_id: String = ""
 var class_id: String = ""
 var race_id: String = ""
 var origin_id: String = ""
-var facing: Vector2 = Vector2.DOWN
 ## Derived combat stats (see StatBlock): hp, move, evasion, initiative.
 var stats: Dictionary = {}
 var abilities: Array[String] = []
