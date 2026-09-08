@@ -187,6 +187,7 @@ static func position_score(state: CombatState, actor: Combatant, cell: Vector2i,
 		score -= rules.ai_corrosive_penalty
 	elif surface == "mana_pool" and _casts_arcane(state, actor):
 		score += rules.ai_mana_pool_weight
+	score += int(rules.surface_evasion.get(surface, 0)) / 2 # spores: harder to hit here
 	return score
 
 

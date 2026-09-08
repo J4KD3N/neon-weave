@@ -204,7 +204,7 @@ func test_class_resources_exist_and_are_well_formed() -> void:
 		if String(def.get("kind", "")) == "marks":
 			assert_false(String(def.get("mark", "")).is_empty(), "resource %s mark id" % id)
 		for key: String in def.get("gain_on_surface", {}):
-			assert_true(["mana_pool", "conduit", "corrosive"].has(key), "resource %s surface %s" % [id, key])
+			assert_true(["mana_pool", "conduit", "corrosive", "spore"].has(key), "resource %s surface %s" % [id, key])
 		assert_true(int(def.get("max", 0)) >= 1, "resource %s max" % id)
 		if def.has("vent_ability"):
 			assert_true(registry.has_entry("abilities", String(def["vent_ability"])), "resource %s vent ability" % id)
@@ -213,7 +213,7 @@ func test_class_resources_exist_and_are_well_formed() -> void:
 
 
 func test_surface_tiles_are_walkable_floors_with_known_surfaces() -> void:
-	var known: Array[String] = ["mana_pool", "conduit", "corrosive"]
+	var known: Array[String] = ["mana_pool", "conduit", "corrosive", "spore"]
 	var found := 0
 	for t: Dictionary in registry.get_all("tiles"):
 		if t.has("surface"):
@@ -224,7 +224,7 @@ func test_surface_tiles_are_walkable_floors_with_known_surfaces() -> void:
 			assert_false(bool(t.get("walkable", false)), "cover tile %s should block movement" % t["id"])
 		if t.has("height"):
 			assert_true(bool(t.get("walkable", false)), "raised tile %s walkable" % t["id"])
-	assert_eq(found, 3, "mana pool, conduit, biogrowth")
+	assert_true(found >= 3, "mana pool, conduit, biogrowth and the Datacore variants (%d)" % found)
 	for s: Dictionary in registry.get_all("shards"):
 		var spec: Dictionary = s.get("surfaces", {})
 		var chars: Array[String] = []

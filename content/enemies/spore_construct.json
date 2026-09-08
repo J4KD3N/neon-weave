@@ -1,0 +1,12 @@
+{
+  "name": "Spore Construct",
+  "family": "verdant_datacore",
+  "archetype": "rusher",
+  "summary": "A walking bloom of fungus wired around a maintenance frame.",
+  "stats": { "hp": 11, "move": 5, "evasion": 0, "initiative": 0 },
+  "abilities": ["thorn_bite"],
+  "awareness": 5,
+  "xp": 6,
+  "loot": { "salvage": [1, 2], "aether": [0, 1] },
+  "art": { "shape": "capsule", "color": "#9ab83a" }
+}

@@ -31,6 +31,7 @@ var rooms: Array[Rect2i] = []
 ## Characters that count as floor for reachability and placement: the base
 ## floor and grate plus every surface char a template declares.
 var floor_chars: Dictionary = {FLOOR: true, GRATE: true}
+var corridor_width: int = 1
 
 
 ## `depth` (Beacon level) adds depth-1 enemy groups and pickups.
@@ -50,12 +51,19 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 	rooms.clear()
 	floor_chars = {FLOOR: true, GRATE: true}
 
-	_place_rooms(template.get("rooms", {}))
+	var room_spec: Dictionary = template.get("rooms", {})
+	_place_rooms(room_spec)
+	var oval := String(room_spec.get("style", "box")) == "oval"
 	for r: Rect2i in rooms:
-		_fill(r, FLOOR)
+		if oval:
+			_fill_oval(r, FLOOR)
+		else:
+			_fill(r, FLOOR)
+	var corridor_spec: Dictionary = template.get("corridors", {})
+	corridor_width = clampi(int(corridor_spec.get("width", 1)), 1, 3)
 	for i: int in range(1, rooms.size()):
 		_carve_corridor(_center(rooms[i - 1]), _center(rooms[i]))
-	var loops := _pick(Dictionary(template.get("corridors", {})).get("extra_loops", [1, 3]))
+	var loops := _pick(corridor_spec.get("extra_loops", [1, 3]))
 	for _i: int in loops:
 		if rooms.size() >= 3:
 			var a := rng.randi_range(0, rooms.size() - 1)
@@ -156,15 +164,34 @@ func _carve_corridor(a: Vector2i, b: Vector2i) -> void:
 	_carve_line(corner, b)
 
 
+## Carves a straight corridor `corridor_width` cells wide (extra width on
+## the +x or +y side, never into the outer wall ring).
 func _carve_line(a: Vector2i, b: Vector2i) -> void:
 	var step := Vector2i(signi(b.x - a.x), signi(b.y - a.y))
+	var side := Vector2i(0, 1) if step.x != 0 else Vector2i(1, 0)
 	var p := a
 	while true:
-		if _cell_at(p) == WALL:
-			_put(p, FLOOR)
+		for w: int in corridor_width:
+			var q := p + side * w
+			if q.x >= 1 and q.y >= 1 and q.x < width - 1 and q.y < height - 1 and _cell_at(q) == WALL:
+				_put(q, FLOOR)
 		if p == b:
 			break
 		p += step
+
+
+## Carves the ellipse inscribed in `r` (a rounded "hollow" instead of a box).
+func _fill_oval(r: Rect2i, ch: String) -> void:
+	var cx := float(r.position.x) + float(r.size.x - 1) / 2.0
+	var cy := float(r.position.y) + float(r.size.y - 1) / 2.0
+	var rx := maxf(float(r.size.x) / 2.0, 1.0)
+	var ry := maxf(float(r.size.y) / 2.0, 1.0)
+	for y: int in range(r.position.y, r.end.y):
+		for x: int in range(r.position.x, r.end.x):
+			var dx := (float(x) - cx) / rx
+			var dy := (float(y) - cy) / ry
+			if dx * dx + dy * dy <= 1.0:
+				_put(Vector2i(x, y), ch)
 
 
 func _grate_patch(r: Rect2i) -> void:

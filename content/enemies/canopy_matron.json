@@ -1,0 +1,13 @@
+{
+  "name": "Canopy Matron",
+  "family": "verdant_datacore",
+  "archetype": "controller",
+  "tier": "boss",
+  "summary": "The oldest hybrid in the racks. Vines pin you; then the spores close in.",
+  "stats": { "hp": 18, "move": 5, "evasion": 5, "initiative": 2 },
+  "abilities": ["vine_lash", "spore_bolt"],
+  "awareness": 6,
+  "xp": 34,
+  "loot": { "salvage": [6, 10], "aether": [3, 5], "cipher_chance": 0.5 },
+  "art": { "shape": "capsule", "color": "#ff6bd6" }
+}

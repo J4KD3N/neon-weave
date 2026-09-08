@@ -1,0 +1,10 @@
+{
+  "name": "Sap Bolt",
+  "summary": "Root Shaman: a bolt of Weft-charged sap. Needs a clear line.",
+  "ap": 1,
+  "range": 4,
+  "damage": [2, 4],
+  "accuracy": 85,
+  "damage_type": "arcane",
+  "requires_los": true
+}

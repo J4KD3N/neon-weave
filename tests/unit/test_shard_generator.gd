@@ -184,3 +184,69 @@ func test_depth_posts_the_boss_and_rolls_elites_but_depth_one_has_neither() -> v
 		for p: Dictionary in d2["enemies"]:
 			assert_true(String(p.get("tier", "")) != "boss", "seed %d: no boss before depth 3" % seed_value)
 	assert_true(elites_seen >= 3, "elites turn up at depth 3 (%d over ten seeds)" % elites_seen)
+
+
+
+func test_verdant_datacore_generates_valid_shards_for_a_hundred_seeds() -> void:
+	var verdant := registry.get_entry("shards", "verdant_datacore")
+	assert_false(verdant.is_empty())
+	assert_eq(verdant["biome"], "verdant_datacore")
+	var surfaces_seen: Dictionary = {}
+	for seed_value: int in range(1, 101):
+		var e := ShardGenerator.generate(verdant, seed_value, 1)
+		assert_eq(ShardValidator.validate(e, tiles), [], "verdant seed %d" % seed_value)
+		var map := MapData.parse(e, tiles)
+		assert_eq(map.biome_id, "verdant_datacore")
+		for y: int in map.height:
+			for x: int in map.width:
+				var s := map.surface_at(Vector2i(x, y))
+				if not s.is_empty():
+					surfaces_seen[s] = true
+	for s: String in ["spore", "mana_pool", "conduit", "corrosive"]:
+		assert_true(surfaces_seen.has(s), "the Datacore grows %s somewhere in a hundred seeds" % s)
+	var deep := ShardGenerator.generate(verdant, 5, 3)
+	assert_eq(ShardValidator.validate(deep, tiles), [], "depth 3")
+	var bosses := 0
+	for p: Dictionary in deep["enemies"]:
+		if String(p.get("tier", "")) == "boss":
+			bosses += 1
+			assert_eq(p["type"], "canopy_matron")
+	assert_eq(bosses, 1)
+
+
+func test_oval_rooms_and_wide_corridors_change_the_carving() -> void:
+	var box := template.duplicate(true)
+	var oval := template.duplicate(true)
+	oval["rooms"] = Dictionary(oval["rooms"]).duplicate()
+	oval["rooms"]["style"] = "oval"
+	oval["corridors"] = {"extra_loops": [1, 3], "width": 2}
+	var a := ShardGenerator.generate(box, 9, 1)
+	var b := ShardGenerator.generate(oval, 9, 1)
+	assert_eq(ShardValidator.validate(b, tiles), [], "oval + wide stays valid")
+	assert_true(a["rows"] != b["rows"], "the carving differs")
+	var raw_room: Array = b["rooms"][0]
+	var room := Rect2i(int(raw_room[0]), int(raw_room[1]), int(raw_room[2]), int(raw_room[3]))
+	var rows_b: Array = b["rows"]
+	# An oval room leaves its rectangle corners as wall (the ellipse misses them).
+	var corner := String(rows_b[room.position.y]).substr(room.position.x, 1)
+	var centre := String(rows_b[room.position.y + room.size.y / 2]).substr(room.position.x + room.size.x / 2, 1)
+	assert_true(room.size.x >= 4 and room.size.y >= 3, "room big enough to have corners")
+	assert_true(corner != "." or room.size.x <= 2, "ellipse leaves the corner")
+	assert_true(centre != "#", "ellipse keeps the centre (floor or the spawn marker), got %s" % centre)
+	var wide := 0
+	var narrow := 0
+	for seed_value: int in range(1, 6):
+		var w := ShardGenerator.generate(oval, seed_value, 1)
+		var n := ShardGenerator.generate(box, seed_value, 1)
+		wide += _floor_count(w)
+		narrow += _floor_count(n)
+	assert_true(wide > narrow, "two-wide corridors and hollows carve more floor (%d vs %d)" % [wide, narrow])
+
+
+static func _floor_count(entry: Dictionary) -> int:
+	var n := 0
+	for row: String in entry["rows"]:
+		for ch: String in row:
+			if ch != "#":
+				n += 1
+	return n

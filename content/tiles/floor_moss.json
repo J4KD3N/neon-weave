@@ -1,0 +1,8 @@
+{
+  "name": "Moss floor",
+  "summary": "Rack floor under a carpet of fibre-moss.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "art": { "shape": "floor", "fill": "floor", "edge": "floor_edge" }
+}

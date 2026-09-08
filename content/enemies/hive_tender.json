@@ -1,0 +1,12 @@
+{
+  "name": "Hive Tender",
+  "family": "verdant_datacore",
+  "archetype": "summoner",
+  "summary": "A gardener-construct that keeps the mites coming.",
+  "stats": { "hp": 12, "move": 4, "evasion": 5, "initiative": 0 },
+  "abilities": ["spawn_mite", "spore_bolt"],
+  "awareness": 6,
+  "xp": 12,
+  "loot": { "salvage": [2, 4], "aether": [1, 2], "cipher_chance": 0.15 },
+  "art": { "shape": "capsule", "color": "#ffa06b" }
+}

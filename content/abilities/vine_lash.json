@@ -1,0 +1,13 @@
+{
+  "name": "Vine Lash",
+  "summary": "Canopy Matron: vines pin the target; it cannot move on its next turn.",
+  "ap": 1,
+  "range": 3,
+  "damage": [2, 3],
+  "accuracy": 90,
+  "damage_type": "physical",
+  "requires_los": true,
+  "effect": "root",
+  "duration": 1,
+  "cooldown": 1
+}

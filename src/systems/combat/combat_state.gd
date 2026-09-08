@@ -277,7 +277,9 @@ func attack_modifiers(actor: Combatant, ability: Dictionary, target: Combatant) 
 		if cover > 0:
 			hit -= rules.cover_hit_penalty
 	var amplified := map.surface_at(actor.cell) == "mana_pool" and String(ability.get("damage_type", "")) == "arcane"
-	return {"hit": hit, "damage": damage, "cover": cover, "elevated": elevated, "uphill": uphill, "amplified": amplified}
+	var shroud := int(rules.surface_evasion.get(map.surface_at(target.cell), 0))
+	hit -= shroud
+	return {"hit": hit, "damage": damage, "cover": cover, "elevated": elevated, "uphill": uphill, "amplified": amplified, "shroud": shroud}
 
 
 ## True when the ability's damage type feeds the actor's class resource.
@@ -359,7 +361,7 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 	var e: Dictionary = {
 		"type": "ability", "actor": actor.id, "ability": ability_id, "target": target.id,
 		"chance": chance, "roll": roll, "hit": roll <= chance, "flanked": flanked, "ambush": ambush,
-		"cover": mods["cover"], "elevated": mods["elevated"], "uphill": mods["uphill"], "amplified": mods["amplified"],
+		"cover": mods["cover"], "elevated": mods["elevated"], "uphill": mods["uphill"], "amplified": mods["amplified"], "shroud": mods["shroud"],
 		"resource_stacks": actor.resource if builds else 0,
 		"resource_cost": resource_cost,
 		"marked": 0, "detonated": 0, "silenced": 0, "absorbed": 0,
@@ -472,6 +474,8 @@ func preview(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Dic
 		tags.append("uphill")
 	if bool(mods["amplified"]):
 		tags.append("mana pool")
+	if int(mods["shroud"]) > 0:
+		tags.append("spores")
 	out["tags"] = tags
 	out["kills"] = out["min"] >= target.hp
 	return out
@@ -795,6 +799,8 @@ func describe(e: Dictionary) -> String:
 				tags.append("uphill")
 			if bool(e.get("amplified", false)):
 				tags.append("mana pool")
+			if int(e.get("shroud", 0)) > 0:
+				tags.append("spores")
 			if int(e.get("resource_stacks", 0)) > 0:
 				tags.append("%d stacks" % int(e["resource_stacks"]))
 			if int(e.get("detonated", 0)) > 0:

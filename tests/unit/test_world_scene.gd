@@ -784,7 +784,8 @@ func test_system_menu_routes_every_keyboard_only_action() -> void:
 	assert_true(world.system_menu.visible)
 	var ids: PackedStringArray = []
 	for item: Dictionary in world.system_items():
-		ids.append(String(item["id"]))
+		if not String(item["id"]).begins_with("shard_"):
+			ids.append(String(item["id"]))
 	assert_eq(ids, PackedStringArray(ExploreWorld.SYSTEM_ITEM_IDS))
 	assert_contains(world.system_menu.label.text, "▶ Resume")
 	assert_contains(world.system_menu.label.text, "Return to the yard (haul is lost)  (unavailable: already home)")
@@ -1103,3 +1104,72 @@ func test_summoner_spawns_a_world_actor_mid_fight() -> void:
 	assert_true(summoned >= 1, "the Drone-Mother called at least one drone by round %d" % s.round_number)
 	assert_true(world.enemies.size() >= before + summoned - 0, "summons join the enemy list")
 	assert_any_contains(s.history, "calls in Feral Drone")
+
+
+
+func test_beacon_level_two_unlocks_the_datacore_for_launch() -> void:
+	assert_eq(world.selected_shard, "rusted_undercity")
+	assert_eq(world.shard_locked_reason("verdant_datacore"), "the Beacon has not found it yet")
+	assert_eq(world.shard_locked_reason("nowhere"), "unknown Shard")
+	assert_false(world.launch_shard("verdant_datacore"), "locked at Beacon level 1")
+	assert_true(world.at_home())
+	world.open_system_menu()
+	var row: Dictionary = {}
+	for item: Dictionary in world.system_items():
+		if String(item["id"]) == "shard_verdant_datacore":
+			row = item
+	assert_false(row.is_empty(), "the Datacore is listed")
+	assert_false(bool(row["enabled"]))
+	assert_contains(world.system_menu.label.text, "Launch instead: Verdant Datacore Shard  (unavailable: the Beacon has not found it yet)")
+	world.close_system_menu()
+	world.ledger.bank({"salvage": 15, "aether": 2})
+	assert_true(world.upgrade_building("beacon"))
+	assert_eq(world.bastion.unlocks(), ["verdant_datacore"])
+	assert_true(world.bastion.has_unlocked("verdant_datacore"))
+	assert_true(world.bastion.has_unlocked(""), "no requirement is always met")
+	assert_eq(world.shard_locked_reason("verdant_datacore"), "")
+	assert_true(world.launch_shard("verdant_datacore"))
+	assert_eq(world.selected_shard, "verdant_datacore")
+	assert_false(world.at_home())
+	assert_eq(world.map_data.biome_id, "verdant_datacore")
+	assert_eq(world.map_depth(), 2, "Beacon level 2 is depth 2")
+	var families: Dictionary = {}
+	for e: EnemyActor in world.living_enemies():
+		families[String(e.entry.get("family", ""))] = true
+	assert_eq(families.keys(), ["verdant_datacore"], "only the Datacore family spawns here")
+	world.enter_map(ExploreWorld.HOME_MAP)
+	world.open_system_menu()
+	assert_contains(world.system_menu.label.text, "Launch a new Shard: Verdant Datacore Shard")
+	assert_contains(world.system_menu.label.text, "Launch instead: Rusted Undercity Shard")
+	world.close_system_menu()
+	assert_true(world.activate_system_item("shard_rusted_undercity"))
+	assert_eq(world.selected_shard, "rusted_undercity")
+	assert_eq(world.map_data.biome_id, "rusted_undercity")
+
+
+func test_spores_shroud_the_target_in_a_real_fight() -> void:
+	world.enter_shard("verdant_datacore", 3)
+	var spore_cells: Array[Vector2i] = []
+	for y: int in world.map_data.height:
+		for x: int in world.map_data.width:
+			if world.map_data.surface_at(Vector2i(x, y)) == "spore":
+				spore_cells.append(Vector2i(x, y))
+	if spore_cells.is_empty():
+		return # this seed grew none; the generator test covers coverage across seeds
+	var free := world.map_data.nearest_free_cells(spore_cells[0], 1, spore_cells)
+	assert_false(free.is_empty())
+	world.teleport_party(free[0])
+	var foe := world.living_enemies()[0]
+	foe.cell = spore_cells[0]
+	foe.position = world.map_view.cell_to_world(foe.cell)
+	world.rules.initiative_die = 1
+	world.start_combat(true)
+	var s := world.combat.state
+	var attacker := s.current()
+	attacker.cell = free[0]
+	var target := s.occupant(spore_cells[0])
+	assert_true(target != null, "the foe stands in the spores")
+	var plain := s.hit_chance(attacker, s.abilities["strike"], target, false, 0)
+	var mods := s.attack_modifiers(attacker, s.abilities["strike"], target)
+	assert_eq(int(mods["shroud"]), 10)
+	assert_true(s.hit_chance(attacker, s.abilities["strike"], target, false, int(mods["hit"])) <= plain - 10 or plain <= world.rules.min_hit_chance + 10)

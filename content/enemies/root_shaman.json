@@ -1,0 +1,12 @@
+{
+  "name": "Root Shaman",
+  "family": "verdant_datacore",
+  "archetype": "ranged",
+  "summary": "A rogue Rootkin who sings sap into bolts. Stands in the pools when it can.",
+  "stats": { "hp": 10, "move": 5, "evasion": 5, "initiative": 2 },
+  "abilities": ["sap_bolt"],
+  "awareness": 6,
+  "xp": 9,
+  "loot": { "salvage": [0, 2], "aether": [1, 2], "cipher_chance": 0.1 },
+  "art": { "shape": "capsule", "color": "#c48cff" }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Sap pool",
+  "summary": "Weft-charged sap. Arcane cast from it hits harder.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "surface": "mana_pool",
+  "art": { "shape": "floor", "fill": "neon_arcane", "edge": "floor_edge", "pattern": "ripple" }
+}

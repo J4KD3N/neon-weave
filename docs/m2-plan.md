@@ -58,3 +58,4 @@ S13 first because playtest findings may reorder everything after it. S14 before 
 - S14 Progression — done: party level from banked XP (cap 6), class growth/unlocks, eight subclasses with one ability each, six talents, the Arcanum, the Weave menu (T at home). D-064.
 - S15 Classes 5–6 — done: Wireghost (Heat, stealth, ambush, cool down) and Null Blade (Null absorption, void lash, silence) with Razor/Phantom/Voidfencer/Suppressor; stealther archetype and the Wire-Lurker. D-065.
 - S16 Enemy AI v2 — done: texture-aware positioning for every archetype, summoner (Drone-Mother) and controller (Undercity Warlord, boss) archetypes, elite/boss tiers, depth scaling of HP and damage, boss posted at the pad from depth 3. D-067, D-068.
+- S17 Verdant Datacore — done: palette, seven tiles, spore surface (D-070), oval rooms and two-wide corridors, family of four plus mite and the Canopy Matron, Beacon level 2 unlocks it, system menu picks the template, CI renders it. D-069.
