@@ -5,6 +5,7 @@ Godot 4.7 / GDScript CRPG. Read these first, every session:
 1. `docs/GDD.md` — canonical design document. It is the prompt.
 2. `docs/decisions.md` — settled decisions. Append, never silently deviate.
 3. `docs/gaps.md` — known holes and assumptions. Update when you open or close one.
+4. `docs/m2-plan.md` — the current milestone plan: which session is next and what "done" means for it (`docs/m1-plan.md` is the finished one).
 
 ## Working agreement (GDD §15)
 
