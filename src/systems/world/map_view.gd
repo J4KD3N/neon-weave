@@ -25,8 +25,8 @@ func build(map_data: MapData, biome: Dictionary) -> void:
 		for x: int in map.width:
 			var cell := Vector2i(x, y)
 			var tile: Dictionary = map.tile_at(cell)
-			if tile.is_empty():
-				continue
+			if tile.is_empty() or map.is_enclosed(cell):
+				continue # solid rock reads better as void than as a slab of wall tops
 			var layer: TileMapLayer = walls if String(tile.get("layer", "ground")) == "wall" else ground
 			layer.set_cell(cell, PlaceholderTiles.SOURCE_ID, atlas_coords[map.tile_id_at(cell)])
 	nav.build(map)

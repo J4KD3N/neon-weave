@@ -66,3 +66,12 @@ func test_no_rows_is_reported() -> void:
 	assert_any_contains(map.errors, "has no rows")
 	assert_eq(map.width, 0)
 	assert_eq(map.height, 0)
+
+
+func test_enclosed_cells_have_no_walkable_neighbour() -> void:
+	var map := MapData.parse(_entry(["####", "#P.#", "####", "####"]), TILES)
+	assert_true(map.is_enclosed(Vector2i(0, 3)), "corner far from the floor")
+	assert_true(map.is_enclosed(Vector2i(1, 3)))
+	assert_false(map.is_enclosed(Vector2i(0, 0)), "diagonal to the spawn")
+	assert_false(map.is_enclosed(Vector2i(1, 2)), "below the floor")
+	assert_false(map.is_enclosed(Vector2i(1, 1)), "walkable cells are never enclosed")
