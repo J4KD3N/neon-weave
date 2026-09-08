@@ -291,3 +291,13 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 ## D-056 — Party of four means three preset members plus a recruit
 **Date**: 2026-09-08
 **Decision**: `parties/prototype.json` is three members; `rules/combat.party_max` is 4; recruits append in order until full. Moth the Circuit-Witch leaves the debug preset (the creator can still make one).
+
+## D-057 — Turn groups: consecutive allies act in any order
+**Date**: 2026-09-08
+**Decision**: Initiative still sorts every combatant, but a run of same-team combatants in the order forms a *turn group*. Within the group the player swaps freely (Tab, or click an ally) until each member has ended its turn; a member begins its turn (AP and Move restored, surface effects) the first time it gets control, keeps what it spent when swapped away from, and cannot be returned to once it pressed End Turn. Enemies use the same rule one at a time. Groups never span a round boundary.
+**Why**: The first playtest could not tell who was acting or why it could not pick someone else. This is the BG3 grouping the GDD points at, without abandoning initiative.
+
+## D-058 — Previews before commitment
+**Date**: 2026-09-08
+**Decision**: `CombatState.preview()` computes the to-hit chance and damage span for an ability on a target with every modifier the roll would use (flanking, cover, elevation, mana pool, resource stacks, marks, Workshop) and the reason it would be refused. The controller shows it on hover, along with a path preview for moves and a hover marker; refusals go to the hint line in red with the ability and reason spelled out. The preview and the roll share one bonus function so they cannot drift.
+**Why**: A turn-based game with hidden odds is a guessing game. Same rule for every future ability: if it changes the roll, it changes the preview.

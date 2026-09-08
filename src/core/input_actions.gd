@@ -14,6 +14,7 @@ const BINDINGS: Dictionary = {
 	"ability_3": [KEY_3],
 	"ability_4": [KEY_4],
 	"end_turn": [KEY_SPACE],
+	"next_member": [KEY_TAB],
 	"cancel": [KEY_ESCAPE],
 	"restart": [KEY_R],
 	"new_shard": [KEY_N],

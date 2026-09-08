@@ -30,6 +30,11 @@ var turn_index: int = 0
 var finished: bool = false
 var result: String = ""
 var history: Array[String] = []
+## The turn group: consecutive same-team combatants in the order, acting in
+## any sequence the player likes (BG3-style). Enemies use it too, one by one.
+var group: Array[Combatant] = []
+var _done: Dictionary = {} # id -> true once that member ended its turn this group
+var _begun: Dictionary = {} # id -> true once begin_turn ran for it this group
 
 
 func setup(p_map: MapData, p_rules: CombatRules, p_abilities: Dictionary, p_combatants: Array[Combatant], p_seed: int) -> void:
@@ -55,13 +60,47 @@ func start(first_strike_team: String = "") -> void:
 	result = ""
 	_emit({"type": "start", "order": _ids(order)})
 	_emit({"type": "round", "round": round_number})
-	_begin_turn()
+	_enter_group_at(0)
 
 
 func current() -> Combatant:
 	if order.is_empty() or finished:
 		return null
 	return order[turn_index]
+
+
+## Group members who may still act: active, not done, not the current one.
+func switchable() -> Array[Combatant]:
+	var out: Array[Combatant] = []
+	var cur := current()
+	for c: Combatant in group:
+		if c != cur and c.is_active() and not _done.has(c.id):
+			out.append(c)
+	return out
+
+
+func has_acted(c: Combatant) -> bool:
+	return _done.has(c.id)
+
+
+## Hands control to another member of the current group. Empty string on
+## success, else the reason. The member keeps whatever AP/Move it has left.
+func switch_to(id: String) -> String:
+	if finished:
+		return "combat over"
+	var c := by_id(id)
+	if c == null or not group.has(c):
+		return "not in this turn group"
+	if not c.is_active():
+		return "down"
+	if _done.has(c.id):
+		return "already acted"
+	if c == current():
+		return ""
+	turn_index = order.find(c)
+	_emit({"type": "switch", "actor": c.id})
+	_lazy_begin(c)
+	return ""
 
 
 func by_id(id: String) -> Combatant:
@@ -248,13 +287,9 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		"damage": 0, "target_hp": target.hp, "downed": false, "killed": false, "ap_left": actor.ap,
 	}
 	if e["hit"]:
-		var bonus := actor.damage_bonus + int(mods["damage"])
-		if builds:
-			bonus += actor.resource * int(def.get("damage_per_stack", 0))
+		var bonus := damage_bonus_for(actor, ability, target, mods)
 		if effect == "detonate" and not mark.is_empty():
-			var stacks := target.mark_count(mark)
-			bonus += stacks * int(ability.get("damage_per_mark", 0))
-			e["detonated"] = stacks
+			e["detonated"] = target.mark_count(mark)
 			target.marks.erase(mark)
 		var dmg := roll_damage(ability, flanked, bonus)
 		if bool(mods["amplified"]):
@@ -280,6 +315,69 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		_chain_shock(target, actor)
 	_check_outcome()
 	return e
+
+
+## Flat damage bonus an attack would carry: Workshop, elevation, resource
+## stacks and, for detonations, the marks on the target (not consumed here).
+func damage_bonus_for(actor: Combatant, ability: Dictionary, target: Combatant, mods: Dictionary) -> int:
+	var bonus := actor.damage_bonus + int(mods["damage"])
+	if builds_resource(actor, ability):
+		bonus += actor.resource * int(actor.resource_def.get("damage_per_stack", 0))
+	var mark := String(ability.get("mark", ""))
+	if String(ability.get("effect", "")) == "detonate" and not mark.is_empty():
+		bonus += target.mark_count(mark) * int(ability.get("damage_per_mark", 0))
+	return bonus
+
+
+## What an ability would do to `target_cell` without rolling: the to-hit
+## chance and the damage span after every modifier. `why` is non-empty when
+## the ability cannot be used there; the numbers are still filled in when
+## only AP or resources are short, so the HUD can show them greyed out.
+func preview(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Dictionary:
+	var why := can_use(actor, ability_id, target_cell)
+	var out: Dictionary = {"why": why, "ability": ability_id, "chance": 0, "min": 0, "max": 0, "heal": 0, "tags": PackedStringArray()}
+	if not abilities.has(ability_id):
+		return out
+	var ability: Dictionary = abilities[ability_id]
+	out["name"] = String(ability.get("name", ability_id))
+	out["ap"] = int(ability.get("ap", 1))
+	if String(ability.get("effect", "")) == "vent":
+		out["heal"] = int(ability.get("heal", 0))
+		return out
+	var target := occupant(target_cell)
+	if target == null or target == actor:
+		return out
+	var flanked := is_flanked(target, actor)
+	var mods := attack_modifiers(actor, ability, target)
+	out["chance"] = hit_chance(actor, ability, target, flanked, int(mods["hit"]))
+	var bonus := damage_bonus_for(actor, ability, target, mods)
+	var span: Array = ability.get("damage", [1, 1])
+	var lo := int(span[0]) if span.size() > 0 else 1
+	var hi := int(span[1]) if span.size() > 1 else lo
+	var dmin := mini(lo, hi) + bonus
+	var dmax := maxi(lo, hi) + bonus
+	if flanked:
+		dmin = int(round(dmin * rules.flank_damage_mult))
+		dmax = int(round(dmax * rules.flank_damage_mult))
+	if bool(mods["amplified"]):
+		dmin = int(round(dmin * rules.mana_pool_amplify))
+		dmax = int(round(dmax * rules.mana_pool_amplify))
+	out["min"] = maxi(dmin, 0)
+	out["max"] = maxi(dmax, 0)
+	var tags: PackedStringArray = []
+	if flanked:
+		tags.append("flanked")
+	if int(mods["cover"]) > 0:
+		tags.append("cover")
+	if bool(mods["elevated"]):
+		tags.append("high ground")
+	if bool(mods["uphill"]):
+		tags.append("uphill")
+	if bool(mods["amplified"]):
+		tags.append("mana pool")
+	out["tags"] = tags
+	out["kills"] = out["min"] >= target.hp
+	return out
 
 
 func hit_chance(actor: Combatant, ability: Dictionary, target: Combatant, flanked: bool, extra: int = 0) -> int:
@@ -375,19 +473,55 @@ func end_turn() -> void:
 	if finished or order.is_empty():
 		return
 	var actor := current()
+	_done[actor.id] = true
 	_emit({"type": "turn_end", "actor": actor.id})
+	# Another member of this group still to act: hand over without leaving the group.
+	for c: Combatant in group:
+		if c.is_active() and not _done.has(c.id):
+			turn_index = order.find(c)
+			_lazy_begin(c)
+			return
+	var last := turn_index
+	for c: Combatant in group:
+		last = maxi(last, order.find(c))
+	_enter_group_at(last + 1)
+
+
+## Starts the group whose first member is the first active combatant at or
+## after `from` (wrapping into a new round). Members begin their turns lazily,
+## when they first get control, so surface effects land when they act.
+func _enter_group_at(from: int) -> void:
+	group.clear()
+	_done.clear()
+	_begun.clear()
+	var idx := from
 	var tries := 0
-	while tries < order.size() + 1:
-		turn_index += 1
-		if turn_index >= order.size():
-			turn_index = 0
+	while tries <= order.size():
+		if idx >= order.size():
+			idx = 0
 			round_number += 1
 			_emit({"type": "round", "round": round_number})
-		if order[turn_index].is_active():
-			_begin_turn()
-			return
+		if order[idx].is_active():
+			break
+		idx += 1
 		tries += 1
-	_check_outcome()
+	if tries > order.size():
+		_check_outcome()
+		return
+	turn_index = idx
+	var team := order[idx].team
+	for i: int in range(idx, order.size()):
+		if order[i].team != team or not order[i].is_active():
+			break
+		group.append(order[i])
+	_lazy_begin(order[idx])
+
+
+func _lazy_begin(c: Combatant) -> void:
+	if _begun.has(c.id):
+		return
+	_begun[c.id] = true
+	_begin_turn()
 
 
 func _begin_turn() -> void:
@@ -531,7 +665,7 @@ func describe(e: Dictionary) -> String:
 			elif bool(e["downed"]):
 				s += " %s is down." % _name(e["actor"])
 			return s
-		"turn_end":
+		"turn_end", "switch":
 			return ""
 		"end":
 			return "Victory." if e["result"] == "victory" else "The party is wiped out."
