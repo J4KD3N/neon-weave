@@ -35,9 +35,15 @@ func _settle(max_ticks: int) -> int:
 func test_map_is_built_from_content() -> void:
 	assert_eq(world.map_data.errors, [])
 	assert_eq(world.map_data.name, "Proto Yard")
-	var placed := world.map_view.ground.get_used_cells().size() + world.map_view.walls.get_used_cells().size()
-	assert_eq(placed, world.map_data.width * world.map_data.height)
-	assert_true(world.map_view.walls.get_used_cells().size() > 0, "walls placed on the wall layer")
+	assert_eq(world.map_view.ground.get_used_cells().size(), world.map_data.walkable_count(), "every walkable cell has ground")
+	var walls := world.map_view.walls.get_used_cells().size()
+	assert_true(walls > 0, "walls placed on the wall layer")
+	var enclosed := 0
+	for y: int in world.map_data.height:
+		for x: int in world.map_data.width:
+			if world.map_data.is_enclosed(Vector2i(x, y)):
+				enclosed += 1
+	assert_eq(walls + enclosed + world.map_data.walkable_count(), world.map_data.width * world.map_data.height, "walls + void + ground cover the map")
 
 
 func test_party_spawns_on_spawn_cells_with_class_colours_and_stats() -> void:

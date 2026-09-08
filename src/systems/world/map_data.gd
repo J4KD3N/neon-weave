@@ -79,6 +79,17 @@ func is_walkable(cell: Vector2i) -> bool:
 	return not tile.is_empty() and bool(tile.get("walkable", false))
 
 
+## A blocked cell with no walkable neighbour (8-connected): solid rock the
+## player can never see the face of. The view draws these as void.
+func is_enclosed(cell: Vector2i) -> bool:
+	if is_walkable(cell):
+		return false
+	for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1)]:
+		if is_walkable(cell + d):
+			return false
+	return true
+
+
 ## Tall terrain blocks line of sight. Defaults to "not walkable" so walls
 ## block and low debris can opt out with `"blocks_sight": false`.
 func blocks_sight(cell: Vector2i) -> bool:
