@@ -13,6 +13,15 @@
     "extraction": "extraction_pad"
   },
   "grate_patch_chance": 0.35,
+  "surfaces": {
+    "patches": [2, 5],
+    "pool": [
+      { "tile": "mana_pool", "char": "m", "weight": 2 },
+      { "tile": "conduit", "char": "c", "weight": 2 },
+      { "tile": "biogrowth", "char": "b", "weight": 2 },
+      { "tile": "catwalk", "char": "k", "weight": 1 }
+    ]
+  },
   "debris_density": 0.04,
   "pickups": {
     "count": [3, 6],

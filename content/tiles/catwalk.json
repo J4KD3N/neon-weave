@@ -1,0 +1,9 @@
+{
+  "name": "Catwalk",
+  "summary": "Raised grating. High ground: easier to hit from, harder to hit onto.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "height": 1,
+  "art": { "shape": "block", "height": 12, "top": "grate", "left": "wall_left", "right": "wall_right" }
+}

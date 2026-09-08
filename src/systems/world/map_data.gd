@@ -79,6 +79,22 @@ func is_walkable(cell: Vector2i) -> bool:
 	return not tile.is_empty() and bool(tile.get("walkable", false))
 
 
+## Elevation storey of a cell (0 = ground, 1 = catwalk). Combat only.
+func height_at(cell: Vector2i) -> int:
+	return int(tile_at(cell).get("height", 0))
+
+
+## Cover value of a cell's tile (low obstacles that shield a neighbour from
+## ranged fire). 0 = none.
+func cover_at(cell: Vector2i) -> int:
+	return int(tile_at(cell).get("cover", 0))
+
+
+## Surface kind on a walkable cell: "", "mana_pool", "conduit", "corrosive".
+func surface_at(cell: Vector2i) -> String:
+	return String(tile_at(cell).get("surface", ""))
+
+
 ## A blocked cell with no walkable neighbour (8-connected): solid rock the
 ## player can never see the face of. The view draws these as void.
 func is_enclosed(cell: Vector2i) -> bool:

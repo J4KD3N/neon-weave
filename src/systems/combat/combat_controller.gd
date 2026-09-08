@@ -52,6 +52,7 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 		c.hp = m.hp
 		c.downed = m.downed
 		c.damage_bonus = world.bastion.damage_bonus()
+		c.set_resource(world.resource_def_for(m))
 		combatants.append(c)
 		actors[c.id] = m
 		m.show_hp = true
@@ -150,8 +151,9 @@ func _do_ability(actor: Combatant, id: String, cell: Vector2i) -> void:
 		return
 	selected_ability = ""
 	var node: WorldActor = actors[actor.id]
-	var target_node: WorldActor = actors[e["target"]]
-	if animate:
+	var target_node: WorldActor = actors[String(e.get("target", actor.id))]
+	_sync_all()
+	if animate and e["type"] == "ability":
 		busy = true
 		highlighter.clear_all()
 		var origin := node.position
@@ -161,11 +163,10 @@ func _do_ability(actor: Combatant, id: String, cell: Vector2i) -> void:
 		tween.tween_property(node, "position", origin, 0.12)
 		tween.finished.connect(func() -> void:
 			_show_hit_text(target_node, e)
-			_sync_actor(e["target"])
+			_sync_all()
 			busy = false
 			_after_state_change())
 	else:
-		_sync_actor(e["target"])
 		_after_state_change()
 
 
@@ -215,6 +216,9 @@ func _on_event(e: Dictionary) -> void:
 		"ability":
 			if not animate:
 				_sync_actor(e["target"])
+		"chain", "surface", "overload", "vent":
+			if not animate:
+				_sync_actor(String(e.get("target", e.get("actor", ""))))
 
 
 func _after_state_change() -> void:
@@ -252,7 +256,8 @@ func _run_enemy_turns() -> void:
 					node.position = world.map_view.cell_to_world(action["to"])
 			"ability":
 				var e := state.use_ability(actor, action["id"], action["target"])
-				if animate and not e.is_empty():
+				_sync_all()
+				if animate and not e.is_empty() and e["type"] == "ability":
 					var node: WorldActor = actors[actor.id]
 					var target_node: WorldActor = actors[e["target"]]
 					var origin := node.position
@@ -281,13 +286,19 @@ func _refresh_player_ui() -> void:
 			if state.can_use(actor, selected_ability, c.cell).is_empty():
 				targets.append(c.cell)
 	highlighter.set_layer("b_targets", targets, COLOR_TARGET)
-	hud.set_turn_text("Round %d — %s  |  AP %d/%d  Move %d/%d" % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max])
+	var res_text := ""
+	if actor.has_resource():
+		res_text = "  %s %d/%d" % [actor.resource_def.get("name", actor.resource_id), actor.resource, actor.resource_max()]
+	hud.set_turn_text("Round %d — %s  |  AP %d/%d  Move %d/%d%s" % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max, res_text])
 	var order: PackedStringArray = []
 	for i: int in state.order.size():
 		var c := state.order[i]
 		var mark := "▶ " if i == state.turn_index else "   "
 		var hp := "%d/%d" % [c.hp, c.max_hp] if c.is_active() else ("down" if c.downed else "dead")
-		order.append("%s%s (%s)" % [mark, c.display_name, hp])
+		var res := ""
+		if c.has_resource() and c.is_active():
+			res = " · %s %d" % [c.resource_def.get("name", c.resource_id), c.resource]
+		order.append("%s%s (%s)%s" % [mark, c.display_name, hp, res])
 	hud.set_order_text("\n".join(order))
 	var abilities: Array[Dictionary] = []
 	for id: String in actor.abilities:
@@ -319,3 +330,12 @@ func _finish() -> void:
 	elif state.result == "victory":
 		hud.hide_message()
 		hud.visible = false
+
+
+## Pushes every combatant's HP/downed/dead state to its node (chains,
+## surfaces and overloads can touch anyone, not just the ability's target).
+func _sync_all() -> void:
+	if state == null:
+		return
+	for c: Combatant in state.combatants:
+		_sync_actor(c.id)

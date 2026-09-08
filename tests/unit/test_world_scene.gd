@@ -540,3 +540,25 @@ func test_loading_the_checkpoint_after_a_wipe_replays_the_fight() -> void:
 	assert_false(FileAccess.file_exists(world.save_path("slot_1")), "a load never writes a slot")
 	var again := SaveSystem.read(world.save_path("autosave"))
 	assert_eq(again["party"], cp["party"], "loading did not overwrite the checkpoint it read")
+
+
+func test_yard_has_surfaces_and_party_has_class_resources() -> void:
+	assert_eq(world.map_data.surface_at(Vector2i(9, 6)), "mana_pool")
+	assert_eq(world.map_data.surface_at(Vector2i(13, 10)), "conduit")
+	assert_eq(world.map_data.surface_at(Vector2i(7, 13)), "corrosive")
+	assert_eq(world.map_data.height_at(Vector2i(2, 7)), 1)
+	assert_eq(world.map_data.cover_at(Vector2i(7, 3)), 1, "debris gives cover")
+	assert_eq(world.party.members[0].resource_id, "vent_heat", "Scrap-Knight")
+	assert_eq(world.party.members[1].resource_id, "surge", "Aetherbinder")
+	assert_eq(String(world.resource_def_for(world.party.members[0])["builds_on"]), "physical")
+	world.teleport_party(Vector2i(13, 4))
+	world.check_encounters()
+	var s := world.combat.state
+	var knight := s.by_id("p:weaver")
+	assert_true(knight.has_resource())
+	assert_eq(knight.resource_max(), 3)
+	assert_true(knight.abilities.has("vent"))
+	var caster := s.by_id("p:ash")
+	assert_eq(caster.resource_id, "surge")
+	for c: Combatant in s.active("enemy"):
+		assert_false(c.has_resource(), "enemies have no class resource")

@@ -104,6 +104,13 @@ func tiles_by_id() -> Dictionary:
 	return out
 
 
+## The `resources` entry behind a member's class resource ({} when none).
+func resource_def_for(m: PartyMember) -> Dictionary:
+	if m.resource_id.is_empty():
+		return {}
+	return registry.get_entry("resources", m.resource_id)
+
+
 func abilities_by_id() -> Dictionary:
 	var out: Dictionary = {}
 	for ability: Dictionary in registry.get_all("abilities"):
@@ -317,8 +324,11 @@ func spawn_party(id: String) -> void:
 		var cls: Dictionary = registry.get_entry("classes", String(data.get("class", "")))
 		var race: Dictionary = registry.get_entry("races", String(data.get("race", "")))
 		var cell: Vector2i = spawns[mini(i, spawns.size() - 1)] if not spawns.is_empty() else Vector2i.ZERO
+		var resource: Dictionary = cls.get("resource", {})
+		var member_data := data.duplicate()
+		member_data["resource_id"] = String(resource.get("id", ""))
 		specs.append({
-			"data": data,
+			"data": member_data,
 			"color": class_color(String(data.get("class", ""))),
 			"position": map_view.cell_to_world(cell),
 			"stats": StatBlock.for_member(cls, race, rules),

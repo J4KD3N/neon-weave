@@ -1,0 +1,11 @@
+{
+  "name": "Surge",
+  "summary": "Weft-charge that builds with every arcane cast. Each stack adds damage; at the cap a cast may overload and burn the caster.",
+  "builds_on": "arcane",
+  "max": 3,
+  "gain_per_cast": 1,
+  "damage_per_stack": 1,
+  "overload_at": 3,
+  "overload_chance": 0.25,
+  "overload_damage": 3
+}

@@ -62,6 +62,7 @@ func _run(template: Dictionary, seed_value: int, depth: int) -> Dictionary:
 	for r: Rect2i in rooms:
 		if rng.randf() < grate_chance:
 			_grate_patch(r)
+	var surface_legend := _surface_patches(template.get("surfaces", {}))
 
 	var spawns := _spawn_cells(rooms[0], 4)
 	for s: Vector2i in spawns:
@@ -89,19 +90,22 @@ func _run(template: Dictionary, seed_value: int, depth: int) -> Dictionary:
 	var room_list: Array = []
 	for r: Rect2i in rooms:
 		room_list.append([r.position.x, r.position.y, r.size.x, r.size.y])
+	var legend: Dictionary = {
+		WALL: String(tiles.get("wall", "wall_rust")),
+		FLOOR: String(tiles.get("floor", "floor_concrete")),
+		GRATE: String(tiles.get("grate", "floor_grate")),
+		DEBRIS: String(tiles.get("debris", "debris")),
+		SPAWN: String(tiles.get("floor", "floor_concrete")),
+		EXIT: String(tiles.get("extraction", "extraction_pad")),
+	}
+	for ch: String in surface_legend:
+		legend[ch] = surface_legend[ch]
 	return {
 		"id": "%s_%d" % [template_id, seed_value],
 		"name": "%s #%d%s" % [String(template.get("name", "Shard")), seed_value, "" if depth <= 1 else " · depth %d" % depth],
 		"biome": String(template.get("biome", "")),
 		"spawn_marker": SPAWN,
-		"legend": {
-			WALL: String(tiles.get("wall", "wall_rust")),
-			FLOOR: String(tiles.get("floor", "floor_concrete")),
-			GRATE: String(tiles.get("grate", "floor_grate")),
-			DEBRIS: String(tiles.get("debris", "debris")),
-			SPAWN: String(tiles.get("floor", "floor_concrete")),
-			EXIT: String(tiles.get("extraction", "extraction_pad")),
-		},
+		"legend": legend,
 		"rows": _rows(),
 		"enemies": enemies,
 		"pickups": pickups,
@@ -434,3 +438,42 @@ func _put(p: Vector2i, ch: String) -> void:
 func _walkable(p: Vector2i) -> bool:
 	var ch := _cell_at(p)
 	return ch == FLOOR or ch == GRATE or ch == SPAWN or ch == EXIT
+
+
+## Surface patches (mana pools, conduits, biogrowth, catwalks) carved into
+## room floors. Returns the legend additions {char: tile id}.
+## spec: {"patches": [2, 4], "pool": [{"tile": "mana_pool", "char": "m", "weight": 2}, ...]}
+func _surface_patches(spec: Dictionary) -> Dictionary:
+	var legend: Dictionary = {}
+	var pool: Array = spec.get("pool", [])
+	if pool.is_empty() or rooms.is_empty():
+		return legend
+	for e: Dictionary in pool:
+		legend[String(e.get("char", "?"))] = String(e.get("tile", ""))
+	var patches := _pick(spec.get("patches", [2, 4]))
+	for _i: int in patches:
+		var e: Dictionary = pool[_weighted_index(pool)]
+		var ch := String(e.get("char", "?"))
+		var r := rooms[rng.randi_range(0, rooms.size() - 1)]
+		var w := rng.randi_range(1, maxi(1, mini(3, r.size.x - 1)))
+		var h := rng.randi_range(1, maxi(1, mini(3, r.size.y - 1)))
+		var x := rng.randi_range(r.position.x, maxi(r.position.x, r.end.x - w))
+		var y := rng.randi_range(r.position.y, maxi(r.position.y, r.end.y - h))
+		for yy: int in range(y, mini(y + h, r.end.y)):
+			for xx: int in range(x, mini(x + w, r.end.x)):
+				var p := Vector2i(xx, yy)
+				if _cell_at(p) == FLOOR or _cell_at(p) == GRATE:
+					_put(p, ch)
+	return legend
+
+
+func _weighted_index(pool: Array) -> int:
+	var total := 0.0
+	for e: Dictionary in pool:
+		total += float(e.get("weight", 1))
+	var roll := rng.randf() * total
+	for i: int in pool.size():
+		roll -= float(Dictionary(pool[i]).get("weight", 1))
+		if roll <= 0.0:
+			return i
+	return pool.size() - 1

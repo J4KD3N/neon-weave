@@ -7,7 +7,7 @@
     "summary": "Overheat / vent rhythm."
   },
   "stats": { "hp": 20, "move": 5, "evasion": 5, "initiative": 0 },
-  "abilities": ["strike", "heavy_swing"],
+  "abilities": ["strike", "heavy_swing", "vent"],
   "subclass_level": 3,
   "subclasses": ["juggernaut", "warden"],
   "milestone": "M0"

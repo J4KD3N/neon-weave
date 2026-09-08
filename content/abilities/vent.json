@@ -1,0 +1,12 @@
+{
+  "name": "Vent",
+  "summary": "Scrap-Knight: blow the heat off. Free, resets Heat, patches 2 HP.",
+  "ap": 0,
+  "range": 0,
+  "targets": "self",
+  "effect": "vent",
+  "heal": 2,
+  "damage": [0, 0],
+  "accuracy": 100,
+  "damage_type": "none"
+}

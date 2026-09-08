@@ -1,0 +1,10 @@
+{
+  "name": "Heat",
+  "summary": "Every blow heats the frame. Each stack adds damage; at the cap heavy swings lock until the knight vents.",
+  "builds_on": "physical",
+  "max": 3,
+  "gain_per_cast": 1,
+  "damage_per_stack": 1,
+  "lock_ap_at_max": 2,
+  "vent_ability": "vent"
+}

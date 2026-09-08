@@ -215,3 +215,23 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `user://saves/slot_1..3.json` and `autosave.json`. Save anywhere out of combat (refused during a fight). Autosave at: entering a Shard, combat start (the "combat checkpoint"), extraction, and returning home after a wipe. After a wipe, Esc reloads the checkpoint, R goes home. Loads suppress autosave so a load never overwrites the checkpoint it reads. Keys: F5 save slot 1, F9 load slot 1, F10 load autosave; a slot picker UI is not in M1.
 **Why**: GDD §13 verbatim, minus Steam Cloud (M2, behind `Platform`).
+
+## D-041 — Session S7 scope: full combat texture
+**Date**: 2026-09-08
+**Decision**: Cover, one storey of elevation, three surfaces and the two prototype class resources, all as tile/ability/resource data read by `CombatState`. Deferred: hackable turrets/doors, difficulty settings, Iron Weave, AI awareness of surfaces, movement cost for elevation.
+
+## D-042 — Cover and elevation
+**Date**: 2026-09-08
+**Decision**: A tile with `cover: n` (debris) shields a target from ranged fire when it sits on the neighbouring cell in the attacker's direction (sign of the delta): −`cover_hit_penalty`. Melee ignores cover; attackers on higher ground ignore it. `height: 1` tiles (catwalk) give +`elevation_hit_bonus` and +`elevation_damage_bonus` when attacking down and −hit when attacking up. Movement between storeys is free (no stairs rule) so procgen validity is untouched.
+**Why**: Cheap, legible, and both answer "does where I stand matter?" without a physics query.
+**Revisit when**: real art needs visible ramps, or AI should seek cover/high ground.
+
+## D-043 — Surfaces
+**Date**: 2026-09-08
+**Decision**: `surface` on a tile: `mana_pool` (arcane casts from it ×`mana_pool_amplify`), `conduit` (a tech/arcane hit on someone standing on it arcs `conduit_chain_damage` to every other occupant of the 4-connected conduit run, allies included), `corrosive` (`corrosive_damage` at turn start; can down or kill). Shard templates carve surface patches with their own legend chars; the yard has samples.
+**Why**: GDD §9 names these three; each is one lookup in the engine and one field in data.
+
+## D-044 — Class resources are `resources` entries
+**Date**: 2026-09-08
+**Decision**: `content/resources/<id>.json`: `builds_on` damage type, `max`, `gain_per_cast`, `damage_per_stack`, optional overload (`overload_at`, `overload_chance`, `overload_damage`: the cast fizzles, AP is spent, the caster takes damage, stacks reset) and optional lock (`lock_ap_at_max`: abilities costing that much AP are refused at max stacks) with a `vent_ability` (`effect: "vent"`, `targets: "self"`, resets stacks, heals). Classes point at a resource by id; enemies have none. Stacks start at 0 per fight.
+**Why**: Surge and Heat are the GDD's two prototype resources and both fit "build on matching casts, pay out as damage, with a downside at the cap". Hexes, Scrap Charge, Null and Wireghost Heat (S8+) should extend this vocabulary rather than add engine branches.

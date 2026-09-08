@@ -13,11 +13,12 @@ registry does not care which exist, but systems expect the ones below.
 | `classes` | M0: scrap_knight, aetherbinder | GDD §8. `branches` lists branch ids; the first gives the class colour. |
 | `branches` | arcane, tech, body | Neon colours (GDD §5). |
 | `biomes` | rusted_undercity | `palette`: 16 named colours that tile art references by role. |
-| `tiles` | 2 floors, wall, debris | `layer` ground/wall, `walkable`, `art` block (see `src/systems/world/placeholder_tiles.gd`). |
+| `tiles` | floors, wall, debris, extraction_pad, catwalk, mana_pool, conduit, biogrowth | `layer` ground/wall, `walkable`, `blocks_sight`, `cover` (low obstacles), `height` (elevation storey), `surface` (mana_pool / conduit / corrosive), `art` block (see `src/systems/world/placeholder_tiles.gd`). |
 | `maps` | proto_yard | ASCII `rows` + `legend` (char to tile id) + `spawn_marker`. See `src/systems/world/map_data.gd`. |
 | `parties` | prototype | Debug starting parties: 1–4 members with `race` and `class` ids. |
 | `enemies` | scav, feral_drone, chrome_addict | `family` (biome id), `archetype` (rusher/ranged/…), `stats`, `abilities`, `awareness`, `art`. |
-| `abilities` | strike, heavy_swing, arc_bolt, zap, chrome_fist | `ap`, `range`, `damage` [min,max], `accuracy`, `damage_type`, `requires_los`. |
+| `abilities` | strike, heavy_swing, arc_bolt, zap, chrome_fist, vent | `ap`, `range`, `damage` [min,max], `accuracy`, `damage_type`, `requires_los`; `targets: "self"` + `effect: "vent"` + `heal` for resource vents. |
+| `resources` | surge, vent_heat | Class resources: `builds_on`, `max`, `gain_per_cast`, `damage_per_stack`, optional `overload_*`, optional `lock_ap_at_max` + `vent_ability`. Classes reference one via `resource.id`. |
 | `rules` | combat | Tunables read by `CombatRules` (AP per turn, flanking, friendly fire, story-protected, awareness, engage radius). |
 | `buildings` | beacon, medbay, workshop | Bastion buildings: `order`, `levels[]` of `{cost, effects, blurb}`; effect keys `depth`, `heal_fraction`, `hp_bonus`, `damage_bonus` (summed across buildings). |
 | `pickups` | salvage_cache, aether_shard | Collectibles: `grants` block (`salvage`/`aether`/`ciphers` as number or [min,max], `cipher_chance`, `xp`), `art.color`. Enemies use the same block under `loot`. |

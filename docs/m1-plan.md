@@ -19,7 +19,8 @@ Out of M1 scope (deferred to M2): Steam integration, exports on Windows/macOS be
 
 ## Progress
 - S5 Bastion — done (PR #11).
-- S6 Save/load — done (this PR).
+- S6 Save/load — done (PR #12).
+- S7 Full combat — done (this PR).
 
 ## Running assumptions
 - Placeholder art stays until S10; systems before it must not depend on sprite details.
