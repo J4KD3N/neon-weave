@@ -8,5 +8,5 @@
   "awareness": 5,
   "xp": 5,
   "loot": { "salvage": [1, 2] },
-  "art": { "shape": "capsule", "color": "#c94b3a" }
+  "art": { "shape": "capsule", "color": "#c94b3a", "sheet": "scav" }
 }

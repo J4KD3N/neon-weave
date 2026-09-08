@@ -23,7 +23,8 @@ Updated every session. Remove items when closed; note the closing commit.
 - **Balance is unplaytested**: numbers in `content/rules/combat.json`, class stats and enemy stats are first guesses; the seeded scene test wins 4v3 but that is one seed.
 
 - **Not yet opened in the editor.** No Godot executable on the build machine. CI runs the unit tests (including a headless instantiation of the exploration scene) and the `screenshot` job renders the scene under Xvfb; that PNG is the only visual check so far. Still unproven: real-time feel, input on a real window, `.uid` sidecars. First local action: open in Godot 4.6, press Play, commit the `.uid` files.
-- **Movement is placeholder-simple**: no elevation, no facing sprites (8-direction mirroring waits on art), followers pass through each other, no actor-vs-actor collision, and WASD steering lets you stand visually "behind" a tall wall's top face.
+- **Art is generated placeholders**: the pipeline is real (S10) but the only sheets are tool-generated rigs for Trueborn and Scav; every other race/enemy uses the static capsule. Race overlays are not composited onto sheets yet (the placeholder rig still stamps them); tiles have no per-biome palette swap beyond the placeholder atlas; no CRT shader; no lighting/glow pass.
+- **Movement is placeholder-simple**: followers pass through each other, no actor-vs-actor collision, and WASD steering lets you stand visually "behind" a tall wall's top face.
 - **Release workflow unverified** until the first `v*` tag. macOS export from Linux uses ad-hoc signing and no notarization; a real Apple signing path is an M2/M4 task.
 - **No per-kind content schemas yet.** The registry loads anything; validation (required fields, enum values, cross-references like `subclasses` ids) lands with each system. Track in `docs/content-schemas.md` when created.
 - **No GodotSteam.** `Platform` has only the null backend (D-007).

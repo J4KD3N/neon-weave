@@ -40,6 +40,10 @@ tests/      headless unit tests + fixtures
 docs/       GDD.md (canonical design doc), decisions.md, gaps.md, modding.md
 ```
 
+## Art
+
+Sprites are raw PNG sheets with JSON sidecars under `content/sprites/`; the current ones are tool-generated placeholders. [docs/art-pipeline.md](docs/art-pipeline.md) is the contract for replacing them.
+
 ## Modding
 
 Every race, class, enemy, item, quest and line of dialogue is a data file loaded by the content registry, and mods override by id. See [docs/modding.md](docs/modding.md).

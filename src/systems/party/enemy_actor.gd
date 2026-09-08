@@ -12,7 +12,7 @@ var stats: Dictionary = {}
 var abilities: Array[String] = []
 
 
-func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i, p_stats: Dictionary, default_awareness: int) -> void:
+func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i, p_stats: Dictionary, default_awareness: int, sheet: SpriteSheet = null, tint_override: Color = Color.TRANSPARENT) -> void:
 	enemy_id = p_id
 	entry = p_entry
 	cell = p_cell
@@ -26,4 +26,6 @@ func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i, p_stats: Diction
 	name = "%s_%d_%d" % [enemy_id, cell.x, cell.y]
 	var art: Dictionary = entry.get("art", {})
 	var color := Color.html(String(art.get("color", "#c94b3a")))
-	build_visuals(String(entry.get("name", enemy_id)), color, String(art.get("shape", "capsule")))
+	if tint_override.a > 0.0:
+		color = tint_override
+	build_visuals(String(entry.get("name", enemy_id)), color, String(art.get("shape", "capsule")), {}, sheet)

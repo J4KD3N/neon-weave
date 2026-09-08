@@ -18,5 +18,6 @@
     "neon_body": "#ff7a6b",
     "blood": "#5a0f14",
     "failing_light": "#8a7a3a"
-  }
+  },
+  "recolors": { "scav": "rust" }
 }

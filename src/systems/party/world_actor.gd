@@ -1,5 +1,7 @@
-## Anything that stands on a cell with placeholder visuals: party members and
-## enemies. Position is the feet. Draws the leader ring and an HP bar.
+## Anything that stands on a cell: party members and enemies. Position is
+## the feet. Visuals are either an [ActorSprite] driven by a sprite sheet
+## (docs/art-pipeline.md) or the generated placeholder capsule. Draws the
+## leader ring and an HP bar.
 class_name WorldActor
 extends Node2D
 
@@ -25,9 +27,14 @@ var downed: bool = false:
 		queue_redraw()
 ## Set when the actor has been removed from play (dead enemy).
 var dead: bool = false
+## Present when the actor is drawn from a sprite sheet.
+var sprite: ActorSprite
+var facing := Vector2.DOWN
 
 
-func build_visuals(text: String, color: Color, shape: String = "capsule", overlay: Dictionary = {}) -> void:
+## `sheet` (optional) switches the body to an animated sprite; `overlay`
+## only applies to the placeholder rig.
+func build_visuals(text: String, color: Color, shape: String = "capsule", overlay: Dictionary = {}, sheet: SpriteSheet = null) -> void:
 	display_name = text
 	tint = color
 
@@ -36,11 +43,17 @@ func build_visuals(text: String, color: Color, shape: String = "capsule", overla
 	shadow.texture = PlaceholderActorArt.shadow_texture()
 	add_child(shadow)
 
-	var body := Sprite2D.new()
-	body.name = "Body"
-	body.texture = PlaceholderActorArt.body_texture(color, shape, overlay)
-	body.offset = Vector2(0, -PlaceholderActorArt.BODY_SIZE.y / 2.0)
-	add_child(body)
+	if sheet != null and sheet.is_valid():
+		sprite = ActorSprite.new()
+		sprite.name = "Body"
+		add_child(sprite)
+		sprite.setup(sheet, sheet.swap_for_tint(color))
+	else:
+		var body := Sprite2D.new()
+		body.name = "Body"
+		body.texture = PlaceholderActorArt.body_texture(color, shape, overlay)
+		body.offset = Vector2(0, -PlaceholderActorArt.BODY_SIZE.y / 2.0)
+		add_child(body)
 
 	var label := Label.new()
 	label.name = "Name"
@@ -52,6 +65,27 @@ func build_visuals(text: String, color: Color, shape: String = "capsule", overla
 	label.add_theme_color_override("font_color", color.lightened(0.4))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(label)
+
+
+func uses_sheet() -> bool:
+	return sprite != null
+
+
+## Movement feedback: facing and idle/walk state (sheet actors only).
+func set_motion(moving: bool, dir: Vector2) -> void:
+	if dir.length_squared() > 0.0001:
+		facing = dir
+	if sprite != null:
+		sprite.set_facing(facing)
+		sprite.set_moving(moving)
+
+
+## One-shot action toward `dir` (attack, cast, hit, death). No-op without a sheet.
+func play_action(action: String, dir: Vector2 = Vector2.ZERO) -> void:
+	if dir.length_squared() > 0.0001:
+		facing = dir
+	if sprite != null:
+		sprite.play_action(action, facing)
 
 
 func _draw() -> void:

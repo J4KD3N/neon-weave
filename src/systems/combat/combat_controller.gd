@@ -158,6 +158,7 @@ func _do_ability(actor: Combatant, id: String, cell: Vector2i) -> void:
 		highlighter.clear_all()
 		var origin := node.position
 		var toward := origin + (target_node.position - origin).normalized() * 14.0
+		_play_attack(node, target_node, id, e)
 		var tween := create_tween()
 		tween.tween_property(node, "position", toward, 0.08)
 		tween.tween_property(node, "position", origin, 0.12)
@@ -261,6 +262,7 @@ func _run_enemy_turns() -> void:
 					var node: WorldActor = actors[actor.id]
 					var target_node: WorldActor = actors[e["target"]]
 					var origin := node.position
+					_play_attack(node, target_node, String(action["id"]), e)
 					var tween := create_tween()
 					tween.tween_property(node, "position", origin + (target_node.position - origin).normalized() * 14.0, 0.08)
 					tween.tween_property(node, "position", origin, 0.12)
@@ -339,3 +341,14 @@ func _sync_all() -> void:
 		return
 	for c: Combatant in state.combatants:
 		_sync_actor(c.id)
+
+
+## Sheet-driven actors: attacker plays attack/cast toward the target, the
+## target plays hit (or death when it dies). Placeholder actors ignore this.
+func _play_attack(node: WorldActor, target_node: WorldActor, ability_id: String, e: Dictionary) -> void:
+	var dir := (target_node.position - node.position)
+	var ability: Dictionary = state.abilities.get(ability_id, {})
+	var action := "cast" if String(ability.get("damage_type", "")) == "arcane" else "attack"
+	node.play_action(action, dir)
+	if bool(e.get("hit", false)):
+		target_node.play_action("death" if bool(e.get("killed", false)) else "hit", -dir)
