@@ -203,3 +203,15 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `ShardGenerator.generate(template, seed, depth)` adds `depth-1` enemy groups and pickups; layout is unchanged for a given seed. Enemy stats do not scale yet.
 **Revisit when**: S7 (full combat) or the balance pass wants scaling stats, elites, or per-depth pools.
+
+## D-039 — Save model: deltas over deterministic content
+**Date**: 2026-09-08
+**Decision**: A save (`SaveSystem`, JSON, `version`) stores the ledger (which carries Bastion levels), the party's HP/downed/cells, the run haul, the location, and deltas against the loaded map: indices of dead enemies and collected pickups. A Shard location is `{template, seed, depth}` and regenerates on load; a handcrafted location is a map id. Loading applies the save's ledger and rewrites `user://ledger.json`, so the books never fork.
+**Alternatives**: serialising every node; storing tile rows for Shards.
+**Why**: Small files, no drift between save shape and scene shape, and procgen determinism is already tested. Placement indices are stable because both maps and the generator emit ordered arrays.
+**Revisit when**: enemies move or spawn dynamically (indices become ids), or item inventories arrive.
+
+## D-040 — Slots and checkpoints
+**Date**: 2026-09-08
+**Decision**: `user://saves/slot_1..3.json` and `autosave.json`. Save anywhere out of combat (refused during a fight). Autosave at: entering a Shard, combat start (the "combat checkpoint"), extraction, and returning home after a wipe. After a wipe, Esc reloads the checkpoint, R goes home. Loads suppress autosave so a load never overwrites the checkpoint it reads. Keys: F5 save slot 1, F9 load slot 1, F10 load autosave; a slot picker UI is not in M1.
+**Why**: GDD §13 verbatim, minus Steam Cloud (M2, behind `Platform`).

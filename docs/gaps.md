@@ -10,7 +10,7 @@ Updated every session. Remove items when closed; note the closing commit.
 - **Depth only adds bodies**: enemy stats and pools do not scale with Beacon depth (D-038).
 - **Shards are plain**: no secrets, vaults or merchants (GDD §11); one room style; corridors are 1 wide; enemy groups are random per room with no difficulty ramp by distance; pickups are two types.
 - **Enemies on a previous map are forgotten** when you leave it; N (launch) and H (home) are still bare keys rather than a Beacon interaction on the map.
-- **Save is ledger-only**: no party/map state, no slots (GDD §13).
+- **Saves have no UI**: three slots exist but only slot 1 is reachable (F5/F9) plus the autosave (F10); no slot picker, no confirmation on overwrite, no content-version check (a save from a different content set loads by index and may misplace deltas).
 - **Map format is ASCII-only** stays true for handcrafted maps; generated ones go through the same rows format by design (D-028).
 
 - **Combat is the M0 skeleton only**: no cover, elevation or surfaces (GDD §9); no class resources (Surge, Vent Heat); no XP, loot or extraction; no stealth openers; no difficulty settings; enemies never move in exploration; awareness is a radius, not a cone.

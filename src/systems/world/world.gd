@@ -16,6 +16,8 @@ const DEFAULT_SHARD := "rusted_undercity"
 @export var combat_seed: int = 0
 ## Where the Bastion ledger persists. Tests point this at a scratch file.
 @export var ledger_path: String = "user://ledger.json"
+## Save slots and the autosave live here. Tests point this at a scratch dir.
+@export var saves_dir: String = "user://saves"
 
 @onready var map_view: MapView = $Scene/MapView
 @onready var party: Party = $Scene/Party
@@ -40,6 +42,9 @@ var hud: CombatHud
 var highlighter: CellHighlighter
 var mode: String = "explore"
 var hovered_cell := Vector2i(-1, -1)
+## True while SaveSystem.restore rebuilds the world; suppresses autosaves so
+## a load never overwrites the checkpoint it is reading.
+var loading: bool = false
 
 var _owns_registry := false
 var _screenshot_path := ""
@@ -115,17 +120,19 @@ func load_map_entry(entry: Dictionary) -> void:
 
 
 ## Generates a Shard from a `shards` template and moves the party into it.
+## `depth` 0 means the Beacon's current depth; loads pass the saved depth.
 ## Returns the generated map entry ({} when the template is unknown).
-func enter_shard(template_id: String, seed_value: int) -> Dictionary:
+func enter_shard(template_id: String, seed_value: int, depth: int = 0) -> Dictionary:
 	var template: Dictionary = registry.get_entry("shards", template_id)
 	if template.is_empty():
 		push_warning("unknown shard template '%s'" % template_id)
 		return {}
-	var entry := ShardGenerator.generate(template, seed_value, bastion.depth())
+	var entry := ShardGenerator.generate(template, seed_value, depth if depth > 0 else bastion.depth())
 	for err: String in ShardValidator.validate(entry, tiles_by_id()):
 		push_warning("shard %s: %s" % [entry.get("id"), err])
 	if _enter(entry):
 		run.begin(String(entry["id"]), seed_value)
+		autosave()
 	return entry
 
 
@@ -177,6 +184,54 @@ func return_home() -> void:
 		return
 	mode = "explore"
 	enter_map(HOME_MAP)
+	autosave()
+
+
+# --- saves -----------------------------------------------------------------
+
+func save_path(save_name: String) -> String:
+	return SaveSystem.path_for(saves_dir, save_name)
+
+
+## Save anywhere out of combat. ERR_UNAVAILABLE during a fight.
+func save_to(save_name: String) -> Error:
+	if mode == "combat":
+		return ERR_UNAVAILABLE
+	return SaveSystem.write(save_path(save_name), SaveSystem.capture(self))
+
+
+func save_slot(n: int) -> Error:
+	var err := save_to(SaveSystem.slot_name(n))
+	if overlay != null:
+		overlay.toast("Saved to slot %d" % n if err == OK else "Save failed: %s" % ("in combat" if err == ERR_UNAVAILABLE else error_string(err)), 2.0)
+	return err
+
+
+func autosave() -> Error:
+	if loading:
+		return OK
+	return save_to(SaveSystem.AUTOSAVE)
+
+
+## Loads a save by name. Returns the restore errors ("" entries never); an
+## unreadable file yields a single error.
+func load_from(save_name: String) -> Array[String]:
+	var data := SaveSystem.read(save_path(save_name))
+	if data.has("_error"):
+		var one: Array[String] = [String(data["_error"])]
+		if overlay != null:
+			overlay.toast("Load failed: %s" % one[0], 2.5)
+		return one
+	var errors := SaveSystem.restore(self, data)
+	if overlay != null:
+		overlay.toast("Loaded %s" % save_name if errors.is_empty() else "Loaded %s with %d problem(s)" % [save_name, errors.size()], 2.5)
+	for e: String in errors:
+		push_warning("load %s: %s" % [save_name, e])
+	return errors
+
+
+func load_slot(n: int) -> Array[String]:
+	return load_from(SaveSystem.slot_name(n))
 
 
 ## Moves the existing party (HP intact) onto a map's spawn cells.
@@ -453,6 +508,7 @@ func extract() -> bool:
 	run.clear()
 	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
 	enter_map(HOME_MAP)
+	autosave()
 	return true
 
 
@@ -465,13 +521,13 @@ func status_line() -> String:
 		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
 	]
 	var line2 := "%s  |  %s" % [run.summary() if run.in_shard else "at home: loot banks on pickup", ledger.summary()]
-	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard (depth %d) · H home · F1 registry" % bastion.depth()
+	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard (depth %d) · H home · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
 	if at_home():
-		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · N new shard (depth %d) · F1 registry" % bastion.depth()
+		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · N new shard (depth %d) · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
 	if can_extract():
 		line3 = "▶ ON THE EXTRACTION PAD — press E to extract ◀"
 	elif mode == "defeated":
-		line3 = "▶ press R to return to the yard ◀"
+		line3 = "▶ R: return to the yard · Esc: reload the combat checkpoint ◀"
 	return "%s\n%s\n%s" % [line1, line2, line3]
 
 
@@ -521,6 +577,10 @@ func start_combat(first_strike: bool) -> void:
 	var cells := CellSettler.settle(map_data, preferred, blocked)
 	for i: int in party.members.size():
 		party.members[i].position = map_view.cell_to_world(cells[i])
+	# Combat checkpoint (GDD §13): the state just before the fight.
+	mode = "explore"
+	autosave()
+	mode = "combat"
 	var seed_value := combat_seed if combat_seed != 0 else int(randi())
 	combat.begin(party.members, cells, foes, first_strike, seed_value)
 
@@ -552,6 +612,15 @@ func _on_combat_ended(result: String) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("toggle_debug"):
 		overlay.toggle_registry()
+		return
+	if event.is_action_pressed("quick_save"):
+		save_slot(1)
+		return
+	if event.is_action_pressed("quick_load"):
+		load_slot(1)
+		return
+	if event.is_action_pressed("load_autosave"):
+		load_from(SaveSystem.AUTOSAVE)
 		return
 	var mb := event as InputEventMouseButton
 	var clicked := mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
@@ -597,6 +666,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		"defeated":
 			if event.is_action_pressed("restart"):
 				return_home()
+			elif event.is_action_pressed("cancel"):
+				load_from(SaveSystem.AUTOSAVE)
 
 
 func _process(delta: float) -> void:
