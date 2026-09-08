@@ -1,0 +1,12 @@
+{
+  "name": "Hex Bolt",
+  "summary": "Circuit-Witch: a weak jolt that leaves a hex on the target (stacks to 3).",
+  "ap": 1,
+  "range": 5,
+  "damage": [1, 3],
+  "accuracy": 90,
+  "damage_type": "arcane",
+  "requires_los": true,
+  "effect": "mark",
+  "mark": "hex"
+}

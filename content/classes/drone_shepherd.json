@@ -1,0 +1,14 @@
+{
+  "name": "Drone Shepherd",
+  "branches": ["tech"],
+  "resource": {
+    "id": "scrap_charge",
+    "name": "Scrap Charge",
+    "summary": "Harvested from kills/terrain."
+  },
+  "stats": { "hp": 16, "move": 6, "evasion": 5, "initiative": 1 },
+  "abilities": ["strike", "scrap_shot", "overcharge"],
+  "subclass_level": 3,
+  "subclasses": ["swarmlord", "artificer"],
+  "milestone": "M1"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Detonate",
+  "summary": "Circuit-Witch: burst every hex on the target: +3 damage per stack, then the stack is gone.",
+  "ap": 2,
+  "range": 5,
+  "damage": [2, 4],
+  "accuracy": 90,
+  "damage_type": "arcane",
+  "requires_los": true,
+  "effect": "detonate",
+  "mark": "hex",
+  "damage_per_mark": 3
+}

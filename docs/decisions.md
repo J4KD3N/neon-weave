@@ -235,3 +235,12 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `content/resources/<id>.json`: `builds_on` damage type, `max`, `gain_per_cast`, `damage_per_stack`, optional overload (`overload_at`, `overload_chance`, `overload_damage`: the cast fizzles, AP is spent, the caster takes damage, stacks reset) and optional lock (`lock_ap_at_max`: abilities costing that much AP are refused at max stacks) with a `vent_ability` (`effect: "vent"`, `targets: "self"`, resets stacks, heals). Classes point at a resource by id; enemies have none. Stacks start at 0 per fight.
 **Why**: Surge and Heat are the GDD's two prototype resources and both fit "build on matching casts, pay out as damage, with a downside at the cap". Hexes, Scrap Charge, Null and Wireghost Heat (S8+) should extend this vocabulary rather than add engine branches.
+
+## D-045 — Classes 3–4 and the resource vocabulary
+**Date**: 2026-09-08
+**Decision**: Circuit-Witch and Drone Shepherd are content entries. Their loops needed three generic additions to the ability/resource vocabulary, added once and reusable: (1) `effect: "mark"` + `mark` stacks a named mark on a hit target up to the caster resource's `max_per_target`; `effect: "detonate"` adds `damage_per_mark` × stacks and clears them; a resource with `kind: "marks"` reads as the live total of its mark; (2) `resource_cost` on an ability is checked in `can_use` and spent on cast; (3) `gain_on_kill` and `gain_on_surface` on a resource harvest charge. Surge/Heat are unchanged. Anyone may place marks; only mark-kind resources read them.
+**Why**: GDD §15 says a new class must not need engine changes. The vocabulary did need three verbs, so the honest record is: the engine grew a vocabulary, and the classes are data. Null Blade (absorb magic as fuel) and Wireghost (Heat from stealth/hacks) should be expressible with `gain_on_*` style fields plus at most one new verb.
+
+## D-046 — Prototype party is one of each class
+**Date**: 2026-09-08
+**Decision**: `parties/prototype.json` fields Scrap-Knight, Aetherbinder, Drone Shepherd, Circuit-Witch. Class colours follow the first branch (Circuit-Witch reads Arcane purple, Drone Shepherd Tech teal).

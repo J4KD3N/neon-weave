@@ -16,6 +16,8 @@ Updated every session. Remove items when closed; note the closing commit.
 - **Combat texture is in but shallow**: cover, elevation, surfaces and Surge/Heat exist (S7) but the AI ignores all of them (it will stand in biogrowth and shoot into cover), elevation has no movement cost or stairs, there are no hackable turrets/doors, no stealth openers, no difficulty settings or Iron Weave; enemies never move in exploration; awareness is a radius, not a cone.
 - **Death-stakes mode has no setup UI**: `rules/combat.json` `story_protected` is the only switch. Downed members revive at 1 HP after victory; there is no healing yet, so HP only goes down between fights.
 - **Only two AI archetypes** (rusher, ranged). Summoner, stealther, controller wait on their mechanics.
+- **Drone Shepherd has no drones**: no summons or turrets yet (Swarmlord/Artificer are subclasses, M2+); the class is a Scrap-spending gunner for now. Circuit-Witch has no Glitchbinder/Plaguecoder spread mechanics.
+- **Subclasses, multiclassing, the Weave Tree and levels** (GDD §8) do not exist; classes are flat ability lists.
 - **Party settling can look odd**: members snap to the nearest free cells around their exploration positions with no animation.
 - **Balance is unplaytested**: numbers in `content/rules/combat.json`, class stats and enemy stats are first guesses; the seeded scene test wins 4v3 but that is one seed.
 

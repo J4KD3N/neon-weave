@@ -77,7 +77,10 @@ func test_party_spawns_on_spawn_cells_with_class_colours_and_stats() -> void:
 	assert_eq(world.party.members[0].tint, Color.html("#ff7a6b"), "Scrap-Knight is Body coral")
 	assert_eq(world.party.members[1].tint, Color.html("#b58cff"), "Aetherbinder is Arcane purple")
 	assert_eq(world.party.members[0].max_hp, 22, "Trueborn Scrap-Knight: 20 + 2")
-	assert_eq(world.party.members[2].max_hp, 24, "Synth Scrap-Knight: 20 + 4")
+	assert_eq(world.party.members[2].max_hp, 20, "Synth Drone Shepherd: 16 + 4")
+	assert_eq(world.party.members[2].tint, Color.html("#33e0d6"), "Drone Shepherd is Tech teal")
+	assert_eq(world.party.members[3].resource_id, "hexes")
+	assert_eq(world.party.members[2].resource_id, "scrap_charge")
 	assert_eq(world.leader_cell(), spawns[0])
 
 
