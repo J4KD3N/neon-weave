@@ -2,9 +2,11 @@
 
 Updated every session. Remove items when closed; note the closing commit.
 
-## Open (as of 2026-09-08, session S0)
+## Open (as of 2026-09-08, session S1)
 
-- **Not yet opened in the editor.** No Godot executable was found on the build machine during S0. CI (Godot 4.6.stable, Linux) imported the project and passed all 17 unit tests on the first push (run 34236943312), so scripts compile and the registry works headless. Still unproven: the boot scene rendering, and the `.uid` sidecar files the editor generates. First local action: open in Godot 4.6, press Play, commit the `.uid` files.
+- **Not yet opened in the editor.** No Godot executable on the build machine. CI runs the unit tests (including a headless instantiation of the exploration scene) and the `screenshot` job renders the scene under Xvfb; that PNG is the only visual check so far. Still unproven: real-time feel, input on a real window, `.uid` sidecars. First local action: open in Godot 4.6, press Play, commit the `.uid` files.
+- **Movement is placeholder-simple**: no elevation, no facing sprites (8-direction mirroring waits on art), followers pass through each other, no actor-vs-actor collision, and WASD steering lets you stand visually "behind" a tall wall's top face.
+- **Map format is ASCII-only**: fine for M0; procgen Shards (a later M0 session) will build `MapData` directly instead of via rows.
 - **Release workflow unverified** until the first `v*` tag. macOS export from Linux uses ad-hoc signing and no notarization; a real Apple signing path is an M2/M4 task.
 - **No per-kind content schemas yet.** The registry loads anything; validation (required fields, enum values, cross-references like `subclasses` ids) lands with each system. Track in `docs/content-schemas.md` when created.
 - **No GodotSteam.** `Platform` has only the null backend (D-007).

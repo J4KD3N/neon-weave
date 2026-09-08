@@ -35,8 +35,13 @@ jobs:
       - name: Import project
         run: godot --headless --path . --import
 
+      # A runtime script error aborts a test method without a recorded
+      # failure, so the log is also checked for SCRIPT ERROR.
       - name: Unit tests
-        run: godot --headless --path . -s tests/test_runner.gd
+        run: |
+          set -o pipefail
+          godot --headless --path . -s tests/test_runner.gd 2>&1 | tee test.log
+          ! grep -q "SCRIPT ERROR" test.log
 
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
@@ -68,3 +73,41 @@ jobs:
           output-file: sbom.spdx.json
       - uses: actions/upload-artifact@v7
         with: { name: sbom, path: sbom.spdx.json }
+
+  # Renders the exploration scene under Xvfb with Mesa's software GL and
+  # uploads a screenshot. Best-effort: not a required check, but the only
+  # eyes on the map until someone opens the editor.
+  screenshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Godot ${{ env.GODOT_VERSION }} and a software GL stack
+        run: |
+          set -euo pipefail
+          curl -sSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo install -m 0755 "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri libegl1 libxcursor1 libxinerama1 libxrandr2 libxi6
+
+      - name: Import project
+        run: godot --headless --path . --import
+
+      - name: Render screenshot
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
+            godot --path . --rendering-method gl_compatibility --rendering-driver opengl3 \
+              --resolution 1280x720 --audio-driver Dummy \
+              -- --screenshot="$PWD/build/screenshot.png"
+          ls -la build
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: screenshot
+          path: build/screenshot.png
