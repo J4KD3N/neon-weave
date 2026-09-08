@@ -10,7 +10,7 @@ permissions:
   contents: write # create the release
 
 env:
-  GODOT_VERSION: 4.6-stable
+  GODOT_VERSION: 4.7.2-stable
 
 jobs:
   export:
