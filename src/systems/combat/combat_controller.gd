@@ -200,7 +200,8 @@ func default_hint() -> String:
 		for c: Combatant in others:
 			names.append(c.display_name)
 		swap = " · Tab or click swaps to %s" % ", ".join(names)
-	return "Click a teal cell to move · click an enemy to attack, or [1-4] then a target · Space ends the turn%s" % swap
+	var undo := " · Esc undoes the move" if state.can_undo_move(state.current()) else ""
+	return "Click a teal cell to move · click an enemy to attack, or [1-4] then a target · Space ends the turn%s%s" % [swap, undo]
 
 
 func switch_to(id: String) -> bool:
@@ -286,10 +287,36 @@ func select_ability(index: int) -> void:
 	_refresh_player_ui()
 
 
+## Esc / B: clears the aimed ability; with nothing aimed, takes back the
+## last move instead.
 func cancel_selection() -> void:
+	if selected_ability.is_empty() and not busy and is_active() and current_is_player() and state.can_undo_move(state.current()):
+		undo_move()
+		return
 	selected_ability = ""
 	if is_active():
 		_refresh_player_ui()
+
+
+func undo_move() -> bool:
+	if busy or not is_active() or not current_is_player():
+		return false
+	var actor := state.current()
+	if not state.undo_move():
+		return false
+	var node: WorldActor = actors[actor.id]
+	node.position = world.map_view.cell_to_world(actor.cell)
+	_after_state_change()
+	return true
+
+
+## Combat follows whoever is acting; exploration follows the leader.
+func _pan_to(id: String) -> void:
+	if world.camera == null:
+		return
+	var node: WorldActor = actors.get(id)
+	if node != null and is_instance_valid(node):
+		world.camera.target = node
 
 
 func end_player_turn() -> void:
@@ -416,6 +443,7 @@ func _run_enemy_turns() -> void:
 	_enemy_loop_running = true
 	while is_active() and not current_is_player():
 		var actor := state.current()
+		_pan_to(actor.id)
 		var action := EnemyBrain.next_action(state, actor)
 		hud.set_turn_text("Round %d — %s acts" % [state.round_number, actor.display_name])
 		match String(action["type"]):
@@ -454,6 +482,7 @@ func _run_enemy_turns() -> void:
 
 func _refresh_player_ui() -> void:
 	var actor := state.current()
+	_pan_to(actor.id)
 	var reach: Array[Vector2i] = []
 	reach.assign(state.reachable_cells(actor).keys())
 	highlighter.set_layer("a_reach", reach, COLOR_REACH)
@@ -499,6 +528,8 @@ func _refresh_player_ui() -> void:
 func _finish() -> void:
 	highlighter.clear_all()
 	hud.set_abilities([], "")
+	if world.camera != null and world.party.leader() != null:
+		world.camera.target = world.party.leader()
 	if state.result == "victory":
 		hud.show_message("Victory")
 		hud.set_hint("")

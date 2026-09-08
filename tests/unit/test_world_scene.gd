@@ -788,7 +788,8 @@ func test_system_menu_routes_every_keyboard_only_action() -> void:
 	assert_eq(ids, PackedStringArray(ExploreWorld.SYSTEM_ITEM_IDS))
 	assert_contains(world.system_menu.label.text, "▶ Resume")
 	assert_contains(world.system_menu.label.text, "Return to the yard (haul is lost)  (unavailable: already home)")
-	assert_contains(world.system_menu.label.text, "Load slot 1  (unavailable: no save yet)")
+	assert_contains(world.system_menu.label.text, "Load slot 1 — empty  (unavailable: empty)")
+	assert_contains(world.system_menu.label.text, "Save slot 3 — empty")
 	assert_false(world.activate_system_item("go_home"), "disabled items refuse")
 	assert_true(world.system_menu.visible, "and the menu stays open")
 	assert_true(world.activate_system_item("save_1"))
@@ -863,3 +864,65 @@ func test_interact_talks_nearby_and_extracts_on_the_pad() -> void:
 	world.teleport_party(Vector2i(13, 4))
 	world.start_combat(true)
 	assert_false(world.interact(), "not in combat")
+
+
+func test_camera_follows_the_acting_combatant_and_returns_to_the_leader() -> void:
+	var s := _party_first_fight()
+	assert_eq(world.camera.target, world.combat.actors["p:ash"], "Ash acts first, and Ash is not the leader")
+	world.combat.next_member()
+	var acting := s.current()
+	assert_eq(world.camera.target, world.combat.actors[acting.id])
+	world.combat.end_player_turn()
+	world.combat.end_player_turn()
+	world.combat.end_player_turn()
+	if not s.finished:
+		assert_true(world.combat.current_is_player())
+		assert_eq(world.camera.target, world.combat.actors[s.current().id], "back on the party after the enemy round")
+	world.mode = "combat"
+	world.combat._finish()
+	assert_eq(world.camera.target, world.party.leader(), "exploration follows the leader")
+
+
+func test_esc_undoes_a_move_when_nothing_is_aimed() -> void:
+	var s := _party_first_fight()
+	var actor := s.current()
+	var reach: Array = s.reachable_cells(actor).keys()
+	reach.sort()
+	var cell: Vector2i = reach[0]
+	var from := actor.cell
+	world.combat.player_click(cell)
+	assert_eq(actor.cell, cell)
+	assert_contains(world.hud.hint_label.text, "Esc undoes the move")
+	world.combat.select_ability(0)
+	world.combat.cancel_selection()
+	assert_eq(actor.cell, cell, "first Esc only clears the aim")
+	assert_eq(world.combat.selected_ability, "")
+	world.combat.cancel_selection()
+	assert_eq(actor.cell, from, "second Esc takes the move back")
+	assert_eq(actor.move_left, actor.move_max)
+	assert_eq(world.combat.actors[actor.id].position, world.map_view.cell_to_world(from))
+	assert_false(world.hud.hint_label.text.contains("Esc undoes"))
+
+
+func test_system_menu_offers_all_three_slots() -> void:
+	assert_eq(world.save_slot(2), OK)
+	world.open_system_menu()
+	var text: String = world.system_menu.label.text
+	assert_contains(text, "Save slot 1 — empty")
+	assert_contains(text, "Save slot 2 — Proto Yard")
+	assert_contains(text, "Load slot 2 — Proto Yard")
+	assert_contains(text, "Load slot 3 — empty  (unavailable: empty)")
+	assert_contains(text, "Load the autosave")
+	assert_true(world.activate_system_item("save_3"))
+	assert_true(FileAccess.file_exists(world.save_path(SaveSystem.slot_name(3))))
+	world.enter_shard("rusted_undercity", 7)
+	world.open_system_menu()
+	assert_true(world.activate_system_item("load_2"))
+	assert_true(world.at_home(), "slot 2 was saved at home")
+	world.teleport_party(Vector2i(13, 4))
+	world.start_combat(true)
+	var blocked := false
+	for item: Dictionary in world.system_items():
+		if String(item["id"]) == "save_1":
+			blocked = not bool(item["enabled"])
+	assert_true(blocked, "saving is unavailable in combat")

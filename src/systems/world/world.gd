@@ -1111,7 +1111,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "save_1", "load_1", "load_autosave", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1128,9 +1128,15 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "go_home", "label": "Return to the yard (haul is lost)", "enabled": not home, "why": "already home"})
 	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
 	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
-	items.append({"id": "save_1", "label": "Save to slot 1", "enabled": true})
-	items.append({"id": "load_1", "label": "Load slot 1", "enabled": FileAccess.file_exists(save_path(SaveSystem.slot_name(1))), "why": "no save yet"})
-	items.append({"id": "load_autosave", "label": "Load the autosave", "enabled": FileAccess.file_exists(save_path(SaveSystem.AUTOSAVE)), "why": "no autosave yet"})
+	var saves := SaveSystem.list_saves(saves_dir)
+	for n: int in SaveSystem.SLOTS:
+		var slot: Dictionary = saves[n]
+		items.append({"id": "save_%d" % (n + 1), "label": "Save slot %d — %s" % [n + 1, slot["summary"]], "enabled": mode != "combat", "why": "in combat"})
+	for n: int in SaveSystem.SLOTS:
+		var slot: Dictionary = saves[n]
+		items.append({"id": "load_%d" % (n + 1), "label": "Load slot %d — %s" % [n + 1, slot["summary"]], "enabled": bool(slot["exists"]), "why": "empty"})
+	var auto: Dictionary = saves[SaveSystem.SLOTS]
+	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["exists"]), "why": "no autosave yet"})
 	items.append({"id": "registry", "label": "Content registry dump (debug)", "enabled": true})
 	return items
 
@@ -1173,10 +1179,10 @@ func activate_system_item(id: String) -> bool:
 			return toggle_bastion()
 		"creator":
 			return open_creator()
-		"save_1":
-			return save_slot(1) == OK
-		"load_1":
-			return load_slot(1).is_empty()
+		"save_1", "save_2", "save_3":
+			return save_slot(int(id.get_slice("_", 1))) == OK
+		"load_1", "load_2", "load_3":
+			return load_slot(int(id.get_slice("_", 1))).is_empty()
 		"load_autosave":
 			return load_from(SaveSystem.AUTOSAVE).is_empty()
 		"registry":

@@ -322,3 +322,8 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Date**: 2026-09-08
 **Decision**: `docs/m2-plan.md` schedules fifteen sessions (S13 playtest triage → S27 demo tuning) in dependency order: progression and the last two classes before the enemy AI and second biome; campaign tooling before companions, the Lattice and the Act 1 slice; front end and audio before Steam; release before tuning. Art and the store page are parallel tracks with an explicit decision point at S22 on shipping the demo with placeholder art. The demo slice ends before first contact with the Choir fragment; the level cap is 6 in the demo; Dax ships as a companion-only Vaultkin entry.
 **Why**: M1 proved the systems are data; M2 is judged by strangers on Steam. Keeping content sessions after their tooling avoids authoring twice, and naming art as a non-code gate keeps every session unblocked until the last possible moment.
+
+## D-063 — S13 triage ships a soak test alongside the fixes
+**Date**: 2026-09-08
+**Decision**: `tests/unit/test_soak.gd` plays three seeded runs of the whole loop headless (yard, Shard, fights with swaps/undo/aiming, mid-run save and load, extraction or wipe, Bastion upgrades, Sera) and checks invariants after every action. It runs on every PR like any other test. The playtest items the plan named are in: the camera follows whoever is acting in combat and returns to the leader; Esc/B with nothing aimed undoes the last move (until any ability, swap or turn end); the system menu lists all three save slots and the autosave with their summaries.
+**Why**: The author is the only playtester and cannot be on call for every PR. A scripted playtester finds the crashes; a human finds the feel. Both are S13.
