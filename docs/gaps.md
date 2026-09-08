@@ -7,6 +7,7 @@ Updated every session. Remove items when closed; note the closing commit.
 - **M0 question still open**: the loop exists end to end (yard → Shard → fight/collect → extract or wipe → yard → Bastion) but nobody has played it. "Is the loop fun?" needs a person with the editor open. Balance numbers are all first guesses, including building costs.
 - **XP and Ciphers have no sink**: Salvage and Aether buy building levels; XP (levels/talents) and Ciphers (rare keys/merchants) wait on later systems. No item loot, rarity or affixes.
 - **Bastion is a text screen** over the yard; no building visuals, no dedicated map (M1 art/companion sessions decide).
+- **Creator is a text screen too**: no appearance customisation beyond the race overlay, no portrait, no title screen (C at home is the entry point), origins gate nothing yet (`dialogue_tag` waits for S11's dialogue data), and only the five M2 races exist.
 - **Depth only adds bodies**: enemy stats and pools do not scale with Beacon depth (D-038).
 - **Shards are plain**: no secrets, vaults or merchants (GDD §11); one room style; corridors are 1 wide; enemy groups are random per room with no difficulty ramp by distance; pickups are two types.
 - **Enemies on a previous map are forgotten** when you leave it; N (launch) and H (home) are still bare keys rather than a Beacon interaction on the map.

@@ -1,0 +1,12 @@
+{
+  "name": "Attributes",
+  "summary": "Creator point buy. Three attributes mirror the Weave branches; each point converts to derived stats via `effects`.",
+  "names": ["body", "arcane", "tech"],
+  "points": 6,
+  "max_per_attribute": 4,
+  "effects": {
+    "body": { "hp": 2 },
+    "arcane": { "initiative": 1 },
+    "tech": { "evasion": 2 }
+  }
+}

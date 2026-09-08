@@ -5,5 +5,6 @@
   "hooks": ["repair_with_parts", "immune_poison", "immune_bleed", "no_magic_healing"],
   "stat_mods": { "hp": 4, "evasion": -5 },
   "faction_lean": "lattice",
+  "overlay": { "kind": "plating", "color": "#9aa3ad" },
   "milestone": "M0"
 }

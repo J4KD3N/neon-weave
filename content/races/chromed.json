@@ -1,0 +1,10 @@
+{
+  "name": "Chromed",
+  "analog": "—",
+  "identity": "Augmented humans: bolt-on plating, replaced limbs, a port behind the ear.",
+  "hooks": ["cyberware_slots"],
+  "stat_mods": { "hp": 1, "evasion": 3 },
+  "faction_lean": "lattice",
+  "overlay": { "kind": "chrome", "color": "#c9ced6" },
+  "milestone": "M1"
+}

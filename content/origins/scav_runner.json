@@ -1,0 +1,6 @@
+{
+  "name": "Scav Runner",
+  "summary": "You grew up threading the Undercity with a sack on your back and someone's drone on your heels.",
+  "dialogue_tag": "undercity",
+  "stat_mods": { "move": 1 }
+}
