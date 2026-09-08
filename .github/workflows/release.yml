@@ -55,7 +55,7 @@ jobs:
           (cd build/linux && tar -czf "../neon-weave-${v}-linux.tar.gz" .)
           mv build/macos/neon-weave.zip "build/neon-weave-${v}-macos.zip"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: builds
           path: |
