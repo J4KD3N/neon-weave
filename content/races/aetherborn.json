@@ -1,0 +1,10 @@
+{
+  "name": "Aetherborn",
+  "analog": "Sorcerer-blood",
+  "identity": "Magic-marked lineage: Weft-light runs in lines under the skin.",
+  "hooks": ["innate_spell", "gadget_interference"],
+  "stat_mods": { "hp": -1, "initiative": 2 },
+  "faction_lean": "rootched",
+  "overlay": { "kind": "marks", "color": "#b58cff" },
+  "milestone": "M1"
+}

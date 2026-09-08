@@ -250,3 +250,31 @@ func test_prototype_party_covers_four_distinct_classes_and_abilities_resolve() -
 		if effect == "mark" or effect == "detonate":
 			assert_false(String(a.get("mark", "")).is_empty(), "ability %s needs a mark id" % a["id"])
 		assert_true(int(a.get("resource_cost", 0)) >= 0)
+
+
+func test_five_races_with_overlays_origins_and_attribute_rules() -> void:
+	var races := registry.get_all("races")
+	assert_true(races.size() >= 5, "M2 demo races")
+	for r: Dictionary in races:
+		var overlay: Dictionary = r.get("overlay", {})
+		assert_true(PlaceholderActorArt.OVERLAY_KINDS.has(String(overlay.get("kind", ""))), "race %s overlay kind" % r["id"])
+		if String(overlay.get("kind", "")) != "none":
+			assert_true(Color.html_is_valid(String(overlay.get("color", ""))), "race %s overlay colour" % r["id"])
+		for key: String in r.get("stat_mods", {}):
+			assert_true(StatBlock.KEYS.has(key), "race %s stat_mod '%s'" % [r["id"], key])
+	var origins := registry.get_all("origins")
+	assert_true(origins.size() >= 4)
+	for o: Dictionary in origins:
+		assert_false(String(o.get("dialogue_tag", "")).is_empty(), "origin %s dialogue_tag" % o["id"])
+		for key: String in o.get("stat_mods", {}):
+			assert_true(StatBlock.KEYS.has(key), "origin %s stat_mod '%s'" % [o["id"], key])
+	var attrs := registry.get_entry("rules", "attributes")
+	var names: Array = attrs.get("names", [])
+	assert_eq(names.size(), 3)
+	assert_true(int(attrs.get("points", 0)) > 0)
+	assert_true(int(attrs.get("max_per_attribute", 0)) * names.size() >= int(attrs.get("points", 0)), "budget must be spendable")
+	var effects: Dictionary = attrs.get("effects", {})
+	for n: String in names:
+		assert_true(effects.has(n), "attribute %s has effects" % n)
+		for key: String in effects[n]:
+			assert_true(StatBlock.KEYS.has(key), "attribute %s effect '%s'" % [n, key])

@@ -1,0 +1,6 @@
+{
+  "name": "Corp Asset",
+  "summary": "Built, trained and owned by a company that no longer exists. Probably.",
+  "dialogue_tag": "corporate",
+  "stat_mods": { "evasion": 4 }
+}

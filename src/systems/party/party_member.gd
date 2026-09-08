@@ -6,6 +6,7 @@ extends WorldActor
 var member_id: String = ""
 var class_id: String = ""
 var race_id: String = ""
+var origin_id: String = ""
 var facing: Vector2 = Vector2.DOWN
 ## Derived combat stats (see StatBlock): hp, move, evasion, initiative.
 var stats: Dictionary = {}
@@ -28,7 +29,7 @@ func set_hp_bonus(bonus: int) -> void:
 	hp = was + delta if was > 0 else 0
 
 
-func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities: Array[String] = []) -> void:
+func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities: Array[String] = [], p_overlay: Dictionary = {}) -> void:
 	member_id = String(data.get("id", ""))
 	class_id = String(data.get("class", ""))
 	race_id = String(data.get("race", ""))
@@ -38,4 +39,5 @@ func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities
 	resource_id = String(data.get("resource_id", ""))
 	max_hp = maxi(int(stats.get("hp", 1)), 1)
 	hp = max_hp
-	build_visuals(String(data.get("name", member_id)), color)
+	origin_id = String(data.get("origin", ""))
+	build_visuals(String(data.get("name", member_id)), color, "capsule", p_overlay)

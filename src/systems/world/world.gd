@@ -35,6 +35,11 @@ var ledger: Ledger
 var run := RunState.new()
 var bastion := BastionState.new()
 var bastion_menu: BastionMenu
+## The created character (CharacterSheet dict) leading the party, or {} for
+## the preset's default leader. Saved under "protagonist".
+var protagonist: Dictionary = {}
+var creator_menu: CreatorMenu
+var creator_state: CreatorState
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
 var combat: CombatController
@@ -76,6 +81,9 @@ func _ready() -> void:
 	bastion_menu = BastionMenu.new()
 	bastion_menu.name = "BastionMenu"
 	add_child(bastion_menu)
+	creator_menu = CreatorMenu.new()
+	creator_menu.name = "CreatorMenu"
+	add_child(creator_menu)
 	combat = CombatController.new()
 	combat.name = "Combat"
 	add_child(combat)
@@ -88,6 +96,8 @@ func _ready() -> void:
 			_screenshot_path = arg.get_slice("=", 1)
 		elif arg.begins_with("--shard="):
 			enter_shard(DEFAULT_SHARD, int(arg.get_slice("=", 1)))
+		elif arg == "--creator":
+			open_creator()
 
 
 func _exit_tree() -> void:
@@ -316,25 +326,62 @@ func extraction_cell() -> Vector2i:
 
 func spawn_party(id: String) -> void:
 	var preset: Dictionary = registry.get_entry("parties", id)
-	var member_entries: Array = preset.get("members", [])
-	var spawns := map_data.spawn_cells()
-	var specs: Array[Dictionary] = []
-	for i: int in member_entries.size():
-		var data: Dictionary = member_entries[i]
-		var cls: Dictionary = registry.get_entry("classes", String(data.get("class", "")))
-		var race: Dictionary = registry.get_entry("races", String(data.get("race", "")))
-		var cell: Vector2i = spawns[mini(i, spawns.size() - 1)] if not spawns.is_empty() else Vector2i.ZERO
-		var resource: Dictionary = cls.get("resource", {})
-		var member_data := data.duplicate()
-		member_data["resource_id"] = String(resource.get("id", ""))
-		specs.append({
-			"data": member_data,
-			"color": class_color(String(data.get("class", ""))),
-			"position": map_view.cell_to_world(cell),
-			"stats": StatBlock.for_member(cls, race, rules),
-			"abilities": cls.get("abilities", []),
-		})
-	party.spawn_members(specs)
+	var positions: Array[Vector2] = []
+	for cell: Vector2i in map_data.spawn_cells():
+		positions.append(map_view.cell_to_world(cell))
+	party.spawn_members(PartyBuilder.member_specs(registry, preset, protagonist, rules, positions))
+
+
+## Fresh party (full HP) from the preset and the current protagonist.
+func respawn_party() -> void:
+	spawn_party(party_id)
+	apply_bastion_bonuses()
+	if camera != null:
+		camera.target = party.leader()
+
+
+## Installs a created character as the party leader. Returns validation
+## errors; on success the party is respawned and the game autosaved.
+func set_protagonist(sheet: Dictionary, save: bool = true) -> Array[String]:
+	var errors := CharacterSheet.from_dict(sheet).validate(registry, registry.get_entry("rules", "attributes"))
+	if not errors.is_empty():
+		return errors
+	protagonist = sheet.duplicate(true)
+	respawn_party()
+	if camera != null:
+		camera.snap()
+	if save:
+		autosave()
+	overlay.toast("%s leads the party." % sheet.get("name", "The Weaver"), 2.5)
+	return errors
+
+
+## Opens the creator; only at home while exploring.
+func open_creator() -> bool:
+	if creator_menu == null or mode != "explore" or not at_home():
+		return false
+	if bastion_menu != null:
+		bastion_menu.visible = false
+	creator_state = CreatorState.new()
+	creator_state.setup(registry, rules, protagonist)
+	creator_menu.open(creator_state)
+	return true
+
+
+func close_creator() -> void:
+	if creator_menu != null:
+		creator_menu.visible = false
+
+
+## Confirms the creator's sheet as the protagonist. False when invalid.
+func confirm_creator() -> bool:
+	if creator_state == null or not creator_state.is_valid():
+		return false
+	var errors := set_protagonist(creator_state.sheet.to_dict())
+	if not errors.is_empty():
+		return false
+	close_creator()
+	return true
 
 
 func spawn_enemies() -> void:
@@ -384,12 +431,7 @@ func spawn_pickups() -> void:
 
 ## Neon colour of a class's primary branch (GDD §5: Arcane purple, Tech teal, Body coral).
 func class_color(class_id: String) -> Color:
-	var cls: Dictionary = registry.get_entry("classes", class_id)
-	var branches: Array = cls.get("branches", [])
-	if branches.is_empty():
-		return Color.WHITE
-	var branch: Dictionary = registry.get_entry("branches", String(branches[0]))
-	return Color.html(String(branch.get("color", "#ffffff")))
+	return PartyBuilder.class_color(registry, class_id)
 
 
 func living_enemies() -> Array[EnemyActor]:
@@ -533,7 +575,7 @@ func status_line() -> String:
 	var line2 := "%s  |  %s" % [run.summary() if run.in_shard else "at home: loot banks on pickup", ledger.summary()]
 	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard (depth %d) · H home · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
 	if at_home():
-		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · N new shard (depth %d) · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
+		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · C creator · N new shard (depth %d) · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
 	if can_extract():
 		line3 = "▶ ON THE EXTRACTION PAD — press E to extract ◀"
 	elif mode == "defeated":
@@ -634,6 +676,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var mb := event as InputEventMouseButton
 	var clicked := mb != null and mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT
+	if creator_menu != null and creator_menu.visible:
+		if event.is_action_pressed("creator") or event.is_action_pressed("ui_cancel"):
+			close_creator()
+		elif event.is_action_pressed("ui_accept"):
+			confirm_creator()
+		elif event.is_action_pressed("ui_up"):
+			creator_state.move_row(-1)
+			creator_menu.refresh()
+		elif event.is_action_pressed("ui_down"):
+			creator_state.move_row(1)
+			creator_menu.refresh()
+		elif event.is_action_pressed("ui_left"):
+			if creator_state.adjust(-1):
+				creator_menu.refresh()
+		elif event.is_action_pressed("ui_right"):
+			if creator_state.adjust(1):
+				creator_menu.refresh()
+		return
 	if bastion_menu != null and bastion_menu.visible:
 		if event.is_action_pressed("bastion") or event.is_action_pressed("cancel"):
 			toggle_bastion()
@@ -649,6 +709,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		"explore":
 			if event.is_action_pressed("bastion"):
 				toggle_bastion()
+			elif event.is_action_pressed("creator"):
+				open_creator()
 			elif clicked:
 				var cell := map_view.world_to_cell(get_global_mouse_position())
 				var enemy := enemy_at(cell)

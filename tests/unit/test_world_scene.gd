@@ -565,3 +565,57 @@ func test_yard_has_surfaces_and_party_has_class_resources() -> void:
 	assert_eq(caster.resource_id, "surge")
 	for c: Combatant in s.active("enemy"):
 		assert_false(c.has_resource(), "enemies have no class resource")
+
+
+const VEX: Dictionary = {"name": "Vex", "race_id": "chromed", "origin_id": "corp_asset", "class_id": "circuit_witch", "attributes": {"body": 1, "arcane": 3, "tech": 2}}
+
+
+func test_protagonist_replaces_the_leader_and_persists_through_saves() -> void:
+	assert_eq(world.party.leader().member_id, "weaver")
+	assert_eq(world.set_protagonist(VEX), [])
+	var l := world.party.leader()
+	assert_eq(l.member_id, PartyBuilder.PROTAGONIST_ID)
+	assert_eq(l.display_name, "Vex")
+	assert_eq(l.class_id, "circuit_witch")
+	assert_eq(l.race_id, "chromed")
+	assert_eq(l.origin_id, "corp_asset")
+	assert_eq(l.resource_id, "hexes")
+	assert_eq(l.tint, Color.html("#b58cff"))
+	assert_eq(l.max_hp, 17)
+	assert_true(l.is_leader)
+	assert_eq(world.party.members.size(), 4)
+	assert_eq(world.party.members[1].member_id, "ash")
+	assert_eq(world.leader_cell(), world.map_data.spawn_cells()[0])
+	assert_eq(world.save_slot(1), OK)
+	var again := _fresh_scene()
+	assert_eq(again.party.leader().member_id, "weaver", "a fresh scene starts with the preset")
+	assert_eq(again.load_slot(1), [])
+	assert_eq(again.party.leader().display_name, "Vex")
+	assert_eq(again.party.leader().max_hp, 17)
+	assert_eq(CharacterSheet.from_dict(again.protagonist).to_dict(), VEX, "ints survive the JSON float round trip")
+	_drop(again)
+
+
+func test_invalid_protagonist_is_refused() -> void:
+	var bad := VEX.duplicate(true)
+	bad["race_id"] = "elf"
+	var errors := world.set_protagonist(bad)
+	assert_any_contains(errors, "unknown race")
+	assert_eq(world.party.leader().member_id, "weaver")
+	assert_true(world.protagonist.is_empty())
+
+
+func test_creator_opens_at_home_only_and_confirms() -> void:
+	assert_true(world.open_creator())
+	assert_true(world.creator_menu.visible)
+	assert_contains(world.creator_menu.label.text, "NEW WEAVER")
+	world.creator_state.sheet.name = "Kest"
+	world.creator_state.adjust(1)
+	var race := world.creator_state.sheet.race_id
+	assert_true(world.confirm_creator())
+	assert_false(world.creator_menu.visible)
+	assert_eq(world.party.leader().display_name, "Kest")
+	assert_eq(world.party.leader().race_id, race)
+	world.enter_shard("rusted_undercity", 7)
+	assert_false(world.open_creator(), "not in a Shard")
+	assert_eq(world.party.leader().display_name, "Kest", "the protagonist walks into the Shard")

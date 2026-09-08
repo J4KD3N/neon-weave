@@ -1,0 +1,6 @@
+{
+  "name": "Vault Child",
+  "summary": "Sealed bunker generations. You saw the sky for the first time last year.",
+  "dialogue_tag": "vault",
+  "stat_mods": { "hp": 2 }
+}

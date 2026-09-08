@@ -244,3 +244,13 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 ## D-046 — Prototype party is one of each class
 **Date**: 2026-09-08
 **Decision**: `parties/prototype.json` fields Scrap-Knight, Aetherbinder, Drone Shepherd, Circuit-Witch. Class colours follow the first branch (Circuit-Witch reads Arcane purple, Drone Shepherd Tech teal).
+
+## D-047 — Session S9 scope: creator v1
+**Date**: 2026-09-08
+**Decision**: `CharacterSheet` (data) + `CreatorState` (pure model: rows, cycling, point buy, validation, text render, stat preview) + `CreatorMenu` (text panel, name field, 4× paper-doll preview) + `PartyBuilder` (preset + optional protagonist → member specs). The protagonist replaces the preset's first member with id `protagonist`, lives in saves under `protagonist`, and is respawned on load. C opens the creator at home; there is no title screen yet.
+**Why**: Everything the screen shows is derived from data (races, origins, classes, `rules/attributes`), and the model is testable without nodes.
+
+## D-048 — Races, origins, attributes as data
+**Date**: 2026-09-08
+**Decision**: The five M2 races (Trueborn, Chromed, Aetherborn, Synth, Rootkin) carry `stat_mods`, `faction_lean` and an `overlay` `{kind, color}` stamped onto the shared humanoid rig (`marks`, `chrome`, `bark`, `plating`, `none`) without changing its silhouette (GDD §5: one rig, race overlays). Origins carry `dialogue_tag` (for later gated dialogue) and `stat_mods`. Attributes are `rules/attributes`: three names mirroring the Weave branches, a point budget, a per-attribute cap, and per-point stat effects applied by `StatBlock`.
+**Revisit when**: real art replaces the placeholder rig (S10) — overlays become sprite layers, the entry shape stays.

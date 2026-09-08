@@ -52,6 +52,7 @@ static func capture(world: ExploreWorld) -> Dictionary:
 		"location": location,
 		"run": {"haul": world.run.haul.duplicate(), "xp": world.run.xp, "kills": world.run.kills, "pickups": world.run.pickups},
 		"party": members,
+		"protagonist": world.protagonist.duplicate(true),
 		"dead_enemies": dead,
 		"collected_pickups": collected,
 	}
@@ -76,6 +77,8 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 	if err != OK:
 		errors.append("ledger save failed: %s" % error_string(err))
 	world.bastion.setup(world.registry.get_all("buildings"), world.ledger.buildings)
+	world.protagonist = Dictionary(data.get("protagonist", {})).duplicate(true)
+	world.respawn_party()
 
 	world.mode = "explore"
 	world.loading = true

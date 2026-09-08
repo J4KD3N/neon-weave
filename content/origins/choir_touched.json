@@ -1,0 +1,6 @@
+{
+  "name": "Choir-Touched",
+  "summary": "Something sang to you once through a dead speaker. You still hear the shape of it.",
+  "dialogue_tag": "choir",
+  "stat_mods": { "initiative": 2 }
+}

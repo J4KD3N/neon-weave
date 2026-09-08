@@ -27,7 +27,7 @@ var downed: bool = false:
 var dead: bool = false
 
 
-func build_visuals(text: String, color: Color, shape: String = "capsule") -> void:
+func build_visuals(text: String, color: Color, shape: String = "capsule", overlay: Dictionary = {}) -> void:
 	display_name = text
 	tint = color
 
@@ -38,7 +38,7 @@ func build_visuals(text: String, color: Color, shape: String = "capsule") -> voi
 
 	var body := Sprite2D.new()
 	body.name = "Body"
-	body.texture = PlaceholderActorArt.body_texture(color, shape)
+	body.texture = PlaceholderActorArt.body_texture(color, shape, overlay)
 	body.offset = Vector2(0, -PlaceholderActorArt.BODY_SIZE.y / 2.0)
 	add_child(body)
 

@@ -109,6 +109,7 @@ jobs:
           run_shot --screenshot="$PWD/build/screenshot.png"
           run_shot --screenshot="$PWD/build/screenshot-combat.png" --screenshot-combat
           run_shot --screenshot="$PWD/build/screenshot-shard.png" --shard=7
+          run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
           ls -la build
 
       - uses: actions/upload-artifact@v7
