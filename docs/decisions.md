@@ -317,3 +317,8 @@ bottom. Format: id, date, decision, alternatives considered, why, revisit-when.
 **Decision**: Target Godot 4.7.2-stable. `project.godot` declares the `4.7` feature; `ci.yml` and `release.yml` download 4.7.2-stable and its export templates. No code changed: 4.7.2 ran the 4.6 project and all 240 tests unmodified.
 **Why**: The first playtest ran on the 4.7.2 editor, which rewrites `project.godot` (feature tag, comment stripping) on every open. Pinning CI and the editor to one version stops that churn and keeps "never break exports" checkable locally.
 **Revisit when**: a 4.8 feature is needed, or a 4.7 export bug blocks a release.
+
+## D-062 — M2 is three tracks: systems, content, then art and store
+**Date**: 2026-09-08
+**Decision**: `docs/m2-plan.md` schedules fifteen sessions (S13 playtest triage → S27 demo tuning) in dependency order: progression and the last two classes before the enemy AI and second biome; campaign tooling before companions, the Lattice and the Act 1 slice; front end and audio before Steam; release before tuning. Art and the store page are parallel tracks with an explicit decision point at S22 on shipping the demo with placeholder art. The demo slice ends before first contact with the Choir fragment; the level cap is 6 in the demo; Dax ships as a companion-only Vaultkin entry.
+**Why**: M1 proved the systems are data; M2 is judged by strangers on Steam. Keeping content sessions after their tooling avoids authoring twice, and naming art as a non-code gate keeps every session unblocked until the last possible moment.
