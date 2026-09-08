@@ -28,6 +28,9 @@ var width: int = 0
 var height: int = 0
 var cells := PackedStringArray()
 var rooms: Array[Rect2i] = []
+## Characters that count as floor for reachability and placement: the base
+## floor and grate plus every surface char a template declares.
+var floor_chars: Dictionary = {FLOOR: true, GRATE: true}
 
 
 ## `depth` (Beacon level) adds depth-1 enemy groups and pickups.
@@ -44,6 +47,7 @@ func _run(template: Dictionary, seed_value: int, depth: int) -> Dictionary:
 	cells.resize(width * height)
 	cells.fill(WALL)
 	rooms.clear()
+	floor_chars = {FLOOR: true, GRATE: true}
 
 	_place_rooms(template.get("rooms", {}))
 	for r: Rect2i in rooms:
@@ -197,7 +201,7 @@ func _scatter_debris(density: float) -> void:
 		for x: int in range(1, width - 1):
 			var p := Vector2i(x, y)
 			var ch := _cell_at(p)
-			if ch != FLOOR and ch != GRATE:
+			if not floor_chars.has(ch):
 				continue
 			if rng.randf() >= density:
 				continue
@@ -287,7 +291,7 @@ func _extraction_cell(dist: PackedInt32Array) -> Vector2i:
 		for y: int in height:
 			for x: int in width:
 				var p := Vector2i(x, y)
-				if _cell_at(p) == FLOOR and dist[_idx(p)] > best_d:
+				if floor_chars.has(_cell_at(p)) and dist[_idx(p)] > best_d:
 					best_d = dist[_idx(p)]
 					far = p
 		return far
@@ -301,7 +305,7 @@ func _nearest_reachable(center: Vector2i, room: Rect2i, dist: PackedInt32Array) 
 		for x: int in range(room.position.x, room.end.x):
 			var p := Vector2i(x, y)
 			var ch := _cell_at(p)
-			if (ch == FLOOR or ch == GRATE) and dist[_idx(p)] >= 0:
+			if floor_chars.has(ch) and dist[_idx(p)] >= 0:
 				var l := (p - center).length_squared()
 				if l < best_len:
 					best_len = l
@@ -326,7 +330,7 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 			for x: int in range(room.position.x, room.end.x):
 				var p := Vector2i(x, y)
 				var ch := _cell_at(p)
-				if (ch == FLOOR or ch == GRATE) and dist[_idx(p)] >= 0 and not taken.has(p) \
+				if floor_chars.has(ch) and dist[_idx(p)] >= 0 and not taken.has(p) \
 						and _distance_to_any(p, spawns) >= min_dist:
 					candidates.append(p)
 		var n := rng.randi_range(int(size_range[0]), int(size_range[1]))
@@ -360,7 +364,7 @@ func _place_pickups(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 			for x: int in range(room.position.x, room.end.x):
 				var p := Vector2i(x, y)
 				var ch := _cell_at(p)
-				if (ch == FLOOR or ch == GRATE) and dist[_idx(p)] >= 0 and not used.has(p):
+				if floor_chars.has(ch) and dist[_idx(p)] >= 0 and not used.has(p):
 					candidates.append(p)
 		if candidates.is_empty():
 			continue
@@ -437,7 +441,7 @@ func _put(p: Vector2i, ch: String) -> void:
 
 func _walkable(p: Vector2i) -> bool:
 	var ch := _cell_at(p)
-	return ch == FLOOR or ch == GRATE or ch == SPAWN or ch == EXIT
+	return ch == SPAWN or ch == EXIT or floor_chars.has(ch)
 
 
 ## Surface patches (mana pools, conduits, biogrowth, catwalks) carved into
@@ -449,7 +453,9 @@ func _surface_patches(spec: Dictionary) -> Dictionary:
 	if pool.is_empty() or rooms.is_empty():
 		return legend
 	for e: Dictionary in pool:
-		legend[String(e.get("char", "?"))] = String(e.get("tile", ""))
+		var c := String(e.get("char", "?"))
+		legend[c] = String(e.get("tile", ""))
+		floor_chars[c] = true
 	var patches := _pick(spec.get("patches", [2, 4]))
 	for _i: int in patches:
 		var e: Dictionary = pool[_weighted_index(pool)]
@@ -462,7 +468,7 @@ func _surface_patches(spec: Dictionary) -> Dictionary:
 		for yy: int in range(y, mini(y + h, r.end.y)):
 			for xx: int in range(x, mini(x + w, r.end.x)):
 				var p := Vector2i(xx, yy)
-				if _cell_at(p) == FLOOR or _cell_at(p) == GRATE:
+				if floor_chars.has(_cell_at(p)):
 					_put(p, ch)
 	return legend
 
