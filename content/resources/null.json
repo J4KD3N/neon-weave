@@ -1,0 +1,7 @@
+{
+  "name": "Null",
+  "summary": "Arcane damage taken is half-swallowed and stored. Spent on the void lash.",
+  "max": 5,
+  "absorb": { "type": "arcane", "fraction": 0.5 },
+  "gain_per_absorbed": 1
+}

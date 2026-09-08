@@ -97,12 +97,13 @@ func _combat_step() -> void:
 		return
 	if actor.move_left > 0:
 		var reach := s.reachable_cells(actor)
+		var field := s.distance_field(target.cell)
 		var cells: Array = reach.keys()
 		cells.sort()
 		var best := actor.cell
-		var best_d := LineOfSight.distance(actor.cell, target.cell)
+		var best_d := int(field.get(actor.cell, 9999))
 		for cell: Vector2i in cells:
-			var d := LineOfSight.distance(cell, target.cell)
+			var d := int(field.get(cell, 9999))
 			if d < best_d:
 				best = cell
 				best_d = d
@@ -166,6 +167,9 @@ func _explore_step(in_shard: bool) -> void:
 
 func test_seeded_runs_survive_the_whole_loop() -> void:
 	for run_seed: int in RUNS:
+		if world.mode != "explore":
+			fail("world stuck in mode %s before seed %d; stopping\n  %s" % [world.mode, run_seed, _where()])
+			break
 		rng.seed = run_seed
 		world.combat_seed = run_seed
 		world.enter_map(ExploreWorld.HOME_MAP)
@@ -200,6 +204,11 @@ func test_seeded_runs_survive_the_whole_loop() -> void:
 						if world.ledger.runs_completed > banked:
 							extractions += 1
 			_check_invariants(tag)
+		if world.mode == "combat" and actions >= MAX_ACTIONS:
+			var s := world.combat.state
+			_note("STALL round %d current %s" % [s.round_number, s.current().id if s.current() != null else "none"])
+			for c: Combatant in s.combatants:
+				_note("  %s %s hp %d/%d ap %d move %d hidden=%s statuses=%s active=%s" % [c.id, c.cell, c.hp, c.max_hp, c.ap, c.move_left, c.hidden, c.statuses, c.is_active()])
 		assert_true(extractions + wipes >= 1, "seed %d never finished a run in %d actions\n  %s" % [run_seed, actions, _where()])
 		_note("seed %d: %d shards, %d extractions, %d wipes, %d actions" % [run_seed, shards, extractions, wipes, actions])
 		print("  soak ", log_lines[log_lines.size() - 1])

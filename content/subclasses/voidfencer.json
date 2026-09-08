@@ -1,0 +1,9 @@
+{
+  "name": "Voidfencer",
+  "class": "null_blade",
+  "summary": "Parries and counters.",
+  "abilities": ["riposte"],
+  "stat_mods": { "evasion": 5 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

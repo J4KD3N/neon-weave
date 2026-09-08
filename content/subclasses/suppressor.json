@@ -1,0 +1,9 @@
+{
+  "name": "Suppressor",
+  "class": "null_blade",
+  "summary": "Silence zones; the Weft goes quiet around you.",
+  "abilities": ["null_field"],
+  "stat_mods": { "hp": 2 },
+  "damage_bonus": 0,
+  "milestone": "M2"
+}

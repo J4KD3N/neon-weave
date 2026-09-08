@@ -1,5 +1,5 @@
 {
-  "name": "Heat",
+  "name": "Vent Heat",
   "summary": "Every blow heats the frame. Each stack adds damage; at the cap heavy swings lock until the knight vents.",
   "builds_on": "physical",
   "max": 3,

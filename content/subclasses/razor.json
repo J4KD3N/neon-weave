@@ -1,0 +1,9 @@
+{
+  "name": "Razor",
+  "class": "wireghost",
+  "summary": "Ambush burst; the first cut is the fight.",
+  "abilities": ["razor_flurry"],
+  "stat_mods": { "initiative": 1 },
+  "damage_bonus": 1,
+  "milestone": "M2"
+}

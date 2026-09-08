@@ -1,0 +1,9 @@
+{
+  "name": "Riposte",
+  "summary": "Voidfencer: a precise counter-cut.",
+  "ap": 1,
+  "range": 1,
+  "damage": [3, 6],
+  "accuracy": 95,
+  "damage_type": "physical"
+}

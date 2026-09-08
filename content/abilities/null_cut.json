@@ -1,0 +1,9 @@
+{
+  "name": "Null Cut",
+  "summary": "Null Blade: a blade that drinks the Weft.",
+  "ap": 1,
+  "range": 1,
+  "damage": [3, 5],
+  "accuracy": 90,
+  "damage_type": "physical"
+}

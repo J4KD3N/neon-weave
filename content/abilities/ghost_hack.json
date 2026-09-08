@@ -1,0 +1,10 @@
+{
+  "name": "Ghost Hack",
+  "summary": "Phantom: a hack from cover; leaves no trace.",
+  "ap": 1,
+  "range": 4,
+  "damage": [2, 4],
+  "accuracy": 90,
+  "damage_type": "tech",
+  "requires_los": true
+}

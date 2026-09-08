@@ -48,7 +48,7 @@ func test_creator_state_lists_options_and_cycles() -> void:
 	st.setup(registry, rules)
 	assert_eq(st.races.size(), 5, "M2 races: trueborn, chromed, aetherborn, synth, rootkin")
 	assert_eq(st.origins.size(), 4)
-	assert_eq(st.classes.size(), 4)
+	assert_eq(st.classes.size(), 6)
 	assert_eq(st.rows, ["name", "race", "origin", "class", "body", "arcane", "tech"])
 	assert_eq(st.current_row(), "race")
 	var first := st.sheet.race_id

@@ -16,15 +16,35 @@ static func next_action(state: CombatState, actor: Combatant) -> Dictionary:
 	match actor.archetype:
 		"ranged":
 			return _ranged(state, actor, target)
+		"stealther":
+			return _stealther(state, actor, target)
 		_:
 			return _rusher(state, actor, target)
+
+
+## Stealther: hide when nothing is in reach, close in unseen, strike from
+## hiding (an ambush), then hide again once it can.
+static func _stealther(state: CombatState, actor: Combatant, target: Combatant) -> Dictionary:
+	var id := usable_ability(state, actor, target)
+	if not id.is_empty():
+		return {"type": "ability", "id": id, "target": target.cell}
+	if not actor.hidden:
+		for stealth_id: String in actor.abilities:
+			var ability: Dictionary = state.abilities.get(stealth_id, {})
+			if String(ability.get("effect", "")) == "stealth" and state.can_use(actor, stealth_id, actor.cell).is_empty():
+				return {"type": "ability", "id": stealth_id, "target": actor.cell}
+	if actor.move_left > 0:
+		var to := _closest_reachable(state, actor, target.cell)
+		if to != actor.cell:
+			return {"type": "move", "to": to}
+	return {"type": "end"}
 
 
 static func nearest_hostile(state: CombatState, actor: Combatant) -> Combatant:
 	var best: Combatant = null
 	var best_d := 1 << 30
 	for c: Combatant in state.active():
-		if not c.is_hostile_to(actor):
+		if not c.is_hostile_to(actor) or c.hidden:
 			continue
 		var d := LineOfSight.distance(actor.cell, c.cell)
 		if d < best_d or (d == best_d and c.id < best.id):
@@ -74,23 +94,31 @@ static func _ranged(state: CombatState, actor: Combatant, target: Combatant) -> 
 	return {"type": "end"}
 
 
-## Reachable cell minimising distance to `goal`, then step cost. May be the
-## current cell when nothing is better.
+## Reachable cell minimising walking distance to `goal` (around walls, not
+## through them), then step cost. Falls back to straight-line distance when
+## the goal is cut off. May be the current cell when nothing is better.
 static func _closest_reachable(state: CombatState, actor: Combatant, goal: Vector2i) -> Vector2i:
+	var field := state.distance_field(goal)
 	var best := actor.cell
-	var best_d := LineOfSight.distance(actor.cell, goal)
+	var best_d := _walk_distance(field, actor.cell, goal)
 	var best_cost := 0
 	var reach := state.reachable_cells(actor)
 	var cells: Array = reach.keys()
 	cells.sort() # deterministic tie-breaks
 	for cell: Vector2i in cells:
-		var d := LineOfSight.distance(cell, goal)
+		var d := _walk_distance(field, cell, goal)
 		var cost: int = reach[cell]
 		if d < best_d or (d == best_d and cost < best_cost):
 			best = cell
 			best_d = d
 			best_cost = cost
 	return best
+
+
+static func _walk_distance(field: Dictionary, cell: Vector2i, goal: Vector2i) -> int:
+	if field.has(cell):
+		return int(field[cell])
+	return 1000 + LineOfSight.distance(cell, goal)
 
 
 ## A reachable cell with line of sight to the target, at distance in

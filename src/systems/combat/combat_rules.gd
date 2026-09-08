@@ -29,6 +29,9 @@ var mana_pool_amplify: float = 1.5
 var conduit_chain_damage: int = 2
 ## Damage at turn start for standing in corrosive biogrowth.
 var corrosive_damage: int = 2
+## Attacking from hiding: hit bonus and damage multiplier, then revealed.
+var ambush_hit_bonus: int = 20
+var ambush_damage_mult: float = 1.5
 
 
 static func from_entry(entry: Dictionary) -> CombatRules:
@@ -52,4 +55,6 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.mana_pool_amplify = float(entry.get("mana_pool_amplify", r.mana_pool_amplify))
 	r.conduit_chain_damage = int(entry.get("conduit_chain_damage", r.conduit_chain_damage))
 	r.corrosive_damage = int(entry.get("corrosive_damage", r.corrosive_damage))
+	r.ambush_hit_bonus = int(entry.get("ambush_hit_bonus", r.ambush_hit_bonus))
+	r.ambush_damage_mult = float(entry.get("ambush_damage_mult", r.ambush_damage_mult))
 	return r

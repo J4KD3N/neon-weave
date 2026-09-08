@@ -1,0 +1,10 @@
+{
+  "name": "Heat",
+  "summary": "Stealth and hacks heat the wire. At the cap the ghost is lit up: no hiding until it cools down.",
+  "builds_on": "tech",
+  "max": 4,
+  "gain_per_cast": 1,
+  "gain_on_stealth": 2,
+  "reveal_at_max": true,
+  "vent_ability": "cool_down"
+}

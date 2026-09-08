@@ -12,7 +12,7 @@ Godot 4.7 / GDScript CRPG. Read these first, every session:
 - One system or feature per session. Log the session's scope as a decision entry.
 - Data-driven first: content lives in `content/<kind>/<id>.json`, loaded by the `Content` autoload (`src/core/content_registry.gd`). Hardcoded content is a bug.
 - Static typing everywhere; untyped declarations are compile errors.
-- Every system ships a test scene and unit tests where there is math. Tests: `tests/unit/test_*.gd` extending `TestCase`; run with `godot --headless --path . -s tests/test_runner.gd`.
+- Every system ships a test scene and unit tests where there is math. Tests: `tests/unit/test_*.gd` extending `TestCase`; run with `godot --headless --path . -s tests/test_runner.gd` (add `-- --only=<fragment>` for one file).
 - Never break `export_presets.cfg` (Windows, Linux, macOS).
 - Companion/faction quests cover both death-stakes modes.
 - New races/classes/companions are registry entries; if they need engine changes, fix the architecture.

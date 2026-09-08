@@ -1,0 +1,12 @@
+{
+  "name": "Shadow Step",
+  "summary": "Wireghost: drop out of sight. Enemies cannot target you until you strike or take damage. Builds 2 Heat.",
+  "ap": 1,
+  "range": 0,
+  "damage": [0, 0],
+  "accuracy": 100,
+  "targets": "self",
+  "effect": "stealth",
+  "duration": 2,
+  "cooldown": 3
+}

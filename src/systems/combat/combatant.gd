@@ -33,6 +33,11 @@ var resource: int = 0
 var marks: Dictionary = {}
 ## Party members under Story-Protected rules are knocked out, not killed.
 var downed: bool = false
+## Stealth: hostile abilities cannot target a hidden combatant; attacking
+## from hiding is an ambush and reveals; taking damage reveals.
+var hidden: bool = false
+## Timed statuses: name -> turns left, counted down at this combatant's turn start.
+var statuses: Dictionary = {}
 
 
 static func make(p_id: String, p_name: String, p_team: String, p_cell: Vector2i, stats: Dictionary, p_abilities: Array[String], ap_per_turn: int) -> Combatant:
@@ -80,6 +85,29 @@ func mark_count(mark: String) -> int:
 	return int(marks.get(mark, 0))
 
 
+func is_silenced() -> bool:
+	return int(statuses.get("silenced", 0)) > 0
+
+
+## Hides for `turns` of this combatant's own turns (2 = through the next
+## enemy round and the whole of the next own turn). Hiding is always a
+## window, never permanent, so a stuck hidden enemy cannot stall a fight.
+func hide(turns: int) -> void:
+	hidden = true
+	statuses["hidden"] = maxi(turns, 1)
+
+
+func reveal() -> void:
+	hidden = false
+	statuses.erase("hidden")
+
+
 func begin_turn() -> void:
 	ap = ap_max
 	move_left = move_max
+	for key: String in statuses.keys():
+		statuses[key] = int(statuses[key]) - 1
+		if int(statuses[key]) <= 0:
+			statuses.erase(key)
+	if hidden and not statuses.has("hidden"):
+		hidden = false
