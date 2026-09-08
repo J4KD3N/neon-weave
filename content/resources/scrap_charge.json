@@ -1,0 +1,7 @@
+{
+  "name": "Scrap",
+  "summary": "Charge scavenged from kills and live terrain. Spent by overcharged tech.",
+  "max": 6,
+  "gain_on_kill": 2,
+  "gain_on_surface": { "conduit": 1 }
+}

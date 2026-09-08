@@ -1,0 +1,8 @@
+{
+  "name": "Hexes",
+  "summary": "Marks stacked on enemies by hex casts. The witch's readout is the total of live marks; Detonate spends a target's stack for damage.",
+  "kind": "marks",
+  "mark": "hex",
+  "max_per_target": 3,
+  "max": 9
+}

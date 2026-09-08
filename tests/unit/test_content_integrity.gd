@@ -196,7 +196,12 @@ func test_class_resources_exist_and_are_well_formed() -> void:
 		var id := String(res.get("id", ""))
 		assert_true(registry.has_entry("resources", id), "class %s resource '%s'" % [cls["id"], id])
 		var def := registry.get_entry("resources", id)
-		assert_true(["physical", "arcane", "tech"].has(String(def.get("builds_on", ""))), "resource %s builds_on" % id)
+		var builds_on := String(def.get("builds_on", ""))
+		assert_true(builds_on.is_empty() or ["physical", "arcane", "tech"].has(builds_on), "resource %s builds_on" % id)
+		if String(def.get("kind", "")) == "marks":
+			assert_false(String(def.get("mark", "")).is_empty(), "resource %s mark id" % id)
+		for key: String in def.get("gain_on_surface", {}):
+			assert_true(["mana_pool", "conduit", "corrosive"].has(key), "resource %s surface %s" % [id, key])
 		assert_true(int(def.get("max", 0)) >= 1, "resource %s max" % id)
 		if def.has("vent_ability"):
 			assert_true(registry.has_entry("abilities", String(def["vent_ability"])), "resource %s vent ability" % id)
@@ -227,3 +232,21 @@ func test_surface_tiles_are_walkable_floors_with_known_surfaces() -> void:
 			assert_false(["#", ".", ",", "x", "P", "E"].has(ch), "surface char clashes with a generator char")
 			assert_false(chars.has(ch), "duplicate surface char")
 			chars.append(ch)
+
+
+func test_prototype_party_covers_four_distinct_classes_and_abilities_resolve() -> void:
+	var classes := registry.get_all("classes")
+	assert_true(classes.size() >= 4, "M1: four classes")
+	var party := registry.get_entry("parties", "prototype")
+	var seen: Array[String] = []
+	for m: Dictionary in party["members"]:
+		var cls := String(m["class"])
+		assert_false(seen.has(cls), "prototype party repeats %s" % cls)
+		seen.append(cls)
+	assert_eq(seen.size(), 4)
+	for a: Dictionary in registry.get_all("abilities"):
+		var effect := String(a.get("effect", ""))
+		assert_true(["", "vent", "mark", "detonate"].has(effect), "ability %s effect '%s'" % [a["id"], effect])
+		if effect == "mark" or effect == "detonate":
+			assert_false(String(a.get("mark", "")).is_empty(), "ability %s needs a mark id" % a["id"])
+		assert_true(int(a.get("resource_cost", 0)) >= 0)

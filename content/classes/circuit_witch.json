@@ -1,0 +1,14 @@
+{
+  "name": "Circuit-Witch",
+  "branches": ["arcane", "tech"],
+  "resource": {
+    "id": "hexes",
+    "name": "Hexes",
+    "summary": "Stacking marks to detonate/exploit."
+  },
+  "stats": { "hp": 14, "move": 6, "evasion": 10, "initiative": 2 },
+  "abilities": ["strike", "hex_bolt", "detonate"],
+  "subclass_level": 3,
+  "subclasses": ["glitchbinder", "plaguecoder"],
+  "milestone": "M1"
+}

@@ -29,6 +29,8 @@ var damage_bonus: int = 0
 var resource_id: String = ""
 var resource_def: Dictionary = {}
 var resource: int = 0
+## Marks placed on this combatant by hex-type abilities: mark id -> stacks.
+var marks: Dictionary = {}
 ## Party members under Story-Protected rules are knocked out, not killed.
 var downed: bool = false
 
@@ -72,6 +74,10 @@ func resource_max() -> int:
 
 func has_resource() -> bool:
 	return not resource_def.is_empty()
+
+
+func mark_count(mark: String) -> int:
+	return int(marks.get(mark, 0))
 
 
 func begin_turn() -> void:

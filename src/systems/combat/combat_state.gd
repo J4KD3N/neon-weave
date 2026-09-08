@@ -145,6 +145,9 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 	var lock_ap := int(actor.resource_def.get("lock_ap_at_max", 0))
 	if lock_ap > 0 and actor.resource >= actor.resource_max() and cost >= lock_ap:
 		return "overheated: vent first"
+	var resource_cost := int(ability.get("resource_cost", 0))
+	if resource_cost > 0 and actor.resource < resource_cost:
+		return "needs %d %s" % [resource_cost, actor.resource_def.get("name", "charge")]
 	var target := occupant(target_cell)
 	if target == null:
 		return "no target"
@@ -205,8 +208,13 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 	var ability: Dictionary = abilities[ability_id]
 	var target := occupant(target_cell)
 	actor.ap -= int(ability.get("ap", 1))
+	var resource_cost := int(ability.get("resource_cost", 0))
+	if resource_cost > 0:
+		actor.resource = maxi(actor.resource - resource_cost, 0)
+	var effect := String(ability.get("effect", ""))
+	var mark := String(ability.get("mark", ""))
 
-	if String(ability.get("effect", "")) == "vent":
+	if effect == "vent":
 		var heal := int(ability.get("heal", 0))
 		var before := actor.resource
 		actor.resource = 0
@@ -235,12 +243,19 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		"chance": chance, "roll": roll, "hit": roll <= chance, "flanked": flanked,
 		"cover": mods["cover"], "elevated": mods["elevated"], "uphill": mods["uphill"], "amplified": mods["amplified"],
 		"resource_stacks": actor.resource if builds else 0,
+		"resource_cost": resource_cost,
+		"marked": 0, "detonated": 0,
 		"damage": 0, "target_hp": target.hp, "downed": false, "killed": false, "ap_left": actor.ap,
 	}
 	if e["hit"]:
 		var bonus := actor.damage_bonus + int(mods["damage"])
 		if builds:
 			bonus += actor.resource * int(def.get("damage_per_stack", 0))
+		if effect == "detonate" and not mark.is_empty():
+			var stacks := target.mark_count(mark)
+			bonus += stacks * int(ability.get("damage_per_mark", 0))
+			e["detonated"] = stacks
+			target.marks.erase(mark)
 		var dmg := roll_damage(ability, flanked, bonus)
 		if bool(mods["amplified"]):
 			dmg = int(round(dmg * rules.mana_pool_amplify))
@@ -249,8 +264,16 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		e["target_hp"] = target.hp
 		e["downed"] = fate["downed"]
 		e["killed"] = fate["killed"]
+		if effect == "mark" and not mark.is_empty() and target.is_active():
+			var cap := int(actor.resource_def.get("max_per_target", 3))
+			target.marks[mark] = mini(target.mark_count(mark) + 1, cap)
+			e["marked"] = target.marks[mark]
+		if bool(fate["killed"]) and def.has("gain_on_kill"):
+			actor.resource = mini(actor.resource + int(def["gain_on_kill"]), actor.resource_max())
 	if builds:
 		actor.resource = mini(actor.resource + int(def.get("gain_per_cast", 1)), actor.resource_max())
+	_refresh_mark_resources()
+	if actor.has_resource():
 		e["resource_after"] = actor.resource
 	_emit(e)
 	if bool(e["hit"]) and int(e["damage"]) > 0 and map.surface_at(target.cell) == "conduit" and CHAIN_TYPES.has(String(ability.get("damage_type", ""))):
@@ -274,6 +297,21 @@ func roll_damage(ability: Dictionary, flanked: bool, bonus: int = 0) -> int:
 	if flanked:
 		dmg = int(round(dmg * rules.flank_damage_mult))
 	return maxi(dmg, 0)
+
+
+## Total live stacks of a mark across active combatants.
+func total_marks(mark: String) -> int:
+	var n := 0
+	for c: Combatant in active():
+		n += c.mark_count(mark)
+	return n
+
+
+## Mark-kind resources (Hexes) read as the number of live marks of their kind.
+func _refresh_mark_resources() -> void:
+	for c: Combatant in combatants:
+		if String(c.resource_def.get("kind", "")) == "marks":
+			c.resource = mini(total_marks(String(c.resource_def.get("mark", ""))), c.resource_max())
 
 
 ## Flanked: some other combatant hostile to the target stands adjacent to it.
@@ -361,7 +399,14 @@ func _begin_turn() -> void:
 		return
 	actor.begin_turn()
 	_emit({"type": "turn_begin", "actor": actor.id, "team": actor.team, "round": round_number})
-	if map.surface_at(actor.cell) == "corrosive" and rules.corrosive_damage > 0:
+	var surface := map.surface_at(actor.cell)
+	var surface_gains: Dictionary = actor.resource_def.get("gain_on_surface", {})
+	if not surface.is_empty() and surface_gains.has(surface):
+		var before := actor.resource
+		actor.resource = mini(actor.resource + int(surface_gains[surface]), actor.resource_max())
+		if actor.resource != before:
+			_emit({"type": "harvest", "actor": actor.id, "surface": surface, "gain": actor.resource - before, "resource": actor.resource})
+	if surface == "corrosive" and rules.corrosive_damage > 0:
 		var fate := _apply_damage(actor, rules.corrosive_damage)
 		_emit({"type": "surface", "actor": actor.id, "surface": "corrosive", "damage": rules.corrosive_damage, "actor_hp": actor.hp, "downed": fate["downed"], "killed": fate["killed"]})
 		_check_outcome()
@@ -448,6 +493,10 @@ func describe(e: Dictionary) -> String:
 				tags.append("mana pool")
 			if int(e.get("resource_stacks", 0)) > 0:
 				tags.append("%d stacks" % int(e["resource_stacks"]))
+			if int(e.get("detonated", 0)) > 0:
+				tags.append("detonated %d" % int(e["detonated"]))
+			if int(e.get("marked", 0)) > 0:
+				tags.append("hex ×%d" % int(e["marked"]))
 			var tag_text := "" if tags.is_empty() else " (%s)" % ", ".join(tags)
 			if not bool(e["hit"]):
 				return "%s: %s on %s — miss (%d vs %d%%)%s." % [who, ab_name, whom, e["roll"], e["chance"], tag_text]
@@ -459,6 +508,8 @@ func describe(e: Dictionary) -> String:
 			return s
 		"vent":
 			return "%s vents (+%d HP)." % [_name(e["actor"]), int(e["heal"])]
+		"harvest":
+			return "%s harvests %d from the %s." % [_name(e["actor"]), int(e["gain"]), String(e["surface"]).replace("_", " ")]
 		"overload":
 			var s := "%s overloads! %d damage to self." % [_name(e["actor"]), int(e["damage"])]
 			if bool(e["killed"]):
