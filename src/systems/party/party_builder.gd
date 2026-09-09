@@ -48,6 +48,11 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 		for id: String in fx["abilities"]:
 			if not abilities.has(id):
 				abilities.append(id)
+		var traits := merge_traits([race.get("traits", {}), Dictionary(extras.get("origin", {})).get("traits", {})])
+		for id: String in traits.get("bonus_abilities", []):
+			if not abilities.has(id):
+				abilities.append(id)
+		data["traits"] = traits
 		data["level"] = level
 		data["subclass"] = String(build.get("subclass", "")) if level >= Progression.subclass_level(cls, prog_rules) else ""
 		var eq := ItemSystem.equipment_mods(registry, build.get("equipment", {}))
@@ -75,3 +80,32 @@ static func class_color(registry: ContentRegistry, class_id: String) -> Color:
 		return Color.WHITE
 	var branch: Dictionary = registry.get_entry("branches", String(branches[0]))
 	return Color.html(String(branch.get("color", "#ffffff")))
+
+
+## Merges trait blocks (D-085): numbers add, dictionaries merge by key
+## (numbers inside add), arrays union, booleans OR. Later sources win ties.
+static func merge_traits(sources: Array) -> Dictionary:
+	var out: Dictionary = {}
+	for raw: Variant in sources:
+		if not raw is Dictionary:
+			continue
+		var src: Dictionary = raw
+		for key: String in src:
+			var v: Variant = src[key]
+			if not out.has(key):
+				out[key] = v.duplicate(true) if (v is Dictionary or v is Array) else v
+			elif v is Dictionary and out[key] is Dictionary:
+				var merged: Dictionary = out[key]
+				for k: String in v:
+					merged[k] = (float(merged.get(k, 0)) + float(v[k])) if (v[k] is float or v[k] is int) and (merged.get(k, 0) is float or merged.get(k, 0) is int) else v[k]
+			elif v is Array and out[key] is Array:
+				for item: Variant in v:
+					if not Array(out[key]).has(item):
+						Array(out[key]).append(item)
+			elif (v is int or v is float) and (out[key] is int or out[key] is float):
+				out[key] = float(out[key]) + float(v)
+			elif v is bool and out[key] is bool:
+				out[key] = bool(out[key]) or bool(v)
+			else:
+				out[key] = v
+	return out

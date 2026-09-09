@@ -19,6 +19,8 @@ var hp_bonus: int = 0
 var level: int = 1
 var subclass_id: String = ""
 var damage_bonus: int = 0
+## Race and origin traits (D-085), copied onto the Combatant each fight.
+var traits: Dictionary = {}
 
 
 ## Re-derives max HP from base stats plus `bonus`; current HP shifts by the
@@ -44,6 +46,7 @@ func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities
 	level = int(data.get("level", 1))
 	subclass_id = String(data.get("subclass", ""))
 	damage_bonus = int(data.get("damage_bonus", 0))
+	traits = Dictionary(data.get("traits", {})).duplicate(true)
 	max_hp = maxi(int(stats.get("hp", 1)), 1)
 	hp = max_hp
 	origin_id = String(data.get("origin", ""))

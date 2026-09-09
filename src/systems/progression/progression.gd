@@ -107,7 +107,12 @@ static func can_choose_subclass(registry: ContentRegistry, class_entry: Dictiona
 
 
 ## Why a talent cannot be bought now; empty when it can.
-static func can_buy_talent(registry: ContentRegistry, level: int, build: Dictionary, talent_id: String, rules: Dictionary, aether: int) -> String:
+## `cost_mod` shifts the Aether price (a race trait); never below 0.
+static func talent_cost(registry: ContentRegistry, talent_id: String, cost_mod: int = 0) -> int:
+	return maxi(int(Dictionary(registry.get_entry("talents", talent_id).get("cost", {})).get("aether", 0)) + cost_mod, 0)
+
+
+static func can_buy_talent(registry: ContentRegistry, level: int, build: Dictionary, talent_id: String, rules: Dictionary, aether: int, cost_mod: int = 0) -> String:
 	var talent := registry.get_entry("talents", talent_id)
 	if talent.is_empty():
 		return "unknown talent"
@@ -119,15 +124,16 @@ static func can_buy_talent(registry: ContentRegistry, level: int, build: Diction
 	for req: String in talent.get("requires", []):
 		if not owned.has(req):
 			return "needs %s" % String(registry.get_entry("talents", req).get("name", req))
-	var cost := int(Dictionary(talent.get("cost", {})).get("aether", 0))
+	var cost := talent_cost(registry, talent_id, cost_mod)
 	if aether < cost:
 		return "needs %d Aether" % cost
 	return ""
 
 
 ## Aether returned when a build's talents are dropped at `refund` (0..1).
-static func refund_for(registry: ContentRegistry, build: Dictionary, refund: float) -> int:
+## `cost_mod` is the same shift the member paid with, so a discount never refunds more than was spent.
+static func refund_for(registry: ContentRegistry, build: Dictionary, refund: float, cost_mod: int = 0) -> int:
 	var total := 0
 	for id: String in build.get("talents", []):
-		total += int(Dictionary(registry.get_entry("talents", id).get("cost", {})).get("aether", 0))
+		total += talent_cost(registry, id, cost_mod)
 	return int(floor(total * clampf(refund, 0.0, 1.0)))

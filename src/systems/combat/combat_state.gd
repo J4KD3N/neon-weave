@@ -335,6 +335,8 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 
 	if effect == "vent":
 		var heal := int(ability.get("heal", 0))
+		if Array(actor.traits.get("heal_immune_types", [])).has(String(ability.get("damage_type", ""))):
+			heal = 0 # no magic healing for a Synth
 		var before := actor.resource
 		actor.resource = 0
 		actor.hp = mini(actor.max_hp, actor.hp + heal)
@@ -381,6 +383,7 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		var fate := _apply_damage(target, dmg, String(ability.get("damage_type", "")))
 		e["damage"] = int(fate["dealt"])
 		e["absorbed"] = int(fate["absorbed"])
+		e["resisted"] = int(fate.get("resisted", 0))
 		e["target_hp"] = target.hp
 		e["downed"] = fate["downed"]
 		e["killed"] = fate["killed"]
@@ -414,6 +417,7 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 ## stacks and, for detonations, the marks on the target (not consumed here).
 func damage_bonus_for(actor: Combatant, ability: Dictionary, target: Combatant, mods: Dictionary) -> int:
 	var bonus := actor.damage_bonus + int(mods["damage"])
+	bonus += int(Dictionary(actor.traits.get("ability_damage_bonus", {})).get(String(ability.get("id", "")), 0))
 	if builds_resource(actor, ability):
 		bonus += actor.resource * int(actor.resource_def.get("damage_per_stack", 0))
 	var mark := String(ability.get("mark", ""))
@@ -577,6 +581,12 @@ func _apply_damage(c: Combatant, dmg: int, damage_type: String = "") -> Dictiona
 			dmg -= absorbed
 			fate["absorbed"] = absorbed
 			c.resource = mini(c.resource + absorbed * int(c.resource_def.get("gain_per_absorbed", 1)), c.resource_max())
+	if not damage_type.is_empty():
+		var r := c.resist(damage_type)
+		if r != 0.0:
+			var shrugged := int(floor(dmg * r)) if r > 0.0 else -int(ceil(dmg * -r))
+			dmg -= shrugged
+			fate["resisted"] = shrugged
 	fate["dealt"] = dmg
 	c.reveal()
 	if dmg <= 0:
@@ -667,8 +677,19 @@ func _begin_turn() -> void:
 		actor.resource = mini(actor.resource + int(surface_gains[surface]), actor.resource_max())
 		if actor.resource != before:
 			_emit({"type": "harvest", "actor": actor.id, "surface": surface, "gain": actor.resource - before, "resource": actor.resource})
-	if surface == "corrosive" and rules.corrosive_damage > 0:
-		var fate := _apply_damage(actor, rules.corrosive_damage)
+	var regen: Dictionary = actor.traits.get("regen_on_surface", {})
+	if not surface.is_empty() and regen.has(surface) and actor.hp < actor.max_hp:
+		var healed := mini(int(regen[surface]), actor.max_hp - actor.hp)
+		actor.hp += healed
+		_emit({"type": "regen", "actor": actor.id, "surface": surface, "heal": healed, "actor_hp": actor.hp})
+	var sight := int(actor.traits.get("detect_hidden", 0))
+	if sight > 0:
+		for c: Combatant in active():
+			if c.hidden and c.is_hostile_to(actor) and LineOfSight.distance(actor.cell, c.cell) <= sight and LineOfSight.clear(map, actor.cell, c.cell):
+				c.reveal()
+				_emit({"type": "detect", "actor": actor.id, "target": c.id, "range": sight})
+	if surface == "corrosive" and rules.corrosive_damage > 0 and actor.resist("corrosive") < 1.0:
+		var fate := _apply_damage(actor, rules.corrosive_damage, "corrosive")
 		_emit({"type": "surface", "actor": actor.id, "surface": "corrosive", "damage": rules.corrosive_damage, "actor_hp": actor.hp, "downed": fate["downed"], "killed": fate["killed"]})
 		_check_outcome()
 		if not finished and not actor.is_active():
@@ -771,6 +792,10 @@ func describe(e: Dictionary) -> String:
 			return "Combat begins. Order: %s" % ", ".join(PackedStringArray(e["order"]))
 		"round":
 			return "— Round %d —" % int(e["round"])
+		"regen":
+			return "%s mends %d in the %s." % [_name(e["actor"]), int(e["heal"]), e["surface"]]
+		"detect":
+			return "%s senses %s hiding." % [_name(e["actor"]), _name(e["target"])]
 		"turn_begin":
 			return "%s's turn." % _name(e["actor"])
 		"move":

@@ -2,7 +2,7 @@
   "name": "Trueborn",
   "analog": "Human",
   "identity": "Unaltered humans.",
-  "hooks": ["extra_talent_points"],
+  "traits": { "talent_cost_mod": -1 },
   "stat_mods": { "hp": 2, "initiative": 1 },
   "faction_lean": "ashfound",
   "overlay": { "kind": "none" },

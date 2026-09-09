@@ -1,0 +1,10 @@
+{
+  "name": "Skyborn",
+  "analog": "Elves",
+  "identity": "Fallen orbital castes: long bones grown in low gravity, and a memory of the world before it fell.",
+  "traits": { "tags": ["old_world"] },
+  "stat_mods": { "hp": -2, "move": 1, "evasion": 5 },
+  "faction_lean": "lattice",
+  "overlay": { "kind": "sky", "color": "#dfe8ff" },
+  "milestone": "M3"
+}

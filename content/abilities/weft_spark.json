@@ -1,0 +1,11 @@
+{
+  "name": "Weft Spark",
+  "sound": "sfx_bolt",
+  "summary": "Aetherborn: the light under the skin, thrown. Every Aetherborn has it, whatever they trained as.",
+  "ap": 2,
+  "range": 4,
+  "damage": [2, 4],
+  "accuracy": 85,
+  "damage_type": "arcane",
+  "requires_los": true
+}

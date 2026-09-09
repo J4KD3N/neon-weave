@@ -1,11 +1,11 @@
 {
   "name": "Vaultkin",
   "analog": "Dwarves",
-  "identity": "Bunker-raised humans who never saw the sky until the seals failed.",
-  "hooks": ["sealed_lore", "poison_resist"],
+  "identity": "Bunker-raised humans who never saw the sky until the seals failed. Eyes made for dark, lungs made for stale air.",
+  "traits": { "detect_hidden": 3, "resist": { "corrosive": 0.5 }, "salvage_bonus": 0.2, "tags": ["sealed"] },
   "stat_mods": { "hp": 3, "move": -1, "evasion": 0, "initiative": -1 },
   "faction_lean": "ashfound",
   "overlay": { "kind": "marks", "color": "#c9b28a" },
-  "playable": false,
+  "playable": true,
   "milestone": "M2"
 }

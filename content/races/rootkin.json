@@ -1,8 +1,8 @@
 {
   "name": "Rootkin",
   "analog": "—",
-  "identity": "Bio-fused with overgrowth: bark where skin was, sap where blood was.",
-  "hooks": ["regen_near_overgrowth", "photosynthetic_stamina"],
+  "identity": "Bio-fused with overgrowth: bark where skin was, sap where blood was. Biogrowth feeds them instead of burning.",
+  "traits": { "resist": { "corrosive": 1.0 }, "regen_on_surface": { "corrosive": 2 } },
   "stat_mods": { "hp": 3 },
   "faction_lean": "rootched",
   "overlay": { "kind": "bark", "color": "#6b4a2e" },

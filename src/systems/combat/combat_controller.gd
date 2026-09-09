@@ -60,6 +60,7 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 		c.downed = m.downed
 		c.damage_bonus = world.bastion.damage_bonus() + m.damage_bonus
 		c.set_resource(world.resource_def_for(m))
+		c.traits = m.traits.duplicate(true)
 		combatants.append(c)
 		actors[c.id] = m
 		m.show_hp = true
@@ -69,6 +70,7 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 		c.hp = e.hp
 		c.archetype = e.archetype
 		c.damage_bonus = e.damage_bonus
+		c.traits = e.traits.duplicate(true)
 		combatants.append(c)
 		actors[c.id] = e
 		e.show_hp = true

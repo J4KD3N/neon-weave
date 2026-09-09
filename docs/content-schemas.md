@@ -15,7 +15,7 @@ without a schema; keep the two in step.
 | classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level |
 | companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start |
 | dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]) |
-| enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity) |
+| enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity), traits (same vocabulary as races) |
 | factions | name, color, rivals, joinable_act | summary |
 | items | name, slot (weapon / armour / trinket / cyberware), art | stat_mods, damage_bonus, weight, price, min_rarity, families, craft {cost, workshop}, summary |
 | affixes | name, slots (["any"] or slot names), weight | prefix (false = suffix), stat_mods, damage_bonus, min_rarity, summary |
@@ -26,7 +26,7 @@ without a schema; keep the two in step.
 | parties | name, members | summary |
 | pickups | name, grants or dialogue, art | rarity (placement-side); grants.item = true drops an item of the pickup's rarity |
 | quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?, next?, next_toast?}} | companion, main, faction, auto_start |
-| races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only), cyberware_slots (extra equipment slots, Chromed) |
+| races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only), cyberware_slots, traits (D-085: resist {type: fraction}, regen_on_surface {surface: hp}, detect_hidden N, salvage_bonus, mend_after_combat, bonus_abilities [ids], ability_damage_bonus {id: n}, heal_immune_types [types], talent_cost_mod, tags [..]) |
 | resources | name, max | builds_on, gain_per_cast, damage_per_stack, lock_ap_at_max, vent_ability, kind "marks", mark, max_per_target, gain_on_kill, gain_on_surface, gain_on_stealth, reveal_at_max, absorb {type,fraction}, gain_per_absorbed |
 | rules | name | per-rule fields (combat, attributes, progression, loot, demo) |
 | shards | name, biome, tiles, rooms, enemies | corridors, surfaces, pickups, features, requires_unlock, grate_patch_chance, debris_density, size |
@@ -40,4 +40,4 @@ without a schema; keep the two in step.
 Trigger effect keys: approval, flags, recruit, quest, reputation, toast,
 open_doors, enemies, victory_flag, grant, dialogue, transition.
 Condition keys (`requires` / `when` / `done_when`): flags, origin_tag,
-race, class, approval, reputation, recruited, not_recruited, quest.
+race, race_tag, class, approval, reputation, recruited, not_recruited, quest.
