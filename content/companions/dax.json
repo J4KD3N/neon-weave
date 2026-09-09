@@ -1,0 +1,16 @@
+{
+  "name": "Dax Orun",
+  "short_name": "Dax",
+  "race": "vaultkin",
+  "class": "null_blade",
+  "summary": "Vault-raised mercenary; pragmatic, allergic to magic and ideology. His vault's seal is failing with family inside.",
+  "faction": "ashfound",
+  "romanceable": false,
+  "dialogue": {
+    "recruit": "dax_recruit",
+    "talk": "dax_recruit",
+    "banter": "dax_banter"
+  },
+  "quest": "dax_failing_seal",
+  "approval_start": 0
+}

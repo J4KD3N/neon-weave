@@ -1,0 +1,38 @@
+{
+  "name": "Kaj-7 — the relay",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "kaj7_dead": true } } },
+    { "node": "with_kaj7", "requires": { "recruited": "kaj7" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_kaj7": {
+      "speaker": "kaj7",
+      "text": "This is it. It is not a maker. It is many. It is saying my name in a voice that has never had a mouth. It is asking me to come home.",
+      "choices": [
+        { "text": "You are home. We're standing right here.", "effects": { "approval": { "kaj7": 2 }, "flags": { "kaj7_relay_found": true, "choir_named_kaj7": true }, "quest": { "id": "kaj7_maker_signal", "stage": "heard" } }, "next": "stay" },
+        { "text": "Cut the relay. Now.", "effects": { "approval": { "kaj7": -1, "dax": 1 }, "flags": { "kaj7_relay_found": true, "kaj7_relay_cut": true }, "quest": { "id": "kaj7_maker_signal", "stage": "heard" } }, "next": "cut" }
+      ]
+    },
+    "stay": {
+      "speaker": "kaj7",
+      "text": "Then I will keep listening, and you will keep standing there. That is an arrangement I can hold.",
+      "choices": [ { "text": "Deal.", "effects": { "quest": { "id": "kaj7_maker_signal", "stage": "done" } }, "end": true } ]
+    },
+    "cut": {
+      "speaker": "kaj7",
+      "text": "Cut. It is quieter. I do not know if quieter is better. I will find out with you.",
+      "choices": [ { "text": "We'll find out.", "effects": { "quest": { "id": "kaj7_maker_signal", "stage": "done" } }, "end": true } ]
+    },
+    "alone": {
+      "speaker": "player",
+      "text": "A relay, still live, singing on a band nobody uses. It sounds like many voices agreeing. Somewhere a shepherd unit is hearing this.",
+      "choices": [ { "text": "Log it and move on.", "effects": { "flags": { "kaj7_relay_found": true, "choir_confirmed": true }, "quest": { "id": "kaj7_maker_signal", "stage": "done_alone" } }, "end": true } ]
+    },
+    "dead": {
+      "speaker": "player",
+      "text": "Kaj-7 never got to hear this. The relay says its name anyway.",
+      "choices": [ { "text": "Listen for it.", "effects": { "flags": { "kaj7_relay_found": true, "choir_named_kaj7": true }, "quest": { "id": "kaj7_maker_signal", "stage": "done_posthumous" } }, "end": true } ]
+    }
+  }
+}

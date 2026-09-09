@@ -32,7 +32,8 @@
     "####################"
   ],
   "npcs": [
-    { "companion": "sera", "cell": [5, 3] }
+    { "companion": "sera", "cell": [5, 3] },
+    { "companion": "dax", "cell": [17, 10] }
   ],
   "transitions": [
     { "cell": [1, 7], "to": "bastion", "arrive": [21, 7], "label": "Back to the Bastion" },

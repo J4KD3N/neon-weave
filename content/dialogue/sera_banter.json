@@ -7,6 +7,8 @@
     { "trigger": "victory", "text": "Clean. Nobody carried.", "requires": { "flags": { "sera_opened_up": false } }, "once": "sera_banter_first_win" },
     { "trigger": "victory", "text": "That one nearly had me. Good line-holding.", "requires": { "approval": { "sera": { "min": 3 } } }, "effects": { "approval": { "sera": 1 } }, "once": "sera_banter_praise" },
     { "trigger": "extract", "text": "Home. Never thought I'd say it about a scrap yard." },
-    { "trigger": "enter_shard", "text": "Watch the grates. Drones nest under them." }
+    { "trigger": "enter_shard", "text": "Watch the grates. Drones nest under them." },
+    { "trigger": "victory", "text": "Dax. You fight like you are late for something.", "requires": { "recruited": "dax" }, "once": "sera_banter_dax" },
+    { "trigger": "extract", "text": "Kaj. Stop counting my steps.", "requires": { "recruited": "kaj7" }, "once": "sera_banter_kaj7" }
   ]
 }

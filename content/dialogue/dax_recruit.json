@@ -1,0 +1,66 @@
+{
+  "name": "Dax — the yard",
+  "start": [
+    { "node": "recruited", "requires": { "recruited": "dax" } },
+    { "node": "refused", "requires": { "flags": { "dax_refused": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "dax",
+      "text": "You run the Beacon. I run a blade. Vault Orun's seal is failing with forty people behind it and the control got routed through this hole a hundred years ago. I need a crew that goes down and comes back. Rates negotiable. Loyalty isn't.",
+      "choices": [
+        { "text": "We could use a blade. What's the catch?", "next": "catch" },
+        { "text": "[Vault] Orun. I know the seal-song. My vault sang it too.", "requires": { "origin_tag": "vault" }, "effects": { "approval": { "dax": 2 }, "flags": { "dax_shared_vault": true } }, "next": "catch" },
+        { "text": "[Undercity] I've seen your kind of mercenary. Which purge were you on?", "requires": { "origin_tag": "undercity" }, "effects": { "approval": { "dax": -1 } }, "next": "catch" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "catch": {
+      "speaker": "dax",
+      "text": "The catch is I don't do magic and I don't do causes. Your Weft-witch wants to sing at the Loom, that's her funeral. Mine's forty people and a door. Find me the seal control and I'm yours until it's shut.",
+      "choices": [
+        { "text": "Deal. We'll find your seal.", "effects": { "recruit": "dax", "approval": { "dax": 1, "sera": -1 }, "flags": { "dax_recruited": true }, "quest": { "id": "dax_failing_seal", "stage": "start" } }, "end": true },
+        { "text": "Sera, you're Ashfound. So is he. Say something.", "requires": { "recruited": "sera" }, "next": "sera_say" },
+        { "text": "We don't hire people who spit on the Weft.", "effects": { "approval": { "dax": -2 }, "flags": { "dax_refused": true } }, "end": true }
+      ]
+    },
+    "sera_say": {
+      "speaker": "sera",
+      "text": "He's no more Ashfound than a rock is. He's just from the same ground. Hire him. Don't trust him with the map.",
+      "choices": [
+        { "text": "Good enough. You're in, Dax.", "effects": { "recruit": "dax", "approval": { "dax": 1, "sera": 1 }, "flags": { "dax_recruited": true }, "quest": { "id": "dax_failing_seal", "stage": "start" } }, "end": true },
+        { "text": "Not today.", "end": true }
+      ]
+    },
+    "refused": {
+      "speaker": "dax",
+      "text": "Still forty people. Still a door. Changed your mind?",
+      "choices": [
+        { "text": "Changed it. Come with us.", "effects": { "recruit": "dax", "flags": { "dax_recruited": true, "dax_refused": false }, "quest": { "id": "dax_failing_seal", "stage": "start" } }, "end": true },
+        { "text": "No.", "end": true }
+      ]
+    },
+    "recruited": {
+      "speaker": "dax",
+      "text": "Seal's still failing. Every hour we spend up here is an hour of air they don't have.",
+      "choices": [
+        { "text": "Who's behind the door, Dax?", "next": "who" },
+        { "text": "Then let's go.", "end": true }
+      ]
+    },
+    "who": {
+      "speaker": "dax",
+      "text": "People.",
+      "choices": [
+        { "text": "Names, Dax.", "requires": { "approval": { "dax": { "min": 2 } } }, "effects": { "approval": { "dax": 1 }, "flags": { "dax_opened_up": true } }, "next": "names" },
+        { "text": "Fine.", "end": true }
+      ]
+    },
+    "names": {
+      "speaker": "dax",
+      "text": "My sister. Her kids. The old man who taught me the blade. Ask me again after the seal's shut and I'll give you the rest.",
+      "choices": [ { "text": "I'll hold you to it.", "end": true } ]
+    }
+  }
+}

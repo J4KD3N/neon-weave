@@ -17,6 +17,7 @@ func before_each() -> void:
 	world = packed.instantiate() as ExploreWorld
 	world.map_id = "proto_yard"
 	world.home_map = "proto_yard"
+	world.party_id = "prototype"
 	world.combat_seed = 1234
 	world.ledger_path = LEDGER
 	world.saves_dir = SAVES
@@ -378,6 +379,7 @@ func test_workshop_upgrade_spends_persists_and_raises_max_hp() -> void:
 	var again := packed.instantiate() as ExploreWorld
 	again.map_id = "proto_yard"
 	again.home_map = "proto_yard"
+	again.party_id = "prototype"
 	again.ledger_path = LEDGER
 	_root().add_child(again)
 	assert_eq(again.bastion.level("workshop"), 1)
@@ -420,6 +422,7 @@ func _fresh_scene() -> ExploreWorld:
 	var again := packed.instantiate() as ExploreWorld
 	again.map_id = "proto_yard"
 	again.home_map = "proto_yard"
+	again.party_id = "prototype"
 	again.combat_seed = 1234
 	again.ledger_path = LEDGER
 	again.saves_dir = SAVES

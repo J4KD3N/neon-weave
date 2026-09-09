@@ -1,0 +1,16 @@
+{
+  "name": "The Failing Seal",
+  "companion": "dax",
+  "summary": "Dax's vault is losing pressure with his family inside. The seal control is somewhere in the Shards.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "Find the seal control for Vault Orun. Dax says it was routed through the Undercity.",
+      "objectives": [ { "text": "Find the Vault Orun seal control in a Shard", "done_when": { "flags": { "dax_seal_found": true } } } ],
+      "shard_site": { "pickup": "dax_vault_seal" }
+    },
+    "sealed": { "summary": "The seal is holding again. Dax owes you the one thing he never gives: a reason.", "complete": true },
+    "done_alone": { "summary": "You reset the seal without Dax. Somewhere a vault of strangers keeps breathing.", "complete": true },
+    "done_posthumous": { "summary": "Dax died before the seal was fixed. You fixed it for the people he never named.", "complete": true }
+  }
+}

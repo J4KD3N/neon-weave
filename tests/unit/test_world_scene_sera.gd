@@ -37,9 +37,11 @@ func _fresh_scene() -> ExploreWorld:
 	var w := packed.instantiate() as ExploreWorld
 	w.map_id = "proto_yard"
 	w.home_map = "proto_yard"
+	w.party_id = "prototype"
 	w.combat_seed = 1234
 	w.ledger_path = LEDGER
 	w.saves_dir = SAVES
+	w.party_id = "prototype"
 	_root().add_child(w)
 	w.combat.animate = false
 	return w

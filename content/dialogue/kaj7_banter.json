@@ -1,0 +1,12 @@
+{
+  "name": "Kaj-7 — banter",
+  "kind": "banter",
+  "lines": [
+    { "trigger": "enter_shard", "text": "The signal is louder here. I am logging that as weather.", "once": "kaj7_banter_first_shard" },
+    { "trigger": "enter_shard", "text": "Sera, you walk in front of the drones every time. I have noticed. I have not decided how I feel about it.", "requires": { "recruited": "sera" }, "once": "kaj7_banter_sera" },
+    { "trigger": "victory", "text": "Dax, you cut the last one without looking. Was that skill or the absence of interest?", "requires": { "recruited": "dax" }, "once": "kaj7_banter_dax" },
+    { "trigger": "victory", "text": "Nobody was decommissioned. I like this outcome." },
+    { "trigger": "extract", "text": "Home is where the graph stops climbing.", "requires": { "flags": { "kaj7_opened_up": true } } },
+    { "trigger": "extract", "text": "Extracted. I will recharge and think about doors." }
+  ]
+}

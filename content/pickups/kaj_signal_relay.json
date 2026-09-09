@@ -1,0 +1,7 @@
+{
+  "name": "Maker-signal relay",
+  "summary": "A live pre-Sundering relay singing on a frequency only Kaj-7 hears. Quest site; opens a dialogue.",
+  "dialogue": "kaj7_signal",
+  "grants": {},
+  "art": { "color": "#4de0a0" }
+}
