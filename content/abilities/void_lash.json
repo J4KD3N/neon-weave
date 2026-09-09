@@ -2,7 +2,7 @@
   "name": "Void Lash",
   "sound": "sfx_slash",
   "summary": "Null Blade: spends 2 Null to lash out two cells.",
-  "ap": 2,
+  "ap": 3,
   "range": 2,
   "damage": [6, 9],
   "accuracy": 85,

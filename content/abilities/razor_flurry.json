@@ -2,7 +2,7 @@
   "name": "Razor Flurry",
   "sound": "sfx_slash",
   "summary": "Razor: three cuts in one breath. Devastating from hiding.",
-  "ap": 2,
+  "ap": 3,
   "range": 1,
   "damage": [4, 8],
   "accuracy": 85,

@@ -2,7 +2,7 @@
   "name": "Override Hex",
   "sound": "sfx_hex",
   "summary": "Glitchbinder: a tech-flavoured hex; leaves a mark.",
-  "ap": 1,
+  "ap": 2,
   "range": 5,
   "damage": [2, 3],
   "accuracy": 90,

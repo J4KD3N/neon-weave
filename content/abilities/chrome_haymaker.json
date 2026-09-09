@@ -2,7 +2,7 @@
   "name": "Chrome Haymaker",
   "sound": "sfx_slash",
   "summary": "Warlord: the whole chrome arm, shoulder and all, brought down once. Slow, and it lands like a wall.",
-  "ap": 2,
+  "ap": 3,
   "range": 1,
   "damage": [5, 9],
   "accuracy": 80,

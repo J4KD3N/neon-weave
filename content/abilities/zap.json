@@ -2,7 +2,7 @@
   "name": "Zap",
   "sound": "sfx_zap",
   "summary": "Feral drone: a stuttering shock from a failing emitter.",
-  "ap": 1,
+  "ap": 2,
   "range": 5,
   "damage": [1, 4],
   "accuracy": 75,

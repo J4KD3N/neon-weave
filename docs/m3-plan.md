@@ -81,3 +81,6 @@ S28 first because the AP economy shapes every fight authored afterwards and a fi
 - Seven Bastion buildings.
 - Modding docs and a validator that a stranger's mod passes.
 - `v0.3.0` built on three platforms from one tag.
+
+## Progress
+- S28 Combat economy — done: the AP experiment ran as harness overrides first, then landed in content (every damaging ability +1 AP; two attacks or a heavy plus a self action per 4-AP turn); Warlord and Undercity gangs retuned on the new economy; AI focus fire (lowest-HP hostile in reach) and a once-per-fight rusher retreat behind `ai_retreat_hp_fraction`. No external playtest existed to triage. D-083.

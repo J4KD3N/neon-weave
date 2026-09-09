@@ -40,6 +40,8 @@ var hidden: bool = false
 var statuses: Dictionary = {}
 ## Id of the summoner that called this combatant in, if any.
 var summoned_by: String = ""
+## Set once a rusher has broken off (S28): a retreat happens once per fight.
+var retreated: bool = false
 
 
 static func make(p_id: String, p_name: String, p_team: String, p_cell: Vector2i, stats: Dictionary, p_abilities: Array[String], ap_per_turn: int) -> Combatant:
