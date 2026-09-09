@@ -1,0 +1,19 @@
+{
+  "name": "The Waking",
+  "main": true,
+  "companion": "",
+  "auto_start": true,
+  "summary": "The Shards are stirring and the expeditions are going wrong. Get the party through the gate and see for yourself.",
+  "start": "gate",
+  "stages": {
+    "gate": {
+      "summary": "The gate road east of the yard is sealed. Find what opens it.",
+      "objectives": [
+        { "text": "Pull the relay lever on the gate road", "done_when": { "flags": { "gate_lever_pulled": true } } },
+        { "text": "Get through the gate", "done_when": { "flags": { "gate_open": true } } },
+        { "text": "Reach the end of the road", "done_when": { "flags": { "road_end": true } } }
+      ]
+    },
+    "done": { "summary": "The road is open. The Undercity is waiting, and so is whatever woke the Shards.", "complete": true }
+  }
+}

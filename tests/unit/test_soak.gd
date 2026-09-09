@@ -18,6 +18,8 @@ func before_each() -> void:
 	_cleanup()
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	world = packed.instantiate() as ExploreWorld
+	world.map_id = "proto_yard"
+	world.home_map = "proto_yard"
 	world.ledger_path = LEDGER
 	world.saves_dir = SAVES
 	(Engine.get_main_loop() as SceneTree).root.add_child(world)
@@ -203,7 +205,7 @@ func test_seeded_runs_survive_the_whole_loop() -> void:
 			break
 		rng.seed = run_seed
 		world.combat_seed = run_seed
-		world.enter_map(ExploreWorld.HOME_MAP)
+		world.enter_map(world.home_map)
 		var actions := 0
 		var extractions := 0
 		var wipes := 0

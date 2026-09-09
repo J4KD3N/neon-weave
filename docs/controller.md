@@ -9,7 +9,7 @@ fails the build if an action ever loses its pad path (D-059).
 | Control | Exploration | Combat | Menus (system, Bastion, dialogue, creator) |
 |---|---|---|---|
 | Left stick / D-pad | Steer the leader | Move the cell cursor (one cell per tap, repeats when held) | Move the cursor / adjust a creator row |
-| A | Interact: extract on the pad, bank at a relay, open an adjacent vault door, trade with a merchant, talk to a companion within two cells | Act on the cursor cell: move, attack, or aim the selected ability | Confirm |
+| A | Interact: extract on the pad, bank at a relay, open an adjacent vault or locked gate, trade with a merchant, talk to a companion within two cells | Act on the cursor cell: move, attack, or aim the selected ability | Confirm |
 | B | — | Clear the selected ability | Close / leave the conversation |
 | X / Y / L1 / R1 | — | Abilities 1–4 | — |
 | L2 / R2 | Zoom out / in | Zoom out / in | — |
@@ -19,7 +19,7 @@ fails the build if an action ever loses its pad path (D-059).
 
 The **system menu** (Start, or Esc on a keyboard while exploring) lists
 every keyboard-only key as an item: Extract, Launch a Shard (N), Return
-home (H), the Bastion (B), the Creator (C), the Weave (T), Save / Load slots 1–3 (F5/F9 for slot 1),
+home (H), the Bastion (B), the Creator (C), the Weave (T), the Journal (J), Save / Load slots 1–3 (F5/F9 for slot 1),
 Load autosave (F10), and the registry dump (F1). Items that would not
 work right now say why. There is no pausing a fight: the menu refuses to
 open in combat.

@@ -145,7 +145,9 @@ static func validate(entry: Dictionary, tiles_by_id: Dictionary) -> Array[String
 		var pocket := String(pocket_cells.get(cell, ""))
 		if not map.is_walkable(cell):
 			errors.append("pickup %s on blocked %s" % [p.get("type"), cell])
-		elif pocket.is_empty() and not reach.has(cell):
+		elif not reach_open.has(cell):
+			errors.append("pickup %s unreachable at %s even through doors" % [p.get("type"), cell])
+		elif pocket.is_empty() and not reach.has(cell) and map.door_cells("locked").is_empty():
 			errors.append("pickup %s unreachable at %s" % [p.get("type"), cell])
 		if pocket == "vaults":
 			vault_pickups += 1

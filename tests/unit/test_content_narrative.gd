@@ -94,7 +94,15 @@ func test_quests_and_sites() -> void:
 	for q: Dictionary in registry.get_all("quests"):
 		var stages: Dictionary = q.get("stages", {})
 		assert_true(stages.has(String(q.get("start", ""))), "quest %s start stage" % q["id"])
-		assert_true(registry.has_entry("companions", String(q.get("companion", ""))), "quest %s companion" % q["id"])
+		if bool(q.get("main", false)):
+			assert_true(String(q.get("companion", "")).is_empty(), "main quest %s has no companion" % q["id"])
+		else:
+			assert_true(registry.has_entry("companions", String(q.get("companion", ""))), "quest %s companion" % q["id"])
+		for stage_id: String in stages:
+			for o: Dictionary in Dictionary(stages[stage_id]).get("objectives", []):
+				assert_false(String(o.get("text", "")).is_empty(), "quest %s stage %s objective text" % [q["id"], stage_id])
+				for k: String in o.get("done_when", {}):
+					assert_true(REQUIRES_KEYS.has(k), "quest %s objective done_when.%s" % [q["id"], k])
 		for stage_id: String in stages:
 			var site: Dictionary = Dictionary(stages[stage_id]).get("shard_site", {})
 			if not site.is_empty():

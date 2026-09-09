@@ -15,6 +15,8 @@ func before_each() -> void:
 	_remove_ledger()
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	world = packed.instantiate() as ExploreWorld
+	world.map_id = "proto_yard"
+	world.home_map = "proto_yard"
 	world.combat_seed = 1234
 	world.ledger_path = LEDGER
 	world.saves_dir = SAVES
@@ -374,6 +376,8 @@ func test_workshop_upgrade_spends_persists_and_raises_max_hp() -> void:
 	# A fresh scene picks the level back up from the ledger.
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	var again := packed.instantiate() as ExploreWorld
+	again.map_id = "proto_yard"
+	again.home_map = "proto_yard"
 	again.ledger_path = LEDGER
 	_root().add_child(again)
 	assert_eq(again.bastion.level("workshop"), 1)
@@ -414,6 +418,8 @@ func test_bastion_menu_opens_only_at_home() -> void:
 func _fresh_scene() -> ExploreWorld:
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	var again := packed.instantiate() as ExploreWorld
+	again.map_id = "proto_yard"
+	again.home_map = "proto_yard"
 	again.combat_seed = 1234
 	again.ledger_path = LEDGER
 	again.saves_dir = SAVES
@@ -1137,7 +1143,7 @@ func test_beacon_level_two_unlocks_the_datacore_for_launch() -> void:
 	for e: EnemyActor in world.living_enemies():
 		families[String(e.entry.get("family", ""))] = true
 	assert_eq(families.keys(), ["verdant_datacore"], "only the Datacore family spawns here")
-	world.enter_map(ExploreWorld.HOME_MAP)
+	world.enter_map(world.home_map)
 	world.open_system_menu()
 	assert_contains(world.system_menu.label.text, "Launch a new Shard: Verdant Datacore Shard")
 	assert_contains(world.system_menu.label.text, "Launch instead: Rusted Undercity Shard")

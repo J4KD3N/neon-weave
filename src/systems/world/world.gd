@@ -7,13 +7,15 @@
 class_name ExploreWorld
 extends Node2D
 
-const HOME_MAP := "proto_yard"
+const HOME_MAP := "bastion"
 const DEFAULT_SHARD := "rusted_undercity"
 
 ## The Shard template N launches: the last one chosen in the system menu.
 var selected_shard: String = DEFAULT_SHARD
 
 @export var map_id: String = HOME_MAP
+## Where H, wipes and extraction return to. Tests pin it to the yard.
+@export var home_map: String = HOME_MAP
 @export var party_id: String = "prototype"
 ## 0 = random per encounter. Tests pin it.
 @export var combat_seed: int = 0
@@ -55,6 +57,11 @@ var system_menu: SystemMenu
 var weave_menu: WeaveMenu
 var merchant_menu: MerchantMenu
 var current_merchant: String = ""
+var journal_menu: JournalMenu
+## Bastion buildings standing on the home map (`buildings` sites).
+var buildings: Array[BuildingActor] = []
+## Set by travel(): where the party arrives on the next map instead of its spawns.
+var _arrive_cell := Vector2i(-1, -1)
 var dialogue: DialogueRunner
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
@@ -114,7 +121,13 @@ func _ready() -> void:
 	merchant_menu = MerchantMenu.new()
 	merchant_menu.name = "MerchantMenu"
 	add_child(merchant_menu)
+	journal_menu = JournalMenu.new()
+	journal_menu.name = "JournalMenu"
+	add_child(journal_menu)
 	spawn_npcs()
+	spawn_buildings()
+	auto_start_quests()
+	restore_map_doors()
 	combat = CombatController.new()
 	combat.name = "Combat"
 	add_child(combat)
@@ -125,9 +138,13 @@ func _ready() -> void:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--biome="):
 			selected_shard = arg.get_slice("=", 1) # before --shard= on the command line
+		elif arg.begins_with("--map="):
+			enter_map(arg.get_slice("=", 1)) # a handcrafted map to stage the other flags on
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="):
 			_screenshot_path = arg.get_slice("=", 1)
+		elif arg == "--journal":
+			open_journal()
 		elif arg.begins_with("--shard="):
 			enter_shard(selected_shard, int(arg.get_slice("=", 1)))
 		elif arg == "--creator":
@@ -234,11 +251,14 @@ func enter_map(id: String) -> bool:
 	var entry: Dictionary = registry.get_entry("maps", id)
 	if entry.is_empty():
 		return false
+	var previous := map_id
+	map_id = id # before _enter: door and trigger flags are keyed by map id
 	if _enter(entry):
-		map_id = id
 		run.begin("", 0)
-		if id == HOME_MAP:
+		if id == home_map:
 			heal_party(bastion.heal_fraction())
+	else:
+		map_id = previous
 	return true
 
 
@@ -249,12 +269,17 @@ func _enter(entry: Dictionary) -> bool:
 	if party.members.is_empty():
 		spawn_party(party_id)
 		apply_bastion_bonuses()
+	elif _arrive_cell.x >= 0 and map_data.is_walkable(_arrive_cell):
+		var taken: Array[Vector2i] = []
+		place_party(map_data.nearest_free_cells(_arrive_cell, party.members.size(), taken))
 	else:
 		place_party(map_data.spawn_cells())
 	spawn_enemies()
 	spawn_pickups()
 	spawn_npcs()
+	spawn_buildings()
 	mode = "explore"
+	restore_map_doors()
 	party.active = true
 	if dialogue_menu != null:
 		dialogue_menu.visible = false
@@ -285,7 +310,7 @@ func return_home() -> void:
 	if mode == "combat":
 		return
 	mode = "explore"
-	enter_map(HOME_MAP)
+	enter_map(home_map)
 	autosave()
 
 
@@ -380,6 +405,7 @@ func upgrade_building(id: String) -> bool:
 		push_warning("ledger save failed: %s" % error_string(err))
 	apply_bastion_bonuses()
 	overlay.toast("%s upgraded to L%d — %s" % [bastion.name_of(id), bastion.level(id), bastion.blurb(id)], 3.0)
+	refresh_buildings()
 	if bastion_menu != null and bastion_menu.visible:
 		bastion_menu.refresh(bastion, ledger)
 	return true
@@ -878,7 +904,7 @@ func extract() -> bool:
 	_bank(take, true)
 	run.clear()
 	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
-	enter_map(HOME_MAP)
+	enter_map(home_map)
 	banter("extract")
 	autosave()
 	return true
@@ -1048,6 +1074,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("ui_down"):
 			system_menu.move(1)
 		return
+	if journal_menu != null and journal_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("journal"):
+			close_journal()
+		return
 	if merchant_menu != null and merchant_menu.visible:
 		if event.is_action_pressed("cancel"):
 			close_merchant()
@@ -1123,6 +1153,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				open_creator()
 			elif event.is_action_pressed("weave"):
 				open_weave()
+			elif event.is_action_pressed("journal"):
+				open_journal()
 			elif event.is_action_pressed("confirm"):
 				interact()
 			elif clicked:
@@ -1145,7 +1177,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			elif event.is_action_pressed("new_shard"):
 				enter_shard(selected_shard, int(randi() % 1000000))
 			elif event.is_action_pressed("go_home"):
-				enter_map(HOME_MAP)
+				enter_map(home_map)
 		"combat":
 			if clicked:
 				combat.player_click(map_view.world_to_cell(get_global_mouse_position()))
@@ -1175,7 +1207,9 @@ func _process(delta: float) -> void:
 			party.steer_leader(dir, delta, map_view.is_walkable_world)
 		check_pickups()
 		check_secrets()
-		check_encounters()
+		check_triggers()
+		if mode == "explore" and not check_transitions():
+			check_encounters()
 	elif mode == "combat":
 		_tick_cursor(Input.get_vector("move_left", "move_right", "move_up", "move_down"), delta)
 	hovered_cell = hover_override if hover_override.x >= 0 else map_view.world_to_cell(get_global_mouse_position())
@@ -1227,7 +1261,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1251,6 +1285,7 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
 	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
 	items.append({"id": "weave", "label": "The Weave (level %d · %s)" % [party_level(), xp_line()], "enabled": home, "why": "only at home"})
+	items.append({"id": "journal", "label": "Journal (%d quests)" % narrative.quests.size(), "enabled": true})
 	var saves := SaveSystem.list_saves(saves_dir)
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
@@ -1297,13 +1332,15 @@ func activate_system_item(id: String) -> bool:
 		"new_shard":
 			return not enter_shard(selected_shard, int(randi() % 1000000)).is_empty()
 		"go_home":
-			return enter_map(HOME_MAP)
+			return enter_map(home_map)
 		"bastion":
 			return toggle_bastion()
 		"creator":
 			return open_creator()
 		"weave":
 			return open_weave()
+		"journal":
+			return open_journal()
 		"save_1", "save_2", "save_3":
 			return save_slot(int(id.get_slice("_", 1))) == OK
 		"load_1", "load_2", "load_3":
@@ -1332,6 +1369,11 @@ func interact() -> bool:
 		var why := open_vault(door)
 		if not why.is_empty():
 			overlay.toast("Vault: %s" % why, 2.0)
+		return why.is_empty()
+	if door.x >= 0 and map_data.door_kind(door) == "locked":
+		var why := open_locked(door)
+		if not why.is_empty():
+			overlay.toast("Gate: %s" % why, 2.5)
 		return why.is_empty()
 	var trader := merchant_near()
 	if trader != null:
@@ -1667,10 +1709,18 @@ func open_door(cell: Vector2i, silent: bool = false) -> bool:
 	if highlighter != null:
 		highlighter.map_view = map_view
 	var raw: Array = [cell.x, cell.y]
-	if not run.opened.has(raw):
-		run.opened.append(raw)
+	if map_entry.has("generation"):
+		if not run.opened.has(raw):
+			run.opened.append(raw)
+	else:
+		narrative.set_flag(door_flag(map_id, cell), true) # handcrafted maps remember for good
 	if not silent:
-		overlay.toast("A hidden passage opens." if kind == "secret" else "The vault door grinds open.", 2.5)
+		var line := "A hidden passage opens."
+		if kind == "vault":
+			line = "The vault door grinds open."
+		elif kind == "locked":
+			line = "The gate unlocks and swings wide."
+		overlay.toast(line, 2.5)
 	return true
 
 
@@ -1828,3 +1878,237 @@ func confirm_merchant() -> bool:
 		overlay.toast("%s: %s" % [row.get("label", row["id"]), why], 2.0)
 	refresh_merchant()
 	return why.is_empty()
+
+
+
+# --- campaign tooling: buildings, transitions, triggers, locked doors, journal
+
+## Places a BuildingActor for every `buildings` site on the map (the Bastion).
+func spawn_buildings() -> void:
+	for b: BuildingActor in buildings:
+		if is_instance_valid(b):
+			b.queue_free()
+	buildings.clear()
+	if npcs_node == null:
+		return
+	for site: Dictionary in map_entry.get("buildings", []):
+		var id := String(site.get("id", ""))
+		if not bastion.has(id):
+			push_warning("map %s places unknown building %s" % [map_data.id, id])
+			continue
+		var raw: Array = site.get("cell", [0, 0])
+		var cell := Vector2i(int(raw[0]), int(raw[1]))
+		var actor := BuildingActor.new()
+		actor.setup(id, bastion.name_of(id), cell, class_color_for_building(id))
+		actor.position = map_view.cell_to_world(cell)
+		npcs_node.add_child(actor)
+		buildings.append(actor)
+	refresh_buildings()
+
+
+func class_color_for_building(id: String) -> Color:
+	match id:
+		"beacon":
+			return Color.html("#b58cff")
+		"medbay":
+			return Color.html("#ff7a6b")
+		"workshop":
+			return Color.html("#33e0d6")
+		"arcanum":
+			return Color.html("#c9a23a")
+	return Color(0.55, 0.5, 0.65)
+
+
+func refresh_buildings() -> void:
+	for b: BuildingActor in buildings:
+		if is_instance_valid(b):
+			b.set_level(bastion.level(b.building_id), bastion.max_level(b.building_id))
+
+
+func building_at(cell: Vector2i) -> BuildingActor:
+	for b: BuildingActor in buildings:
+		if is_instance_valid(b) and b.cell == cell:
+			return b
+	return null
+
+
+## Quests with `auto_start` begin at their start stage the first time a
+## world exists without them (new game); saved games already carry them.
+func auto_start_quests() -> void:
+	for q: Dictionary in registry.get_all("quests"):
+		if bool(q.get("auto_start", false)) and narrative.stage_of(String(q["id"])).is_empty():
+			narrative.set_stage(String(q["id"]), String(q.get("start", "")))
+
+
+## Persisted door state on handcrafted maps lives in narrative flags.
+static func door_flag(map_name: String, cell: Vector2i) -> String:
+	return "door_%s_%d_%d" % [map_name, cell.x, cell.y]
+
+
+func restore_map_doors() -> void:
+	if map_entry.has("generation"): # Shards keep their own run deltas
+		return
+	for door: Vector2i in map_data.door_cells():
+		if narrative.flag(door_flag(map_id, door)):
+			open_door(door, true)
+
+
+## The `doors` entry for a locked door cell, or {}.
+func locked_door_at(cell: Vector2i) -> Dictionary:
+	for d: Dictionary in map_entry.get("doors", []):
+		var raw: Array = d.get("cell", [])
+		if raw.size() == 2 and Vector2i(int(raw[0]), int(raw[1])) == cell:
+			return d
+	return {}
+
+
+## Opens a locked gate when its key flag is set. Empty string on success.
+func open_locked(cell: Vector2i) -> String:
+	if map_data.door_kind(cell) != "locked":
+		return "not a locked door"
+	var entry := locked_door_at(cell)
+	var key := String(entry.get("key_flag", ""))
+	if not key.is_empty() and not narrative.flag(key):
+		return "locked: %s" % String(entry.get("hint", "something on this map opens it"))
+	open_door(cell)
+	var opens := String(entry.get("opens_flag", ""))
+	if not opens.is_empty():
+		narrative.set_flag(opens, true)
+	return ""
+
+
+## Transitions: the leader standing on a marked cell travels to another map.
+func transition_at(cell: Vector2i) -> Dictionary:
+	for t: Dictionary in map_entry.get("transitions", []):
+		var raw: Array = t.get("cell", [])
+		if raw.size() == 2 and Vector2i(int(raw[0]), int(raw[1])) == cell:
+			return t
+	return {}
+
+
+func check_transitions() -> bool:
+	if mode != "explore" or in_dialogue() or map_entry.has("generation"):
+		return false
+	var t := transition_at(leader_cell())
+	if t.is_empty() or not Conditions.passes(t.get("when", {}), dialogue_ctx()):
+		return false
+	var raw: Array = t.get("arrive", [])
+	var arrive := Vector2i(int(raw[0]), int(raw[1])) if raw.size() == 2 else Vector2i(-1, -1)
+	return travel(String(t.get("to", "")), arrive, String(t.get("label", "")))
+
+
+## Loads `to` and places the party at `arrive` (or its spawn cells).
+func travel(to: String, arrive: Vector2i, label: String = "") -> bool:
+	_arrive_cell = arrive
+	var ok := enter_map(to)
+	_arrive_cell = Vector2i(-1, -1)
+	if ok:
+		overlay.toast(label if not label.is_empty() else map_data.name, 2.0)
+		autosave()
+	return ok
+
+
+## Triggers: scripted cells. `once` triggers remember firing in a flag.
+static func trigger_flag(map_name: String, id: String) -> String:
+	return "trigger_%s_%s" % [map_name, id]
+
+
+func check_triggers() -> int:
+	if mode != "explore" or in_dialogue():
+		return 0
+	var cells: Array[Vector2i] = []
+	for m: PartyMember in party.members:
+		cells.append(member_cell(m))
+	var fired := 0
+	for t: Dictionary in map_entry.get("triggers", []):
+		var on := false
+		var raw_cells: Array = t.get("cells", [])
+		if t.has("cell"):
+			raw_cells = [t["cell"]]
+		for raw: Array in raw_cells:
+			if cells.has(Vector2i(int(raw[0]), int(raw[1]))):
+				on = true
+		if on and fire_trigger(t):
+			fired += 1
+			if mode != "explore" or in_dialogue():
+				break
+	return fired
+
+
+## Runs one trigger if its conditions hold and it has not spent itself.
+func fire_trigger(t: Dictionary) -> bool:
+	var id := String(t.get("id", ""))
+	if bool(t.get("once", true)) and narrative.flag(trigger_flag(map_id, id)):
+		return false
+	if not Conditions.passes(t.get("when", {}), dialogue_ctx()):
+		return false
+	if bool(t.get("once", true)):
+		narrative.set_flag(trigger_flag(map_id, id), true)
+	var effects: Dictionary = t.get("effects", {})
+	for companion: String in Conditions.apply(effects, narrative):
+		add_companion(companion)
+	if effects.has("toast"):
+		overlay.toast(String(effects["toast"]), 3.5)
+	for raw: Array in effects.get("open_doors", []):
+		open_door(Vector2i(int(raw[0]), int(raw[1])))
+	var placed: Array = effects.get("enemies", [])
+	if not placed.is_empty():
+		for p: Dictionary in placed:
+			var raw: Array = p.get("cell", [0, 0])
+			var cell := Vector2i(int(raw[0]), int(raw[1]))
+			var entry: Dictionary = registry.get_entry("enemies", String(p.get("type", "")))
+			if entry.is_empty() or not map_data.is_walkable(cell) or enemy_at(cell) != null:
+				continue
+			enemies.append(_make_enemy(String(p["type"]), entry, cell, String(p.get("tier", ""))))
+		start_combat(false)
+	if effects.has("dialogue") and mode == "explore":
+		open_dialogue(String(effects["dialogue"]))
+	if effects.has("transition"):
+		var tr: Dictionary = effects["transition"]
+		var raw_a: Array = tr.get("arrive", [])
+		travel(String(tr.get("to", "")), Vector2i(int(raw_a[0]), int(raw_a[1])) if raw_a.size() == 2 else Vector2i(-1, -1), String(tr.get("label", "")))
+	autosave()
+	return true
+
+
+## Journal entries for every started quest, objectives ticked against the state.
+func journal_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var ctx := dialogue_ctx()
+	var ids: Array = narrative.quests.keys()
+	ids.sort()
+	for quest_id: String in ids:
+		var quest: Dictionary = registry.get_entry("quests", quest_id)
+		if quest.is_empty():
+			continue
+		var stage_id := narrative.stage_of(quest_id)
+		var stage: Dictionary = Dictionary(quest.get("stages", {})).get(stage_id, {})
+		var objectives: Array[Dictionary] = []
+		for o: Dictionary in stage.get("objectives", []):
+			objectives.append({"text": String(o.get("text", "")), "done": Conditions.passes(o.get("done_when", {}), ctx)})
+		out.append({"id": quest_id, "name": String(quest.get("name", quest_id)), "main": bool(quest.get("main", false)), "stage": stage_id, "stage_summary": String(stage.get("summary", "")), "complete": bool(stage.get("complete", false)), "objectives": objectives})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if bool(a["main"]) != bool(b["main"]):
+			return bool(a["main"])
+		return String(a["id"]) < String(b["id"]))
+	return out
+
+
+func journal_text() -> String:
+	return JournalMenu.render(journal_entries())
+
+
+func open_journal() -> bool:
+	if journal_menu == null or mode == "combat" or in_dialogue():
+		return false
+	if (creator_menu != null and creator_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (weave_menu != null and weave_menu.visible):
+		return false
+	if system_menu != null:
+		system_menu.close()
+	journal_menu.show_text(journal_text())
+	return true
+
+
+func close_journal() -> void:
+	if journal_menu != null:
+		journal_menu.close()
