@@ -1,0 +1,11 @@
+{
+  "name": "Vaultkin",
+  "analog": "Dwarves",
+  "identity": "Bunker-raised humans who never saw the sky until the seals failed.",
+  "hooks": ["sealed_lore", "poison_resist"],
+  "stat_mods": { "hp": 3, "move": -1, "evasion": 0, "initiative": -1 },
+  "faction_lean": "ashfound",
+  "overlay": { "kind": "marks", "color": "#c9b28a" },
+  "playable": false,
+  "milestone": "M2"
+}

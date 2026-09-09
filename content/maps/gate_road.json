@@ -34,7 +34,7 @@
   "transitions": [
     { "cell": [1, 1], "to": "proto_yard", "arrive": [17, 14], "label": "Back to the yard" }
   ],
-  "npcs": [],
+  "npcs": [ { "companion": "kaj7", "cell": [19, 5] } ],
   "pickups": [ { "type": "salvage_cache", "cell": [20, 1] } ],
   "enemies": []
 }

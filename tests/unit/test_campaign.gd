@@ -40,6 +40,7 @@ func _fresh() -> ExploreWorld:
 	w.combat_seed = 1234
 	w.ledger_path = LEDGER
 	w.saves_dir = SAVES
+	w.party_id = "prototype"
 	_root().add_child(w)
 	w.combat.animate = false
 	return w

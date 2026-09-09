@@ -1,0 +1,11 @@
+{
+  "name": "Dax — banter",
+  "kind": "banter",
+  "lines": [
+    { "trigger": "enter_shard", "text": "Air's bad down here. Better than the vault's, which tells you something.", "once": "dax_banter_first_shard" },
+    { "trigger": "enter_shard", "text": "Sera. Purge detail. I read the marks. Don't stand behind me.", "requires": { "recruited": "sera" }, "effects": { "approval": { "sera": -1 } }, "once": "dax_banter_sera" },
+    { "trigger": "victory", "text": "The machine fights fine. I'll say that once.", "requires": { "recruited": "kaj7" }, "effects": { "approval": { "kaj7": 1 } }, "once": "dax_banter_kaj7" },
+    { "trigger": "victory", "text": "Done. Count the air." },
+    { "trigger": "extract", "text": "Banked. Every run is one more the seal has to hold." }
+  ]
+}

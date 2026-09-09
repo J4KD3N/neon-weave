@@ -1,0 +1,38 @@
+{
+  "name": "Dax — the seal control",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "dax_dead": true } } },
+    { "node": "with_dax", "requires": { "recruited": "dax" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_dax": {
+      "speaker": "dax",
+      "text": "That's it. Pressure's at forty percent. There's a Weft charge in the coupling; someone routed magic through the seal to keep it alive. I can't touch it. You can.",
+      "choices": [
+        { "text": "Reset it. The Weft keeps your people breathing, Dax.", "effects": { "approval": { "dax": 2, "kaj7": 1 }, "flags": { "dax_seal_found": true, "dax_seal_reset": true }, "quest": { "id": "dax_failing_seal", "stage": "sealed" } }, "next": "reset" },
+        { "text": "Rip the Weft charge out and route it clean.", "requires": { "approval": { "dax": { "min": 2 } } }, "effects": { "approval": { "dax": 1, "kaj7": -1 }, "flags": { "dax_seal_found": true, "dax_seal_clean": true }, "quest": { "id": "dax_failing_seal", "stage": "sealed" } }, "next": "clean" }
+      ]
+    },
+    "reset": {
+      "speaker": "dax",
+      "text": "Holding. Forty people, breathing on witch-light. I'll learn to live with it. That's what you do.",
+      "choices": [ { "text": "That's what you do.", "end": true } ]
+    },
+    "clean": {
+      "speaker": "dax",
+      "text": "Holding, and no Weft in the line. I owe you a reason. Later. When it's earned.",
+      "choices": [ { "text": "Later.", "end": true } ]
+    },
+    "alone": {
+      "speaker": "player",
+      "text": "A pressure console, still routed to a vault. Forty souls on the readout and a Weft charge keeping the seal alive. Somebody's family.",
+      "choices": [ { "text": "Reset the seal.", "effects": { "flags": { "dax_seal_found": true, "dax_seal_reset": true }, "quest": { "id": "dax_failing_seal", "stage": "done_alone" } }, "end": true } ]
+    },
+    "dead": {
+      "speaker": "player",
+      "text": "Dax never made it here. The readout says forty. It does not say whose.",
+      "choices": [ { "text": "Reset it for them.", "effects": { "flags": { "dax_seal_found": true, "dax_seal_reset": true }, "quest": { "id": "dax_failing_seal", "stage": "done_posthumous" } }, "end": true } ]
+    }
+  }
+}

@@ -20,6 +20,7 @@ func before_each() -> void:
 	world = packed.instantiate() as ExploreWorld
 	world.map_id = "proto_yard"
 	world.home_map = "proto_yard"
+	world.party_id = "prototype"
 	world.ledger_path = LEDGER
 	world.saves_dir = SAVES
 	(Engine.get_main_loop() as SceneTree).root.add_child(world)

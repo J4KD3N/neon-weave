@@ -1,0 +1,16 @@
+{
+  "name": "Kaj-7",
+  "short_name": "Kaj-7",
+  "race": "synth",
+  "class": "drone_shepherd",
+  "summary": "Gentle awakened machine; curious, literal, quietly funny. Tracing the signal that woke it.",
+  "faction": "lattice",
+  "romanceable": true,
+  "dialogue": {
+    "recruit": "kaj7_recruit",
+    "talk": "kaj7_recruit",
+    "banter": "kaj7_banter"
+  },
+  "quest": "kaj7_maker_signal",
+  "approval_start": 0
+}

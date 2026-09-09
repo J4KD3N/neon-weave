@@ -25,7 +25,8 @@ func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary =
 	attr_rules = registry.get_entry("rules", "attributes")
 	races.clear()
 	for r: Dictionary in registry.get_all("races"):
-		races.append(r["id"])
+		if bool(r.get("playable", true)): # companion-only races (Vaultkin) stay off the creator
+			races.append(r["id"])
 	origins.clear()
 	for o: Dictionary in registry.get_all("origins"):
 		origins.append(o["id"])

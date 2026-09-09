@@ -16,7 +16,9 @@ var selected_shard: String = DEFAULT_SHARD
 @export var map_id: String = HOME_MAP
 ## Where H, wipes and extraction return to. Tests pin it to the yard.
 @export var home_map: String = HOME_MAP
-@export var party_id: String = "prototype"
+## The demo party is the protagonist alone; companions fill the other three
+## slots as they are recruited. Tests pin the three-member prototype party.
+@export var party_id: String = "demo"
 ## 0 = random per encounter. Tests pin it.
 @export var combat_seed: int = 0
 ## Where the Bastion ledger persists. Tests point this at a scratch file.

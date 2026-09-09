@@ -1,0 +1,7 @@
+{
+  "name": "Demo party",
+  "summary": "The Steam demo party: the protagonist alone; companions fill the other three slots as they are recruited (Sera in the yard, Dax at the gate, Kaj-7 on the road).",
+  "members": [
+    { "id": "weaver", "name": "Weaver", "race": "trueborn", "class": "scrap_knight" }
+  ]
+}

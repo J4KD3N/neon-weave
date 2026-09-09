@@ -1,0 +1,7 @@
+{
+  "name": "Vault Orun seal control",
+  "summary": "A pressure console still routed to a sealed vault. Quest site; opens a dialogue.",
+  "dialogue": "dax_seal",
+  "grants": {},
+  "art": { "color": "#c9b28a" }
+}

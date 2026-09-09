@@ -1,0 +1,67 @@
+{
+  "name": "Kaj-7 — the road",
+  "start": [
+    { "node": "recruited", "requires": { "recruited": "kaj7" } },
+    { "node": "not_yet", "requires": { "quest": { "id": "main_waking", "stage": "gate" } } },
+    { "node": "refused", "requires": { "flags": { "kaj7_refused": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "not_yet": {
+      "speaker": "kaj7",
+      "text": "You are early. The gate is still closed and the signal is still east. I will wait; waiting is a thing I am good at.",
+      "choices": [ { "text": "We'll be back.", "end": true } ]
+    },
+    "greet": {
+      "speaker": "kaj7",
+      "text": "Hello. I am Kaj-7. I was a shepherd unit until something woke me and called me by a name I did not have. It is still calling. It is somewhere down there. May I walk with you?",
+      "choices": [
+        { "text": "What's calling you?", "next": "signal" },
+        { "text": "A machine that wants things. What could go wrong.", "effects": { "approval": { "kaj7": -1 } }, "next": "signal" },
+        { "text": "[Vault] We had a unit like you in the vault. It sang to the door until the door opened.", "requires": { "origin_tag": "vault" }, "effects": { "approval": { "kaj7": 1 } }, "next": "signal" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "signal": {
+      "speaker": "kaj7",
+      "text": "I do not know. It sounds like many voices agreeing. When I follow it I feel less like a shepherd and more like a sheep. I would like to find out which I am, with someone watching.",
+      "choices": [
+        { "text": "Walk with us. We'll find your signal.", "effects": { "recruit": "kaj7", "approval": { "kaj7": 1, "dax": -1 }, "flags": { "kaj7_recruited": true }, "quest": { "id": "kaj7_maker_signal", "stage": "start" } }, "end": true },
+        { "text": "Sera, you've fought machines. Your call.", "requires": { "recruited": "sera" }, "next": "sera_call" },
+        { "text": "We don't carry things that hear voices.", "effects": { "approval": { "kaj7": -2 }, "flags": { "kaj7_refused": true } }, "end": true }
+      ]
+    },
+    "sera_call": {
+      "speaker": "sera",
+      "text": "It asked. The drones under the grates never asked. Bring it.",
+      "choices": [
+        { "text": "Then it's settled. Walk with us.", "effects": { "recruit": "kaj7", "approval": { "kaj7": 1, "sera": 1 }, "flags": { "kaj7_recruited": true }, "quest": { "id": "kaj7_maker_signal", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
+      ]
+    },
+    "refused": {
+      "speaker": "kaj7",
+      "text": "You came back. That is data. Is the answer different now?",
+      "choices": [
+        { "text": "It's different. Walk with us.", "effects": { "recruit": "kaj7", "flags": { "kaj7_recruited": true, "kaj7_refused": false }, "quest": { "id": "kaj7_maker_signal", "stage": "start" } }, "end": true },
+        { "text": "Same answer.", "end": true }
+      ]
+    },
+    "recruited": {
+      "speaker": "kaj7",
+      "text": "The signal is louder when the Beacon is deeper. I have made a graph. It is not a comforting graph.",
+      "choices": [
+        { "text": "Are you frightened?", "next": "frightened" },
+        { "text": "Later.", "end": true }
+      ]
+    },
+    "frightened": {
+      "speaker": "kaj7",
+      "text": "I do not have the part that does that. I have the part that keeps checking whether the door is locked. It is checking now.",
+      "choices": [
+        { "text": "We'll keep it locked together.", "requires": { "approval": { "kaj7": { "min": 2 } } }, "effects": { "approval": { "kaj7": 1 }, "flags": { "kaj7_opened_up": true } }, "end": true },
+        { "text": "Keep checking.", "end": true }
+      ]
+    }
+  }
+}

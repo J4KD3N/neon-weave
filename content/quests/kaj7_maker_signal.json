@@ -1,0 +1,17 @@
+{
+  "name": "The Maker-Signal",
+  "companion": "kaj7",
+  "summary": "Kaj-7 woke to a signal it cannot stop hearing. It leads into the Shards, and the Choir is on the other end.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "Find the relay Kaj-7 is hearing. It is somewhere in the Shards.",
+      "objectives": [ { "text": "Find the maker-signal relay in a Shard", "done_when": { "flags": { "kaj7_relay_found": true } } } ],
+      "shard_site": { "pickup": "kaj_signal_relay" }
+    },
+    "heard": { "summary": "Kaj-7 heard the signal clearly. It was not a maker. It was a choir, and it knew Kaj-7 by name." },
+    "done": { "summary": "Kaj-7 chose to keep listening, with you between it and the voice.", "complete": true },
+    "done_alone": { "summary": "You found the relay without Kaj-7. The signal is logged; the Choir is confirmed.", "complete": true },
+    "done_posthumous": { "summary": "Kaj-7 was gone before it heard the signal. You listened for it.", "complete": true }
+  }
+}
