@@ -772,3 +772,39 @@ func _roll_rarity(weights: Dictionary) -> String:
 static func _at_least(rarity: String, floor_rarity: String) -> String:
 	var order: Array[String] = ["common", "rare", "epic"]
 	return rarity if order.find(rarity) >= order.find(floor_rarity) else floor_rarity
+
+
+## A template with a `remix` block draws its enemy pool from every listed
+## family (non-boss entries with awareness, weight 1 each) and its surface
+## pool from every listed template (S34, D-089). Returns a new template;
+## one without the block comes back as it is.
+static func expand_remix(template: Dictionary, registry: ContentRegistry) -> Dictionary:
+	if not template.has("remix"):
+		return template
+	var remix: Dictionary = template["remix"]
+	var out := template.duplicate(true)
+	var enemies: Dictionary = Dictionary(out.get("enemies", {})).duplicate(true)
+	var pool: Array = []
+	for family: String in remix.get("families", []):
+		for e: Dictionary in registry.get_all("enemies"):
+			if String(e.get("family", "")) != family or String(e.get("tier", "")) == "boss" or int(e.get("awareness", 5)) <= 0:
+				continue
+			pool.append({"type": String(e["id"]), "weight": 1})
+	if not pool.is_empty():
+		enemies["pool"] = pool
+	out["enemies"] = enemies
+	var surfaces: Dictionary = Dictionary(out.get("surfaces", {})).duplicate(true)
+	var seen: Dictionary = {}
+	var spool: Array = []
+	for id: String in remix.get("templates", []):
+		var other := registry.get_entry("shards", id)
+		for p: Dictionary in Dictionary(other.get("surfaces", {})).get("pool", []):
+			var tile := String(p.get("tile", ""))
+			if tile.is_empty() or seen.has(tile):
+				continue
+			seen[tile] = true
+			spool.append({"tile": tile, "char": String(p.get("char", "s")), "weight": int(p.get("weight", 1))})
+	if not spool.is_empty():
+		surfaces["pool"] = spool
+	out["surfaces"] = surfaces
+	return out

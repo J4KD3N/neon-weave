@@ -9,7 +9,7 @@
     "title": "music_title",
     "bastion": "music_bastion",
     "combat": "music_combat",
-    "explore": { "default": "music_undercity", "rusted_undercity": "music_undercity", "verdant_datacore": "music_datacore", "ghost_markets": "music_markets" }
+    "explore": { "default": "music_undercity", "rusted_undercity": "music_undercity", "verdant_datacore": "music_datacore", "ghost_markets": "music_markets", "null_cathedral": "music_cathedral" }
   },
   "milestone": "M2"
 }

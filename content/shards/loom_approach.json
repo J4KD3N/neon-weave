@@ -1,0 +1,54 @@
+{
+  "name": "The Loom Approach",
+  "biome": "null_cathedral",
+  "summary": "Act 3: the way down to the Loom, where every biome bleeds into the cathedral. Every surface, every family, the Organist at the door.",
+  "requires_unlock": "",
+  "requires_flag": "loom_located",
+  "remix": {
+    "families": ["rusted_undercity", "verdant_datacore", "ghost_markets", "null_cathedral"],
+    "templates": ["rusted_undercity", "verdant_datacore", "ghost_markets", "null_cathedral"]
+  },
+  "size": { "width": [52, 64], "height": [36, 46] },
+  "rooms": { "count": [8, 11], "min": [6, 5], "max": [14, 9], "attempts": 300 },
+  "corridors": { "extra_loops": [2, 4], "width": 2 },
+  "tiles": {
+    "wall": "wall_nave",
+    "floor": "floor_flagstone",
+    "grate": "choir_lattice",
+    "debris": "pew",
+    "extraction": "extraction_pad",
+    "secret_door": "secret_door",
+    "vault_door": "vault_door",
+    "waypoint": "waypoint"
+  },
+  "features": {
+    "secrets": [2, 4],
+    "vaults": [2, 2],
+    "vault_cost": { "ciphers": 1 },
+    "merchant": "sacristy_keeper",
+    "waypoints": [2, 3],
+    "rarity": { "rare": 0.35, "epic": 0.1 },
+    "ramp_far_fraction": 0.5
+  },
+  "grate_patch_chance": 0.25,
+  "surfaces": { "patches": [6, 10], "pool": [] },
+  "debris_density": 0.06,
+  "pickups": {
+    "count": [4, 7],
+    "pool": [
+      { "type": "salvage_cache", "weight": 2 },
+      { "type": "aether_shard", "weight": 4 },
+      { "type": "loot_crate", "weight": 5 }
+    ]
+  },
+  "enemies": {
+    "groups": [6, 9],
+    "group_size": [2, 3],
+    "min_spawn_distance": 10,
+    "pool": [],
+    "elite_chance_per_depth": 0.15,
+    "elite_chance_max": 0.7,
+    "boss": { "type": "the_organist", "min_depth": 1 }
+  },
+  "milestone": "M3"
+}

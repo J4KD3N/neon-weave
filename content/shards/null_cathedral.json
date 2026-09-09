@@ -1,0 +1,64 @@
+{
+  "name": "Null Cathedral Shard",
+  "biome": "null_cathedral",
+  "summary": "Naves and side-chapels off a long transept, pews for cover, null fonts that swallow every spell, and the Choir under the floor.",
+  "requires_unlock": "",
+  "requires_flag": "null_cathedral_found",
+  "size": { "width": [48, 60], "height": [34, 44] },
+  "rooms": { "count": [6, 9], "min": [6, 5], "max": [14, 9], "attempts": 300 },
+  "corridors": { "extra_loops": [1, 3], "width": 2 },
+  "tiles": {
+    "wall": "wall_nave",
+    "floor": "floor_flagstone",
+    "grate": "choir_lattice",
+    "debris": "pew",
+    "extraction": "extraction_pad",
+    "secret_door": "secret_door",
+    "vault_door": "vault_door",
+    "waypoint": "waypoint"
+  },
+  "features": {
+    "secrets": [2, 3],
+    "vaults": [1, 2],
+    "vault_cost": { "ciphers": 1 },
+    "merchant": "sacristy_keeper",
+    "waypoints": [1, 2],
+    "rarity": { "rare": 0.3, "epic": 0.08 },
+    "ramp_far_fraction": 0.55
+  },
+  "grate_patch_chance": 0.25,
+  "surfaces": {
+    "patches": [4, 8],
+    "pool": [
+      { "tile": "null_font", "char": "n", "weight": 3 },
+      { "tile": "mana_pool", "char": "m", "weight": 1 },
+      { "tile": "conduit", "char": "c", "weight": 2 },
+      { "tile": "catwalk", "char": "k", "weight": 1 }
+    ]
+  },
+  "debris_density": 0.07,
+  "pickups": {
+    "count": [3, 6],
+    "pool": [
+      { "type": "salvage_cache", "weight": 2 },
+      { "type": "aether_shard", "weight": 4 },
+      { "type": "loot_crate", "weight": 4 }
+    ]
+  },
+  "enemies": {
+    "groups": [5, 8],
+    "group_size": [1, 3],
+    "min_spawn_distance": 10,
+    "pool": [
+      { "type": "null_husk", "weight": 4 },
+      { "type": "inner_voice", "weight": 3 },
+      { "type": "hollow_choirist", "weight": 2 },
+      { "type": "warden_construct", "weight": 2 },
+      { "type": "sacristan", "weight": 1 }
+    ],
+    "elite_chance_per_depth": 0.12,
+    "elite_chance_max": 0.6,
+    "boss": { "type": "the_organist", "min_depth": 3 }
+  },
+  "milestone": "M3"
+}

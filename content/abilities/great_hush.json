@@ -1,0 +1,1 @@
+{ "name": "Great Hush", "sound": "sfx_net", "summary": "The Organist: one chord and the nave goes silent for everyone in it.", "ap": 3, "range": 4, "damage": [2, 4], "accuracy": 90, "damage_type": "arcane", "requires_los": true, "effect": "silence", "duration": 2, "aoe": 2, "cooldown": 2 }

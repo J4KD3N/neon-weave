@@ -1,0 +1,1 @@
+{ "name": "Choir lattice", "sound": "sfx_step_grate", "summary": "A grille over the crypt where the Choir was drowned. Something under it is still singing.", "layer": "ground", "walkable": true, "blocks_sight": false, "art": { "shape": "floor", "fill": "grate", "edge": "floor_edge", "pattern": "grate", "pattern_color": "grate_line" } }

@@ -1,0 +1,8 @@
+{
+  "name": "The Null Cathedral",
+  "kind": "music",
+  "summary": "Placeholder synth loop: a held organ chord and the drowning-song under it. Drop a looping file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "saw", "bpm": 60, "step": 1.0, "notes": [45, 52, 57, 52, 45, 50, 55, 50], "bars": 2, "volume": 0.22 },
+  "volume_db": -15,
+  "loop": true
+}

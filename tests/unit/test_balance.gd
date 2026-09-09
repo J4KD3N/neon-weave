@@ -209,7 +209,7 @@ func test_shard_depths_extract_more_often_than_not() -> void:
 	var prules: Dictionary = world.progression_rules()
 	_drop(world)
 	var rates: Array[float] = []
-	for run: Dictionary in [{"template": ExploreWorld.DEFAULT_SHARD, "depth": 1, "xp": 20, "min": 0.5}, {"template": ExploreWorld.DEFAULT_SHARD, "depth": 2, "xp": 20, "min": 0.4}, {"template": "verdant_datacore", "depth": 2, "xp": 80, "min": 0.2}, {"template": ExploreWorld.DEFAULT_SHARD, "depth": 3, "xp": 200, "min": 0.1}, {"template": "ghost_markets", "depth": 3, "xp": 200, "min": 0.1}]:
+	for run: Dictionary in [{"template": ExploreWorld.DEFAULT_SHARD, "depth": 1, "xp": 20, "min": 0.5}, {"template": ExploreWorld.DEFAULT_SHARD, "depth": 2, "xp": 20, "min": 0.4}, {"template": "verdant_datacore", "depth": 2, "xp": 80, "min": 0.2}, {"template": ExploreWorld.DEFAULT_SHARD, "depth": 3, "xp": 200, "min": 0.1}, {"template": "ghost_markets", "depth": 3, "xp": 200, "min": 0.1}, {"template": "null_cathedral", "depth": 3, "xp": 400, "min": 0.0}, {"template": "loom_approach", "depth": 1, "xp": 850, "min": 0.05}]:
 		var depth := int(run["depth"])
 		var extracted := 0
 		var fights := 0

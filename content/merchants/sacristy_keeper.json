@@ -1,0 +1,11 @@
+{
+  "name": "Sacristy Keeper",
+  "summary": "A construct that still takes offerings. Salvage in, relics out.",
+  "stock": [
+    { "id": "maul", "label": "Shock maul (weapon, +2 damage)", "cost": { "salvage": 15 }, "effect": { "item": "shock_maul" } },
+    { "id": "mesh", "label": "Dermal mesh (cyberware, +4 HP)", "cost": { "salvage": 14 }, "effect": { "item": "dermal_mesh" } },
+    { "id": "cipher", "label": "A Cipher key, consecrated", "cost": { "salvage": 12 }, "effect": { "grant": { "ciphers": 1 } } },
+    { "id": "sap", "label": "Blessed draught: heal the party fully", "cost": { "salvage": 10 }, "effect": { "heal_fraction": 1.0 } }
+  ],
+  "art": { "color": "#e8c060" }
+}

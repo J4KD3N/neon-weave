@@ -1,0 +1,1 @@
+{ "name": "Null font", "sound": "sfx_step_pool", "summary": "A basin of null: the anti-magic the council poured into the Weft. Whoever starts a turn in it cannot cast.", "layer": "ground", "walkable": true, "blocks_sight": false, "surface": "null", "art": { "shape": "floor", "fill": "grate", "edge": "floor_edge", "pattern": "ripple", "pattern_color": "neon_arcane" } }

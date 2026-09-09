@@ -28,12 +28,12 @@ without a schema; keep the two in step.
 | quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?, next?, next_toast?}} | companion, main, faction, auto_start |
 | races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only), cyberware_slots, traits (D-085: resist {type: fraction}, regen_on_surface {surface: hp}, detect_hidden N, salvage_bonus, mend_after_combat, bonus_abilities [ids], ability_damage_bonus {id: n}, heal_immune_types [types], talent_cost_mod, tags [..]) |
 | resources | name, max | builds_on, gain_per_cast, damage_per_stack, lock_ap_at_max, vent_ability, kind "marks", mark, max_per_target, gain_on_kill, gain_on_surface, gain_on_stealth, reveal_at_max, absorb {type,fraction}, gain_per_absorbed |
-| rules | name | per-rule fields (combat incl. surface_evasion and surface_resist {surface: {type: fraction}}, attributes, progression, loot, demo) |
-| shards | name, biome, tiles, rooms, enemies | corridors, surfaces, pickups, features, requires_unlock, grate_patch_chance, debris_density, size |
+| rules | name | per-rule fields (combat incl. surface_evasion, surface_resist {surface: {type: fraction}} and surface_status {surface: {status: turns}}, attributes, progression, loot, demo) |
+| shards | name, biome, tiles, rooms, enemies | corridors, surfaces, pickups, features, requires_unlock (Beacon), requires_flag (story), remix {families, templates} (pools filled by rule, D-089), grate_patch_chance, debris_density, size |
 | sprites | image or sheet, frame | see docs/art-pipeline.md |
 | subclasses | name, class, abilities | stat_mods, damage_bonus, summary |
 | talents | name, branch, tier, cost, effects | requires, summary |
-| tiles | name, layer, walkable, art | blocks_sight, cover, height, surface (mana_pool / conduit / corrosive / spore / echo), door, waypoint, sound |
+| tiles | name, layer, walkable, art | blocks_sight, cover, height, surface (mana_pool / conduit / corrosive / spore / echo / null), door, waypoint, sound |
 | achievements | name, steam_id, when (conditions) | summary |
 | audio | name, kind (sfx or music), synth or file | volume_db, loop, summary |
 

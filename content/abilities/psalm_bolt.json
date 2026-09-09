@@ -1,0 +1,1 @@
+{ "name": "Psalm Bolt", "sound": "sfx_bolt", "summary": "Inner Voice: a line of the drowning-song, sung at you.", "ap": 2, "range": 5, "damage": [3, 5], "accuracy": 85, "damage_type": "arcane", "requires_los": true }

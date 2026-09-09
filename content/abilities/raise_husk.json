@@ -1,0 +1,1 @@
+{ "name": "Raise Husk", "sound": "sfx_summon", "summary": "Sacristan: another one up out of the crypt.", "ap": 2, "range": 0, "damage": [0, 0], "accuracy": 100, "targets": "self", "effect": "summon", "summon": "null_husk", "summon_max": 2, "cooldown": 2 }
