@@ -1,0 +1,8 @@
+{
+  "name": "Marshal Kade",
+  "short_name": "Kade",
+  "summary": "An Ashfound marshal, burn-scarred and courteous, who counts the machines on the plaza before she counts the people.",
+  "faction": "ashfound",
+  "dialogue": "ashfound_intro",
+  "art": { "color": "#ff7a6b" }
+}

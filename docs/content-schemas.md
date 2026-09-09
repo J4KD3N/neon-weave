@@ -16,7 +16,7 @@ without a schema; keep the two in step.
 | companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start |
 | dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]) |
 | enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity), traits (same vocabulary as races) |
-| factions | name, color, rivals, joinable_act | summary |
+| factions | name, color, rivals, joinable_act | summary, envoy (npc id), vendor (merchant id), area (map id), join_reputation {faction: delta} applied on joining |
 | items | name, slot (weapon / armour / trinket / cyberware), art | stat_mods, damage_bonus, weight, price, min_rarity, families, craft {cost, workshop}, summary |
 | affixes | name, slots (["any"] or slot names), weight | prefix (false = suffix), stat_mods, damage_bonus, min_rarity, summary |
 | maps | name, biome, spawn_marker, legend, rows | npcs (companion / merchant / npc + when), pickups, enemies, transitions, triggers, doors, buildings |
@@ -38,6 +38,7 @@ without a schema; keep the two in step.
 | audio | name, kind (sfx or music), synth or file | volume_db, loop, summary |
 
 Trigger effect keys: approval, flags, recruit, quest, reputation, toast,
-open_doors, enemies, victory_flag, grant, dialogue, transition.
+open_doors, enemies, victory_flag, grant, dialogue, transition, join_faction.
 Condition keys (`requires` / `when` / `done_when`): flags, origin_tag,
-race, race_tag, class, approval, reputation, recruited, not_recruited, quest.
+race, race_tag, class, approval, reputation, recruited, not_recruited, quest,
+faction (the joined faction id, "" for none yet), not_faction.

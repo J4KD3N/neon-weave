@@ -1,0 +1,8 @@
+{
+  "name": "Speaker Ilex",
+  "short_name": "Ilex",
+  "summary": "A Rootched speaker with moss in the seams of her coat and no hurry at all. She arrived on the plaza the way weather does.",
+  "faction": "rootched",
+  "dialogue": "rootched_intro",
+  "art": { "color": "#9ab83a" }
+}

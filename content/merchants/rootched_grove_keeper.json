@@ -1,0 +1,11 @@
+{
+  "name": "Grove Keeper",
+  "summary": "Trades in things that were alive an hour ago. Members only.",
+  "stock": [
+    { "id": "weave", "label": "Mesh weave (armour, +5 evasion)", "cost": { "salvage": 12 }, "effect": { "item": "mesh_weave" } },
+    { "id": "charm", "label": "Weft charm (trinket, +3 evasion)", "cost": { "salvage": 6 }, "effect": { "item": "weft_charm" } },
+    { "id": "sap", "label": "Sap draught: heal the party fully", "cost": { "salvage": 9 }, "effect": { "heal_fraction": 1.0 } },
+    { "id": "aether", "label": "Three vials of Aether", "cost": { "salvage": 10 }, "effect": { "grant": { "aether": 3 } } }
+  ],
+  "art": { "color": "#9ab83a" }
+}

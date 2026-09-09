@@ -3,7 +3,8 @@
 ## `requires` block: {"flags": {name: bool}, "origin_tag": "x", "race": "x",
 ## "class": "x", "approval": {companion: {"min": n, "max": n}},
 ## "recruited": "companion", "not_recruited": "companion",
-## "quest": {"id": "q", "stage": "s"}}. Every listed key must hold.
+## "quest": {"id": "q", "stage": "s"}, "faction": "id" (the joined faction;
+## "" for none yet), "not_faction": "id"}. Every listed key must hold.
 ##
 ## `ctx`: {"narrative": NarrativeState, "origin_tag": String, "race": String,
 ## "class": String}
@@ -46,6 +47,10 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 		if bounds.has("max") and rep > int(bounds["max"]):
 			return false
 	if requires.has("recruited") and not n.is_recruited(String(requires["recruited"])):
+		return false
+	if requires.has("faction") and n.faction != String(requires["faction"]): # "" means none joined
+		return false
+	if requires.has("not_faction") and n.faction == String(requires["not_faction"]) and not n.faction.is_empty():
 		return false
 	if requires.has("not_recruited") and n.is_recruited(String(requires["not_recruited"])):
 		return false

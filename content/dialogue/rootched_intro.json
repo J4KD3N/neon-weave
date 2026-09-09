@@ -1,0 +1,43 @@
+{
+  "name": "Speaker Ilex — the plaza",
+  "start": [
+    { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "rootched" } },
+    { "node": "joined", "requires": { "faction": "rootched" } },
+    { "node": "answered", "requires": { "flags": { "rootched_answered": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "rootched_envoy",
+      "text": "You keep opening the ground and bringing things up out of it. The Rootched approve of that, mostly. I am Ilex. We think the fusion is not a wound; we think it is a seed. Would you hear how a seed ends?",
+      "choices": [
+        { "text": "Go on.", "effects": { "flags": { "rootched_heard": true }, "quest": { "id": "rootched_offer", "stage": "offer" } }, "next": "piece" },
+        { "text": "[Rootkin] I already know how it ends. It ends green.", "requires": { "race": "rootkin" }, "effects": { "flags": { "rootched_heard": true }, "reputation": { "rootched": 1 }, "quest": { "id": "rootched_offer", "stage": "offer" } }, "next": "piece" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "piece": {
+      "speaker": "rootched_envoy",
+      "text": "The Weft and the machines are already one thing; only people are still pretending otherwise. When the Loom is found we would finish what the Sundering started, and everything that lives would be part of everything else. Your shield-bearer would hate that. Ask her why.",
+      "choices": [
+        { "text": "Sera burned a village for people who talk like you.", "requires": { "recruited": "sera" }, "effects": { "flags": { "rootched_wary": true }, "reputation": { "rootched": -1 }, "approval": { "sera": 2 } }, "next": "answer" },
+        { "text": "She is entitled to hate it. I am still listening.", "requires": { "recruited": "sera" }, "effects": { "reputation": { "rootched": 1 }, "approval": { "sera": -2 } }, "next": "answer" },
+        { "text": "Get to the offer.", "next": "answer" }
+      ]
+    },
+    "answer": {
+      "speaker": "rootched_envoy",
+      "text": "The offer is a garden. Let the Bastion grow. Keep bringing the Shards up. When the Loom is found, choose the seed. Until then, think of us as the thing under the floor that is not trying to kill you.",
+      "choices": [
+        { "text": "Join the Rootched.", "requires": { "flags": { "act2": true }, "faction": "" }, "effects": { "flags": { "rootched_answered": true }, "join_faction": "rootched", "quest": { "id": "rootched_offer", "stage": "joined" } }, "next": "joined" },
+        { "text": "Keep talking to us. That is all I promise.", "effects": { "flags": { "rootched_answered": true }, "reputation": { "rootched": 2 }, "quest": { "id": "rootched_offer", "stage": "warm" } }, "next": "warm" },
+        { "text": "Take your moss and go.", "effects": { "flags": { "rootched_answered": true }, "reputation": { "rootched": -2 }, "quest": { "id": "rootched_offer", "stage": "cold" } }, "next": "cold" }
+      ]
+    },
+    "warm": { "speaker": "rootched_envoy", "text": "Then we will keep talking. Things grow slowly and then all at once.", "choices": [ { "text": "All at once.", "end": true } ] },
+    "cold": { "speaker": "rootched_envoy", "text": "The moss stays. It always does.", "choices": [ { "text": "Go.", "end": true } ] },
+    "joined": { "speaker": "rootched_envoy", "text": "Then the grove is open to you. The path is behind the Beacon; the keeper there trades in things that were alive an hour ago.", "choices": [ { "text": "Understood.", "end": true } ] },
+    "answered": { "speaker": "rootched_envoy", "text": "You answered. I remember answers the way roots remember water.", "choices": [ { "text": "Nothing more.", "end": true } ] },
+    "locked": { "speaker": "rootched_envoy", "text": "You chose. The Rootched do not argue with a choice; we outlast it.", "choices": [ { "text": "So be it.", "end": true } ] }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "name": "Marshal Kade — the plaza",
+  "start": [
+    { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "ashfound" } },
+    { "node": "joined", "requires": { "faction": "ashfound" } },
+    { "node": "answered", "requires": { "flags": { "ashfound_answered": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "ashfound_envoy",
+      "text": "Marshal Kade, Ashfound. I counted four machines and a mage on my way across your plaza, so I will be brief. We burn both. Magic, machine, the thing they made together. What is left is people. Will you hear the case?",
+      "choices": [
+        { "text": "Make it.", "effects": { "flags": { "ashfound_heard": true }, "quest": { "id": "ashfound_offer", "stage": "offer" } }, "next": "piece" },
+        { "text": "[Trueborn] You are preaching to the unaltered, Marshal.", "requires": { "race": "trueborn" }, "effects": { "flags": { "ashfound_heard": true }, "reputation": { "ashfound": 1 }, "quest": { "id": "ashfound_offer", "stage": "offer" } }, "next": "piece" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "piece": {
+      "speaker": "ashfound_envoy",
+      "text": "Every Shard you open feeds the fusion. Every machine you wake has a song in it now. When the Loom is found we put it out, all of it, and we start again smaller and honest. Your Synth would not survive that. I will not pretend otherwise.",
+      "choices": [
+        { "text": "Then you have already lost me.", "requires": { "recruited": "kaj7" }, "effects": { "reputation": { "ashfound": -1 }, "approval": { "kaj7": 2 } }, "next": "answer" },
+        { "text": "Kaj-7 knew the risks when it followed me.", "requires": { "recruited": "kaj7" }, "effects": { "reputation": { "ashfound": 1 }, "approval": { "kaj7": -2 } }, "next": "answer" },
+        { "text": "Get to the offer.", "next": "answer" }
+      ]
+    },
+    "answer": {
+      "speaker": "ashfound_envoy",
+      "text": "The offer is a forge and a straight answer. Keep the road open. Keep people alive. When the Loom is found, burn it. Until then we will trade with you, and we will not lie to you.",
+      "choices": [
+        { "text": "Join the Ashfound.", "requires": { "flags": { "act2": true }, "faction": "" }, "effects": { "flags": { "ashfound_answered": true }, "join_faction": "ashfound", "quest": { "id": "ashfound_offer", "stage": "joined" } }, "next": "joined" },
+        { "text": "Keep talking to us. That is all I promise.", "effects": { "flags": { "ashfound_answered": true }, "reputation": { "ashfound": 2 }, "quest": { "id": "ashfound_offer", "stage": "warm" } }, "next": "warm" },
+        { "text": "Take your matches and go.", "effects": { "flags": { "ashfound_answered": true }, "reputation": { "ashfound": -2 }, "quest": { "id": "ashfound_offer", "stage": "cold" } }, "next": "cold" }
+      ]
+    },
+    "warm": { "speaker": "ashfound_envoy", "text": "Good enough. Honest people keep talking.", "choices": [ { "text": "Honest.", "end": true } ] },
+    "cold": { "speaker": "ashfound_envoy", "text": "Noted. We do not need to be liked.", "choices": [ { "text": "Go.", "end": true } ] },
+    "joined": { "speaker": "ashfound_envoy", "text": "Then the forge door is yours. Left of the yard gate. The armourer there sells things that do not sing.", "choices": [ { "text": "Understood.", "end": true } ] },
+    "answered": { "speaker": "ashfound_envoy", "text": "You gave me an answer. I do not need another one.", "choices": [ { "text": "Nothing more.", "end": true } ] },
+    "locked": { "speaker": "ashfound_envoy", "text": "You picked a side. Fine. We will see you at the Loom.", "choices": [ { "text": "We will.", "end": true } ] }
+  }
+}

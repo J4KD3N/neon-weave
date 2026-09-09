@@ -1,0 +1,14 @@
+{
+  "name": "A Straight Answer",
+  "main": true,
+  "companion": "",
+  "faction": "ashfound",
+  "summary": "The Ashfound have counted the machines on the plaza. Their marshal wants a straight answer.",
+  "start": "offer",
+  "stages": {
+    "offer": { "summary": "Marshal Kade of the Ashfound is waiting on the plaza.", "objectives": [ { "text": "Hear the Ashfound marshal out", "done_when": { "flags": { "ashfound_heard": true } } }, { "text": "Give the marshal an answer", "done_when": { "flags": { "ashfound_answered": true } } } ] },
+    "warm": { "summary": "You kept the door open. The Ashfound will trade and will not lie.", "complete": true },
+    "cold": { "summary": "You sent the marshal away. They do not need to be liked.", "complete": true },
+    "joined": { "summary": "You joined the Ashfound. The forge left of the yard gate is open; the Lattice and the Rootched are closed.", "complete": true }
+  }
+}
