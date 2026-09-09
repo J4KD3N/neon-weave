@@ -3,8 +3,8 @@
 extends TestCase
 
 const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
-const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest"]
-const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "class", "approval", "recruited", "not_recruited", "quest"]
+const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation"]
+const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "class", "approval", "recruited", "not_recruited", "quest", "reputation"]
 
 var registry: ContentRegistry
 
@@ -119,8 +119,19 @@ func test_map_npcs_are_companions_on_walkable_cells() -> void:
 	for m: Dictionary in registry.get_all("maps"):
 		var map := MapData.parse(m, tiles)
 		for p: Dictionary in m.get("npcs", []):
-			found += 1
-			assert_true(registry.has_entry("companions", String(p.get("companion", ""))), "map %s npc" % m["id"])
 			var raw: Array = p.get("cell", [])
 			assert_true(map.is_walkable(Vector2i(int(raw[0]), int(raw[1]))), "map %s npc cell" % m["id"])
+			if p.has("merchant"):
+				assert_true(registry.has_entry("merchants", String(p["merchant"])), "map %s merchant" % m["id"])
+				continue
+			if p.has("npc"):
+				var npc := registry.get_entry("npcs", String(p["npc"]))
+				assert_false(npc.is_empty(), "map %s story npc %s" % [m["id"], p["npc"]])
+				assert_true(registry.has_entry("dialogue", String(npc.get("dialogue", ""))), "npc %s dialogue" % p["npc"])
+				assert_true(registry.has_entry("factions", String(npc.get("faction", ""))) or String(npc.get("faction", "")).is_empty(), "npc %s faction" % p["npc"])
+				for k: String in p.get("when", {}):
+					assert_true(REQUIRES_KEYS.has(k), "map %s npc when.%s" % [m["id"], k])
+				continue
+			found += 1
+			assert_true(registry.has_entry("companions", String(p.get("companion", ""))), "map %s npc" % m["id"])
 	assert_true(found >= 1, "Sera stands somewhere")

@@ -1,10 +1,13 @@
-## Flags, companion approval, quest stages and recruits (GDD §11 "flag /
-## reputation system"). Pure data, saved under "narrative".
+## Flags, companion approval, faction reputation, quest stages and recruits
+## (GDD §11 "flag / reputation system"). Pure data, saved under "narrative".
 class_name NarrativeState
 extends RefCounted
 
 var flags: Dictionary = {}
 var approval: Dictionary = {}
+## Standing with each faction (Lattice, Rootched, Ashfound): id -> int.
+## Joining is an Act 2 decision; Act 1 only moves these numbers.
+var reputation: Dictionary = {}
 var quests: Dictionary = {} # quest id -> stage id
 var recruited: Array[String] = []
 
@@ -23,6 +26,14 @@ func approval_of(companion: String) -> int:
 
 func add_approval(companion: String, delta: int) -> void:
 	approval[companion] = approval_of(companion) + delta
+
+
+func reputation_of(faction: String) -> int:
+	return int(reputation.get(faction, 0))
+
+
+func add_reputation(faction: String, delta: int) -> void:
+	reputation[faction] = reputation_of(faction) + delta
 
 
 func stage_of(quest: String) -> String:
@@ -47,7 +58,7 @@ func dismiss(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate()}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate()}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -58,6 +69,9 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	var a: Dictionary = d.get("approval", {})
 	for k: String in a:
 		n.approval[k] = int(a[k])
+	var r: Dictionary = d.get("reputation", {})
+	for k: String in r:
+		n.reputation[k] = int(r[k])
 	var q: Dictionary = d.get("quests", {})
 	for k: String in q:
 		n.quests[k] = String(q[k])

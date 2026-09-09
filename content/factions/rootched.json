@@ -1,0 +1,8 @@
+{
+  "name": "The Rootched",
+  "summary": "Complete the fusion. A flowering, unrecognisable new world.",
+  "color": "#9ab83a",
+  "rivals": ["lattice", "ashfound"],
+  "joinable_act": 2,
+  "milestone": "M2"
+}

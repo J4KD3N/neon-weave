@@ -1,0 +1,8 @@
+{
+  "name": "Envoy Calder",
+  "short_name": "Calder",
+  "summary": "A Lattice envoy in a clean coat, come to see who is running the Beacon now that the road is open.",
+  "faction": "lattice",
+  "dialogue": "lattice_intro",
+  "art": { "color": "#8fd3ff" }
+}

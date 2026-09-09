@@ -1,0 +1,19 @@
+{
+  "name": "A Clean Offer",
+  "main": true,
+  "companion": "",
+  "faction": "lattice",
+  "summary": "The Lattice has noticed the Beacon. Their envoy wants to talk, and to know what you think of machines.",
+  "start": "offer",
+  "stages": {
+    "offer": {
+      "summary": "Envoy Calder of the Lattice is waiting on the plaza.",
+      "objectives": [
+        { "text": "Hear the Lattice envoy out", "done_when": { "flags": { "lattice_heard": true } } },
+        { "text": "Give the envoy an answer", "done_when": { "flags": { "lattice_answered": true } } }
+      ]
+    },
+    "warm": { "summary": "You kept the door open. The Lattice will send more than an envoy when the Loom is found.", "complete": true },
+    "cold": { "summary": "You sent the envoy away. The Lattice remembers refusals as data.", "complete": true }
+  }
+}

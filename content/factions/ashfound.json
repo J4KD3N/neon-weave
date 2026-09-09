@@ -1,0 +1,8 @@
+{
+  "name": "The Ashfound",
+  "summary": "Burn both magic and machine. A hard, free, diminished humanity.",
+  "color": "#ff7a6b",
+  "rivals": ["lattice", "rootched"],
+  "joinable_act": 2,
+  "milestone": "M2"
+}
