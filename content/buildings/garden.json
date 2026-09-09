@@ -1,0 +1,9 @@
+{
+  "name": "Garden",
+  "order": 6,
+  "levels": [
+    { "cost": {}, "effects": {}, "blurb": "A cracked planter and one stubborn vine." },
+    { "cost": { "salvage": 10 }, "effects": { "garden": 1, "heal_fraction": 0.15 }, "blurb": "Overgrowth bed: everyone heals a little more on return; Rootkin twice that." },
+    { "cost": { "salvage": 24, "aether": 3 }, "effects": { "garden": 2, "heal_fraction": 0.25, "aether_on_return": 1 }, "blurb": "Weft-fed grove: an Aether of sap distils from every extraction." }
+  ]
+}

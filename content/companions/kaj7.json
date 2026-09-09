@@ -12,5 +12,6 @@
     "banter": "kaj7_banter"
   },
   "quest": "kaj7_maker_signal",
+  "scenes": [ { "id": "kaj7_quarters", "label": "A better signal", "dialogue": "kaj7_quarters", "requires": { "approval": { "kaj7": { "min": 3 } } }, "quarters": 1 } ],
   "approval_start": 0
 }

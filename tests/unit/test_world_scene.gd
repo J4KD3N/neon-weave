@@ -371,7 +371,7 @@ func test_workshop_upgrade_spends_persists_and_raises_max_hp() -> void:
 	assert_eq(world.bastion.level("workshop"), 1)
 	assert_eq(leader.max_hp, 24, "+2 plating")
 	assert_eq(leader.hp, 12, "the upgrade heals by what it adds")
-	assert_eq(world.ledger.buildings, {"beacon": 0, "medbay": 0, "workshop": 1, "arcanum": 0})
+	assert_eq(world.ledger.buildings, {"beacon": 0, "medbay": 0, "workshop": 1, "arcanum": 0, "archive": 0, "garden": 0, "quarters": 0})
 	var saved := Ledger.load_or_new(LEDGER)
 	assert_eq(saved.buildings["workshop"], 1)
 	# A fresh scene picks the level back up from the ledger.

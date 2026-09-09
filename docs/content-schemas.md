@@ -11,9 +11,10 @@ without a schema; keep the two in step.
 | abilities | name, ap, range, damage [min,max], accuracy | sound, damage_type, requires_los, targets ("self"), effect (vent/mark/detonate/stealth/silence/root/summon/chain/taunt/poison/counter), mark, damage_per_mark, duration, cooldown, resource_cost, heal, summon, summon_max, summon_count, aoe (radius), chain_targets, chain_range, chain_fraction, poison_damage, spread, counter_damage |
 | biomes | name, palette (16 roles) | recolors |
 | branches | name, color | summary |
-| buildings | name, order, levels [{cost, effects, blurb}] | levels[].unlocks |
+| buildings | name, order, levels [{cost, effects, blurb}] | levels[].unlocks; effect keys read: depth, heal_fraction, hp_bonus, damage_bonus, respec, respec_refund, archive, aether_per_fragment, garden, aether_on_return, quarters |
 | classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level, capstone (ability at `capstone_level` levels in the class) |
-| companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start |
+| companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start, scenes [{id, label, dialogue, requires, quarters (level)}] (S35) |
+| lore | name, text, order | source; found ids live in the narrative state and read in the Archive |
 | dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]) |
 | enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity), traits (same vocabulary as races) |
 | factions | name, color, rivals, joinable_act | summary, envoy (npc id), vendor (merchant id), area (map id), join_reputation {faction: delta} applied on joining |
@@ -22,9 +23,9 @@ without a schema; keep the two in step.
 | maps | name, biome, spawn_marker, legend, rows | npcs (companion / merchant / npc + when), pickups, enemies, transitions, triggers, doors, buildings |
 | merchants | name, stock [{id,label,cost,effect}] | art; effect keys heal_fraction, grant, item (a common instance into the pack) |
 | npcs | name, dialogue | short_name, faction, art |
-| origins | name, dialogue_tag | stat_mods |
+| origins | name, dialogue_tag | stat_mods, traits, unlock_flag (earned for the account when a playthrough sets it), unlock_blurb |
 | parties | name, members | summary |
-| pickups | name, grants or dialogue, art | rarity (placement-side); grants.item = true drops an item of the pickup's rarity |
+| pickups | name, grants or dialogue, art | rarity (placement-side); grants.item = true drops an item of the pickup rarity; grants.lore = true finds the next fragment |
 | quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?, next?, next_toast?}} | companion, main, faction, auto_start |
 | races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only), cyberware_slots, traits (D-085: resist {type: fraction}, regen_on_surface {surface: hp}, detect_hidden N, salvage_bonus, mend_after_combat, bonus_abilities [ids], ability_damage_bonus {id: n}, heal_immune_types [types], talent_cost_mod, tags [..]) |
 | resources | name, max | builds_on, gain_per_cast, damage_per_stack, lock_ap_at_max, vent_ability, kind "marks", mark, max_per_target, gain_on_kill, gain_on_surface, gain_on_stealth, reveal_at_max, absorb {type,fraction}, gain_per_absorbed |

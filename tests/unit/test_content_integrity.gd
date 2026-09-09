@@ -153,7 +153,7 @@ func test_shard_templates_reference_existing_tiles_enemies_and_biomes() -> void:
 func test_pickups_have_valid_grants_and_placements() -> void:
 	var pickups := registry.get_all("pickups")
 	assert_true(pickups.size() >= 2)
-	var allowed: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp", "item"]
+	var allowed: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp", "item", "lore"]
 	for p: Dictionary in pickups:
 		var grants: Dictionary = p.get("grants", {})
 		if p.has("dialogue"):
@@ -179,8 +179,8 @@ func test_pickups_have_valid_grants_and_placements() -> void:
 
 func test_buildings_have_free_base_levels_and_valid_costs_and_effects() -> void:
 	var buildings := registry.get_all("buildings")
-	assert_eq(buildings.size(), 4, "Beacon, Med-bay, Workshop, Arcanum")
-	var effect_keys: Array[String] = ["depth", "heal_fraction", "hp_bonus", "damage_bonus", "respec", "respec_refund"]
+	assert_eq(buildings.size(), 7, "Beacon, Med-bay, Workshop, Arcanum, Archive, Garden, Quarters")
+	var effect_keys: Array[String] = ["depth", "heal_fraction", "hp_bonus", "damage_bonus", "respec", "respec_refund", "archive", "aether_per_fragment", "garden", "aether_on_return", "quarters"]
 	for b: Dictionary in buildings:
 		var levels: Array = b.get("levels", [])
 		assert_true(levels.size() >= 2, "building %s has upgrades" % b["id"])

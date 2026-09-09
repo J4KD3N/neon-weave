@@ -34,7 +34,10 @@
     { "id": "beacon", "cell": [4, 2] },
     { "id": "medbay", "cell": [17, 2] },
     { "id": "workshop", "cell": [4, 10] },
-    { "id": "arcanum", "cell": [17, 10] }
+    { "id": "arcanum", "cell": [17, 10] },
+    { "id": "archive", "cell": [10, 2] },
+    { "id": "garden", "cell": [10, 10] },
+    { "id": "quarters", "cell": [20, 6] }
   ],
   "transitions": [
     { "cell": [22, 7], "to": "proto_yard", "arrive": [2, 7], "label": "The yard gate" },

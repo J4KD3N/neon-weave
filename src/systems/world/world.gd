@@ -25,6 +25,8 @@ var selected_shard: String = DEFAULT_SHARD
 @export var ledger_path: String = "user://ledger.json"
 ## Save slots and the autosave live here. Tests point this at a scratch dir.
 @export var saves_dir: String = "user://saves"
+## Account-level unlocks across playthroughs (S35): outside every save.
+@export var account_path: String = Account.DEFAULT_PATH
 
 @onready var map_view: MapView = $Scene/MapView
 @onready var party: Party = $Scene/Party
@@ -58,6 +60,8 @@ var dialogue_menu: DialogueMenu
 var system_menu: SystemMenu
 var weave_menu: WeaveMenu
 var inventory_menu: InventoryMenu
+var archive_menu: ArchiveMenu
+var account: Account
 var merchant_menu: MerchantMenu
 var current_merchant: String = ""
 var journal_menu: JournalMenu
@@ -141,6 +145,10 @@ func _ready() -> void:
 	inventory_menu = InventoryMenu.new()
 	inventory_menu.name = "InventoryMenu"
 	add_child(inventory_menu)
+	archive_menu = ArchiveMenu.new()
+	archive_menu.name = "ArchiveMenu"
+	add_child(archive_menu)
+	account = Account.load_or_new(account_path)
 	merchant_menu = MerchantMenu.new()
 	merchant_menu.name = "MerchantMenu"
 	add_child(merchant_menu)
@@ -345,6 +353,8 @@ func _enter(entry: Dictionary) -> bool:
 		weave_menu.visible = false
 	if inventory_menu != null:
 		inventory_menu.visible = false
+	if archive_menu != null:
+		archive_menu.visible = false
 	close_merchant()
 	if combat != null:
 		combat.release_cursor()
@@ -391,6 +401,7 @@ func autosave() -> Error:
 	if loading:
 		return OK
 	advance_quests() # the save carries any stage the last beat completed
+	grant_account_unlocks()
 	var err := save_to(SaveSystem.AUTOSAVE)
 	if err == OK:
 		check_achievements() # every story beat autosaves, so this is where they land
@@ -736,7 +747,7 @@ func open_creator() -> bool:
 	if bastion_menu != null:
 		bastion_menu.visible = false
 	creator_state = CreatorState.new()
-	creator_state.setup(registry, rules, protagonist)
+	creator_state.setup(registry, rules, protagonist, account.unlocked if account != null else [])
 	creator_menu.open(creator_state)
 	return true
 
@@ -957,6 +968,10 @@ func check_pickups() -> Array[Dictionary]:
 			var inst := drop_item(p.rarity)
 			if not inst.is_empty():
 				got["item"] = inst
+		if p.grants().has("lore"):
+			var fragment := find_lore()
+			if not fragment.is_empty():
+				got["lore"] = fragment
 		got["pickup"] = p.pickup_id
 		got["rarity"] = p.rarity
 		gained.append(got)
@@ -1021,6 +1036,10 @@ func extract() -> bool:
 	play_event("explore.extract")
 	narrative.set_flag("first_extraction", true)
 	narrative.set_flag("extracted_depth_%d" % map_depth(), true) # quests read these
+	var sap := int(bastion.effect("aether_on_return", 0.0))
+	if sap > 0:
+		ledger.bank({"aether": sap})
+		ledger.save()
 	enter_map(home_map)
 	banter("extract")
 	autosave()
@@ -1170,7 +1189,7 @@ func _on_combat_ended(result: String) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Menu sounds: any open text menu ticks, confirms and cancels the same way.
 	var menu_open := in_title() or (settings_menu != null and settings_menu.visible) or (system_menu != null and system_menu.visible) \
-		or (weave_menu != null and weave_menu.visible) or (inventory_menu != null and inventory_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
+		or (weave_menu != null and weave_menu.visible) or (inventory_menu != null and inventory_menu.visible) or (archive_menu != null and archive_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
 		or (journal_menu != null and journal_menu.visible) or in_dialogue()
 	if menu_open and audio != null and not (settings_menu != null and not settings_menu.rebinding.is_empty()):
 		if event.is_action_pressed("confirm"):
@@ -1265,6 +1284,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("ui_down"):
 			merchant_menu.move(1)
 			refresh_merchant()
+		return
+	if archive_menu != null and archive_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("confirm") or event.is_action_pressed("journal"):
+			close_archive()
 		return
 	if inventory_menu != null and inventory_menu.visible:
 		if event.is_action_pressed("inventory") or event.is_action_pressed("cancel"):
@@ -1563,6 +1586,8 @@ func activate_system_item(id: String) -> bool:
 			return true
 	if id.begins_with("shard_"):
 		return launch_shard(id.trim_prefix("shard_"))
+	if id.begins_with("scene_"):
+		return play_scene(id.trim_prefix("scene_"))
 	return false
 
 
@@ -2472,6 +2497,12 @@ func interact_building(b: BuildingActor) -> bool:
 			heal_party(maxf(bastion.heal_fraction(), 0.25))
 			overlay.toast("The Med-bay patches the party up.", 2.0)
 			return true
+		"archive":
+			return open_archive()
+		"garden":
+			return tend_garden()
+		"quarters":
+			return open_quarters()
 	return false
 
 
@@ -3118,3 +3149,132 @@ func handle_join_effect(effects: Dictionary) -> void:
 	var why := join_faction(id)
 	if not why.is_empty():
 		overlay.toast("Cannot join %s: %s" % [faction_name(id), why], 3.0)
+
+
+
+# --- Bastion v2: the Archive, the Garden, the Quarters, the account (S35, D-090)
+
+## Every lore fragment in history order, marked found or not.
+func archive_entries() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for f: Dictionary in registry.get_all("lore"):
+		out.append({"id": String(f["id"]), "name": String(f.get("name", f["id"])), "order": int(f.get("order", 0)), "source": String(f.get("source", "")), "text": String(f.get("text", "")), "found": narrative.lore.has(String(f["id"]))})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["order"]) != int(b["order"]):
+			return int(a["order"]) < int(b["order"])
+		return String(a["id"]) < String(b["id"]))
+	return out
+
+
+func archive_text() -> String:
+	return ArchiveMenu.render(archive_entries(), bastion.level("archive"))
+
+
+## The first fragment in history order not yet found, or "" when the record is complete.
+func next_lore_fragment() -> String:
+	for e: Dictionary in archive_entries():
+		if not bool(e["found"]):
+			return String(e["id"])
+	return ""
+
+
+## Brings a fragment home: found in a Shard it rides the story, not the
+## haul (a wipe never loses it); the Archive at level 2 pays an Aether of
+## insight per fragment. Returns the fragment id, "" when none is left.
+func find_lore() -> String:
+	var id := next_lore_fragment()
+	if id.is_empty():
+		return ""
+	narrative.lore.append(id)
+	var insight := int(bastion.effect("aether_per_fragment", 0.0))
+	if insight > 0:
+		ledger.bank({"aether": insight})
+		ledger.save()
+	overlay.toast("Fragment: %s" % String(registry.get_entry("lore", id).get("name", id)), 3.0)
+	return id
+
+
+func open_archive() -> bool:
+	if archive_menu == null or mode != "explore" or not at_home() or in_dialogue():
+		return false
+	if system_menu != null:
+		system_menu.close()
+	archive_menu.show_text(archive_text())
+	return true
+
+
+func close_archive() -> void:
+	if archive_menu != null:
+		archive_menu.close()
+
+
+## Tending the Garden: the extra heal its level grants, doubled for Rootkin
+## (regen_on_surface is their trait; the Garden is overgrowth by design).
+func tend_garden() -> bool:
+	if bastion.level("garden") <= 0:
+		overlay.toast("The Garden is one stubborn vine. Raise it at the Workshop.", 2.5)
+		return false
+	var garden: Dictionary = Dictionary(bastion.buildings.get("garden", {})).get("levels", [])[bastion.level("garden")].get("effects", {})
+	var fraction := float(garden.get("heal_fraction", 0.0))
+	for m: PartyMember in party.members:
+		var f := fraction * (2.0 if m.traits.has("regen_on_surface") else 1.0)
+		if not m.downed and m.hp < m.max_hp:
+			m.hp = mini(m.max_hp, m.hp + int(ceil(m.max_hp * f)))
+	overlay.toast("The Garden closes what it can.", 2.0)
+	return true
+
+
+## Companions with a Quarters scene they qualify for and have not had.
+func quarters_scenes() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var ctx := dialogue_ctx()
+	for id: String in narrative.recruited:
+		var c: Dictionary = registry.get_entry("companions", id)
+		for scene: Dictionary in c.get("scenes", []):
+			var scene_id := String(scene.get("id", ""))
+			if scene_id.is_empty() or narrative.flag("scene_%s_seen" % scene_id):
+				continue
+			if int(scene.get("quarters", 1)) > bastion.level("quarters"):
+				continue
+			if not Conditions.passes(scene.get("requires", {}), ctx):
+				continue
+			out.append({"companion": id, "scene": scene_id, "dialogue": String(scene.get("dialogue", "")), "label": "%s — %s" % [c.get("short_name", id), scene.get("label", scene_id)]})
+	return out
+
+
+func open_quarters() -> bool:
+	if system_menu == null or mode != "explore" or not at_home():
+		return false
+	if bastion.level("quarters") <= 0:
+		overlay.toast("Bunks in a container. Raise the Quarters at the Workshop.", 2.5)
+		return false
+	var items: Array[Dictionary] = []
+	for s: Dictionary in quarters_scenes():
+		items.append({"id": "scene_%s" % s["scene"], "label": s["label"], "enabled": true})
+	if items.is_empty():
+		items.append({"id": "resume", "label": "Nobody has anything to say tonight.", "enabled": true})
+	else:
+		items.append({"id": "resume", "label": "Leave them to it", "enabled": true})
+	system_menu.open(items)
+	return true
+
+
+## Plays a Quarters scene by id; it is marked seen when it opens.
+func play_scene(scene_id: String) -> bool:
+	for s: Dictionary in quarters_scenes():
+		if String(s["scene"]) != scene_id:
+			continue
+		narrative.set_flag("scene_%s_seen" % scene_id, true)
+		return open_dialogue(String(s["dialogue"]))
+	return false
+
+
+## Keys this playthrough has earned for the account (origins by flag).
+func grant_account_unlocks() -> Array[String]:
+	if account == null:
+		return []
+	var fresh := account.grant_from(narrative, registry)
+	for key: String in fresh:
+		var origin := registry.get_entry("origins", key.get_slice(":", 1))
+		overlay.toast("Unlocked for every playthrough: %s" % origin.get("name", key), 4.0)
+	return fresh

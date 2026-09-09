@@ -12,6 +12,8 @@ var quests: Dictionary = {} # quest id -> stage id
 var recruited: Array[String] = []
 ## The faction joined (D-087); "" until Act 2 commits. Joining is exclusive.
 var faction: String = ""
+## Lore fragment ids found (S35): story, never haul, so a wipe keeps them.
+var lore: Array[String] = []
 
 
 func flag(name: String) -> bool:
@@ -60,7 +62,7 @@ func dismiss(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate()}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -79,6 +81,7 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 		n.quests[k] = String(q[k])
 	n.recruited.assign(d.get("recruited", []))
 	n.faction = String(d.get("faction", ""))
+	n.lore.assign(d.get("lore", []))
 	return n
 
 

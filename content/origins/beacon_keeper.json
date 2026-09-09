@@ -1,0 +1,1 @@
+{ "name": "Beacon Keeper", "summary": "You have kept the Beacon before. You know what sings on the way down, and it knows you.", "dialogue_tag": "keeper", "stat_mods": { "initiative": 1, "evasion": 2 }, "unlock_flag": "choir_contact", "unlock_blurb": "Unlocked by reaching first contact with the Choir in an earlier playthrough." }

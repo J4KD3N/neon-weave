@@ -41,7 +41,8 @@
     "pool": [
       { "type": "salvage_cache", "weight": 3 },
       { "type": "aether_shard", "weight": 4 },
-      { "type": "loot_crate", "weight": 3 }
+      { "type": "loot_crate", "weight": 3 },
+      { "type": "lore_fragment", "weight": 1 }
     ]
   },
   "enemies": {
