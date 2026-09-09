@@ -1,0 +1,1 @@
+{ "name": "Dirge Touch", "sound": "sfx_bolt", "summary": "Hollow Choirist: a cold hand and a verse you feel in the teeth.", "ap": 2, "range": 1, "damage": [3, 6], "accuracy": 90, "damage_type": "arcane" }

@@ -258,9 +258,9 @@ func load_map_entry(entry: Dictionary) -> void:
 ## `depth` 0 means the Beacon's current depth; loads pass the saved depth.
 ## Returns the generated map entry ({} when the template is unknown).
 func enter_shard(template_id: String, seed_value: int, depth: int = 0, extras: Array[String] = []) -> Dictionary:
-	var template: Dictionary = registry.get_entry("shards", template_id)
+	var template: Dictionary = ShardGenerator.expand_remix(registry.get_entry("shards", template_id), registry)
 	if template.is_empty():
-		push_warning("unknown shard template '%s'" % template_id)
+		push_warning("unknown shard template %s" % template_id)
 		return {}
 	var sites := extras if not extras.is_empty() else quest_sites()
 	var entry := ShardGenerator.generate(template, seed_value, depth if depth > 0 else bastion.depth(), sites)
@@ -1478,8 +1478,8 @@ func system_items() -> Array[Dictionary]:
 		var id := String(t["id"])
 		if id == selected_shard:
 			continue
-		var need := String(t.get("requires_unlock", ""))
-		items.append({"id": "shard_" + id, "label": "Launch instead: %s" % t.get("name", id), "enabled": bastion.has_unlocked(need), "why": "the Beacon has not found it yet"})
+		var locked := shard_locked_reason(id)
+		items.append({"id": "shard_" + id, "label": "Launch instead: %s" % t.get("name", id), "enabled": locked.is_empty(), "why": locked})
 	items.append({"id": "go_home", "label": "Return to the yard (haul is lost)", "enabled": not home, "why": "already home"})
 	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
 	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
@@ -1864,6 +1864,9 @@ func shard_locked_reason(template_id: String) -> String:
 		return "unknown Shard"
 	if not bastion.has_unlocked(String(t.get("requires_unlock", ""))):
 		return "the Beacon has not found it yet"
+	var flag := String(t.get("requires_flag", ""))
+	if not flag.is_empty() and not narrative.flag(flag):
+		return "the story has not opened it yet"
 	return ""
 
 

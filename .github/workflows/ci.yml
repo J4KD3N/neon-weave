@@ -112,6 +112,8 @@ jobs:
           run_shot --screenshot="$PWD/build/screenshot-shard.png" --shard=7
           run_shot --screenshot="$PWD/build/screenshot-datacore.png" --shard=7 --biome=verdant_datacore
           run_shot --screenshot="$PWD/build/screenshot-markets.png" --shard=7 --biome=ghost_markets
+          run_shot --screenshot="$PWD/build/screenshot-cathedral.png" --shard=7 --biome=null_cathedral
+          run_shot --screenshot="$PWD/build/screenshot-loom.png" --shard=7 --biome=loom_approach
           run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
           run_shot --screenshot="$PWD/build/screenshot-dialogue.png" --map=proto_yard --talk=sera
           run_shot --screenshot="$PWD/build/screenshot-road.png" --map=gate_road --journal

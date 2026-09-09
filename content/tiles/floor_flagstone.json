@@ -1,0 +1,1 @@
+{ "name": "Flagstone", "sound": "sfx_step_concrete", "summary": "Cut stone over cable trunking. Every step rings.", "layer": "ground", "walkable": true, "blocks_sight": false, "art": { "shape": "floor", "fill": "floor", "edge": "floor_edge", "pattern": "cracked" } }

@@ -35,5 +35,6 @@
   "ai_retreat_hp_fraction": 0.3,
   "surface_evasion": { "spore": 10 },
   "surface_resist": { "echo": { "tech": 0.5 } },
+  "surface_status": { "null": { "silenced": 1 } },
   "initiative_die": 20
 }

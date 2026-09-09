@@ -784,6 +784,10 @@ func _begin_turn() -> void:
 		var healed := mini(int(regen[surface]), actor.max_hp - actor.hp)
 		actor.hp += healed
 		_emit({"type": "regen", "actor": actor.id, "surface": surface, "heal": healed, "actor_hp": actor.hp})
+	var laid: Dictionary = rules.surface_status.get(surface, {})
+	for st: String in laid:
+		actor.statuses[st] = maxi(int(actor.statuses.get(st, 0)), int(laid[st]))
+		_emit({"type": "surface_status", "actor": actor.id, "surface": surface, "status": st, "turns": int(laid[st])})
 	var sight := int(actor.traits.get("detect_hidden", 0))
 	if sight > 0:
 		for c: Combatant in active():
@@ -904,6 +908,8 @@ func describe(e: Dictionary) -> String:
 			return "%s takes %d from poison (%d left).%s" % [_name(e["actor"]), int(e["damage"]), int(e["turns"]) - 1, (" %s dies." % _name(e["actor"])) if bool(e["killed"]) else ""]
 		"spread":
 			return "The poison spreads from %s to %s." % [_name(e["actor"]), _name(e["target"])]
+		"surface_status":
+			return "%s: the %s font takes the voice (%s %d)." % [_name(e["actor"]), e["surface"], e["status"], int(e["turns"])]
 		"stance":
 			return "%s takes a %s stance (%d)." % [_name(e["actor"]), e["stance"], int(e["turns"])]
 		"detect":

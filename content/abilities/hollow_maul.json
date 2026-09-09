@@ -1,0 +1,1 @@
+{ "name": "Hollow Maul", "sound": "sfx_slash", "summary": "Null Husk: an arm that has forgotten it is an arm.", "ap": 2, "range": 1, "damage": [3, 6], "accuracy": 80, "damage_type": "physical" }

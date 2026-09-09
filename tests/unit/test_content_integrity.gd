@@ -142,7 +142,7 @@ func test_shard_templates_reference_existing_tiles_enemies_and_biomes() -> void:
 		for role: String in ["wall", "floor", "grate", "debris", "extraction"]:
 			assert_true(registry.has_entry("tiles", String(tiles.get(role, ""))), "shard %s tile role %s" % [t["id"], role])
 		assert_true(bool(registry.get_entry("tiles", String(tiles.get("extraction", ""))).get("walkable", false)), "extraction tile walkable")
-		var enemies: Dictionary = t.get("enemies", {})
+		var enemies: Dictionary = ShardGenerator.expand_remix(t, registry).get("enemies", {}) # a remix fills its pool by rule
 		var pool: Array = enemies.get("pool", [])
 		assert_true(pool.size() >= 1, "shard %s enemy pool" % t["id"])
 		for p: Dictionary in pool:
@@ -205,7 +205,7 @@ func test_class_resources_exist_and_are_well_formed() -> void:
 		if String(def.get("kind", "")) == "marks":
 			assert_false(String(def.get("mark", "")).is_empty(), "resource %s mark id" % id)
 		for key: String in def.get("gain_on_surface", {}):
-			assert_true(["mana_pool", "conduit", "corrosive", "spore", "echo"].has(key), "resource %s surface %s" % [id, key])
+			assert_true(["mana_pool", "conduit", "corrosive", "spore", "echo", "null"].has(key), "resource %s surface %s" % [id, key])
 		assert_true(int(def.get("max", 0)) >= 1, "resource %s max" % id)
 		if def.has("vent_ability"):
 			assert_true(registry.has_entry("abilities", String(def["vent_ability"])), "resource %s vent ability" % id)
@@ -214,7 +214,7 @@ func test_class_resources_exist_and_are_well_formed() -> void:
 
 
 func test_surface_tiles_are_walkable_floors_with_known_surfaces() -> void:
-	var known: Array[String] = ["mana_pool", "conduit", "corrosive", "spore", "echo"]
+	var known: Array[String] = ["mana_pool", "conduit", "corrosive", "spore", "echo", "null"]
 	var found := 0
 	for t: Dictionary in registry.get_all("tiles"):
 		if t.has("surface"):

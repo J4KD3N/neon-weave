@@ -46,6 +46,8 @@ var surface_evasion: Dictionary = {}
 ## Damage fraction a surface shrugs off for whoever stands in it (target side):
 ## {"echo": {"tech": 0.5}} (S33). Negative is a weakness.
 var surface_resist: Dictionary = {}
+## Statuses a surface lays on whoever starts a turn in it: {"null": {"silenced": 1}} (S34).
+var surface_status: Dictionary = {}
 ## Enemy positioning weights (EnemyBrain scoring).
 var ai_cover_weight: int = 4
 var ai_elevation_weight: int = 4
@@ -97,6 +99,13 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 		for t: String in sr[surface]:
 			by_type[t] = float(Dictionary(sr[surface])[t])
 		r.surface_resist[surface] = by_type
+	r.surface_status = {}
+	var ss: Dictionary = entry.get("surface_status", {})
+	for surface: String in ss:
+		var by_status: Dictionary = {}
+		for st: String in ss[surface]:
+			by_status[st] = int(Dictionary(ss[surface])[st])
+		r.surface_status[surface] = by_status
 	r.ai_cover_weight = int(entry.get("ai_cover_weight", r.ai_cover_weight))
 	r.ai_elevation_weight = int(entry.get("ai_elevation_weight", r.ai_elevation_weight))
 	r.ai_corrosive_penalty = int(entry.get("ai_corrosive_penalty", r.ai_corrosive_penalty))

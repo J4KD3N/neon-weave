@@ -1,0 +1,23 @@
+{
+  "name": "The Null Cathedral",
+  "summary": "A pre-Sundering data-cathedral where the council drowned the Choir. Null-touched horrors in the nave, anti-magic constructs at the altars, and the inner voices of the Choir under the floor.",
+  "palette": {
+    "floor": "#2a2622",
+    "floor_edge": "#17140f",
+    "grate": "#221f1a",
+    "grate_line": "#8a7a4a",
+    "wall_top": "#6a6258",
+    "wall_left": "#3a352e",
+    "wall_right": "#4a443b",
+    "rust": "#5a4a3a",
+    "debris_top": "#5a5248",
+    "debris_left": "#2e2a24",
+    "debris_right": "#3d3830",
+    "neon_arcane": "#e8d8ff",
+    "neon_tech": "#8fe0d0",
+    "neon_body": "#ffb08a",
+    "blood": "#3a0a1a",
+    "failing_light": "#e8c060"
+  },
+  "recolors": { "scav": "rust" }
+}

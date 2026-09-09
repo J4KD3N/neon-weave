@@ -1,0 +1,1 @@
+{ "name": "Inner Voice", "family": "null_cathedral", "archetype": "ranged", "summary": "A Choir fragment that got under the floor and learned to aim.", "stats": { "hp": 10, "move": 5, "evasion": 10, "initiative": 2 }, "abilities": ["psalm_bolt"], "awareness": 6, "xp": 10, "loot": { "aether": [1, 3], "cipher_chance": 0.15 }, "art": { "shape": "capsule", "color": "#e8d8ff" } }

@@ -1,0 +1,1 @@
+{ "name": "Pew", "summary": "A bench for a congregation that never came back. Cover.", "layer": "wall", "walkable": false, "blocks_sight": false, "cover": 1, "art": { "shape": "block", "height": 12, "top": "debris_top", "left": "debris_left", "right": "debris_right" } }
