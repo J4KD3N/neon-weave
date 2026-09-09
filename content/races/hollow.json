@@ -1,0 +1,10 @@
+{
+  "name": "Hollow",
+  "analog": "Undead",
+  "identity": "Echoes of the dead of the Sundering: a body the Weft forgot to let go of. No breath, no warmth, and people notice.",
+  "traits": { "resist": { "corrosive": 1.0, "arcane": 0.25 }, "tags": ["hollow", "unnerving"] },
+  "stat_mods": { "hp": -2, "evasion": 5 },
+  "faction_lean": "",
+  "overlay": { "kind": "echo", "color": "#9ad8ff" },
+  "milestone": "M3"
+}

@@ -46,7 +46,7 @@ func test_sheet_validation_errors() -> void:
 func test_creator_state_lists_options_and_cycles() -> void:
 	var st := CreatorState.new()
 	st.setup(registry, rules)
-	assert_eq(st.races.size(), 5, "M2 races: trueborn, chromed, aetherborn, synth, rootkin")
+	assert_eq(st.races.size(), 10, "all ten GDD races are playable (S30)")
 	assert_eq(st.origins.size(), 4)
 	assert_eq(st.classes.size(), 6)
 	assert_eq(st.rows, ["name", "race", "origin", "class", "body", "arcane", "tech"])

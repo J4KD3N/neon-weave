@@ -1,8 +1,8 @@
 {
   "name": "Aetherborn",
   "analog": "Sorcerer-blood",
-  "identity": "Magic-marked lineage: Weft-light runs in lines under the skin.",
-  "hooks": ["innate_spell", "gadget_interference"],
+  "identity": "Magic-marked lineage: Weft-light runs in lines under the skin. Gadgets misfire near them.",
+  "traits": { "bonus_abilities": ["weft_spark"], "resist": { "tech": -0.25 } },
   "stat_mods": { "hp": -1, "initiative": 2 },
   "faction_lean": "rootched",
   "overlay": { "kind": "marks", "color": "#b58cff" },

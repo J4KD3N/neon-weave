@@ -7,7 +7,7 @@ extends RefCounted
 
 const BODY_SIZE := Vector2i(32, 48)
 const SHADOW_SIZE := Vector2i(36, 14)
-const OVERLAY_KINDS: Array[String] = ["none", "marks", "chrome", "bark", "plating"]
+const OVERLAY_KINDS: Array[String] = ["none", "marks", "chrome", "bark", "plating", "echo", "pelt", "sky", "swarm"]
 
 
 static func body_texture(tint: Color, shape: String = "capsule", overlay: Dictionary = {}) -> ImageTexture:
@@ -59,6 +59,14 @@ static func _stamp_overlay(img: Image, overlay: Dictionary) -> void:
 					hit = (x * 3 + y * 5) % 6 == 0
 				"plating":
 					hit = y == 8 or y == 20 or y == 21 or y == 34 or y == 35
+				"echo": # a faint static every other row: a body the light passes through
+					hit = y % 2 == 0 and (x + y / 2) % 3 == 0
+				"pelt": # dense fur flecks below the face
+					hit = y > 12 and (x * 7 + y * 3) % 4 == 0
+				"sky": # a single pale line down the spine and long limbs
+					hit = x == img.get_width() / 2 or (y > 30 and x % 5 == 0)
+				"swarm": # shifting grain: no two rows agree
+					hit = (x * x + y * 11) % 5 == 0
 			if hit:
 				img.set_pixel(x, y, color)
 

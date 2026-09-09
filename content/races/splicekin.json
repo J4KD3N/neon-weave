@@ -1,0 +1,10 @@
+{
+  "name": "Splicekin",
+  "analog": "Beastfolk",
+  "identity": "Gene-built chimeras from corporate vats: pelt, claw and a nose that reads a room.",
+  "traits": { "detect_hidden": 2, "ability_damage_bonus": { "strike": 1 }, "tags": ["bestial"] },
+  "stat_mods": { "move": 1, "initiative": 1 },
+  "faction_lean": "ashfound",
+  "overlay": { "kind": "pelt", "color": "#a86b3c" },
+  "milestone": "M3"
+}

@@ -14,6 +14,8 @@ var abilities: Array[String] = []
 var tier: String = ""
 var damage_bonus: int = 0
 var ap_bonus: int = 0
+## Entry traits (D-085): the same vocabulary as races, on any enemy.
+var traits: Dictionary = {}
 
 
 func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i, p_stats: Dictionary, default_awareness: int, sheet: SpriteSheet = null, tint_override: Color = Color.TRANSPARENT) -> void:
@@ -29,6 +31,7 @@ func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i, p_stats: Diction
 	hp = max_hp
 	tier = String(stats.get("tier", ""))
 	damage_bonus = int(stats.get("damage_bonus", 0))
+	traits = Dictionary(entry.get("traits", {})).duplicate(true)
 	ap_bonus = int(stats.get("ap_bonus", 0))
 	name = "%s_%d_%d" % [enemy_id, cell.x, cell.y]
 	var art: Dictionary = entry.get("art", {})

@@ -25,6 +25,8 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	if requires.has("race") and String(requires["race"]) != String(ctx.get("race", "")):
 		return false
+	if requires.has("race_tag") and not Array(ctx.get("race_tags", [])).has(String(requires["race_tag"])):
+		return false
 	if requires.has("class") and String(requires["class"]) != String(ctx.get("class", "")):
 		return false
 	var approval: Dictionary = requires.get("approval", {})

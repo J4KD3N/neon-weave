@@ -1,0 +1,10 @@
+{
+  "name": "Swarmborn",
+  "analog": "Changelings",
+  "identity": "A nanite colony in a human shape. It mends itself between fights and can wear another face for a while.",
+  "traits": { "mend_after_combat": 0.25, "tags": ["swarm", "disguise"] },
+  "stat_mods": { "initiative": 1 },
+  "faction_lean": "",
+  "overlay": { "kind": "swarm", "color": "#c0c0c0" },
+  "milestone": "M3"
+}

@@ -607,7 +607,8 @@ func dialogue_ctx() -> Dictionary:
 	var origin_tag := ""
 	if l != null and not l.origin_id.is_empty():
 		origin_tag = String(registry.get_entry("origins", l.origin_id).get("dialogue_tag", ""))
-	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "class": l.class_id if l != null else ""}
+	var tags: Array = Dictionary(registry.get_entry("races", l.race_id).get("traits", {})).get("tags", []) if l != null else []
+	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "race_tags": tags, "class": l.class_id if l != null else ""}
 
 
 func speaker_names() -> Dictionary:
@@ -973,6 +974,10 @@ func _gain(grants: Dictionary) -> Dictionary:
 
 func _bank(take: Dictionary, count_run: bool) -> void:
 	var level_before := party_level()
+	var bonus := party_trait_total("salvage_bonus")
+	if bonus > 0.0 and int(take.get("salvage", 0)) > 0:
+		take = take.duplicate()
+		take["salvage"] = int(round(int(take["salvage"]) * (1.0 + bonus)))
 	ledger.bank(take)
 	ledger.xp += int(take.get("xp", 0))
 	if party_level() > level_before:
@@ -1112,6 +1117,10 @@ func _on_combat_ended(result: String) -> void:
 			if m.downed:
 				m.downed = false
 				m.hp = 1
+		for m: PartyMember in party.members:
+			var mend := float(m.traits.get("mend_after_combat", 0.0))
+			if mend > 0.0 and m.hp > 0 and m.hp < m.max_hp:
+				m.hp = mini(m.max_hp, m.hp + int(ceil(m.max_hp * mend)))
 		party.trail.reset(party.leader().position)
 		party.active = true
 		mode = "explore"
@@ -1651,6 +1660,7 @@ func refresh_progression() -> void:
 			m.level = int(data.get("level", 1))
 			m.subclass_id = String(data.get("subclass", ""))
 			m.damage_bonus = int(data.get("damage_bonus", 0))
+			m.traits = Dictionary(data.get("traits", {})).duplicate(true)
 			m.set_hp_bonus(bastion.hp_bonus())
 
 
@@ -1685,10 +1695,11 @@ func choose_subclass(member_id: String, sub_id: String) -> String:
 func buy_talent(member_id: String, talent_id: String) -> String:
 	if member_by_id(member_id) == null:
 		return "no such member"
-	var why := Progression.can_buy_talent(registry, party_level(), build_for(member_id), talent_id, progression_rules(), ledger.total("aether"))
+	var cost_mod := int(member_by_id(member_id).traits.get("talent_cost_mod", 0))
+	var why := Progression.can_buy_talent(registry, party_level(), build_for(member_id), talent_id, progression_rules(), ledger.total("aether"), cost_mod)
 	if not why.is_empty():
 		return why
-	var cost := int(Dictionary(registry.get_entry("talents", talent_id).get("cost", {})).get("aether", 0))
+	var cost := Progression.talent_cost(registry, talent_id, cost_mod)
 	if not ledger.spend({"aether": cost}):
 		return "needs %d Aether" % cost
 	var b := build_for(member_id)
@@ -1708,7 +1719,7 @@ func respec(member_id: String) -> String:
 	var b := build_for(member_id)
 	if String(b["subclass"]).is_empty() and Array(b["talents"]).is_empty():
 		return "nothing to reset"
-	var refund := Progression.refund_for(registry, b, bastion.effect("respec_refund", 0.0))
+	var refund := Progression.refund_for(registry, b, bastion.effect("respec_refund", 0.0), int(member_by_id(member_id).traits.get("talent_cost_mod", 0)))
 	ledger.resources["aether"] = ledger.total("aether") + refund
 	ledger.builds[member_id] = {"subclass": "", "talents": [], "equipment": Dictionary(b.get("equipment", {})).duplicate(true)} # gear stays on
 	ledger.save()
@@ -2960,3 +2971,12 @@ func confirm_inventory() -> bool:
 		overlay.toast("%s: %s" % [row.get("label", row.get("id", "")), why], 2.0)
 	refresh_inventory()
 	return why.is_empty()
+
+
+## Sum of a numeric trait across the living party (D-085): salvage_bonus etc.
+func party_trait_total(key: String) -> float:
+	var total := 0.0
+	for m: PartyMember in party.members:
+		if not m.downed:
+			total += float(m.traits.get(key, 0.0))
+	return total

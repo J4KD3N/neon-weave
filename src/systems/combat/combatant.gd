@@ -42,6 +42,9 @@ var statuses: Dictionary = {}
 var summoned_by: String = ""
 ## Set once a rusher has broken off (S28): a retreat happens once per fight.
 var retreated: bool = false
+## Generic traits from race, origin or entry data (D-085): resist, regen_on_surface,
+## detect_hidden, ability_damage_bonus, heal_immune_types, ... Read by CombatState.
+var traits: Dictionary = {}
 
 
 static func make(p_id: String, p_name: String, p_team: String, p_cell: Vector2i, stats: Dictionary, p_abilities: Array[String], ap_per_turn: int) -> Combatant:
@@ -65,6 +68,11 @@ static func make(p_id: String, p_name: String, p_team: String, p_cell: Vector2i,
 ## Alive and not knocked out: still takes turns and blocks cells.
 func is_active() -> bool:
 	return hp > 0 and not downed
+
+
+## Fraction of `damage_type` this combatant shrugs off (negative = weakness).
+func resist(damage_type: String) -> float:
+	return clampf(float(Dictionary(traits.get("resist", {})).get(damage_type, 0.0)), -1.0, 1.0)
 
 
 func is_hostile_to(other: Combatant) -> bool:
