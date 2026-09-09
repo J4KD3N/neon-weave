@@ -1,0 +1,1 @@
+{ "name": "Call Wisp", "sound": "sfx_summon", "summary": "Cantor: another verse, another wisp.", "ap": 2, "range": 0, "damage": [0, 0], "accuracy": 100, "targets": "self", "effect": "summon", "summon": "echo_wisp", "summon_max": 2, "cooldown": 1 }

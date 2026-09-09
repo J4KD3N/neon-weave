@@ -34,5 +34,6 @@
   "ai_mana_pool_weight": 3,
   "ai_retreat_hp_fraction": 0.3,
   "surface_evasion": { "spore": 10 },
+  "surface_resist": { "echo": { "tech": 0.5 } },
   "initiative_die": 20
 }

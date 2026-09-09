@@ -1,0 +1,1 @@
+{ "name": "Grave Grip", "sound": "sfx_slash", "summary": "Failed Hollow: a hand that does not know it is dead closes on you.", "ap": 2, "range": 1, "damage": [3, 5], "accuracy": 85, "damage_type": "physical" }

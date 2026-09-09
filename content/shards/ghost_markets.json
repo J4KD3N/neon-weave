@@ -1,0 +1,62 @@
+{
+  "name": "Ghost Markets Shard",
+  "biome": "ghost_markets",
+  "summary": "An arcade of shuttered stalls and dead lights, static pooled in the aisles, and the Choir on every speaker. Stalls are cover; the static jams tech.",
+  "requires_unlock": "ghost_markets",
+  "size": { "width": [46, 58], "height": [32, 42] },
+  "rooms": { "count": [7, 10], "min": [5, 4], "max": [11, 7], "attempts": 300 },
+  "corridors": { "extra_loops": [2, 4] },
+  "tiles": {
+    "wall": "wall_shutter",
+    "floor": "floor_tile",
+    "grate": "dead_light",
+    "debris": "stall",
+    "extraction": "extraction_pad",
+    "secret_door": "secret_door",
+    "vault_door": "vault_door",
+    "waypoint": "waypoint"
+  },
+  "features": {
+    "secrets": [1, 3],
+    "vaults": [1, 2],
+    "vault_cost": { "ciphers": 1 },
+    "merchant": "ghost_broker",
+    "waypoints": [1, 2],
+    "rarity": { "rare": 0.25, "epic": 0.06 },
+    "ramp_far_fraction": 0.6
+  },
+  "grate_patch_chance": 0.3,
+  "surfaces": {
+    "patches": [4, 7],
+    "pool": [
+      { "tile": "echo_static", "char": "e", "weight": 3 },
+      { "tile": "mana_pool", "char": "m", "weight": 2 },
+      { "tile": "conduit", "char": "c", "weight": 2 },
+      { "tile": "catwalk", "char": "k", "weight": 1 }
+    ]
+  },
+  "debris_density": 0.06,
+  "pickups": {
+    "count": [3, 6],
+    "pool": [
+      { "type": "salvage_cache", "weight": 3 },
+      { "type": "aether_shard", "weight": 4 },
+      { "type": "loot_crate", "weight": 3 }
+    ]
+  },
+  "enemies": {
+    "groups": [4, 7],
+    "group_size": [1, 3],
+    "min_spawn_distance": 10,
+    "pool": [
+      { "type": "failed_hollow", "weight": 4 },
+      { "type": "choir_cultist", "weight": 3 },
+      { "type": "echo_wraith", "weight": 3 },
+      { "type": "choir_cantor", "weight": 1 }
+    ],
+    "elite_chance_per_depth": 0.12,
+    "elite_chance_max": 0.6,
+    "boss": { "type": "choir_voice", "min_depth": 3 }
+  },
+  "milestone": "M3"
+}

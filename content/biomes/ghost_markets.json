@@ -1,0 +1,23 @@
+{
+  "name": "Ghost Markets",
+  "summary": "A pre-Sundering arcade where the dead still trade: echo-wraiths in the static, failed Hollows behind the shutters, and the Choir singing through every dead speaker.",
+  "palette": {
+    "floor": "#242130",
+    "floor_edge": "#15131d",
+    "grate": "#1d1a27",
+    "grate_line": "#5a4d7a",
+    "wall_top": "#4a4560",
+    "wall_left": "#2a2738",
+    "wall_right": "#353146",
+    "rust": "#7a5a4a",
+    "debris_top": "#5a3f4f",
+    "debris_left": "#2e2029",
+    "debris_right": "#3d2b36",
+    "neon_arcane": "#d9a0ff",
+    "neon_tech": "#7fd6ff",
+    "neon_body": "#ff9d8a",
+    "blood": "#5a1a3a",
+    "failing_light": "#e0b05a"
+  },
+  "recolors": { "scav": "rust" }
+}

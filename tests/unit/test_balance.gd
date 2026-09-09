@@ -201,13 +201,16 @@ func test_the_road_chain_without_healing_is_survivable() -> void:
 	world = _fresh()
 
 
-## One Shard at each demo depth with the full party at level 2: hop between
-## pickups and the pad, fight what wakes, extract. Depth 2 must be harder
-## than depth 1 and both must be extractable more often than not.
+## Shards by biome and depth with a geared party of the level a player would
+## have there (`_gear_up`): hop between pickups and the pad, fight what wakes,
+## extract. Each row holds a floor; the deeper floors are low on purpose (the
+## naive policy never retreats or heals) and are logged in gaps for the M4 pass.
 func test_shard_depths_extract_more_often_than_not() -> void:
+	var prules: Dictionary = world.progression_rules()
 	_drop(world)
 	var rates: Array[float] = []
-	for depth: int in [1, 2]:
+	for run: Dictionary in [{"template": ExploreWorld.DEFAULT_SHARD, "depth": 1, "xp": 20, "min": 0.5}, {"template": ExploreWorld.DEFAULT_SHARD, "depth": 2, "xp": 20, "min": 0.4}, {"template": "verdant_datacore", "depth": 2, "xp": 80, "min": 0.2}, {"template": ExploreWorld.DEFAULT_SHARD, "depth": 3, "xp": 200, "min": 0.1}, {"template": "ghost_markets", "depth": 3, "xp": 200, "min": 0.1}]:
+		var depth := int(run["depth"])
 		var extracted := 0
 		var fights := 0
 		for i: int in SEEDS:
@@ -215,10 +218,11 @@ func test_shard_depths_extract_more_often_than_not() -> void:
 			w.combat_seed = 4000 + i
 			for id: String in ["sera", "dax", "kaj7"]:
 				w.add_companion(id)
-			w.ledger.xp = 20
+			w.ledger.xp = int(run["xp"])
 			w.refresh_progression()
+			_gear_up(w, depth)
 			_heal_up(w)
-			var entry := w.enter_shard(ExploreWorld.DEFAULT_SHARD, 500 + i, depth)
+			var entry := w.enter_shard(String(run["template"]), 500 + i, depth)
 			assert_false(entry.is_empty(), "line 213")
 			var hops := 0
 			while w.mode != "defeated" and not w.at_home() and hops < 40:
@@ -246,7 +250,33 @@ func test_shard_depths_extract_more_often_than_not() -> void:
 			_drop(w)
 		var rate := float(extracted) / SEEDS
 		rates.append(rate)
-		_report("shard depth %d" % depth, extracted, SEEDS, float(fights) / SEEDS, 0.0, 0.0, "  (rounds = fights per run)")
-		assert_true(rate >= 0.5, "depth %d extracts %d/%d runs" % [depth, extracted, SEEDS])
+		_report("%s d%d" % [String(run["template"]).substr(0, 14), depth], extracted, SEEDS, float(fights) / SEEDS, 0.0, 0.0, "  lvl %d (rounds = fights per run)" % Progression.level_for_xp(int(run["xp"]), prules))
+		assert_true(rate >= float(run.get("min", 0.4)), "%s depth %d extracts %d/%d runs" % [run["template"], depth, extracted, SEEDS])
 	print("  balance extraction by depth: %s (depth scaling itself is pinned by test_stat_block)" % [rates])
 	world = _fresh()
+
+
+## A plausible build for the level (S33): the first subclass, every talent
+## the level and a full purse allow, a common weapon and armour each, and a
+## Workshop level for the depth. The naive policy still plays badly; it
+## just no longer plays a level-6 party with level-1 numbers.
+static func _gear_up(w: ExploreWorld, depth: int) -> void:
+	w.ledger.bank({"aether": 60, "salvage": 200})
+	w.ledger.buildings["workshop"] = clampi(depth - 1, 0, 2)
+	w.bastion.setup(w.registry.get_all("buildings"), w.ledger.buildings)
+	for m: PartyMember in w.party.members:
+		var cls := w.registry.get_entry("classes", m.class_id)
+		var subs: Array = cls.get("subclasses", [])
+		if not subs.is_empty():
+			w.choose_subclass(m.member_id, String(subs[0]))
+		for _pass: int in 3:
+			for t: Dictionary in w.registry.get_all("talents"):
+				w.buy_talent(m.member_id, String(t["id"]))
+		var uid := 90000 + m.member_id.hash() % 1000
+		w.ledger.items.append(ItemSystem.make("strut_blade", [], "common", uid))
+		w.ledger.items.append(ItemSystem.make("scrap_plating", [], "common", uid + 1))
+		w.equip(m.member_id, "weapon", uid)
+		w.equip(m.member_id, "armour", uid + 1)
+	w.ledger.resources["aether"] = 0
+	w.ledger.resources["salvage"] = 0
+	w.apply_bastion_bonuses()

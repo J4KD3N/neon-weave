@@ -1,0 +1,1 @@
+{ "name": "Echo static", "sound": "sfx_step_conduit", "summary": "A pool of dead-channel static. Tech hits on whoever stands in it lose half their bite.", "layer": "ground", "walkable": true, "blocks_sight": false, "surface": "echo", "art": { "shape": "floor", "fill": "grate", "edge": "floor_edge", "pattern": "ripple", "pattern_color": "neon_arcane" } }

@@ -682,7 +682,8 @@ func _apply_damage(c: Combatant, dmg: int, damage_type: String = "") -> Dictiona
 			fate["absorbed"] = absorbed
 			c.resource = mini(c.resource + absorbed * int(c.resource_def.get("gain_per_absorbed", 1)), c.resource_max())
 	if not damage_type.is_empty():
-		var r := c.resist(damage_type)
+		var r := c.resist(damage_type) + float(Dictionary(rules.surface_resist.get(map.surface_at(c.cell), {})).get(damage_type, 0.0))
+		r = clampf(r, -1.0, 1.0)
 		if r != 0.0:
 			var shrugged := int(floor(dmg * r)) if r > 0.0 else -int(ceil(dmg * -r))
 			dmg -= shrugged

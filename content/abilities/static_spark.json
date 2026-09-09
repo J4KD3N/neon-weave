@@ -1,0 +1,1 @@
+{ "name": "Static Spark", "sound": "sfx_zap", "summary": "Echo-wisp: a spit of dead-channel static.", "ap": 2, "range": 4, "damage": [1, 3], "accuracy": 80, "damage_type": "tech", "requires_los": true }

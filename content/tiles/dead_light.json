@@ -1,0 +1,1 @@
+{ "name": "Failing light", "sound": "sfx_step_grate", "summary": "A floor panel lit from below by a light that has been dying for centuries.", "layer": "ground", "walkable": true, "blocks_sight": false, "art": { "shape": "floor", "fill": "grate", "edge": "floor_edge", "pattern": "grate", "pattern_color": "failing_light" } }

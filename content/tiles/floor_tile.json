@@ -1,0 +1,1 @@
+{ "name": "Arcade tile", "sound": "sfx_step_concrete", "summary": "Pre-Sundering floor tile, cracked in a pattern nobody chose.", "layer": "ground", "walkable": true, "blocks_sight": false, "art": { "shape": "floor", "fill": "floor", "edge": "floor_edge", "pattern": "cracked" } }

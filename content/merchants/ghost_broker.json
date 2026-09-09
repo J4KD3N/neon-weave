@@ -1,0 +1,10 @@
+{
+  "name": "The Broker",
+  "summary": "Something that remembers being a shopkeeper. It takes Salvage; it does not take questions.",
+  "stock": [
+    { "id": "charm", "label": "Weft charm (trinket, +3 evasion)", "cost": { "salvage": 7 }, "effect": { "item": "weft_charm" } },
+    { "id": "cipher", "label": "A Cipher key, still warm", "cost": { "salvage": 13 }, "effect": { "grant": { "ciphers": 1 } } },
+    { "id": "medkit", "label": "Field medkit: heal the party by half", "cost": { "salvage": 6 }, "effect": { "heal_fraction": 0.5 } }
+  ],
+  "art": { "color": "#d9a0ff" }
+}
