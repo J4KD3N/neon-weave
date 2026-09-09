@@ -1,0 +1,1 @@
+{ "name": "Circuit Sense", "branch": "tech", "tier": 3, "cost": { "aether": 6 }, "effects": { "initiative": 2, "evasion": 3 }, "summary": "+2 initiative, +3 evasion. Needs Ghost Gait.", "requires": ["ghost_gait"] }

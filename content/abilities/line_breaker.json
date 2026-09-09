@@ -1,0 +1,1 @@
+{ "name": "Line Breaker", "sound": "sfx_slash", "summary": "Scrap-Knight capstone: through the front rank, and everyone in it turns to face you.", "ap": 3, "range": 1, "damage": [6, 10], "accuracy": 85, "damage_type": "physical", "aoe": 1, "effect": "taunt", "duration": 2 }

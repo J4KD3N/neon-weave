@@ -405,8 +405,8 @@ func _sync_actor(id: String) -> void:
 	if c.hp <= 0 and not c.downed and not node.dead:
 		node.dead = true
 		var enemy := node as EnemyActor
-		if enemy != null:
-			world.on_enemy_killed(enemy)
+		if enemy != null and world.enemies.has(enemy):
+			world.on_enemy_killed(enemy) # party summons drop nothing
 		if animate:
 			var tween := node.create_tween()
 			tween.tween_property(node, "modulate:a", 0.0, 0.4)
@@ -420,7 +420,7 @@ func _on_event(e: Dictionary) -> void:
 	_sound_for_event(e)
 	match String(e["type"]):
 		"summon":
-			var minion := world.spawn_summoned(String(e["kind"]), e["cell"])
+			var minion := world.spawn_summoned(String(e["kind"]), e["cell"], String(e.get("team", Combatant.TEAM_ENEMY)))
 			if minion != null:
 				actors[String(e["summoned"])] = minion
 				minion.show_hp = true

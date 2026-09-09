@@ -1,0 +1,1 @@
+{ "name": "Loom-touched", "branch": "arcane", "tier": 4, "cost": { "aether": 9 }, "effects": { "damage_bonus": 2, "initiative": 2 }, "summary": "+2 damage, +2 initiative. Needs Weft Attuned.", "requires": ["weft_attuned"] }

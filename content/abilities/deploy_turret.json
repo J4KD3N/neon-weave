@@ -1,0 +1,1 @@
+{ "name": "Deploy Turret", "sound": "sfx_summon", "summary": "Artificer: a turret bolted down beside you. It does not move; it does not miss much.", "ap": 2, "range": 0, "damage": [0, 0], "accuracy": 100, "targets": "self", "effect": "summon", "summon": "shepherd_turret", "summon_max": 1, "cooldown": 3 }

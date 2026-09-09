@@ -1,10 +1,1 @@
-{
-  "name": "Riposte",
-  "sound": "sfx_slash",
-  "summary": "Voidfencer: a precise counter-cut.",
-  "ap": 2,
-  "range": 1,
-  "damage": [3, 6],
-  "accuracy": 95,
-  "damage_type": "physical"
-}
+{ "name": "Riposte", "sound": "sfx_slash", "summary": "Voidfencer: a guard that answers every blade that comes within reach, hit or miss.", "ap": 1, "range": 0, "damage": [0, 0], "accuracy": 100, "targets": "self", "effect": "counter", "duration": 2, "counter_damage": [3, 6] }

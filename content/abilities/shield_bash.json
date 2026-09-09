@@ -1,10 +1,1 @@
-{
-  "name": "Shield Bash",
-  "sound": "sfx_slash",
-  "summary": "Warden: a bash that always lands.",
-  "ap": 2,
-  "range": 1,
-  "damage": [2, 4],
-  "accuracy": 100,
-  "damage_type": "physical"
-}
+{ "name": "Shield Bash", "sound": "sfx_slash", "summary": "Warden: a plate to the face. Whoever takes it swings at you next.", "ap": 2, "range": 1, "damage": [2, 4], "accuracy": 100, "damage_type": "physical", "effect": "taunt", "duration": 2 }

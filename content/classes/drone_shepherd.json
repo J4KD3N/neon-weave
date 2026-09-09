@@ -11,6 +11,7 @@
   "unlocks": {},
   "abilities": ["strike", "scrap_shot", "overcharge"],
   "subclass_level": 3,
+  "capstone": "overclock_swarm",
   "subclasses": ["swarmlord", "artificer"],
   "milestone": "M1"
 }

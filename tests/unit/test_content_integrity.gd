@@ -80,7 +80,8 @@ func test_enemies_reference_abilities_and_families() -> void:
 	var enemies := registry.get_all("enemies")
 	assert_true(enemies.size() >= 3, "M0 wants three enemy types")
 	for e: Dictionary in enemies:
-		assert_true(registry.has_entry("biomes", String(e.get("family", ""))), "enemy %s family" % e["id"])
+		var family := String(e.get("family", ""))
+		assert_true(registry.has_entry("biomes", family) or family == "bastion", "enemy %s family (a biome, or bastion for the party side summons)" % e["id"])
 		assert_true(["rusher", "ranged", "summoner", "stealther", "controller"].has(String(e.get("archetype", ""))), "enemy %s archetype" % e["id"])
 		var abilities: Array = e.get("abilities", [])
 		assert_true(abilities.size() >= 1, "enemy %s has abilities" % e["id"])
@@ -249,7 +250,7 @@ func test_prototype_party_covers_distinct_classes_and_abilities_resolve() -> voi
 	assert_eq(seen.size(), 3, "three preset classes; Sera brings the knight count to two")
 	for a: Dictionary in registry.get_all("abilities"):
 		var effect := String(a.get("effect", ""))
-		assert_true(["", "vent", "mark", "detonate", "stealth", "silence", "root", "summon"].has(effect), "ability %s effect '%s'" % [a["id"], effect])
+		assert_true(["", "vent", "mark", "detonate", "stealth", "silence", "root", "summon", "chain", "taunt", "poison", "counter"].has(effect), "ability %s effect '%s'" % [a["id"], effect])
 		if effect == "mark" or effect == "detonate":
 			assert_false(String(a.get("mark", "")).is_empty(), "ability %s needs a mark id" % a["id"])
 		assert_true(int(a.get("resource_cost", 0)) >= 0)

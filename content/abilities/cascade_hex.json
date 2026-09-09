@@ -1,0 +1,1 @@
+{ "name": "Cascade Hex", "sound": "sfx_bolt", "summary": "Circuit-Witch capstone: every hex in reach goes off at once.", "ap": 3, "range": 5, "damage": [3, 5], "accuracy": 90, "damage_type": "tech", "requires_los": true, "aoe": 1, "effect": "detonate", "mark": "hex", "damage_per_mark": 3 }

@@ -1,0 +1,1 @@
+{ "name": "Weft Attuned", "branch": "arcane", "tier": 3, "cost": { "aether": 6 }, "effects": { "damage_bonus": 1, "hp": 3 }, "summary": "+1 damage, +3 max HP. Needs Weft Edge.", "requires": ["weft_edge"] }

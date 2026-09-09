@@ -11,6 +11,7 @@
   "unlocks": {},
   "abilities": ["strike", "hex_bolt", "detonate"],
   "subclass_level": 3,
+  "capstone": "cascade_hex",
   "subclasses": ["glitchbinder", "plaguecoder"],
   "milestone": "M1"
 }

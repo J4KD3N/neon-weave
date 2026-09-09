@@ -11,6 +11,7 @@
   "unlocks": {},
   "abilities": ["strike", "heavy_swing", "vent"],
   "subclass_level": 3,
+  "capstone": "line_breaker",
   "subclasses": ["juggernaut", "warden"],
   "milestone": "M0"
 }

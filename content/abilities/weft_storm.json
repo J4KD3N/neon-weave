@@ -1,0 +1,1 @@
+{ "name": "Weft Storm", "sound": "sfx_bolt", "summary": "Aetherbinder capstone: the Weft opened for a heartbeat over a whole room.", "ap": 3, "range": 5, "damage": [5, 8], "accuracy": 85, "damage_type": "arcane", "requires_los": true, "aoe": 1, "effect": "chain", "chain_targets": 2, "chain_range": 2, "chain_fraction": 0.5 }

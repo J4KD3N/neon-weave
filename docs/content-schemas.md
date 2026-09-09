@@ -8,11 +8,11 @@ without a schema; keep the two in step.
 
 | Kind | Required | Optional (read by) |
 |---|---|---|
-| abilities | name, ap, range, damage [min,max], accuracy | sound, damage_type, requires_los, targets ("self"), effect (vent/mark/detonate/stealth/silence/root/summon), mark, damage_per_mark, duration, cooldown, resource_cost, heal, summon, summon_max |
+| abilities | name, ap, range, damage [min,max], accuracy | sound, damage_type, requires_los, targets ("self"), effect (vent/mark/detonate/stealth/silence/root/summon/chain/taunt/poison/counter), mark, damage_per_mark, duration, cooldown, resource_cost, heal, summon, summon_max, summon_count, aoe (radius), chain_targets, chain_range, chain_fraction, poison_damage, spread, counter_damage |
 | biomes | name, palette (16 roles) | recolors |
 | branches | name, color | summary |
 | buildings | name, order, levels [{cost, effects, blurb}] | levels[].unlocks |
-| classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level |
+| classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level, capstone (ability at `capstone_level` levels in the class) |
 | companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start |
 | dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]) |
 | enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity), traits (same vocabulary as races) |

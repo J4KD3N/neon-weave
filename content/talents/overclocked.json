@@ -1,0 +1,1 @@
+{ "name": "Overclocked", "branch": "tech", "tier": 4, "cost": { "aether": 9 }, "effects": { "move": 1, "damage_bonus": 2 }, "summary": "+1 Move, +2 damage. Needs Circuit Sense.", "requires": ["circuit_sense"] }
