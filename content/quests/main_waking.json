@@ -24,6 +24,8 @@
     },
     "deeper": {
       "summary": "The log says the singing starts at the second depth. Reach it and come back.",
+      "next": "throat",
+      "next_toast": "Something is singing under the yard. The throat has opened south of the plaza road.",
       "objectives": [
         { "text": "Raise the Beacon to depth 2", "done_when": { "flags": { "building_beacon_l1": true } } },
         { "text": "Extract from a depth-2 Shard", "done_when": { "flags": { "extracted_depth_2": true } } }

@@ -310,3 +310,24 @@ func test_every_archetype_beats_a_party_that_only_swings_back() -> void:
 						s.end_turn()
 		assert_true(s.finished, "%s fight resolves (round %d)" % [archetype, s.round_number])
 		assert_eq(s.result, "defeat", "%s wins against a passive party" % archetype)
+
+
+## S27: a controller whose only damage is melee (the Warlord's fist) closes
+## in after its nets instead of kiting away from the target it cannot shoot.
+func test_melee_controller_closes_in_after_its_nets() -> void:
+	var p := _tc("p", "party", Vector2i(0, 1), "rusher", ["strike"])
+	var boss := _tc("b", "enemy", Vector2i(3, 1), "controller", ["net", "strike"])
+	var s := _tstate(["......", "......", "......"], [p, boss], "enemy")
+	boss.ap = 9
+	var a := EnemyBrain.next_action(s, boss)
+	assert_eq(a["id"], "net", "control first")
+	s.use_ability(boss, "net", p.cell)
+	var b := EnemyBrain.next_action(s, boss)
+	assert_eq(b["type"], "move", "then close: %s" % [b])
+	assert_true(LineOfSight.distance(Vector2i(b["to"]), p.cell) < 3, "toward the target, not away")
+	var shooter := _tc("z", "enemy", Vector2i(3, 1), "controller", ["net", "zap"])
+	var s2 := _tstate(["......", "......", "......"], [p, shooter], "enemy")
+	shooter.ap = 9
+	s2.use_ability(shooter, "net", p.cell)
+	var c := EnemyBrain.next_action(s2, shooter)
+	assert_true(c["type"] == "ability" and c["id"] == "zap" or c["type"] == "move", "a ranged controller still shoots or kites: %s" % [c])

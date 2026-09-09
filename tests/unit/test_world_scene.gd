@@ -1079,7 +1079,7 @@ func test_depth_three_is_measurably_harder_and_posts_a_boss() -> void:
 	assert_true(deep_hp > shallow_hp * 1.3, "and tougher ones: %d vs %d" % [deep_hp, shallow_hp])
 	assert_true(boss != null, "the Warlord guards depth 3")
 	assert_eq(boss.enemy_id, "undercity_warlord")
-	assert_eq(boss.max_hp, int(round(16 * 3.0 * 1.3)), "boss x3, depth x1.3")
+	assert_eq(boss.max_hp, int(round(int(world.registry.get_entry("enemies", "undercity_warlord")["stats"]["hp"]) * 3.0 * 1.3)), "boss x3, depth x1.3")
 	assert_eq(boss.damage_bonus, 2 + 1)
 	assert_eq(boss.ap_bonus, 1)
 	assert_true(LineOfSight.distance(boss.cell, world.extraction_cell()) <= 3, "posted by the pad")

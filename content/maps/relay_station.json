@@ -36,7 +36,7 @@
   "enemies": [],
   "triggers": [
     { "id": "arrive", "cell": [1, 5], "once": true, "effects": { "flags": { "relay_entered": true }, "toast": "Relay Station Nine. Halden's crew marked the door; nobody marked the way back." } },
-    { "id": "hive", "cells": [[12, 4], [12, 5], [13, 4], [13, 5]], "once": true, "effects": { "toast": "The relay tower is a hive now. The mother comes down to meet you.", "enemies": [ { "type": "drone_mother", "cell": [16, 3] }, { "type": "feral_drone", "cell": [17, 6] } ], "victory_flag": "hive_cleared" } }
+    { "id": "hive", "cells": [[12, 4], [12, 5], [13, 4], [13, 5]], "once": true, "effects": { "toast": "The relay tower is a hive now. The mother comes down to meet you.", "enemies": [ { "type": "drone_mother", "cell": [16, 3] }, { "type": "feral_drone", "cell": [17, 6] }, { "type": "feral_drone", "cell": [20, 2] } ], "victory_flag": "hive_cleared" } }
   ],
   "transitions": [
     { "cell": [1, 1], "to": "gate_road", "arrive": [21, 5], "label": "Back to the road" }

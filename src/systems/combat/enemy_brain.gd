@@ -141,7 +141,25 @@ static func _controller(state: CombatState, actor: Combatant, target: Combatant)
 		for c: Combatant in _hostiles_by_distance(state, actor):
 			if _control_is_fresh(ability, c) and state.can_use(actor, id, c.cell).is_empty():
 				return {"type": "ability", "id": id, "target": c.cell}
+	# The finisher decides the fallback: a melee controller (the Warlord and
+	# his fist) closes like a rusher; a ranged one (the Matron) kites.
+	if _damage_range(state, actor) <= 1:
+		return _rusher(state, actor, target)
 	return _ranged(state, actor, target)
+
+
+## Longest range among the actor's damaging (non-control) abilities.
+static func _damage_range(state: CombatState, actor: Combatant) -> int:
+	var out := 0
+	for id: String in actor.abilities:
+		var ability: Dictionary = state.abilities.get(id, {})
+		if _is_control(ability):
+			continue
+		var span: Array = ability.get("damage", [0, 0])
+		if float(span[span.size() - 1]) <= 0.0:
+			continue
+		out = maxi(out, int(ability.get("range", 1)))
+	return out
 
 
 ## First usable self-targeted ability with the given effect, or "".

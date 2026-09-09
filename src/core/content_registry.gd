@@ -27,6 +27,7 @@ var load_errors: Array[String] = []
 var loaded_mods: Array[Dictionary] = []
 
 var _entries: Dictionary = {} # kind:String -> { id:String -> Dictionary }
+var _fingerprint_cache: String = ""
 
 
 func _ready() -> void:
@@ -51,6 +52,7 @@ func default_mod_roots() -> Array[String]:
 func load_from(base_root: String, mod_roots: Array[String]) -> void:
 	_entries.clear()
 	load_errors.clear()
+	_fingerprint_cache = ""
 	loaded_mods.clear()
 
 	if DirAccess.dir_exists_absolute(base_root):
@@ -130,6 +132,7 @@ func put(kind: String, id: String, entry: Dictionary) -> void:
 	copy["_source"] = "runtime"
 	copy["_path"] = ""
 	_entries[kind][id] = copy
+	_fingerprint_cache = ""
 
 
 ## Every entry of a kind, sorted by id for determinism.
@@ -209,3 +212,45 @@ static func _compare_mods(a: Dictionary, b: Dictionary) -> bool:
 	if pa != pb:
 		return pa < pb
 	return String(a["id"]) < String(b["id"])
+
+
+# --- fingerprints (S27) -------------------------------------------------------
+
+## Stable hash of one entry's content, provenance stripped, so the same
+## file loaded from res:// or from a pack hashes the same. Saves stamp the
+## entry their deltas index into (a map or a Shard template) with this.
+static func hash_entry(entry: Dictionary) -> String:
+	var clean := {}
+	var keys: Array = entry.keys()
+	keys.sort()
+	for key: String in keys:
+		if key.begins_with("_"):
+			continue
+		clean[key] = entry[key]
+	return JSON.stringify(clean).sha256_text().substr(0, 16)
+
+
+## Fingerprint of one entry by (kind, id); "" when it does not exist.
+func entry_fingerprint(kind: String, id: String) -> String:
+	var entry := get_entry(kind, id)
+	return "" if entry.is_empty() else hash_entry(entry)
+
+
+## Fingerprint of the whole content set: every kind, every entry, in order.
+## Any change to any file flips it; mods are part of it.
+func fingerprint() -> String:
+	if not _fingerprint_cache.is_empty():
+		return _fingerprint_cache
+	var parts: PackedStringArray = []
+	for kind: String in kinds():
+		for entry: Dictionary in get_all(kind):
+			parts.append("%s/%s:%s" % [kind, entry.get("id", ""), hash_entry(entry)])
+	return "\n".join(parts).sha256_text().substr(0, 16)
+
+
+## Ids of the mods that loaded, in load order.
+func mod_ids() -> Array[String]:
+	var out: Array[String] = []
+	for m: Dictionary in loaded_mods:
+		out.append(String(m.get("id", "")))
+	return out

@@ -32,7 +32,7 @@
   ],
   "triggers": [
     { "id": "enter", "cells": [[1, 1], [2, 1], [3, 1], [1, 2], [2, 2], [3, 2]], "once": true, "effects": { "flags": { "throat_entered": true }, "toast": "The throat. The singing is in your teeth now." } },
-    { "id": "holder", "cells": [[14, 3], [14, 4], [14, 5]], "once": true, "effects": { "toast": "The Warlord has been waiting here longer than the Shard has existed. He does not look surprised.", "enemies": [ { "type": "undercity_warlord", "cell": [20, 4] }, { "type": "scav", "cell": [19, 2] }, { "type": "scav", "cell": [19, 6] } ], "victory_flag": "warlord_beaten" } },
+    { "id": "holder", "cells": [[14, 3], [14, 4], [14, 5]], "once": true, "effects": { "toast": "The Warlord has been waiting here longer than the Shard has existed. He does not look surprised.", "enemies": [ { "type": "undercity_warlord", "cell": [20, 4] }, { "type": "chrome_addict", "cell": [19, 2] }, { "type": "scav", "cell": [19, 6] } ], "victory_flag": "warlord_beaten" } },
     { "id": "source", "cell": [26, 8], "once": true, "when": { "flags": { "warlord_beaten": true } }, "effects": { "dialogue": "choir_fragment" } }
   ],
   "transitions": [

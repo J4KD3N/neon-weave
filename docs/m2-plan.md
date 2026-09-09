@@ -34,7 +34,7 @@ One system per session (GDD §15). Each session ends with a PR, decisions, gaps,
 
 - **Art**: the S10 pipeline takes real sheets as file-for-file replacements. The demo needs 5 race rigs with overlays, ~10 enemies across two families, two tilesets, portraits for three companions, and a capsule. This needs an artist; every session before S26 keeps the generated placeholders so nothing blocks on it. Decision point at S22: ship the demo with placeholders and a clear "art in progress" note, or hold for art.
 - **Store page**: capsule, trailer, screenshots, description. The repo contributes `screenshot` job PNGs and the S26 builds. Needs a Steamworks account and the demo depot before S25 can be tested for real.
-- **Playtesting**: after S13, S19, S22 and S27, a full playthrough by someone who is not the author.
+- **Playtesting**: after S13, S19, S22 and S27, a full playthrough by someone who is not the author. None has happened by the end of S27; `test_balance.gd` stands in until it does.
 
 ## Out of M2 scope (M3+)
 
@@ -68,3 +68,4 @@ S13 first because playtest findings may reorder everything after it. S14 before 
 - S23 Front end — done: title screen with new game (death-stakes choice), continue, load, settings and quit; settings persist; rebinding to `user://input.json`; pad glyphs; the system menu is the pause menu. D-076.
 - S22 Act 1 demo slice — done, thin: five main-quest stages across the gate road, Relay Station Nine, a depth-2 extraction and the Undercity Throat, ending at first contact with the Choir and an end panel; interactable buildings; retryable boss triggers; content schemas pinned. The writing pass and the length target (2–3 hours) remain open; the art decision falls to the user (see assumptions). D-075.
 - S26 Release — done: `v0.2.0-demo` tagged; release.yml tests, exports all three platforms, smoke-boots the Linux export under Xvfb to the title, packages and publishes a GitHub Release. macOS ad-hoc signed; placeholders ship with a title-screen note; `steam/app_build.vdf` lays out the demo depot; `docs/store-page.md` is the asset checklist; `docs/release-notes/v0.2.0-demo.md`. D-079.
+- S27 Demo tuning — done: `test_balance.gd` plays every demo fight, the road chain and both Shard depths over twenty seeds and holds win-rate bands (gate 95%, hive 100%, Warlord 75% naive); the Warlord got a 2-AP finisher and a melee-controller brain that closes in; three-scav ambush; save format v2 with content fingerprints, mismatches refused and marked in every list; the deeper→throat hand-off is quest data (`next`). External playtesters: none yet, logged in gaps. D-080, D-081.

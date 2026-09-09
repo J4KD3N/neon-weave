@@ -28,7 +28,7 @@
   ],
   "triggers": [
     { "id": "lever", "cell": [7, 1], "once": true, "effects": { "flags": { "gate_lever_pulled": true }, "toast": "You pull the relay lever. Something east of you grinds awake." } },
-    { "id": "ambush", "cell": [12, 4], "once": true, "when": { "flags": { "gate_open": true } }, "effects": { "toast": "Scavs. They were waiting for the gate.", "enemies": [ { "type": "scav", "cell": [16, 2] }, { "type": "scav", "cell": [16, 6] } ] } },
+    { "id": "ambush", "cell": [12, 4], "once": true, "when": { "flags": { "gate_open": true } }, "effects": { "toast": "Scavs. They were waiting for the gate.", "enemies": [ { "type": "scav", "cell": [16, 2] }, { "type": "scav", "cell": [16, 6] }, { "type": "scav", "cell": [19, 4] } ] } },
     { "id": "road_end", "cell": [21, 4], "once": true, "effects": { "flags": { "road_end": true }, "quest": { "id": "main_waking", "stage": "relay" }, "toast": "The road opens onto the Undercity. Crew Halden went east from here and never came back." } }
   ],
   "transitions": [

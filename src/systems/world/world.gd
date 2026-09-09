@@ -381,6 +381,7 @@ func save_slot(n: int) -> Error:
 func autosave() -> Error:
 	if loading:
 		return OK
+	advance_quests() # the save carries any stage the last beat completed
 	var err := save_to(SaveSystem.AUTOSAVE)
 	if err == OK:
 		check_achievements() # every story beat autosaves, so this is where they land
@@ -396,6 +397,13 @@ func load_from(save_name: String) -> Array[String]:
 		if overlay != null:
 			overlay.toast("Load failed: %s" % one[0], 2.5)
 		return one
+	var why := SaveSystem.content_check(SaveSystem.migrate(data), registry)
+	if not why.is_empty():
+		var refused: Array[String] = [why]
+		if overlay != null:
+			overlay.toast("Load refused: %s" % why, 4.0)
+		push_warning("load %s refused: %s" % [save_name, why])
+		return refused
 	var errors := SaveSystem.restore(self, data)
 	if overlay != null:
 		overlay.toast("Loaded %s" % save_name if errors.is_empty() else "Loaded %s with %d problem(s)" % [save_name, errors.size()], 2.5)
@@ -1419,15 +1427,15 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
 	items.append({"id": "weave", "label": "The Weave (level %d · %s)" % [party_level(), xp_line()], "enabled": home, "why": "only at home"})
 	items.append({"id": "journal", "label": "Journal (%d quests)" % narrative.quests.size(), "enabled": true})
-	var saves := SaveSystem.list_saves(saves_dir)
+	var saves := SaveSystem.list_saves(saves_dir, registry)
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
 		items.append({"id": "save_%d" % (n + 1), "label": "Save slot %d — %s" % [n + 1, slot["summary"]], "enabled": mode != "combat", "why": "in combat"})
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
-		items.append({"id": "load_%d" % (n + 1), "label": "Load slot %d — %s" % [n + 1, slot["summary"]], "enabled": bool(slot["exists"]), "why": "empty"})
+		items.append({"id": "load_%d" % (n + 1), "label": "Load slot %d — %s" % [n + 1, slot["summary"]], "enabled": bool(slot["loadable"]), "why": "needs a new game" if bool(slot["exists"]) else "empty"})
 	var auto: Dictionary = saves[SaveSystem.SLOTS]
-	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["exists"]), "why": "no autosave yet"})
+	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["loadable"]), "why": "needs a new game" if bool(auto["exists"]) else "no autosave yet"})
 	items.append({"id": "settings", "label": "Settings", "enabled": true})
 	items.append({"id": "platform", "label": platform().status_line(), "enabled": false, "why": "%d achievements this session" % platform().unlocked_this_session.size()})
 	items.append({"id": "title", "label": "Title screen", "enabled": mode != "combat", "why": "in combat"})
@@ -2411,10 +2419,11 @@ func open_beacon_menu() -> bool:
 # --- front end: title, new game, settings, rebinding -------------------------
 
 func title_rows() -> Array[Dictionary]:
-	var has_auto := FileAccess.file_exists(save_path(SaveSystem.AUTOSAVE))
+	var saves := SaveSystem.list_saves(saves_dir, registry)
+	var has_auto := bool(saves[SaveSystem.SLOTS]["loadable"])
 	var any_slot := false
-	for s: Dictionary in SaveSystem.list_saves(saves_dir):
-		if bool(s["exists"]):
+	for n: int in SaveSystem.SLOTS:
+		if bool(saves[n]["loadable"]):
 			any_slot = true
 	var rows: Array[Dictionary] = []
 	rows.append({"id": "new", "label": "New game", "enabled": true})
@@ -2671,3 +2680,42 @@ func check_achievements() -> Array[String]:
 			got.append(id)
 			overlay.toast("Achievement: %s" % registry.get_entry("achievements", id).get("name", id), 3.0)
 	return got
+
+
+## Quest stages that declare `next` advance once every objective of the
+## current stage is done: the data hand-off between beats (D-081), so no
+## map trigger has to know the quest. Runs before every autosave, so the
+## save carries the new stage. Returns the quest ids that moved.
+func advance_quests() -> Array[String]:
+	var moved: Array[String] = []
+	for _pass: int in 8: # a stage may complete the next one at once
+		var moved_now := false
+		var ctx := dialogue_ctx()
+		var ids: Array = narrative.quests.keys()
+		ids.sort()
+		for quest_id: String in ids:
+			var quest: Dictionary = registry.get_entry("quests", quest_id)
+			var stages: Dictionary = quest.get("stages", {})
+			var stage: Dictionary = stages.get(narrative.stage_of(quest_id), {})
+			var next := String(stage.get("next", ""))
+			if next.is_empty() or not stages.has(next):
+				continue
+			var objectives: Array = stage.get("objectives", [])
+			if objectives.is_empty():
+				continue
+			var done := true
+			for o: Dictionary in objectives:
+				if not Conditions.passes(o.get("done_when", {}), ctx):
+					done = false
+					break
+			if not done:
+				continue
+			narrative.set_stage(quest_id, next)
+			moved.append(quest_id)
+			moved_now = true
+			var toast := String(stage.get("next_toast", ""))
+			if not toast.is_empty() and overlay != null:
+				overlay.toast(toast, 4.0)
+		if not moved_now:
+			break
+	return moved
