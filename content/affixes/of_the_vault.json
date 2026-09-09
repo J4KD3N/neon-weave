@@ -1,0 +1,1 @@
+{ "name": "of the Vault", "prefix": false, "slots": ["any"], "stat_mods": { "hp": 3, "initiative": 1 }, "weight": 1, "min_rarity": "epic", "summary": "Sealed generations made this to last." }

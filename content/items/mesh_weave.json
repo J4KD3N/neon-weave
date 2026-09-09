@@ -1,0 +1,9 @@
+{
+  "name": "Mesh weave",
+  "slot": "armour",
+  "summary": "Datacore filament woven tight. Light enough to move in.",
+  "stat_mods": { "evasion": 5 },
+  "weight": 4,
+  "price": 14,
+  "art": { "color": "#6fe0a8" }
+}

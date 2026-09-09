@@ -1,0 +1,9 @@
+{
+  "name": "Weft charm",
+  "slot": "trinket",
+  "summary": "A knot of mana-static that pulls shots a finger wide.",
+  "stat_mods": { "evasion": 3 },
+  "weight": 4,
+  "price": 8,
+  "art": { "color": "#b48cff" }
+}

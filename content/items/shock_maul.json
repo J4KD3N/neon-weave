@@ -1,0 +1,11 @@
+{
+  "name": "Shock maul",
+  "slot": "weapon",
+  "summary": "A conduit coil on a pole. Heavy, and everything it touches remembers.",
+  "damage_bonus": 2,
+  "stat_mods": { "move": -1 },
+  "weight": 2,
+  "min_rarity": "rare",
+  "price": 18,
+  "art": { "color": "#7fd6ff" }
+}

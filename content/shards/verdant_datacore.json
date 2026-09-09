@@ -41,7 +41,8 @@
     "count": [3, 6],
     "pool": [
       { "type": "salvage_cache", "weight": 4 },
-      { "type": "aether_shard", "weight": 4 }
+      { "type": "aether_shard", "weight": 4 },
+      { "type": "loot_crate", "weight": 2 }
     ]
   },
   "enemies": {

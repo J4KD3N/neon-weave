@@ -1,0 +1,9 @@
+{
+  "name": "Lucky bolt",
+  "slot": "trinket",
+  "summary": "A bolt that missed someone once. They kept it.",
+  "stat_mods": { "initiative": 2 },
+  "weight": 4,
+  "price": 8,
+  "art": { "color": "#ffd24d" }
+}

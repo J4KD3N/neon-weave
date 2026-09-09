@@ -1,0 +1,9 @@
+{
+  "name": "Optic suite",
+  "slot": "cyberware",
+  "summary": "Replacement eyes that see the shot before it leaves the barrel.",
+  "stat_mods": { "evasion": 5 },
+  "weight": 3,
+  "price": 16,
+  "art": { "color": "#7fd6ff" }
+}

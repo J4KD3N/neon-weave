@@ -1,0 +1,9 @@
+{
+  "name": "Reflex port",
+  "slot": "cyberware",
+  "summary": "Spinal shunt that fires the legs before the thought finishes.",
+  "stat_mods": { "initiative": 3 },
+  "weight": 3,
+  "price": 16,
+  "art": { "color": "#c9ced6" }
+}

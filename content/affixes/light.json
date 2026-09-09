@@ -1,0 +1,1 @@
+{ "name": "Light", "prefix": true, "slots": ["armour"], "stat_mods": { "move": 1 }, "weight": 2, "summary": "Half the weight it looks." }

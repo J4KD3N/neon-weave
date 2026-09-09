@@ -26,6 +26,7 @@ const BINDINGS: Dictionary = {
 	"next_member": {"keys": [KEY_TAB], "buttons": [JOY_BUTTON_BACK]},
 	"weave": {"keys": [KEY_T]},
 	"journal": {"keys": [KEY_J]},
+	"inventory": {"keys": [KEY_I]},
 	"zoom_in": {"keys": [KEY_EQUAL, KEY_KP_ADD], "axes": [[JOY_AXIS_TRIGGER_RIGHT, 1]]},
 	"zoom_out": {"keys": [KEY_MINUS, KEY_KP_SUBTRACT], "axes": [[JOY_AXIS_TRIGGER_LEFT, 1]]},
 	"toggle_debug": {"keys": [KEY_F1]},
@@ -44,6 +45,7 @@ const BINDINGS: Dictionary = {
 ## "menu:<id>" is an item of the system menu (Start); "confirm" means the
 ## A button in the mode named.
 const PAD_ROUTES: Dictionary = {
+	"inventory": "menu:inventory",
 	"toggle_debug": "menu:registry",
 	"restart": "confirm in the defeated screen",
 	"new_shard": "menu:new_shard",

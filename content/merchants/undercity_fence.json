@@ -4,7 +4,9 @@
   "stock": [
     { "id": "medkit", "label": "Field medkit: heal the party by half", "cost": { "salvage": 6 }, "effect": { "heal_fraction": 0.5 } },
     { "id": "cipher", "label": "A Cipher key", "cost": { "salvage": 15 }, "effect": { "grant": { "ciphers": 1 } } },
-    { "id": "aether", "label": "Two vials of Aether", "cost": { "salvage": 8 }, "effect": { "grant": { "aether": 2 } } }
+    { "id": "aether", "label": "Two vials of Aether", "cost": { "salvage": 8 }, "effect": { "grant": { "aether": 2 } } },
+    { "id": "plating", "label": "Scrap plating (armour, +3 HP)", "cost": { "salvage": 12 }, "effect": { "item": "scrap_plating" } },
+    { "id": "pistol", "label": "Bolt pistol (weapon, +1 damage, +1 initiative)", "cost": { "salvage": 14 }, "effect": { "item": "bolt_pistol" } }
   ],
   "art": { "color": "#d8c46a" }
 }

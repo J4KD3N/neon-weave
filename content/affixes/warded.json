@@ -1,0 +1,1 @@
+{ "name": "Warded", "prefix": true, "slots": ["any"], "stat_mods": { "evasion": 3 }, "weight": 3, "summary": "Someone sang over it." }

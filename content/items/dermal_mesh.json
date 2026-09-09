@@ -1,0 +1,10 @@
+{
+  "name": "Dermal mesh",
+  "slot": "cyberware",
+  "summary": "Subdermal lattice. Takes a week to stop itching and a year to stop noticing.",
+  "stat_mods": { "hp": 4 },
+  "weight": 3,
+  "price": 16,
+  "craft": { "cost": { "salvage": 20 }, "workshop": 2 },
+  "art": { "color": "#c9ced6" }
+}

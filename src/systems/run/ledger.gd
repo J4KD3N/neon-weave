@@ -4,7 +4,7 @@
 class_name Ledger
 extends RefCounted
 
-const VERSION := 3
+const VERSION := 4
 const RESOURCES: Array[String] = ["salvage", "aether", "ciphers"]
 
 var path: String = "user://ledger.json"
@@ -15,8 +15,11 @@ var runs_wiped: int = 0
 var kills: int = 0
 ## Bastion building levels (id -> level). Owned by BastionState at runtime.
 var buildings: Dictionary = {}
-## Per-member progression choices: member_id -> {"subclass": id, "talents": [ids]}.
+## Per-member progression choices: member_id -> {"subclass": id, "talents": [ids], "equipment": {slot_key: instance}}.
+## (the comment above is superseded by this one)
 var builds: Dictionary = {}
+## The banked pack: item instances (ItemSystem) not equipped by anyone.
+var items: Array = []
 ## Set when the last load found a file it could not read; the ledger
 ## starts fresh but the reason is kept for the UI/log.
 var load_error: String = ""
@@ -61,6 +64,10 @@ static func migrate(data: Dictionary) -> Dictionary:
 		# v3 adds per-member builds (subclass, talents).
 		d["builds"] = d.get("builds", {})
 		d["version"] = 3
+	if version < 4:
+		# v4 adds the item pack (S29); equipment rides inside builds.
+		d["items"] = d.get("items", [])
+		d["version"] = 4
 	return d
 
 
@@ -77,6 +84,7 @@ func apply(d: Dictionary) -> void:
 	for key: String in saved:
 		buildings[key] = int(saved[key])
 	builds = Dictionary(d.get("builds", {})).duplicate(true)
+	items = Array(d.get("items", [])).duplicate(true)
 
 
 func to_dict() -> Dictionary:
@@ -85,6 +93,7 @@ func to_dict() -> Dictionary:
 		"resources": resources.duplicate(),
 		"xp": xp,
 		"builds": builds.duplicate(true),
+		"items": items.duplicate(true),
 		"runs_completed": runs_completed,
 		"runs_wiped": runs_wiped,
 		"kills": kills,
@@ -107,6 +116,8 @@ func save() -> Error:
 func bank(haul: Dictionary) -> void:
 	for key: String in RESOURCES:
 		resources[key] = int(resources[key]) + int(haul.get(key, 0))
+	for inst: Variant in haul.get("items", []):
+		items.append(Dictionary(inst).duplicate(true))
 
 
 func can_afford(cost: Dictionary) -> bool:

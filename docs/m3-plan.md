@@ -84,3 +84,4 @@ S28 first because the AP economy shapes every fight authored afterwards and a fi
 
 ## Progress
 - S28 Combat economy — done: the AP experiment ran as harness overrides first, then landed in content (every damaging ability +1 AP; two attacks or a heavy plus a self action per 4-AP turn); Warlord and Undercity gangs retuned on the new economy; AI focus fire (lowest-HP hostile in reach) and a once-per-fight rusher retreat behind `ai_retreat_hp_fraction`. No external playtest existed to triage. D-083.
+- S29 Items, affixes, cyberware — done: `items` and `affixes` kinds, instances rolled by rarity (affix count from `rules/loot`), drops by enemy tier and from loot crates, the Fence sells gear, the Workshop crafts it, equipment in the ledger builds feeds `PartyBuilder` stats and damage, Chromed get two cyberware slots from race data, the pack screen on I. D-084.

@@ -1,0 +1,1 @@
+{ "name": "Balanced", "prefix": true, "slots": ["weapon"], "stat_mods": { "initiative": 1 }, "weight": 3, "summary": "Sits right in the hand." }
