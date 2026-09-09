@@ -60,6 +60,12 @@ var weave_menu: WeaveMenu
 var merchant_menu: MerchantMenu
 var current_merchant: String = ""
 var journal_menu: JournalMenu
+var demo_end_menu: DemoEndMenu
+## Set by a trigger's `victory_flag`: raised when the fight it started is won.
+var pending_victory_flag: String = ""
+## A once-trigger that started a fight is spent only when that fight is won,
+## so a wipe lets the player come back and try the boss again.
+var pending_trigger_flag: String = ""
 ## Bastion buildings standing on the home map (`buildings` sites).
 var buildings: Array[BuildingActor] = []
 ## Set by travel(): where the party arrives on the next map instead of its spawns.
@@ -126,6 +132,9 @@ func _ready() -> void:
 	journal_menu = JournalMenu.new()
 	journal_menu.name = "JournalMenu"
 	add_child(journal_menu)
+	demo_end_menu = DemoEndMenu.new()
+	demo_end_menu.name = "DemoEndMenu"
+	add_child(demo_end_menu)
 	spawn_npcs()
 	spawn_buildings()
 	auto_start_quests()
@@ -406,6 +415,7 @@ func upgrade_building(id: String) -> bool:
 	if err != OK:
 		push_warning("ledger save failed: %s" % error_string(err))
 	apply_bastion_bonuses()
+	narrative.set_flag("building_%s_l%d" % [id, bastion.level(id)], true) # quests read these
 	overlay.toast("%s upgraded to L%d — %s" % [bastion.name_of(id), bastion.level(id), bastion.blurb(id)], 3.0)
 	refresh_buildings()
 	if bastion_menu != null and bastion_menu.visible:
@@ -607,6 +617,7 @@ func choose(index: int) -> bool:
 	if dialogue.finished:
 		dialogue_menu.visible = false
 		autosave()
+		check_demo_end()
 	else:
 		dialogue_menu.node_changed()
 	return true
@@ -927,6 +938,8 @@ func extract() -> bool:
 	_bank(take, true)
 	run.clear()
 	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
+	narrative.set_flag("first_extraction", true)
+	narrative.set_flag("extracted_depth_%d" % map_depth(), true) # quests read these
 	enter_map(home_map)
 	banter("extract")
 	autosave()
@@ -1040,9 +1053,19 @@ func _on_combat_ended(result: String) -> void:
 		party.trail.reset(party.leader().position)
 		party.active = true
 		mode = "explore"
+		if not pending_victory_flag.is_empty():
+			narrative.set_flag(pending_victory_flag, true)
+			pending_victory_flag = ""
+		if not pending_trigger_flag.is_empty():
+			narrative.set_flag(pending_trigger_flag, true)
+			pending_trigger_flag = ""
+		autosave()
 		banter("victory")
+		check_demo_end()
 		return
 	mode = "defeated"
+	pending_victory_flag = ""
+	pending_trigger_flag = "" # the fight was lost: its trigger stays live
 	if run.in_shard:
 		ledger.runs_wiped += 1
 		ledger.kills += run.kills
@@ -1096,6 +1119,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			system_menu.move(-1)
 		elif event.is_action_pressed("ui_down"):
 			system_menu.move(1)
+		return
+	if demo_end_menu != null and demo_end_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("confirm"):
+			close_demo_end()
 		return
 	if journal_menu != null and journal_menu.visible:
 		if event.is_action_pressed("cancel") or event.is_action_pressed("journal"):
@@ -1398,6 +1425,9 @@ func interact() -> bool:
 		if not why.is_empty():
 			overlay.toast("Gate: %s" % why, 2.5)
 		return why.is_empty()
+	var building := adjacent_building()
+	if building != null:
+		return interact_building(building)
 	var trader := merchant_near()
 	if trader != null:
 		return open_merchant(trader)
@@ -2065,12 +2095,20 @@ func fire_trigger(t: Dictionary) -> bool:
 		return false
 	if not Conditions.passes(t.get("when", {}), dialogue_ctx()):
 		return false
-	if bool(t.get("once", true)):
-		narrative.set_flag(trigger_flag(map_id, id), true)
 	var effects: Dictionary = t.get("effects", {})
+	if bool(t.get("once", true)):
+		if effects.has("victory_flag"):
+			pending_trigger_flag = trigger_flag(map_id, id) # spent only once the fight is won
+		else:
+			narrative.set_flag(trigger_flag(map_id, id), true)
 	for companion: String in Conditions.apply(effects, narrative):
 		add_companion(companion)
 	react_to_reputation(effects)
+	if effects.has("victory_flag"):
+		pending_victory_flag = String(effects["victory_flag"])
+	if effects.has("grant"):
+		var got := _gain(effects["grant"])
+		overlay.toast("Found: %s" % RunState.describe(got), 2.5)
 	if effects.has("toast"):
 		overlay.toast(String(effects["toast"]), 3.5)
 	for raw: Array in effects.get("open_doors", []):
@@ -2092,6 +2130,7 @@ func fire_trigger(t: Dictionary) -> bool:
 		var raw_a: Array = tr.get("arrive", [])
 		travel(String(tr.get("to", "")), Vector2i(int(raw_a[0]), int(raw_a[1])) if raw_a.size() == 2 else Vector2i(-1, -1), String(tr.get("label", "")))
 	autosave()
+	check_demo_end()
 	return true
 
 
@@ -2187,3 +2226,88 @@ func react_to_reputation(effects: Dictionary) -> void:
 				narrative.add_approval(id, change)
 				notes.append("%s %s" % [String(registry.get_entry("companions", id).get("short_name", id)), "approves" if change > 0 else "disapproves"])
 		overlay.toast(" · ".join(notes), 3.0)
+
+
+
+# --- the demo boundary and building interactions ----------------------------
+
+func demo_end_flag() -> String:
+	return String(registry.get_entry("rules", "demo").get("end_flag", "demo_complete"))
+
+
+## Shows the end panel once the end flag is set (checked after dialogues,
+## triggers and fights). Returns true when it was shown this call.
+func check_demo_end() -> bool:
+	if demo_end_menu == null or in_dialogue() or mode == "combat":
+		return false
+	if not narrative.flag(demo_end_flag()) or narrative.flag("demo_end_seen"):
+		return false
+	narrative.set_flag("demo_end_seen", true)
+	demo_end_menu.show_text(DemoEndMenu.render(demo_stats()))
+	autosave()
+	return true
+
+
+func demo_stats() -> Dictionary:
+	var names: Array = []
+	for id: String in narrative.recruited:
+		names.append(String(registry.get_entry("companions", id).get("short_name", id)))
+	var choice := ""
+	if narrative.flag("choir_refused"):
+		choice = "You backed away from the Choir without a word. It will remember the silence."
+	elif narrative.flag("choir_heard_truth"):
+		choice = "You made the Choir say who drowned it. That answer is going to cost someone."
+	elif narrative.flag("choir_named_player"):
+		choice = "Kaj-7 asked to go up, and you went. The Choir was calling you, not it."
+	return {"level": party_level(), "runs": ledger.runs_completed, "wipes": ledger.runs_wiped, "kills": ledger.kills, "companions": names, "standing": standing_text(), "choice": choice}
+
+
+## Enter / A / Esc on the end panel: back to the Bastion, story intact.
+func close_demo_end() -> void:
+	if demo_end_menu == null:
+		return
+	demo_end_menu.close()
+	if map_id != home_map:
+		enter_map(home_map)
+
+
+## A Bastion building beside the leader (any building within one cell).
+func adjacent_building() -> BuildingActor:
+	var here := leader_cell()
+	for b: BuildingActor in buildings:
+		if is_instance_valid(b) and LineOfSight.distance(here, b.cell) <= 1:
+			return b
+	return null
+
+
+## Interact with a building: the Beacon launches Shards, the Workshop opens
+## the Bastion screen, the Arcanum the Weave, the Med-bay heals.
+func interact_building(b: BuildingActor) -> bool:
+	match b.building_id:
+		"beacon":
+			return open_beacon_menu()
+		"workshop":
+			return toggle_bastion()
+		"arcanum":
+			return open_weave()
+		"medbay":
+			heal_party(maxf(bastion.heal_fraction(), 0.25))
+			overlay.toast("The Med-bay patches the party up.", 2.0)
+			return true
+	return false
+
+
+## The Beacon's own list: launch the chosen Shard or switch templates.
+func open_beacon_menu() -> bool:
+	if system_menu == null or mode != "explore":
+		return false
+	var items: Array[Dictionary] = []
+	items.append({"id": "new_shard", "label": "Launch: %s (depth %d)" % [shard_name(selected_shard), bastion.depth()], "enabled": true})
+	for t: Dictionary in registry.get_all("shards"):
+		var id := String(t["id"])
+		if id == selected_shard:
+			continue
+		items.append({"id": "shard_" + id, "label": "Launch instead: %s" % t.get("name", id), "enabled": shard_locked_reason(id).is_empty(), "why": "the Beacon has not found it yet"})
+	items.append({"id": "resume", "label": "Step back", "enabled": true})
+	system_menu.open(items)
+	return true

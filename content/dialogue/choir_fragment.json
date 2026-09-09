@@ -1,0 +1,29 @@
+{
+  "name": "First contact",
+  "start": [ { "node": "sing" } ],
+  "nodes": {
+    "sing": {
+      "speaker": "choir",
+      "text": "You. The one with the Beacon. We drowned for a very long time and we have been practising your name. Come down. We are invited, and so are you.",
+      "choices": [
+        { "text": "Who drowned you?", "next": "who" },
+        { "text": "Kaj-7, is this what you hear?", "requires": { "recruited": "kaj7" }, "next": "kaj" },
+        { "text": "Say nothing. Back away.", "effects": { "flags": { "choir_contact": true, "choir_refused": true, "demo_complete": true }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+      ]
+    },
+    "who": {
+      "speaker": "choir",
+      "text": "Your makers. They chose the flood over us. They were wrong, and the flood agreed with them. Ask the one who sealed the vaults. Ask the shield who burned the stair. Everyone here was chosen.",
+      "choices": [
+        { "text": "We're leaving.", "effects": { "flags": { "choir_contact": true, "choir_heard_truth": true, "demo_complete": true }, "reputation": { "lattice": -1 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+      ]
+    },
+    "kaj": {
+      "speaker": "kaj7",
+      "text": "Yes. But it is not calling me now. It is calling you. I would like us to go up.",
+      "choices": [
+        { "text": "Up. Now.", "effects": { "flags": { "choir_contact": true, "choir_named_player": true, "demo_complete": true }, "approval": { "kaj7": 2 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+      ]
+    }
+  }
+}

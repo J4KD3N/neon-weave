@@ -29,10 +29,11 @@
   "triggers": [
     { "id": "lever", "cell": [7, 1], "once": true, "effects": { "flags": { "gate_lever_pulled": true }, "toast": "You pull the relay lever. Something east of you grinds awake." } },
     { "id": "ambush", "cell": [12, 4], "once": true, "when": { "flags": { "gate_open": true } }, "effects": { "toast": "Scavs. They were waiting for the gate.", "enemies": [ { "type": "scav", "cell": [16, 2] }, { "type": "scav", "cell": [16, 6] } ] } },
-    { "id": "road_end", "cell": [21, 4], "once": true, "effects": { "flags": { "road_end": true }, "quest": { "id": "main_waking", "stage": "done" }, "toast": "The road opens onto the Undercity. The Shards are stirring." } }
+    { "id": "road_end", "cell": [21, 4], "once": true, "effects": { "flags": { "road_end": true }, "quest": { "id": "main_waking", "stage": "relay" }, "toast": "The road opens onto the Undercity. Crew Halden went east from here and never came back." } }
   ],
   "transitions": [
-    { "cell": [1, 1], "to": "proto_yard", "arrive": [17, 14], "label": "Back to the yard" }
+    { "cell": [1, 1], "to": "proto_yard", "arrive": [17, 14], "label": "Back to the yard" },
+    { "cell": [22, 4], "to": "relay_station", "arrive": [1, 5], "label": "East: the relay station", "when": { "flags": { "road_end": true } } }
   ],
   "npcs": [ { "companion": "kaj7", "cell": [19, 5] } ],
   "pickups": [ { "type": "salvage_cache", "cell": [20, 1] } ],

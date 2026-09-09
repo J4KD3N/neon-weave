@@ -1,0 +1,7 @@
+{
+  "name": "Expedition log",
+  "summary": "Crew Halden's log slate, cracked and still recording. Opens a dialogue; the story reads it.",
+  "dialogue": "expedition_log",
+  "grants": {},
+  "art": { "color": "#e0c07a" }
+}

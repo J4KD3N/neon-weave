@@ -145,10 +145,11 @@ func test_gate_road_plays_end_to_end() -> void:
 	_stand_on(Vector2i(21, 4))
 	assert_eq(world.check_triggers(), 1)
 	assert_true(world.narrative.flag("road_end"))
-	assert_eq(world.narrative.stage_of("main_waking"), "done")
+	assert_eq(world.narrative.stage_of("main_waking"), "relay", "the road opens the next stage")
 	var text := world.journal_text()
-	assert_contains(text, "Done")
-	assert_contains(text, "✓ The Waking")
+	assert_contains(text, "★ The Waking")
+	assert_contains(text, "Crew Halden went east")
+	assert_contains(text, "· Reach the relay station")
 	# Back to the yard by the west gate; the door stays open on re-entry.
 	_stand_on(Vector2i(1, 1))
 	assert_true(world.check_transitions())
@@ -163,7 +164,7 @@ func test_gate_road_plays_end_to_end() -> void:
 	assert_eq(again.load_slot(1), [])
 	assert_eq(again.map_id, "gate_road")
 	assert_true(again.map_data.is_walkable(gate))
-	assert_eq(again.narrative.stage_of("main_waking"), "done")
+	assert_eq(again.narrative.stage_of("main_waking"), "relay")
 	assert_eq(again.check_triggers(), 0, "spent triggers stay spent")
 	_drop(again)
 
@@ -241,7 +242,7 @@ func test_map_campaign_fields_are_well_formed() -> void:
 		for tr: Dictionary in m.get("triggers", []):
 			assert_false(String(tr.get("id", "")).is_empty(), "map %s trigger id" % m["id"])
 			for k: String in tr.get("effects", {}):
-				assert_true(["approval", "flags", "recruit", "quest", "toast", "open_doors", "enemies", "dialogue", "transition"].has(k), "map %s trigger effect %s" % [m["id"], k])
+				assert_true(["approval", "flags", "recruit", "quest", "reputation", "toast", "open_doors", "enemies", "victory_flag", "grant", "dialogue", "transition"].has(k), "map %s trigger effect %s" % [m["id"], k])
 			for k: String in tr.get("when", {}):
 				assert_true(["flags", "origin_tag", "race", "class", "approval", "recruited", "not_recruited", "quest"].has(k), "map %s trigger when.%s" % [m["id"], k])
 		for b: Dictionary in m.get("buildings", []):
