@@ -10,7 +10,19 @@
     "floor": "floor_concrete",
     "grate": "floor_grate",
     "debris": "debris",
-    "extraction": "extraction_pad"
+    "extraction": "extraction_pad",
+    "secret_door": "secret_door",
+    "vault_door": "vault_door",
+    "waypoint": "waypoint"
+  },
+  "features": {
+    "secrets": [1, 2],
+    "vaults": [1, 1],
+    "vault_cost": { "ciphers": 1 },
+    "merchant": "undercity_fence",
+    "waypoints": [1, 2],
+    "rarity": { "rare": 0.15, "epic": 0.04 },
+    "ramp_far_fraction": 0.6
   },
   "grate_patch_chance": 0.35,
   "surfaces": {

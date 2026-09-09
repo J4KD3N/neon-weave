@@ -30,6 +30,18 @@ func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i) -> void:
 	queue_redraw()
 
 
+## Rarity from the placement ("common" by default): tints the gem and
+## multiplies the grants (rules/loot).
+var rarity: String = "common"
+
+
+func set_rarity(p_rarity: String, color: Color) -> void:
+	rarity = p_rarity
+	if color.a > 0.0:
+		tint = color
+	queue_redraw()
+
+
 func grants() -> Dictionary:
 	return entry.get("grants", {})
 

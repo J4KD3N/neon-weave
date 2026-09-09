@@ -5,13 +5,13 @@ Updated every session. Remove items when closed; note the closing commit.
 ## Open (as of 2026-09-08, M1 complete; M2 sessions in docs/m2-plan.md)
 
 - **M0 question still open**: the loop exists end to end (yard → Shard → fight/collect → extract or wipe → yard → Bastion) but nobody has played it. "Is the loop fun?" needs a person with the editor open. Balance numbers are all first guesses, including building costs.
-- **XP and Ciphers have no sink**: Salvage and Aether buy building levels; XP (levels/talents) and Ciphers (rare keys/merchants) wait on later systems. No item loot, rarity or affixes.
+- ~~XP and Ciphers have no sink~~ closed 2026-09-08: XP levels the party (S14), Ciphers open vaults and merchants sell them (S18). Item loot and affixes are still missing.
 - **Bastion is a text screen** over the yard; no building visuals, no dedicated map (M1 art/companion sessions decide).
 - **Narrative is one companion deep**: Sera only; no romance, portraits, journal UI, or companion reactions in combat; banter is a toast; dialogue is a text panel with number keys; NPCs never move; the death-stakes mode is still a rule flag with no setup UI (Mortal mode works but you cannot choose it in game).
 - **Pad support is functional, not native**: the combat cursor steps one cell per press with key-repeat pacing (no analog glide), there is no on-screen button glyph swap when a pad is detected, no rumble, no Steam Input template yet (M2 with GodotSteam), and the system menu is the only way to save/load on a pad. Mouse remains the fastest way to target in combat.
 - **Creator is a text screen too**: no appearance customisation beyond the race overlay, no portrait, no title screen (C at home is the entry point), origins gate nothing yet (`dialogue_tag` waits for S11's dialogue data), and only the five M2 races exist.
 - ~~Depth only adds bodies~~ closed 2026-09-08 (S16, D-068): HP and damage scale with depth, elites roll in, the Warlord guards the pad from depth 3. Pools do not change by depth yet.
-- **Shards are plain**: no secrets, vaults or merchants (GDD §11); two room styles (box, oval) and corridor widths since S17; enemy groups are random per room with no difficulty ramp by distance; pickups are two types.
+- **Shards have features but no items**: secrets, Cipher vaults, relay waypoints, merchants, a distance ramp and loot rarity exist (S18, D-071), but there is no item loot, no affixes, no cyberware drops and only two pickup types; merchants sell three things each and secrets hold a single pickup.
 - **Enemies on a previous map are forgotten** when you leave it; N (launch) and H (home) are still bare keys rather than a Beacon interaction on the map.
 - **Saves have a list, not a UI**: the system menu reaches all three slots and the autosave with summaries (S13); F5/F9 still mean slot 1; no confirmation on overwrite, no content-version check (a save from a different content set loads by index and may misplace deltas).
 - **Map format is ASCII-only** stays true for handcrafted maps; generated ones go through the same rows format by design (D-028).

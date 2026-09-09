@@ -1,0 +1,8 @@
+{
+  "name": "Loot rules",
+  "summary": "Pickup rarity multiplies every grant; vault pickups are at least the vault rarity.",
+  "rarities": { "common": 1.0, "rare": 2.0, "epic": 4.0 },
+  "colors": { "rare": "#ffd24d", "epic": "#ff5df0" },
+  "vault_rarity": "rare",
+  "milestone": "M2"
+}

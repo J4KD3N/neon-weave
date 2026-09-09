@@ -1,0 +1,9 @@
+{
+  "name": "Relay waypoint",
+  "summary": "A working relay. Stand on it and press E to bank the haul without leaving; one use.",
+  "layer": "ground",
+  "walkable": true,
+  "blocks_sight": false,
+  "waypoint": true,
+  "art": { "shape": "floor", "fill": "floor_edge", "edge": "neon_body", "pattern": "pad", "pattern_color": "neon_body" }
+}

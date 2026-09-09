@@ -16,6 +16,10 @@ const GRATE := ","
 const DEBRIS := "x"
 const SPAWN := "P"
 const EXIT := "E"
+const SECRET := "?"
+const VAULT := "V"
+const WAYPOINT := "W"
+const MERCHANT := "M" # floor under the merchant; kept out of the placement pools
 
 const N4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 const RING: Array[Vector2i] = [
@@ -89,10 +93,21 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 	var exit_cell := _extraction_cell(dist)
 	_put(exit_cell, EXIT)
 
+	var features_spec: Dictionary = template.get("features", {})
+	var max_dist := 0
+	for d: int in dist:
+		max_dist = maxi(max_dist, d)
+	var far := int(round(float(max_dist) * clampf(float(features_spec.get("ramp_far_fraction", 0.0)), 0.0, 1.0)))
+
+	# Features first: they change the layout (pockets, relay and merchant
+	# cells), and the layout must not depend on depth or quest extras.
+	var feature_taken: Array[Vector2i] = []
+	var features := _carve_features(features_spec, spawns, dist, exit_cell, feature_taken, template.get("pickups", {}), max_dist)
+
 	var enemy_spec: Dictionary = template.get("enemies", {})
 	var min_dist := int(enemy_spec.get("min_spawn_distance", 10))
-	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist, depth, exit_cell)
-	var taken: Array[Vector2i] = []
+	var enemies := _place_enemies(enemy_spec, spawns, dist, min_dist, depth, exit_cell, far)
+	var taken: Array[Vector2i] = feature_taken.duplicate()
 	for e: Dictionary in enemies:
 		var raw: Array = e["cell"]
 		taken.append(Vector2i(int(raw[0]), int(raw[1])))
@@ -101,6 +116,12 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 		var raw: Array = p["cell"]
 		taken.append(Vector2i(int(raw[0]), int(raw[1])))
 	pickups.append_array(_place_extra_pickups(extra_pickups, spawns, dist, taken))
+	var rarity_weights: Dictionary = features_spec.get("rarity", {})
+	for p: Dictionary in pickups:
+		var r := _roll_rarity(rarity_weights)
+		if r != "common":
+			p["rarity"] = r
+	pickups.append_array(features["pickups"])
 
 	var tiles: Dictionary = template.get("tiles", {})
 	var template_id := String(template.get("id", "shard"))
@@ -114,6 +135,10 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 		DEBRIS: String(tiles.get("debris", "debris")),
 		SPAWN: String(tiles.get("floor", "floor_concrete")),
 		EXIT: String(tiles.get("extraction", "extraction_pad")),
+		SECRET: String(tiles.get("secret_door", "secret_door")),
+		VAULT: String(tiles.get("vault_door", "vault_door")),
+		WAYPOINT: String(tiles.get("waypoint", "waypoint")),
+		MERCHANT: String(tiles.get("floor", "floor_concrete")),
 	}
 	for ch: String in surface_legend:
 		legend[ch] = surface_legend[ch]
@@ -128,7 +153,11 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 		"pickups": pickups,
 		"extraction": [exit_cell.x, exit_cell.y],
 		"rooms": room_list,
-		"generation": {"template": template_id, "seed": seed_value, "depth": depth, "min_spawn_distance": min_dist, "extra_pickups": extra_pickups.duplicate()},
+		"secrets": features["secrets"],
+		"vaults": features["vaults"],
+		"waypoints": features["waypoints"],
+		"npcs": features["npcs"],
+		"generation": {"template": template_id, "seed": seed_value, "depth": depth, "min_spawn_distance": min_dist, "ramp_far_distance": far, "ramp_origin": [spawns[0].x, spawns[0].y], "extra_pickups": extra_pickups.duplicate()},
 	}
 
 
@@ -350,7 +379,9 @@ func _nearest_reachable(center: Vector2i, room: Rect2i, dist: PackedInt32Array) 
 ## `depth` 1 is the base population; each depth past it adds a group, raises
 ## the elite chance (`elite_chance_per_depth`, capped at `elite_chance_max`)
 ## and, from `boss.min_depth`, posts the template's boss beside the pad.
-func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, min_dist: int, depth: int = 1, exit_cell: Vector2i = Vector2i(-1, -1)) -> Array:
+## `far` (walking steps from the spawn) is the difficulty ramp: groups
+## placed past it are one larger and are the only ones that roll elites.
+func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, min_dist: int, depth: int = 1, exit_cell: Vector2i = Vector2i(-1, -1), far: int = 0) -> Array:
 	var out: Array = []
 	var pool: Array = spec.get("pool", [])
 	if pool.is_empty() or rooms.size() < 2:
@@ -358,7 +389,7 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 	var extra_groups := maxi(depth, 1) - 1
 	var groups := _pick(spec.get("groups", [4, 7])) + extra_groups
 	var size_range: Array = spec.get("group_size", [1, 3])
-	var elite_chance := minf(float(spec.get("elite_chance_per_depth", 0.0)) * float(extra_groups), float(spec.get("elite_chance_max", 0.0)))
+	var base_elite_chance := minf(float(spec.get("elite_chance_per_depth", 0.0)) * float(extra_groups), float(spec.get("elite_chance_max", 0.0)))
 	var taken: Dictionary = {}
 	var boss: Dictionary = spec.get("boss", {})
 	if not boss.is_empty() and depth >= int(boss.get("min_depth", 99)) and exit_cell.x >= 0:
@@ -376,7 +407,9 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 				if floor_chars.has(ch) and dist[_idx(p)] >= 0 and not taken.has(p) \
 						and _distance_to_any(p, spawns) >= min_dist:
 					candidates.append(p)
-		var n := rng.randi_range(int(size_range[0]), int(size_range[1]))
+		var centre := _center(room)
+		var room_far := far > 0 and dist[_idx(centre)] >= far
+		var n := rng.randi_range(int(size_range[0]), int(size_range[1])) + (1 if room_far else 0)
 		for _i: int in n:
 			if candidates.is_empty():
 				break
@@ -385,7 +418,8 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 			candidates.remove_at(k)
 			taken[cell] = true
 			var placement: Dictionary = {"type": _weighted_pick(pool), "cell": [cell.x, cell.y]}
-			if elite_chance > 0.0 and rng.randf() < elite_chance:
+			var past_ramp := far <= 0 or dist[_idx(cell)] >= far
+			if base_elite_chance > 0.0 and past_ramp and rng.randf() < base_elite_chance:
 				placement["tier"] = "elite"
 			out.append(placement)
 	return out
@@ -580,3 +614,157 @@ func _place_extra_pickups(ids: Array[String], spawns: Array[Vector2i], dist: Pac
 		used[cell] = true
 		out.append({"type": id, "cell": [cell.x, cell.y]})
 	return out
+
+
+
+# --- features: secrets, vaults, waypoints, merchant, rarity -----------------
+
+## Carves the Shard features after the walk graph is final. Pockets are dug
+## out of solid wall next to a room and sealed by a door tile, so they are
+## unreachable until the door opens (the validator proves it). Returns
+## {"secrets", "vaults", "waypoints", "npcs", "pickups"}.
+func _carve_features(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32Array, exit_cell: Vector2i, taken: Array[Vector2i], pickup_spec: Dictionary, max_dist: int) -> Dictionary:
+	var out: Dictionary = {"secrets": [], "vaults": [], "waypoints": [], "npcs": [], "pickups": []}
+	if spec.is_empty() or rooms.size() < 2:
+		return out
+	var pool: Array = pickup_spec.get("pool", [])
+	var secrets := _pick(spec.get("secrets", [0, 0]))
+	for _i: int in secrets:
+		var pocket := _carve_pocket(SECRET, 1, dist)
+		if pocket.is_empty():
+			break
+		var cells: Array = pocket["cells"]
+		var entry: Dictionary = {"door": pocket["door"], "cells": cells}
+		if not pool.is_empty():
+			var c: Array = cells[0]
+			var pickup: Dictionary = {"type": _weighted_pick(pool), "cell": c}
+			var r := _roll_rarity(spec.get("rarity", {}))
+			if r != "common":
+				pickup["rarity"] = r
+			out["pickups"].append(pickup)
+		out["secrets"].append(entry)
+	var vaults := _pick(spec.get("vaults", [0, 0]))
+	var vault_rarity := String(spec.get("vault_rarity", "rare"))
+	for _i: int in vaults:
+		var pocket := _carve_pocket(VAULT, 2, dist)
+		if pocket.is_empty():
+			break
+		var cells: Array = pocket["cells"]
+		var cost: Dictionary = {}
+		for key: String in spec.get("vault_cost", {"ciphers": 1}):
+			cost[key] = int(Dictionary(spec.get("vault_cost", {"ciphers": 1}))[key])
+		out["vaults"].append({"door": pocket["door"], "cells": cells, "cost": cost})
+		if not pool.is_empty():
+			for c: Array in cells:
+				out["pickups"].append({"type": _weighted_pick(pool), "cell": c, "rarity": _at_least(_roll_rarity(spec.get("rarity", {})), vault_rarity)})
+	var waypoints := _pick(spec.get("waypoints", [0, 0]))
+	var exit_dist := dist[_idx(exit_cell)]
+	for i: int in waypoints:
+		var target := int(round(float(exit_dist) * float(i + 1) / float(waypoints + 1)))
+		var w := _cell_near_distance(target, dist, spawns, exit_cell, taken)
+		if w.x < 0:
+			break
+		_put(w, WAYPOINT)
+		taken.append(w)
+		out["waypoints"].append([w.x, w.y])
+	var merchant := String(spec.get("merchant", ""))
+	if not merchant.is_empty():
+		var m := _cell_near_distance(int(round(float(exit_dist) * 0.5)), dist, spawns, exit_cell, taken)
+		if m.x >= 0:
+			_put(m, MERCHANT)
+			taken.append(m)
+			out["npcs"].append({"merchant": merchant, "cell": [m.x, m.y]})
+	return out
+
+
+## Digs a `depth_cells`-deep pocket into solid wall off a random room edge,
+## sealed by a door char on the room side. {} when no wall is thick enough.
+func _carve_pocket(door_char: String, depth_cells: int, dist: PackedInt32Array) -> Dictionary:
+	for _attempt: int in 60:
+		var room := rooms[rng.randi_range(0, rooms.size() - 1)]
+		var side := rng.randi_range(0, 3)
+		var dir := N4[side]
+		var x := rng.randi_range(room.position.x, room.end.x - 1)
+		var y := rng.randi_range(room.position.y, room.end.y - 1)
+		var inside := Vector2i(x, y)
+		# Walk to the room edge in `dir`.
+		while _walkable(inside + dir) and room.has_point(inside + dir):
+			inside += dir
+		if not _walkable(inside) or dist[_idx(inside)] < 0:
+			continue
+		var door := inside + dir
+		var cells: Array[Vector2i] = []
+		for k: int in range(1, depth_cells + 1):
+			cells.append(door + dir * k)
+		if not _pocket_is_sealed(door, cells, dir):
+			continue
+		_put(door, door_char)
+		var raw_cells: Array = []
+		for c: Vector2i in cells:
+			_put(c, FLOOR)
+			raw_cells.append([c.x, c.y])
+		return {"door": [door.x, door.y], "cells": raw_cells}
+	return {}
+
+
+## The door and every pocket cell must be wall inside the border. Every
+## neighbour of a pocket cell must be wall or part of the pocket; the door
+## may touch the room only on its room side (the opening and its two
+## flanks), so nothing reaches the pocket around the door.
+func _pocket_is_sealed(door: Vector2i, cells: Array[Vector2i], dir: Vector2i) -> bool:
+	var all: Array[Vector2i] = [door]
+	all.append_array(cells)
+	var along := Vector2i(dir.y, dir.x)
+	var room_side: Array[Vector2i] = [door - dir, door - dir + along, door - dir - along]
+	for c: Vector2i in all:
+		if c.x < 1 or c.y < 1 or c.x >= width - 1 or c.y >= height - 1:
+			return false
+		if _cell_at(c) != WALL:
+			return false
+	for c: Vector2i in cells:
+		for d: Vector2i in RING:
+			var n := c + d
+			if all.has(n):
+				continue
+			if n.x < 0 or n.y < 0 or n.x >= width or n.y >= height or _cell_at(n) != WALL:
+				return false
+	for d: Vector2i in RING:
+		var n := door + d
+		if all.has(n) or room_side.has(n):
+			continue
+		if _cell_at(n) != WALL:
+			return false
+	return true
+
+
+## A reachable floor cell whose walking distance from the spawn is closest
+## to `target`, not taken, not a spawn or the exit. (-1, -1) when none.
+func _cell_near_distance(target: int, dist: PackedInt32Array, spawns: Array[Vector2i], exit_cell: Vector2i, taken: Array[Vector2i]) -> Vector2i:
+	var best := Vector2i(-1, -1)
+	var best_gap := 1 << 30
+	for y: int in height:
+		for x: int in width:
+			var p := Vector2i(x, y)
+			if _cell_at(p) != FLOOR or dist[_idx(p)] < 0 or taken.has(p) or spawns.has(p) or p == exit_cell:
+				continue
+			var gap := absi(dist[_idx(p)] - target)
+			if gap < best_gap:
+				best = p
+				best_gap = gap
+	return best
+
+
+func _roll_rarity(weights: Dictionary) -> String:
+	var roll := rng.randf()
+	var epic := float(weights.get("epic", 0.0))
+	var rare := float(weights.get("rare", 0.0))
+	if roll < epic:
+		return "epic"
+	if roll < epic + rare:
+		return "rare"
+	return "common"
+
+
+static func _at_least(rarity: String, floor_rarity: String) -> String:
+	var order: Array[String] = ["common", "rare", "epic"]
+	return rarity if order.find(rarity) >= order.find(floor_rarity) else floor_rarity
