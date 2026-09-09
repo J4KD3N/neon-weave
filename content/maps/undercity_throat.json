@@ -1,0 +1,44 @@
+{
+  "name": "The Undercity Throat",
+  "summary": "A collapsed intake south of the yard that was not open last week. The singing comes up it like heat.",
+  "biome": "rusted_undercity",
+  "spawn_marker": "P",
+  "legend": {
+    ".": "floor_concrete",
+    ",": "floor_grate",
+    "#": "wall_rust",
+    "x": "debris",
+    "P": "floor_concrete",
+    "m": "mana_pool",
+    "c": "conduit",
+    "b": "biogrowth",
+    "k": "catwalk",
+    "L": "locked_door"
+  },
+  "rows": [
+    "############################",
+    "#.P.P......#......bbb......#",
+    "#.P.P......#.......b.......#",
+    "#..........#......ccc......#",
+    "#....x.....L......ccc..mm..#",
+    "#..........#...........mm..#",
+    "#..kkk.....#......x........#",
+    "#..kkk.....#..............,#",
+    "#..........#.............,,#",
+    "############################"
+  ],
+  "doors": [
+    { "cell": [11, 4], "key_flag": "throat_entered", "opens_flag": "throat_door_open", "hint": "it opens from this side; step up to it" }
+  ],
+  "triggers": [
+    { "id": "enter", "cells": [[1, 1], [2, 1], [3, 1], [1, 2], [2, 2], [3, 2]], "once": true, "effects": { "flags": { "throat_entered": true }, "toast": "The throat. The singing is in your teeth now." } },
+    { "id": "holder", "cells": [[14, 3], [14, 4], [14, 5]], "once": true, "effects": { "toast": "The Warlord has been waiting here longer than the Shard has existed. He does not look surprised.", "enemies": [ { "type": "undercity_warlord", "cell": [20, 4] }, { "type": "scav", "cell": [19, 2] }, { "type": "scav", "cell": [19, 6] } ], "victory_flag": "warlord_beaten" } },
+    { "id": "source", "cell": [26, 8], "once": true, "when": { "flags": { "warlord_beaten": true } }, "effects": { "dialogue": "choir_fragment" } }
+  ],
+  "transitions": [
+    { "cell": [1, 1], "to": "proto_yard", "arrive": [10, 13], "label": "Back up to the yard" }
+  ],
+  "npcs": [],
+  "pickups": [ { "type": "aether_shard", "cell": [4, 7] } ],
+  "enemies": []
+}

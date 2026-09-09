@@ -1,0 +1,49 @@
+{
+  "name": "Pell — the relay station",
+  "start": [
+    { "node": "after", "requires": { "flags": { "pell_talked": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "pell",
+      "text": "Weavers. You're Beacon-crew, I can see the burn on your boots. Halden took us down the second depth and it sang to us. Six of us went in humming. I'm the one who stopped.",
+      "choices": [
+        { "text": "Where is the rest of your crew?", "next": "crew" },
+        { "text": "[Undercity] I know that tune. My mother hummed it before the Shard took her.", "requires": { "origin_tag": "undercity" }, "effects": { "flags": { "pell_shared_tune": true }, "approval": { "sera": 1 } }, "next": "crew" },
+        { "text": "Sera, she's Ashfound-marked. Yours?", "requires": { "recruited": "sera" }, "next": "sera_marks" }
+      ]
+    },
+    "sera_marks": {
+      "speaker": "sera",
+      "text": "Purge-school. Same as me. Pell, you were on the Ninth Stair detail?",
+      "choices": [
+        { "text": "Let her answer the crew question first.", "next": "crew" }
+      ]
+    },
+    "crew": {
+      "speaker": "pell",
+      "text": "In the tower. The drones got them, or the singing did; I stopped being able to tell. Halden kept the log. If you want to know what we heard, it's still on him, past the hive.",
+      "choices": [
+        { "text": "We'll get the log. Get yourself back to the road.", "effects": { "flags": { "pell_talked": true }, "reputation": { "ashfound": 1 } }, "end": true },
+        { "text": "Kaj-7, is she hearing what you hear?", "requires": { "recruited": "kaj7" }, "next": "kaj_hears" },
+        { "text": "You stay put until we clear it.", "effects": { "flags": { "pell_talked": true } }, "end": true }
+      ]
+    },
+    "kaj_hears": {
+      "speaker": "kaj7",
+      "text": "Yes. It is the same signal. She has less of it than I do. I do not know if that is lucky.",
+      "choices": [
+        { "text": "Noted. We'll get the log.", "effects": { "flags": { "pell_talked": true, "pell_kaj_confirmed": true }, "approval": { "kaj7": 1 } }, "end": true }
+      ]
+    },
+    "after": {
+      "speaker": "pell",
+      "text": "Still humming. Go on. The log is past the hive.",
+      "choices": [
+        { "text": "Go back to the road, Pell.", "effects": { "flags": { "pell_left": true } }, "end": true },
+        { "text": "Hold on.", "end": true }
+      ]
+    }
+  }
+}

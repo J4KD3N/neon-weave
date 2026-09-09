@@ -14,6 +14,29 @@
         { "text": "Reach the end of the road", "done_when": { "flags": { "road_end": true } } }
       ]
     },
-    "done": { "summary": "The road is open. The Undercity is waiting, and so is whatever woke the Shards.", "complete": true }
+    "relay": {
+      "summary": "Crew Halden went east to the relay station three days ago and did not come back. Find them.",
+      "objectives": [
+        { "text": "Reach the relay station east of the road", "done_when": { "flags": { "relay_entered": true } } },
+        { "text": "Find out what happened to Crew Halden", "done_when": { "flags": { "pell_talked": true } } },
+        { "text": "Recover the expedition log", "done_when": { "flags": { "log_recovered": true } } }
+      ]
+    },
+    "deeper": {
+      "summary": "The log says the singing starts at the second depth. Reach it and come back.",
+      "objectives": [
+        { "text": "Raise the Beacon to depth 2", "done_when": { "flags": { "building_beacon_l1": true } } },
+        { "text": "Extract from a depth-2 Shard", "done_when": { "flags": { "extracted_depth_2": true } } }
+      ]
+    },
+    "throat": {
+      "summary": "Something is singing under the yard. The Undercity throat has opened south of the plaza road.",
+      "objectives": [
+        { "text": "Enter the Undercity throat from the yard", "done_when": { "flags": { "throat_entered": true } } },
+        { "text": "Get past whatever holds the throat", "done_when": { "flags": { "warlord_beaten": true } } },
+        { "text": "Reach the source of the singing", "done_when": { "flags": { "choir_contact": true } } }
+      ]
+    },
+    "choir": { "summary": "First contact. It knew your name. The demo ends here; the Waking does not.", "complete": true }
   }
 }

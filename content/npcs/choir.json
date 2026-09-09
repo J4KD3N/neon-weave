@@ -1,0 +1,8 @@
+{
+  "name": "The Choir",
+  "short_name": "The Choir",
+  "summary": "Fragments of the drowned seed-intelligence, singing through corrupted machines. Never placed on a map; speaks through triggers.",
+  "faction": "lattice",
+  "dialogue": "choir_fragment",
+  "art": { "color": "#c48cff" }
+}

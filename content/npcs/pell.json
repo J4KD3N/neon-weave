@@ -1,0 +1,8 @@
+{
+  "name": "Pell of Crew Halden",
+  "short_name": "Pell",
+  "summary": "The only one of Crew Halden who walked out of the relay station. She hums a tune she did not know a week ago.",
+  "faction": "ashfound",
+  "dialogue": "pell_survivor",
+  "art": { "color": "#e0c07a" }
+}

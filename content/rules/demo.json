@@ -1,0 +1,6 @@
+{
+  "name": "Demo boundary",
+  "summary": "The Steam demo ends when this flag is set (the first lucid Choir fragment speaks). The end panel shows once, then the party is home.",
+  "end_flag": "demo_complete",
+  "milestone": "M2"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "The expedition log",
+  "start": [ { "node": "read" } ],
+  "nodes": {
+    "read": {
+      "speaker": "narrator",
+      "text": "Halden's slate, cracked, still recording. Day one: Beacon calibrated for the second depth. Day two: the drones sing in intervals; Ferro says it is a language. Day three: it said our names. Day three, later, in a different hand: WE ARE INVITED.",
+      "choices": [
+        { "text": "Take the log. The second depth, then.", "effects": { "flags": { "log_recovered": true }, "quest": { "id": "main_waking", "stage": "deeper" } }, "end": true }
+      ]
+    }
+  }
+}
