@@ -12,7 +12,7 @@ Targets: Windows, Linux (Steam Deck friendly), macOS. Steam demo and 1.0 planned
 
 1. Install [Godot 4.7.2](https://godotengine.org/download) (standard build; no .NET needed).
 2. Clone this repo and open `project.godot` from the Godot project manager (**Import**).
-3. Press **Play**. You get the Proto Yard with the prototype party; F1 lists loaded content and mods.
+3. Press **Play**. The title screen offers New game (choose Story-Protected or Mortal), Continue, Load and Settings; F1 in game lists loaded content and mods.
 
 The first editor open generates `.uid` sidecar files next to scripts. Commit them.
 

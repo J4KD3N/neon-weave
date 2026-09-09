@@ -61,6 +61,12 @@ var merchant_menu: MerchantMenu
 var current_merchant: String = ""
 var journal_menu: JournalMenu
 var demo_end_menu: DemoEndMenu
+var title_menu: TitleMenu
+var settings_menu: SettingsMenu
+var settings: Settings = Settings.new()
+var _settings_return_to_title: bool = false
+## Cold starts show the title; tests (Engine meta) and CLI staging skip it.
+@export var show_title_on_start: bool = true
 ## Set by a trigger's `victory_flag`: raised when the fight it started is won.
 var pending_victory_flag: String = ""
 ## A once-trigger that started a fight is spent only when that fight is won,
@@ -135,6 +141,15 @@ func _ready() -> void:
 	demo_end_menu = DemoEndMenu.new()
 	demo_end_menu.name = "DemoEndMenu"
 	add_child(demo_end_menu)
+	title_menu = TitleMenu.new()
+	title_menu.name = "TitleMenu"
+	add_child(title_menu)
+	settings_menu = SettingsMenu.new()
+	settings_menu.name = "SettingsMenu"
+	add_child(settings_menu)
+	settings = Settings.load_or_default()
+	settings.apply()
+	InputActions.load_overrides()
 	spawn_npcs()
 	spawn_buildings()
 	auto_start_quests()
@@ -168,6 +183,10 @@ func _ready() -> void:
 			ledger.bank({"aether": 4})
 			refresh_progression()
 			open_weave()
+	apply_death_stakes()
+	var staged := not OS.get_cmdline_user_args().is_empty() and not OS.get_cmdline_user_args().has("--title")
+	if show_title_on_start and not Engine.has_meta("neon_weave_tests") and not staged:
+		show_title()
 
 
 func _exit_tree() -> void:
@@ -1080,6 +1099,33 @@ func _on_combat_ended(result: String) -> void:
 # --- input & frame ---------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if settings_menu != null and settings_menu.visible:
+		if not settings_menu.rebinding.is_empty():
+			capture_rebind(event)
+			return
+		if event.is_action_pressed("cancel"):
+			close_settings()
+		elif event.is_action_pressed("confirm"):
+			confirm_setting()
+		elif event.is_action_pressed("ui_up"):
+			settings_menu.move(-1)
+		elif event.is_action_pressed("ui_down"):
+			settings_menu.move(1)
+		elif event.is_action_pressed("ui_left"):
+			adjust_setting(-1)
+		elif event.is_action_pressed("ui_right"):
+			adjust_setting(1)
+		return
+	if in_title():
+		if event.is_action_pressed("confirm"):
+			activate_title()
+		elif event.is_action_pressed("cancel") and title_menu.page == TitleMenu.PAGE_STAKES:
+			title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
+		elif event.is_action_pressed("ui_up"):
+			title_menu.move(-1)
+		elif event.is_action_pressed("ui_down"):
+			title_menu.move(1)
+		return
 	if event.is_action_pressed("toggle_debug"):
 		overlay.toggle_registry()
 		return
@@ -1311,7 +1357,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "title", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1345,6 +1391,8 @@ func system_items() -> Array[Dictionary]:
 		items.append({"id": "load_%d" % (n + 1), "label": "Load slot %d — %s" % [n + 1, slot["summary"]], "enabled": bool(slot["exists"]), "why": "empty"})
 	var auto: Dictionary = saves[SaveSystem.SLOTS]
 	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["exists"]), "why": "no autosave yet"})
+	items.append({"id": "settings", "label": "Settings", "enabled": true})
+	items.append({"id": "title", "label": "Title screen", "enabled": mode != "combat", "why": "in combat"})
 	items.append({"id": "registry", "label": "Content registry dump (debug)", "enabled": true})
 	return items
 
@@ -1399,6 +1447,12 @@ func activate_system_item(id: String) -> bool:
 			return load_from(SaveSystem.AUTOSAVE).is_empty()
 		"registry":
 			overlay.toggle_registry()
+			return true
+		"settings":
+			return open_settings()
+		"title":
+			autosave()
+			show_title()
 			return true
 	if id.begins_with("shard_"):
 		return launch_shard(id.trim_prefix("shard_"))
@@ -2310,4 +2364,202 @@ func open_beacon_menu() -> bool:
 		items.append({"id": "shard_" + id, "label": "Launch instead: %s" % t.get("name", id), "enabled": shard_locked_reason(id).is_empty(), "why": "the Beacon has not found it yet"})
 	items.append({"id": "resume", "label": "Step back", "enabled": true})
 	system_menu.open(items)
+	return true
+
+
+
+# --- front end: title, new game, settings, rebinding -------------------------
+
+func title_rows() -> Array[Dictionary]:
+	var has_auto := FileAccess.file_exists(save_path(SaveSystem.AUTOSAVE))
+	var any_slot := false
+	for s: Dictionary in SaveSystem.list_saves(saves_dir):
+		if bool(s["exists"]):
+			any_slot = true
+	var rows: Array[Dictionary] = []
+	rows.append({"id": "new", "label": "New game", "enabled": true})
+	rows.append({"id": "continue", "label": "Continue", "enabled": has_auto, "why": "no autosave yet"})
+	rows.append({"id": "load", "label": "Load", "enabled": any_slot, "why": "no saves yet"})
+	rows.append({"id": "settings", "label": "Settings", "enabled": true})
+	rows.append({"id": "quit", "label": "Quit", "enabled": true})
+	return rows
+
+
+func stakes_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	rows.append({"id": "story", "label": "Story-Protected", "enabled": true, "blurb": "Companions fall and get back up. The story never loses anyone it did not mean to."})
+	rows.append({"id": "mortal", "label": "Mortal", "enabled": true, "blurb": "The dead stay dead. Companion quests carry on without them. A dead leader ends the expedition."})
+	rows.append({"id": "back", "label": "Back", "enabled": true})
+	return rows
+
+
+func show_title() -> void:
+	if title_menu == null:
+		return
+	party.stop()
+	title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
+
+
+func in_title() -> bool:
+	return title_menu != null and title_menu.visible
+
+
+## Enter / A on the title screen.
+func activate_title() -> bool:
+	if not in_title():
+		return false
+	var id := title_menu.selected_id()
+	if title_menu.page == TitleMenu.PAGE_STAKES:
+		match id:
+			"story":
+				return new_game(false)
+			"mortal":
+				return new_game(true)
+			"back":
+				title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
+				return true
+		return false
+	match id:
+		"new":
+			title_menu.show_rows(TitleMenu.PAGE_STAKES, stakes_rows())
+			return true
+		"continue":
+			return continue_game()
+		"load":
+			title_menu.close()
+			open_system_menu()
+			return system_menu.visible
+		"settings":
+			return open_settings()
+		"quit":
+			get_tree().quit()
+			return true
+	return false
+
+
+## A fresh story: narrative, protagonist and party reset, the books wiped,
+## death-stakes chosen. The old autosave is overwritten by the first one.
+func new_game(mortal: bool) -> bool:
+	if title_menu != null:
+		title_menu.close()
+	narrative = NarrativeState.new()
+	narrative.set_flag("mortal_mode", mortal)
+	protagonist = {}
+	ledger = Ledger.new()
+	ledger.path = ledger_path
+	ledger.save()
+	bastion.setup(registry.get_all("buildings"), ledger.buildings)
+	selected_shard = DEFAULT_SHARD
+	apply_death_stakes()
+	respawn_party()
+	enter_map(home_map)
+	auto_start_quests()
+	spawn_npcs()
+	autosave()
+	overlay.toast("Mortal mode: the dead stay dead." if mortal else "Story-Protected: the story keeps its people.", 3.0)
+	return true
+
+
+func continue_game() -> bool:
+	if not FileAccess.file_exists(save_path(SaveSystem.AUTOSAVE)):
+		return false
+	if title_menu != null:
+		title_menu.close()
+	return load_from(SaveSystem.AUTOSAVE).is_empty()
+
+
+## The death-stakes rule follows the story: saved as a narrative flag.
+func apply_death_stakes() -> void:
+	rules.story_protected = not narrative.flag("mortal_mode")
+
+
+func is_mortal_mode() -> bool:
+	return narrative.flag("mortal_mode")
+
+
+func open_settings() -> bool:
+	if settings_menu == null:
+		return false
+	if title_menu != null and title_menu.visible:
+		title_menu.close()
+		_settings_return_to_title = true
+	else:
+		_settings_return_to_title = false
+	if system_menu != null:
+		system_menu.close()
+	refresh_settings()
+	return true
+
+
+func refresh_settings() -> void:
+	settings_menu.show_rows(SettingsMenu.build_rows(settings))
+
+
+func close_settings() -> void:
+	if settings_menu == null:
+		return
+	settings_menu.close()
+	settings.save()
+	InputActions.save_overrides()
+	if _settings_return_to_title:
+		show_title()
+
+
+## Left / right on a settings row.
+func adjust_setting(direction: int) -> bool:
+	var row := settings_menu.selected()
+	match String(row.get("id", "")):
+		"fullscreen":
+			settings.fullscreen = not settings.fullscreen
+		"volume":
+			settings.step_volume(direction)
+		"glyphs":
+			settings.cycle_glyphs(direction)
+		_:
+			return false
+	settings.apply()
+	refresh_settings()
+	return true
+
+
+## Enter / A on a settings row: toggles, starts a rebind, resets, or backs out.
+func confirm_setting() -> bool:
+	var row := settings_menu.selected()
+	var id := String(row.get("id", ""))
+	if id.begins_with("rebind:"):
+		settings_menu.rebinding = id.trim_prefix("rebind:")
+		settings_menu.refresh()
+		return true
+	match id:
+		"fullscreen", "glyphs":
+			return adjust_setting(1)
+		"volume":
+			return adjust_setting(1)
+		"reset":
+			InputActions.reset_overrides()
+			refresh_settings()
+			overlay.toast("Bindings reset to default.", 2.0)
+			return true
+		"back":
+			close_settings()
+			return true
+	return false
+
+
+## The next key or pad button while a rebind is armed becomes the binding.
+func capture_rebind(event: InputEvent) -> bool:
+	if settings_menu == null or settings_menu.rebinding.is_empty():
+		return false
+	if event is InputEventKey and (event as InputEventKey).physical_keycode == KEY_ESCAPE:
+		settings_menu.rebinding = ""
+		settings_menu.refresh()
+		return true
+	if not (event is InputEventKey or event is InputEventJoypadButton) or not event.is_pressed():
+		return false
+	var action := settings_menu.rebinding
+	if InputActions.rebind(action, event):
+		InputActions.save_overrides()
+		overlay.toast("%s is now %s" % [action.replace("_", " "), InputActions.describe(action)], 2.5)
+	settings_menu.rebinding = ""
+	refresh_settings()
 	return true

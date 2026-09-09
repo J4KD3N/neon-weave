@@ -107,6 +107,7 @@ jobs:
                 --resolution 1280x720 --audio-driver Dummy -- "$@"
           }
           run_shot --screenshot="$PWD/build/screenshot.png"
+          run_shot --screenshot="$PWD/build/screenshot-title.png" --title
           run_shot --screenshot="$PWD/build/screenshot-combat.png" --map=proto_yard --screenshot-combat
           run_shot --screenshot="$PWD/build/screenshot-shard.png" --shard=7
           run_shot --screenshot="$PWD/build/screenshot-datacore.png" --shard=7 --biome=verdant_datacore
