@@ -11,6 +11,7 @@
   "unlocks": {},
   "abilities": ["strike", "null_cut", "void_lash", "null_pulse"],
   "subclass_level": 3,
+  "capstone": "null_dominion",
   "subclasses": ["voidfencer", "suppressor"],
   "milestone": "M2"
 }

@@ -1,0 +1,1 @@
+{ "name": "Shepherd turret", "family": "bastion", "archetype": "ranged", "summary": "An Artificer turret: bolted down, long-sighted, ours.", "stats": { "hp": 10, "move": 1, "evasion": 0, "initiative": 0 }, "abilities": ["turret_shot"], "awareness": 0, "xp": 0, "loot": {}, "art": { "shape": "capsule", "color": "#5fd9c9" } }

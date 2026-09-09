@@ -981,7 +981,7 @@ func test_subclass_and_talents_persist_through_save_and_load() -> void:
 	assert_eq(weaver.max_hp, 26 + 3)
 	assert_eq(world.buy_talent("weaver", "plated_bones"), "tier 2 opens later")
 	assert_eq(world.buy_talent("weaver", "iron_skin"), "already learned")
-	assert_eq(world.build_for("weaver"), {"subclass": "juggernaut", "talents": ["iron_skin"], "equipment": {}})
+	assert_eq(world.build_for("weaver"), {"subclass": "juggernaut", "talents": ["iron_skin"], "equipment": {}, "multiclass": {}})
 	assert_eq(world.save_slot(1), OK)
 	var again := _fresh_scene()
 	assert_eq(again.load_slot(1), [])
@@ -1013,7 +1013,7 @@ func test_respec_needs_the_arcanum_and_refunds_aether() -> void:
 	assert_true(world.can_respec())
 	assert_eq(world.respec("weaver"), "")
 	assert_eq(world.ledger.total("aether"), 1, "the Trueborn paid 1 of the 2; half of 1 rounds down to nothing back")
-	assert_eq(world.build_for("weaver"), {"subclass": "", "talents": [], "equipment": {}})
+	assert_eq(world.build_for("weaver"), {"subclass": "", "talents": [], "equipment": {}, "multiclass": {}})
 	assert_eq(weaver.subclass_id, "")
 	assert_false(weaver.abilities.has("shield_bash"))
 	assert_eq(weaver.max_hp, 26)
@@ -1050,7 +1050,7 @@ func test_weave_menu_rows_and_navigation() -> void:
 	for r: Dictionary in rows:
 		if not kinds.has(String(r["kind"])):
 			kinds.append(String(r["kind"]))
-	assert_eq(kinds, PackedStringArray(["subclass", "talent", "respec"]))
+	assert_eq(kinds, PackedStringArray(["subclass", "multiclass", "talent", "respec"]))
 	world.close_weave()
 	assert_false(world.weave_menu.visible)
 	world.enter_shard("rusted_undercity", 7)

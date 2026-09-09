@@ -312,6 +312,10 @@ static func _better_kite_cell_exists(state: CombatState, actor: Combatant, targe
 ## its longest range), the one with the least HP left; ties go to the
 ## nearest. Nothing in reach: the nearest, to walk at.
 static func pick_target(state: CombatState, actor: Combatant) -> Combatant:
+	if not actor.taunted_by.is_empty():
+		var t := state.by_id(actor.taunted_by)
+		if t != null and t.is_active() and not t.hidden and t.is_hostile_to(actor):
+			return t
 	var reach := actor.move_left + _max_range(state, actor)
 	var best: Combatant = null
 	var best_key: Array = []

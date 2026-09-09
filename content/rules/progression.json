@@ -1,9 +1,11 @@
 {
   "name": "Progression",
   "summary": "Party-wide XP (banked on extraction) turns into a party level. Levels grow stats per class `growth`, unlock class `unlocks`, and open a subclass at `subclass_level`. Talents are bought with Aether; the Arcanum refunds them.",
-  "level_cap": 6,
-  "xp_curve": [0, 15, 40, 80, 130, 200],
+  "level_cap": 12,
+  "xp_curve": [0, 15, 40, 80, 130, 200, 290, 400, 530, 680, 850, 1050],
   "subclass_level": 3,
-  "talent_tiers_by_level": { "1": 1, "4": 2 },
+  "multiclass_level": 5,
+  "capstone_level": 8,
+  "talent_tiers_by_level": { "1": 1, "4": 2, "7": 3, "10": 4 },
   "milestone": "M2"
 }

@@ -82,6 +82,8 @@ var _arrive_cell := Vector2i(-1, -1)
 var dialogue: DialogueRunner
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
+## Party-side summoned actors alive in the current fight (D-086).
+var summons: Array[EnemyActor] = []
 var combat: CombatController
 var hud: CombatHud
 var highlighter: CellHighlighter
@@ -307,6 +309,7 @@ func enter_map(id: String) -> bool:
 func _enter(entry: Dictionary) -> bool:
 	if mode == "combat":
 		return false
+	clear_summons()
 	load_map_entry(entry)
 	if party.members.is_empty():
 		spawn_party(party_id)
@@ -800,13 +803,24 @@ func enemies_by_id() -> Dictionary:
 
 ## A minion called in mid-fight by a summoner: placed, tracked with the
 ## other enemies (loot and XP on death), never part of the map entry.
-func spawn_summoned(kind: String, cell: Vector2i) -> EnemyActor:
+func spawn_summoned(kind: String, cell: Vector2i, team: String = Combatant.TEAM_ENEMY) -> EnemyActor:
 	var enemy_entry: Dictionary = registry.get_entry("enemies", kind)
 	if enemy_entry.is_empty() or not map_data.is_walkable(cell):
 		return null
 	var actor := _make_enemy(kind, enemy_entry, cell)
-	enemies.append(actor)
+	if team == Combatant.TEAM_PARTY:
+		summons.append(actor) # a drone or turret: ours for the fight, never loot, gone after
+	else:
+		enemies.append(actor)
 	return actor
+
+
+## Frees the party side summons (they last one fight).
+func clear_summons() -> void:
+	for s: EnemyActor in summons:
+		if is_instance_valid(s):
+			s.queue_free()
+	summons.clear()
 
 
 func spawn_pickups() -> void:
@@ -1096,6 +1110,7 @@ func start_combat(first_strike: bool) -> void:
 
 
 func _on_combat_ended(result: String) -> void:
+	clear_summons()
 	if result == "victory":
 		# Mortal mode: the dead stay dead. Companions leave the roster with a
 		# `<id>_dead` flag their quests can read; a dead leader is a wipe.
@@ -1636,7 +1651,7 @@ func xp_line() -> String:
 
 func build_for(member_id: String) -> Dictionary:
 	var b: Dictionary = ledger.builds.get(member_id, {})
-	return {"subclass": String(b.get("subclass", "")), "talents": Array(b.get("talents", [])).duplicate(), "equipment": Dictionary(b.get("equipment", {})).duplicate(true)}
+	return {"subclass": String(b.get("subclass", "")), "talents": Array(b.get("talents", [])).duplicate(), "equipment": Dictionary(b.get("equipment", {})).duplicate(true), "multiclass": Dictionary(b.get("multiclass", {})).duplicate(true)}
 
 
 func can_respec() -> bool:
@@ -1717,11 +1732,11 @@ func respec(member_id: String) -> String:
 	if not can_respec():
 		return "needs the Arcanum"
 	var b := build_for(member_id)
-	if String(b["subclass"]).is_empty() and Array(b["talents"]).is_empty():
+	if String(b["subclass"]).is_empty() and Array(b["talents"]).is_empty() and Dictionary(b.get("multiclass", {})).is_empty():
 		return "nothing to reset"
 	var refund := Progression.refund_for(registry, b, bastion.effect("respec_refund", 0.0), int(member_by_id(member_id).traits.get("talent_cost_mod", 0)))
 	ledger.resources["aether"] = ledger.total("aether") + refund
-	ledger.builds[member_id] = {"subclass": "", "talents": [], "equipment": Dictionary(b.get("equipment", {})).duplicate(true)} # gear stays on
+	ledger.builds[member_id] = {"subclass": "", "talents": [], "equipment": Dictionary(b.get("equipment", {})).duplicate(true), "multiclass": {}} # gear stays on; the multiclass resets too
 	ledger.save()
 	refresh_progression()
 	overlay.toast("%s reset; %d Aether returned" % [member_by_id(member_id).display_name, refund], 2.5)
@@ -1752,6 +1767,7 @@ func weave_rows(member_id: String) -> Array[Dictionary]:
 		if String(build["subclass"]) == sub_id:
 			label = "✓ " + label
 		rows.append({"kind": "subclass", "id": sub_id, "label": label, "enabled": why.is_empty(), "why": why})
+	rows.append_array(multiclass_rows(member_id))
 	var talents := registry.get_all("talents")
 	talents.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a.get("tier", 1)) != int(b.get("tier", 1)):
@@ -1820,6 +1836,10 @@ func confirm_weave() -> bool:
 	match String(row.get("kind", "")):
 		"subclass":
 			why = choose_subclass(m.member_id, String(row["id"]))
+		"multiclass":
+			why = choose_multiclass(m.member_id, String(row["id"]))
+		"multiclass_level":
+			why = add_multiclass_level(m.member_id)
 		"talent":
 			why = buy_talent(m.member_id, String(row["id"]))
 		"respec":
@@ -2980,3 +3000,80 @@ func party_trait_total(key: String) -> float:
 		if not m.downed:
 			total += float(m.traits.get(key, 0.0))
 	return total
+
+
+
+# --- multiclassing (S31, D-086) ---------------------------------------------
+
+## Takes a second class for a member (from `multiclass_level`); levels move
+## into it one at a time with `add_multiclass_level`. Empty string on
+## success, else the reason.
+func choose_multiclass(member_id: String, class_id: String) -> String:
+	var m := member_by_id(member_id)
+	if m == null:
+		return "no such member"
+	var cls: Dictionary = registry.get_entry("classes", m.class_id)
+	var why := Progression.can_multiclass(registry, cls, party_level(), build_for(member_id), class_id, progression_rules(), can_respec())
+	if not why.is_empty():
+		return why
+	var b := build_for(member_id)
+	b["multiclass"] = {"class": class_id, "levels": 0}
+	ledger.builds[member_id] = b
+	ledger.save()
+	refresh_progression()
+	return ""
+
+
+func add_multiclass_level(member_id: String) -> String:
+	if member_by_id(member_id) == null:
+		return "no such member"
+	var b := build_for(member_id)
+	var why := Progression.can_add_multiclass_level(party_level(), b, progression_rules())
+	if not why.is_empty():
+		return why
+	var mc: Dictionary = b["multiclass"]
+	mc["levels"] = int(mc.get("levels", 0)) + 1
+	b["multiclass"] = mc
+	ledger.builds[member_id] = b
+	ledger.save()
+	refresh_progression()
+	return ""
+
+
+## "Scrap-Knight 7 / Aetherbinder 3" for headers.
+func class_levels_text(member_id: String) -> String:
+	var m := member_by_id(member_id)
+	if m == null:
+		return ""
+	var split := Progression.class_levels(party_level(), build_for(member_id), progression_rules())
+	var text := "%s %d" % [registry.get_entry("classes", m.class_id).get("name", m.class_id), int(split["main"])]
+	if int(split["second"]) > 0:
+		text += " / %s %d" % [registry.get_entry("classes", String(split["class"])).get("name", split["class"]), int(split["second"])]
+	return text
+
+
+## Rows for the second class: take one (any other class) and put levels into it.
+func multiclass_rows(member_id: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var m := member_by_id(member_id)
+	if m == null:
+		return rows
+	var cls: Dictionary = registry.get_entry("classes", m.class_id)
+	var build := build_for(member_id)
+	var level := party_level()
+	var prules := progression_rules()
+	var current := String(Dictionary(build.get("multiclass", {})).get("class", ""))
+	for other: Dictionary in registry.get_all("classes"):
+		var id := String(other["id"])
+		if id == m.class_id:
+			continue
+		var why := Progression.can_multiclass(registry, cls, level, build, id, prules, can_respec())
+		var label := "Second class: %s" % other.get("name", id)
+		if current == id:
+			label = "✓ " + label
+		rows.append({"kind": "multiclass", "id": id, "label": label, "enabled": why.is_empty(), "why": why})
+	if not current.is_empty():
+		var why := Progression.can_add_multiclass_level(level, build, prules)
+		var split := Progression.class_levels(level, build, prules)
+		rows.append({"kind": "multiclass_level", "id": member_id, "label": "Put a level into %s (%d there, %d in %s)" % [registry.get_entry("classes", current).get("name", current), int(split["second"]), int(split["main"]), cls.get("name", m.class_id)], "enabled": why.is_empty(), "why": why})
+	return rows

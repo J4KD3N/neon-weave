@@ -56,7 +56,7 @@ static func render(header: String, p_rows: Array[Dictionary], p_cursor: int) -> 
 		var row: Dictionary = p_rows[i]
 		var kind := String(row.get("kind", ""))
 		if kind != last_kind:
-			lines.append({"subclass": "Subclass", "talent": "Talents (Aether)", "respec": "Arcanum"}.get(kind, kind.capitalize()))
+			lines.append({"subclass": "Subclass", "multiclass": "Second class (from level 5; capstone at 8 levels in one class)", "multiclass_level": "Levels", "talent": "Talents (Aether)", "respec": "Arcanum"}.get(kind, kind.capitalize()))
 			last_kind = kind
 		var marker := "▶ " if i == p_cursor else "   "
 		var line := "%s%s" % [marker, row.get("label", row.get("id", "?"))]

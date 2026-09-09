@@ -1,0 +1,1 @@
+{ "name": "Shepherd drone", "family": "bastion", "archetype": "ranged", "summary": "A Drone Shepherd hunter drone: yours for the fight.", "stats": { "hp": 6, "move": 5, "evasion": 10, "initiative": 2 }, "abilities": ["zap"], "awareness": 0, "xp": 0, "loot": {}, "art": { "shape": "drone", "color": "#5fd9c9" } }

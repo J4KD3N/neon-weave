@@ -39,6 +39,24 @@ static func subclass_level(class_entry: Dictionary, rules: Dictionary) -> int:
 	return int(class_entry.get("subclass_level", rules.get("subclass_level", 3)))
 
 
+static func multiclass_level(rules: Dictionary) -> int:
+	return int(rules.get("multiclass_level", 5))
+
+
+static func capstone_level(rules: Dictionary) -> int:
+	return int(rules.get("capstone_level", 8))
+
+
+## How the party level splits between the main class and the multiclass
+## (D-086): the second class holds at most the levels past `multiclass_level`.
+static func class_levels(level: int, build: Dictionary, rules: Dictionary) -> Dictionary:
+	var mc: Dictionary = build.get("multiclass", {})
+	var second := 0
+	if not String(mc.get("class", "")).is_empty():
+		second = clampi(int(mc.get("levels", 0)), 0, maxi(level - multiclass_level(rules), 0))
+	return {"main": level - second, "second": second, "class": String(mc.get("class", ""))}
+
+
 ## Highest talent tier open at `level`.
 static func talent_tier_at(level: int, rules: Dictionary) -> int:
 	var tiers: Dictionary = rules.get("talent_tiers_by_level", {"1": 1})
@@ -51,24 +69,28 @@ static func talent_tier_at(level: int, rules: Dictionary) -> int:
 
 ## Stat deltas and extras a build adds on top of StatBlock: returns
 ## {"stats": {key: delta}, "abilities": [extra ids], "damage_bonus": int}.
-static func build_effects(registry: ContentRegistry, class_entry: Dictionary, level: int, build: Dictionary, rules: Dictionary) -> Dictionary:
+static func build_effects(registry: ContentRegistry, class_entry: Dictionary, party_level: int, build: Dictionary, rules: Dictionary) -> Dictionary:
 	var stats: Dictionary = {}
 	for key: String in STAT_KEYS:
 		stats[key] = 0
 	var abilities: Array[String] = []
 	var damage_bonus := 0
-	var growth: Dictionary = class_entry.get("growth", {})
-	for key: String in growth:
-		if stats.has(key):
-			stats[key] = int(stats[key]) + int(growth[key]) * maxi(level - 1, 0)
-	var unlocks: Dictionary = class_entry.get("unlocks", {})
-	var unlock_levels: Array = unlocks.keys()
-	unlock_levels.sort_custom(func(a: String, b: String) -> bool: return int(a) < int(b))
-	for key: String in unlock_levels:
-		if level >= int(key):
-			for id: String in unlocks[key]:
-				if not abilities.has(id):
-					abilities.append(id)
+	var split := class_levels(party_level, build, rules)
+	var level := int(split["main"])
+	_grow(class_entry, level - 1, stats)
+	_unlock(class_entry, level, abilities)
+	if level >= capstone_level(rules) and class_entry.has("capstone") and not abilities.has(String(class_entry["capstone"])):
+		abilities.append(String(class_entry["capstone"]))
+	var second := int(split["second"])
+	if second > 0:
+		var other := registry.get_entry("classes", String(split["class"]))
+		for id: String in other.get("abilities", []):
+			if id != "strike" and not abilities.has(id) and not Array(class_entry.get("abilities", [])).has(id):
+				abilities.append(id)
+		_grow(other, second, stats)
+		_unlock(other, second, abilities)
+		if second >= capstone_level(rules) and other.has("capstone") and not abilities.has(String(other["capstone"])):
+			abilities.append(String(other["capstone"]))
 	var sub_id := String(build.get("subclass", ""))
 	if not sub_id.is_empty() and level >= subclass_level(class_entry, rules):
 		var sub := registry.get_entry("subclasses", sub_id)
@@ -137,3 +159,47 @@ static func refund_for(registry: ContentRegistry, build: Dictionary, refund: flo
 	for id: String in build.get("talents", []):
 		total += talent_cost(registry, id, cost_mod)
 	return int(floor(total * clampf(refund, 0.0, 1.0)))
+
+
+static func _grow(class_entry: Dictionary, levels: int, stats: Dictionary) -> void:
+	var growth: Dictionary = class_entry.get("growth", {})
+	for key: String in growth:
+		if stats.has(key):
+			stats[key] = int(stats[key]) + int(growth[key]) * maxi(levels, 0)
+
+
+static func _unlock(class_entry: Dictionary, level: int, abilities: Array[String]) -> void:
+	var unlocks: Dictionary = class_entry.get("unlocks", {})
+	var unlock_levels: Array = unlocks.keys()
+	unlock_levels.sort_custom(func(a: String, b: String) -> bool: return int(a) < int(b))
+	for key: String in unlock_levels:
+		if level >= int(key):
+			for id: String in unlocks[key]:
+				if not abilities.has(id):
+					abilities.append(id)
+
+
+## Why a second class cannot be taken now; empty when it can (D-086).
+static func can_multiclass(registry: ContentRegistry, class_entry: Dictionary, level: int, build: Dictionary, class_id: String, rules: Dictionary, respec: bool) -> String:
+	if class_id == String(class_entry.get("id", "")):
+		return "that is the main class"
+	if not registry.has_entry("classes", class_id):
+		return "unknown class"
+	if level < multiclass_level(rules):
+		return "needs level %d" % multiclass_level(rules)
+	var current := String(Dictionary(build.get("multiclass", {})).get("class", ""))
+	if current == class_id:
+		return "already chosen"
+	if not current.is_empty() and not respec:
+		return "needs the Arcanum to change"
+	return ""
+
+
+## Why another level cannot move to the second class; empty when it can.
+static func can_add_multiclass_level(level: int, build: Dictionary, rules: Dictionary) -> String:
+	var mc: Dictionary = build.get("multiclass", {})
+	if String(mc.get("class", "")).is_empty():
+		return "no second class yet"
+	if int(mc.get("levels", 0)) >= level - multiclass_level(rules):
+		return "every level past %d is already placed" % multiclass_level(rules)
+	return ""

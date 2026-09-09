@@ -1,0 +1,1 @@
+{ "name": "Juggernaut Frame", "branch": "body", "tier": 4, "cost": { "aether": 9 }, "effects": { "hp": 8, "damage_bonus": 1 }, "summary": "+8 max HP, +1 damage. Needs Iron Will.", "requires": ["iron_will"] }

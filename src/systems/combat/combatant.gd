@@ -45,6 +45,12 @@ var retreated: bool = false
 ## Generic traits from race, origin or entry data (D-085): resist, regen_on_surface,
 ## detect_hidden, ability_damage_bonus, heal_immune_types, ... Read by CombatState.
 var traits: Dictionary = {}
+## Who this combatant must attack while `taunted` runs (D-086).
+var taunted_by: String = ""
+## {"damage", "spread", "source", "type"} while `poisoned` runs.
+var poison: Dictionary = {}
+## Damage span of the counter stance while `counter` runs.
+var counter_damage: Array = []
 
 
 static func make(p_id: String, p_name: String, p_team: String, p_cell: Vector2i, stats: Dictionary, p_abilities: Array[String], ap_per_turn: int) -> Combatant:
@@ -133,3 +139,9 @@ func tick_statuses() -> void:
 			statuses.erase(key)
 	if hidden and not statuses.has("hidden"):
 		hidden = false
+	if not statuses.has("taunted"):
+		taunted_by = ""
+	if not statuses.has("poisoned"):
+		poison = {}
+	if not statuses.has("counter"):
+		counter_damage = []

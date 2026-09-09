@@ -1,0 +1,1 @@
+{ "name": "Phantom Blades", "sound": "sfx_slash", "summary": "Wireghost capstone: everything within reach, cut in one motion.", "ap": 3, "range": 1, "damage": [6, 9], "accuracy": 85, "damage_type": "physical", "aoe": 1 }

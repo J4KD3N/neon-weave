@@ -309,18 +309,26 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 
 	if effect == "summon":
 		var kind := String(ability.get("summon", ""))
-		var cell := free_adjacent(actor.cell)
 		var entry: Dictionary = enemy_entries.get(kind, {})
-		_summon_count += 1
-		var stats := StatBlock.for_enemy(entry, rules, depth)
-		var minion := Combatant.make("e:s%d:%s" % [_summon_count, kind], String(entry.get("name", kind)), actor.team, cell, stats, Array(entry.get("abilities", []), TYPE_STRING, "", null), rules.ap_per_turn)
-		minion.archetype = String(entry.get("archetype", "rusher"))
-		minion.damage_bonus = int(stats.get("damage_bonus", 0))
-		minion.summoned_by = actor.id
-		combatants.append(minion)
-		order.append(minion)
-		var sm: Dictionary = {"type": "summon", "actor": actor.id, "summoned": minion.id, "kind": kind, "cell": cell, "ap_left": actor.ap}
-		_emit(sm)
+		var sm: Dictionary = {}
+		for _n: int in maxi(int(ability.get("summon_count", 1)), 1):
+			if summons_of(actor).size() >= int(ability.get("summon_max", 1)):
+				break
+			var cell := free_adjacent(actor.cell)
+			if cell == Vector2i(-1, -1):
+				break
+			_summon_count += 1
+			var stats := StatBlock.for_enemy(entry, rules, depth)
+			var prefix := "e" if actor.team == Combatant.TEAM_ENEMY else "p"
+			var minion := Combatant.make("%s:s%d:%s" % [prefix, _summon_count, kind], String(entry.get("name", kind)), actor.team, cell, stats, Array(entry.get("abilities", []), TYPE_STRING, "", null), rules.ap_per_turn)
+			minion.archetype = String(entry.get("archetype", "rusher"))
+			minion.damage_bonus = int(stats.get("damage_bonus", 0))
+			minion.traits = Dictionary(entry.get("traits", {})).duplicate(true)
+			minion.summoned_by = actor.id
+			combatants.append(minion)
+			order.append(minion)
+			sm = {"type": "summon", "actor": actor.id, "team": actor.team, "summoned": minion.id, "kind": kind, "cell": cell, "ap_left": actor.ap}
+			_emit(sm)
 		return sm
 
 	if effect == "stealth":
@@ -355,52 +363,21 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		_check_outcome()
 		return o
 
-	var flanked := is_flanked(target, actor)
+	if effect == "counter":
+		actor.statuses["counter"] = int(ability.get("duration", 1))
+		actor.counter_damage = Array(ability.get("counter_damage", ability.get("damage", [1, 1])))
+		var cs: Dictionary = {"type": "stance", "actor": actor.id, "ability": ability_id, "stance": "counter", "turns": int(ability.get("duration", 1)), "ap_left": actor.ap}
+		_emit(cs)
+		return cs
+
 	var ambush := actor.hidden
-	var mods := attack_modifiers(actor, ability, target)
-	var chance := hit_chance(actor, ability, target, flanked, int(mods["hit"]) + (rules.ambush_hit_bonus if ambush else 0))
-	var roll := rng.randi_range(1, 100)
-	var e: Dictionary = {
-		"type": "ability", "actor": actor.id, "ability": ability_id, "target": target.id,
-		"chance": chance, "roll": roll, "hit": roll <= chance, "flanked": flanked, "ambush": ambush,
-		"cover": mods["cover"], "elevated": mods["elevated"], "uphill": mods["uphill"], "amplified": mods["amplified"], "shroud": mods["shroud"],
-		"resource_stacks": actor.resource if builds else 0,
-		"resource_cost": resource_cost,
-		"marked": 0, "detonated": 0, "silenced": 0, "absorbed": 0,
-		"damage": 0, "target_hp": target.hp, "downed": false, "killed": false, "ap_left": actor.ap,
-	}
 	actor.reveal() # striking from hiding reveals, hit or miss
-	if e["hit"]:
-		var bonus := damage_bonus_for(actor, ability, target, mods)
-		if effect == "detonate" and not mark.is_empty():
-			e["detonated"] = target.mark_count(mark)
-			target.marks.erase(mark)
-		var dmg := roll_damage(ability, flanked, bonus)
-		if bool(mods["amplified"]):
-			dmg = int(round(dmg * rules.mana_pool_amplify))
-		if ambush:
-			dmg = int(round(dmg * rules.ambush_damage_mult))
-		var fate := _apply_damage(target, dmg, String(ability.get("damage_type", "")))
-		e["damage"] = int(fate["dealt"])
-		e["absorbed"] = int(fate["absorbed"])
-		e["resisted"] = int(fate.get("resisted", 0))
-		e["target_hp"] = target.hp
-		e["downed"] = fate["downed"]
-		e["killed"] = fate["killed"]
-		if effect == "silence" and target.is_active():
-			var turns := int(ability.get("duration", 1))
-			target.statuses["silenced"] = maxi(int(target.statuses.get("silenced", 0)), turns)
-			e["silenced"] = turns
-		if effect == "root" and target.is_active():
-			var turns := int(ability.get("duration", 1))
-			target.statuses["rooted"] = maxi(int(target.statuses.get("rooted", 0)), turns)
-			e["rooted"] = turns
-		if effect == "mark" and not mark.is_empty() and target.is_active():
-			var cap := int(actor.resource_def.get("max_per_target", 3))
-			target.marks[mark] = mini(target.mark_count(mark) + 1, cap)
-			e["marked"] = target.marks[mark]
-		if bool(fate["killed"]) and def.has("gain_on_kill"):
-			actor.resource = mini(actor.resource + int(def["gain_on_kill"]), actor.resource_max())
+	var e := _strike(actor, ability, ability_id, target, ambush, true)
+	e["resource_stacks"] = actor.resource if builds else 0
+	e["resource_cost"] = resource_cost
+	e["ap_left"] = actor.ap
+	if bool(e["hit"]) and bool(e["killed"]) and def.has("gain_on_kill"):
+		actor.resource = mini(actor.resource + int(def["gain_on_kill"]), actor.resource_max())
 	if builds:
 		actor.resource = mini(actor.resource + int(def.get("gain_per_cast", 1)), actor.resource_max())
 	_refresh_mark_resources()
@@ -409,8 +386,131 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 	_emit(e)
 	if bool(e["hit"]) and int(e["damage"]) > 0 and map.surface_at(target.cell) == "conduit" and CHAIN_TYPES.has(String(ability.get("damage_type", ""))):
 		_chain_shock(target, actor)
+	_counter_against(actor, target)
+	# Area: everyone else within `aoe` of the target cell takes their own roll.
+	var radius := int(ability.get("aoe", 0))
+	if radius > 0:
+		for c: Combatant in active():
+			if c == actor or c == target or LineOfSight.distance(target.cell, c.cell) > radius:
+				continue
+			if not actor.is_hostile_to(c) and not rules.friendly_fire:
+				continue
+			var s := _strike(actor, ability, ability_id, c, false, false)
+			s["aoe"] = true
+			s["ap_left"] = actor.ap
+			_emit(s)
+			_counter_against(actor, c)
 	_check_outcome()
 	return e
+
+
+## One attack roll against `target` with every modifier, the damage, and
+## the on-hit effects (silence, root, mark, taunt, poison, chain). Emits
+## nothing: the caller adds resource bookkeeping and emits. `allow_chain`
+## is false for area and chain-secondary hits so lightning never loops.
+func _strike(actor: Combatant, ability: Dictionary, ability_id: String, target: Combatant, ambush: bool, allow_chain: bool) -> Dictionary:
+	var effect := String(ability.get("effect", ""))
+	var mark := String(ability.get("mark", ""))
+	var flanked := is_flanked(target, actor)
+	var mods := attack_modifiers(actor, ability, target)
+	var chance := hit_chance(actor, ability, target, flanked, int(mods["hit"]) + (rules.ambush_hit_bonus if ambush else 0))
+	var roll := rng.randi_range(1, 100)
+	var e: Dictionary = {
+		"type": "ability", "actor": actor.id, "ability": ability_id, "target": target.id,
+		"chance": chance, "roll": roll, "hit": roll <= chance, "flanked": flanked, "ambush": ambush,
+		"cover": mods["cover"], "elevated": mods["elevated"], "uphill": mods["uphill"], "amplified": mods["amplified"], "shroud": mods["shroud"],
+		"resource_stacks": 0, "resource_cost": 0,
+		"marked": 0, "detonated": 0, "silenced": 0, "absorbed": 0,
+		"damage": 0, "target_hp": target.hp, "downed": false, "killed": false, "ap_left": actor.ap,
+	}
+	if not e["hit"]:
+		return e
+	var bonus := damage_bonus_for(actor, ability, target, mods)
+	if effect == "detonate" and not mark.is_empty():
+		e["detonated"] = target.mark_count(mark)
+		target.marks.erase(mark)
+	var dmg := roll_damage(ability, flanked, bonus)
+	if bool(mods["amplified"]):
+		dmg = int(round(dmg * rules.mana_pool_amplify))
+	if ambush:
+		dmg = int(round(dmg * rules.ambush_damage_mult))
+	var damage_type := String(ability.get("damage_type", ""))
+	var fate := _apply_damage(target, dmg, damage_type)
+	e["damage"] = int(fate["dealt"])
+	e["absorbed"] = int(fate["absorbed"])
+	e["resisted"] = int(fate.get("resisted", 0))
+	e["target_hp"] = target.hp
+	e["downed"] = fate["downed"]
+	e["killed"] = fate["killed"]
+	var turns := int(ability.get("duration", 1))
+	if effect == "silence" and target.is_active():
+		target.statuses["silenced"] = maxi(int(target.statuses.get("silenced", 0)), turns)
+		e["silenced"] = turns
+	if effect == "root" and target.is_active():
+		target.statuses["rooted"] = maxi(int(target.statuses.get("rooted", 0)), turns)
+		e["rooted"] = turns
+	if effect == "taunt" and target.is_active():
+		target.statuses["taunted"] = maxi(int(target.statuses.get("taunted", 0)), turns)
+		target.taunted_by = actor.id
+		e["taunted"] = turns
+	if effect == "poison" and target.is_active():
+		_poison(target, turns, int(ability.get("poison_damage", 1)), bool(ability.get("spread", false)), actor.id, damage_type)
+		e["poisoned"] = turns
+	if effect == "mark" and not mark.is_empty() and target.is_active():
+		var cap := int(actor.resource_def.get("max_per_target", 3))
+		target.marks[mark] = mini(target.mark_count(mark) + 1, cap)
+		e["marked"] = target.marks[mark]
+	if effect == "chain" and allow_chain and int(e["damage"]) > 0:
+		e["arcs"] = _arc(actor, target, int(e["damage"]), ability, damage_type)
+	return e
+
+
+## Poison (D-086): `turns` of `damage` at the end of each of the victim's own
+## turns; with `spread`, it jumps to adjacent teammates as it ticks.
+func _poison(target: Combatant, turns: int, damage: int, spread: bool, source: String, damage_type: String) -> void:
+	target.statuses["poisoned"] = maxi(int(target.statuses.get("poisoned", 0)), turns)
+	target.poison = {"damage": damage, "spread": spread, "source": source, "type": damage_type if not damage_type.is_empty() else "poison"}
+
+
+## Chain lightning (D-086): the hit jumps to the nearest other hostiles within
+## `chain_range` of the target, up to `chain_targets`, for `chain_fraction` of
+## the damage. Returns how many it reached.
+func _arc(actor: Combatant, target: Combatant, dmg: int, ability: Dictionary, damage_type: String) -> int:
+	var jump := int(floor(dmg * clampf(float(ability.get("chain_fraction", 0.5)), 0.0, 1.0)))
+	if jump <= 0:
+		return 0
+	var range_cells := int(ability.get("chain_range", 2))
+	var candidates: Array[Combatant] = []
+	for c: Combatant in active():
+		if c == target or c == actor or not actor.is_hostile_to(c) or c.hidden:
+			continue
+		if LineOfSight.distance(target.cell, c.cell) <= range_cells:
+			candidates.append(c)
+	candidates.sort_custom(func(a: Combatant, b: Combatant) -> bool:
+		var da := LineOfSight.distance(target.cell, a.cell)
+		var db := LineOfSight.distance(target.cell, b.cell)
+		return da < db if da != db else a.id < b.id)
+	var reached := 0
+	for c: Combatant in candidates:
+		if reached >= int(ability.get("chain_targets", 1)):
+			break
+		var fate := _apply_damage(c, jump, damage_type)
+		_emit({"type": "arc", "actor": actor.id, "from": target.id, "target": c.id, "damage": int(fate["dealt"]), "target_hp": c.hp, "downed": fate["downed"], "killed": fate["killed"]})
+		reached += 1
+	return reached
+
+
+## A counter stance (D-086): a target holding `counter` strikes back at any
+## adjacent hostile that attacks it, hit or miss, once per attack.
+func _counter_against(attacker: Combatant, target: Combatant) -> void:
+	if int(target.statuses.get("counter", 0)) <= 0 or not target.is_active() or not attacker.is_active():
+		return
+	if not target.is_hostile_to(attacker) or LineOfSight.distance(attacker.cell, target.cell) > 1:
+		return
+	var span: Array = target.counter_damage if not target.counter_damage.is_empty() else [1, 1]
+	var dmg := rng.randi_range(int(span[0]), int(span[span.size() - 1])) + target.damage_bonus
+	var fate := _apply_damage(attacker, dmg, "physical")
+	_emit({"type": "counter", "actor": target.id, "target": attacker.id, "damage": int(fate["dealt"]), "target_hp": attacker.hp, "downed": fate["downed"], "killed": fate["killed"]})
 
 
 ## Flat damage bonus an attack would carry: Workshop, elevation, resource
@@ -609,6 +709,7 @@ func end_turn() -> void:
 	var actor := current()
 	_done[actor.id] = true
 	_undo = {}
+	_tick_poison(actor)
 	actor.tick_statuses()
 	_emit({"type": "turn_end", "actor": actor.id})
 	# Another member of this group still to act: hand over without leaving the group.
@@ -794,6 +895,16 @@ func describe(e: Dictionary) -> String:
 			return "— Round %d —" % int(e["round"])
 		"regen":
 			return "%s mends %d in the %s." % [_name(e["actor"]), int(e["heal"]), e["surface"]]
+		"arc":
+			return "Lightning arcs from %s to %s for %d.%s" % [_name(e["from"]), _name(e["target"]), int(e["damage"]), (" %s dies." % _name(e["target"])) if bool(e["killed"]) else ""]
+		"counter":
+			return "%s counters %s for %d.%s" % [_name(e["actor"]), _name(e["target"]), int(e["damage"]), (" %s dies." % _name(e["target"])) if bool(e["killed"]) else ""]
+		"poison":
+			return "%s takes %d from poison (%d left).%s" % [_name(e["actor"]), int(e["damage"]), int(e["turns"]) - 1, (" %s dies." % _name(e["actor"])) if bool(e["killed"]) else ""]
+		"spread":
+			return "The poison spreads from %s to %s." % [_name(e["actor"]), _name(e["target"])]
+		"stance":
+			return "%s takes a %s stance (%d)." % [_name(e["actor"]), e["stance"], int(e["turns"])]
 		"detect":
 			return "%s senses %s hiding." % [_name(e["actor"]), _name(e["target"])]
 		"turn_begin":
@@ -897,3 +1008,22 @@ static func _by_initiative(a: Combatant, b: Combatant) -> bool:
 	if a.initiative != b.initiative:
 		return a.initiative > b.initiative
 	return a.id < b.id
+
+
+
+## Poison ticks at the end of the victim's own turn; a spreading poison
+## jumps to adjacent teammates with one turn less, so it burns out.
+func _tick_poison(actor: Combatant) -> void:
+	var turns := int(actor.statuses.get("poisoned", 0))
+	if turns <= 0 or actor.poison.is_empty() or not actor.is_active():
+		return
+	var dmg := int(actor.poison.get("damage", 1))
+	var fate := _apply_damage(actor, dmg, String(actor.poison.get("type", "poison")))
+	_emit({"type": "poison", "actor": actor.id, "damage": int(fate["dealt"]), "actor_hp": actor.hp, "downed": fate["downed"], "killed": fate["killed"], "turns": turns})
+	if bool(actor.poison.get("spread", false)) and turns > 1:
+		for c: Combatant in active():
+			if c == actor or c.team != actor.team or c.statuses.has("poisoned") or LineOfSight.distance(actor.cell, c.cell) > 1:
+				continue
+			_poison(c, turns - 1, dmg, true, String(actor.poison.get("source", "")), String(actor.poison.get("type", "poison")))
+			_emit({"type": "spread", "actor": actor.id, "target": c.id, "turns": turns - 1})
+	_check_outcome()

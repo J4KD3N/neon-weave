@@ -1,0 +1,1 @@
+{ "name": "Iron Will", "branch": "body", "tier": 3, "cost": { "aether": 6 }, "effects": { "hp": 6 }, "summary": "+6 max HP. Needs Plated Bones.", "requires": ["plated_bones"] }

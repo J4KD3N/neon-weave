@@ -1,0 +1,1 @@
+{ "name": "Drone Swarm", "sound": "sfx_summon", "summary": "Swarmlord: two drones off the belt, hunting for you.", "ap": 2, "range": 0, "damage": [0, 0], "accuracy": 100, "targets": "self", "effect": "summon", "summon": "shepherd_drone", "summon_count": 2, "summon_max": 2, "cooldown": 2 }
