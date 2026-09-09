@@ -1,0 +1,7 @@
+{
+  "name": "Throat Cleared",
+  "summary": "Beat the Undercity Warlord.",
+  "steam_id": "ACH_WARLORD",
+  "when": { "flags": { "warlord_beaten": true } },
+  "milestone": "M2"
+}

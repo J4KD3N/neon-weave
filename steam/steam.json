@@ -1,0 +1,6 @@
+{
+  "app_id": 0,
+  "demo_app_id": 0,
+  "demo": true,
+  "note": "Fill app_id from Steamworks before S26. 0 keeps the Steam backend from initialising even with GodotSteam present. Achievement API names live on content/achievements/*.json as steam_id and must match the Steamworks definitions exactly."
+}

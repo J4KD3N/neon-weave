@@ -1,0 +1,7 @@
+{
+  "name": "It Knew Your Name",
+  "summary": "Reach the end of the demo.",
+  "steam_id": "ACH_FIRST_CONTACT",
+  "when": { "flags": { "demo_complete": true } },
+  "milestone": "M2"
+}

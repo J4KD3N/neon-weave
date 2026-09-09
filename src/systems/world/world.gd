@@ -100,6 +100,7 @@ func _ready() -> void:
 	InputActions.ensure()
 	registry = _resolve_registry()
 	overlay.registry = registry
+	platform().pull_missing(saves_dir) # cloud saves this machine has not seen yet
 	rules = CombatRules.from_entry(registry.get_entry("rules", "combat"))
 	ledger = Ledger.load_or_new(ledger_path)
 	if not ledger.load_error.is_empty():
@@ -364,7 +365,10 @@ func save_path(save_name: String) -> String:
 func save_to(save_name: String) -> Error:
 	if mode == "combat":
 		return ERR_UNAVAILABLE
-	return SaveSystem.write(save_path(save_name), SaveSystem.capture(self))
+	var err := SaveSystem.write(save_path(save_name), SaveSystem.capture(self))
+	if err == OK:
+		platform().push_save(save_path(save_name)) # cloud copy, when the platform has one
+	return err
 
 
 func save_slot(n: int) -> Error:
@@ -377,7 +381,10 @@ func save_slot(n: int) -> Error:
 func autosave() -> Error:
 	if loading:
 		return OK
-	return save_to(SaveSystem.AUTOSAVE)
+	var err := save_to(SaveSystem.AUTOSAVE)
+	if err == OK:
+		check_achievements() # every story beat autosaves, so this is where they land
+	return err
 
 
 ## Loads a save by name. Returns the restore errors ("" entries never); an
@@ -1387,7 +1394,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "title", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "platform", "title", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1422,6 +1429,7 @@ func system_items() -> Array[Dictionary]:
 	var auto: Dictionary = saves[SaveSystem.SLOTS]
 	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["exists"]), "why": "no autosave yet"})
 	items.append({"id": "settings", "label": "Settings", "enabled": true})
+	items.append({"id": "platform", "label": platform().status_line(), "enabled": false, "why": "%d achievements this session" % platform().unlocked_this_session.size()})
 	items.append({"id": "title", "label": "Title screen", "enabled": mode != "combat", "why": "in combat"})
 	items.append({"id": "registry", "label": "Content registry dump (debug)", "enabled": true})
 	return items
@@ -2631,3 +2639,35 @@ func play_sound(id: String) -> void:
 func play_event(path: String) -> void:
 	if audio != null:
 		audio.event(path)
+
+
+
+# --- platform: achievements and cloud saves ---------------------------------
+
+var _local_platform: PlatformService
+
+
+## The Platform autoload, or a local service when the scene runs alone.
+func platform() -> PlatformService:
+	var service := get_node_or_null("/root/Platform") as PlatformService
+	if service != null:
+		return service
+	if _local_platform == null:
+		_local_platform = PlatformService.new()
+		_local_platform.name = "LocalPlatform"
+		add_child(_local_platform)
+	return _local_platform
+
+
+## Unlocks every achievement whose conditions now hold. Called at story
+## beats (every autosave) and after banking. Returns the ids unlocked now.
+func check_achievements() -> Array[String]:
+	var service := platform()
+	var entries: Array[Dictionary] = registry.get_all("achievements")
+	var due := PlatformService.due_achievements(entries, dialogue_ctx(), service.backend)
+	var got: Array[String] = []
+	for id: String in due:
+		if service.unlock_achievement(id):
+			got.append(id)
+			overlay.toast("Achievement: %s" % registry.get_entry("achievements", id).get("name", id), 3.0)
+	return got

@@ -43,7 +43,7 @@ pick dialogue and Bastion lines directly.
 
 ## Steam Deck
 
-The layout above is the Deck layout; nothing is Deck-specific in code yet.
+The layout above is the Deck layout; `steam/steam_input_template.vdf` is the Steam Input default configuration that mirrors it (upload it through Steamworks).
 When GodotSteam lands (M2), the Steam Input default template will mirror
 this table, add the back grips as duplicates of L1/R1 (abilities 3–4) and
 Select (swap), and map the right trackpad to the mouse so the pointer path

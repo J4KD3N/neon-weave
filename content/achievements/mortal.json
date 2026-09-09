@@ -1,0 +1,7 @@
+{
+  "name": "No Second Chances",
+  "summary": "Start a Mortal-mode story.",
+  "steam_id": "ACH_MORTAL",
+  "when": { "flags": { "mortal_mode": true } },
+  "milestone": "M2"
+}

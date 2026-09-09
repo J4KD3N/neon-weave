@@ -1,0 +1,7 @@
+{
+  "name": "Where the Singing Starts",
+  "summary": "Extract from a depth-2 Shard.",
+  "steam_id": "ACH_SECOND_DEPTH",
+  "when": { "flags": { "extracted_depth_2": true } },
+  "milestone": "M2"
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Four Weavers",
+  "summary": "Walk with Sera, Kaj-7 and Dax at once.",
+  "steam_id": "ACH_FULL_PARTY",
+  "when": { "recruited": "kaj7", "flags": { "sera_recruited": true, "dax_recruited": true } },
+  "milestone": "M2"
+}

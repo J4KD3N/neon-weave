@@ -31,7 +31,7 @@ Updated every session. Remove items when closed; note the closing commit.
 - **Movement is placeholder-simple**: followers pass through each other, no actor-vs-actor collision, and WASD steering lets you stand visually "behind" a tall wall's top face.
 - **Release workflow unverified** until the first `v*` tag. macOS export from Linux uses ad-hoc signing and no notarization; a real Apple signing path is an M2/M4 task.
 - **No per-kind content schemas yet.** The registry loads anything; validation (required fields, enum values, cross-references like `subclasses` ids) lands with each system. Track in `docs/content-schemas.md` when created.
-- **No GodotSteam.** `Platform` has only the null backend (D-007).
+- **Steam is wired but unverified** (S25, D-078): the Steam backend exists and passes the contract shape, but no GodotSteam binaries, app id or Steamworks definitions exist here; achievements, cloud sync and the Steam Input template have never touched a live client. Needs the user with Steamworks access before S26.
 - **Content is placeholder-thin**: 2 races and 2 classes carry only descriptive fields. Mechanical hooks (`hooks`, `resource`) are strings until the class/race systems define them.
 - ~~Branch protection~~ closed 2026-09-08: `main` requires a PR with a green, up-to-date `ci` check, enforced for admins, no force-pushes or deletions.
 - ~~No `.gdignore` for a `build/` dir~~ closed 2026-09-08: `build/.gdignore` is committed (git-ignore exception) so local exports and screenshots never enter the editor scan.

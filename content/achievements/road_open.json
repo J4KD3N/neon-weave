@@ -1,0 +1,7 @@
+{
+  "name": "The Road East",
+  "summary": "Open the gate on the gate road.",
+  "steam_id": "ACH_ROAD_OPEN",
+  "when": { "flags": { "road_end": true } },
+  "milestone": "M2"
+}

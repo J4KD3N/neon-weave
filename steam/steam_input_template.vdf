@@ -1,0 +1,87 @@
+"controller_mappings"
+{
+	"version"		"3"
+	"title"		"Neon Weave — default layout"
+	"description"		"Mirrors docs/controller.md: left stick and D-pad move or drive the combat cursor; A confirm; B cancel; X/Y/L1/R1 abilities 1-4; L2/R2 zoom; Start system menu or end turn; Select swap member. Back grips duplicate L1/R1 and Select; the right trackpad is the mouse."
+	"controller_type"		"controller_steamcontroller_gordon"
+	"group"
+	{
+		"id"		"0"
+		"mode"		"four_buttons"
+		"inputs"
+		{
+			"button_a"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button A" } } } }
+			"button_b"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button B" } } } }
+			"button_x"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button X" } } } }
+			"button_y"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button Y" } } } }
+		}
+	}
+	"group"
+	{
+		"id"		"1"
+		"mode"		"joystick_move"
+		"inputs" { }
+	}
+	"group"
+	{
+		"id"		"2"
+		"mode"		"dpad"
+		"inputs"
+		{
+			"dpad_north"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button dpad_up" } } } }
+			"dpad_south"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button dpad_down" } } } }
+			"dpad_west"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button dpad_left" } } } }
+			"dpad_east"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button dpad_right" } } } }
+		}
+	}
+	"group"
+	{
+		"id"		"3"
+		"mode"		"absolute_mouse"
+		"inputs" { }
+	}
+	"group"
+	{
+		"id"		"4"
+		"mode"		"switches"
+		"inputs"
+		{
+			"button_escape"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button start" } } } }
+			"button_menu"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button select" } } } }
+			"left_bumper"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button shoulder_left" } } } }
+			"right_bumper"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button shoulder_right" } } } }
+			"button_back_left"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button shoulder_left" } } } }
+			"button_back_right"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button shoulder_right" } } } }
+			"button_back_left_upper"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button select" } } } }
+			"button_back_right_upper"		{ "activators" { "Full_Press" { "bindings" { "binding" "xinput_button select" } } } }
+		}
+	}
+	"group"
+	{
+		"id"		"5"
+		"mode"		"trigger"
+		"inputs" { "edge" { "activators" { "Full_Press" { "bindings" { "binding" "xinput_button trigger_left" } } } } }
+	}
+	"group"
+	{
+		"id"		"6"
+		"mode"		"trigger"
+		"inputs" { "edge" { "activators" { "Full_Press" { "bindings" { "binding" "xinput_button trigger_right" } } } } }
+	}
+	"preset"
+	{
+		"id"		"0"
+		"name"		"Default"
+		"group_source_bindings"
+		{
+			"0"		"button_diamond active"
+			"1"		"joystick active"
+			"2"		"left_trackpad active dpad"
+			"3"		"right_trackpad active"
+			"4"		"switch active"
+			"5"		"left_trigger active"
+			"6"		"right_trigger active"
+		}
+	}
+	"settings" { "left_trackpad_mode" "0" "right_trackpad_mode" "0" }
+}
