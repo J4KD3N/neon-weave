@@ -1,0 +1,1 @@
+{ "name": "Echo Touch", "sound": "sfx_bolt", "summary": "Echo-wraith: static through the ribs.", "ap": 2, "range": 1, "damage": [3, 5], "accuracy": 90, "damage_type": "arcane" }

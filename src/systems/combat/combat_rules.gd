@@ -43,6 +43,9 @@ var depth_hp_per_level: float = 0.15
 var depth_damage_every: int = 2
 ## Evasion granted by standing on a surface (target side): {"spore": 10}.
 var surface_evasion: Dictionary = {}
+## Damage fraction a surface shrugs off for whoever stands in it (target side):
+## {"echo": {"tech": 0.5}} (S33). Negative is a weakness.
+var surface_resist: Dictionary = {}
 ## Enemy positioning weights (EnemyBrain scoring).
 var ai_cover_weight: int = 4
 var ai_elevation_weight: int = 4
@@ -87,6 +90,13 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	var se: Dictionary = entry.get("surface_evasion", {})
 	for key: String in se:
 		r.surface_evasion[key] = int(se[key])
+	r.surface_resist = {}
+	var sr: Dictionary = entry.get("surface_resist", {})
+	for surface: String in sr:
+		var by_type: Dictionary = {}
+		for t: String in sr[surface]:
+			by_type[t] = float(Dictionary(sr[surface])[t])
+		r.surface_resist[surface] = by_type
 	r.ai_cover_weight = int(entry.get("ai_cover_weight", r.ai_cover_weight))
 	r.ai_elevation_weight = int(entry.get("ai_elevation_weight", r.ai_elevation_weight))
 	r.ai_corrosive_penalty = int(entry.get("ai_corrosive_penalty", r.ai_corrosive_penalty))

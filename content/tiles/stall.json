@@ -1,0 +1,1 @@
+{ "name": "Market stall", "summary": "A counter and its collapsed awning. Cover, for whoever gets there first.", "layer": "wall", "walkable": false, "blocks_sight": false, "cover": 1, "art": { "shape": "block", "height": 12, "top": "debris_top", "left": "debris_left", "right": "debris_right" } }

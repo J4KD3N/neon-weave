@@ -1,0 +1,1 @@
+{ "name": "Hymn Bolt", "sound": "sfx_bolt", "summary": "Choir: a verse thrown. It hurts the way a chord does, all at once.", "ap": 2, "range": 5, "damage": [2, 5], "accuracy": 85, "damage_type": "arcane", "requires_los": true }
