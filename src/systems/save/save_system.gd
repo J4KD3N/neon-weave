@@ -80,6 +80,7 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 	world.bastion.setup(world.registry.get_all("buildings"), world.ledger.buildings)
 	world.protagonist = Dictionary(data.get("protagonist", {})).duplicate(true)
 	world.narrative = NarrativeState.from_dict(data.get("narrative", {}))
+	world.apply_death_stakes() # the mode rides with the story
 	world.respawn_party()
 
 	world.mode = "explore"

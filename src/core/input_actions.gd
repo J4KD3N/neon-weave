@@ -99,3 +99,137 @@ static func routed_menu_items() -> PackedStringArray:
 			if token.begins_with("menu:"):
 				out.append(token.trim_prefix("menu:"))
 	return out
+
+
+# --- player overrides (Settings -> Bindings) --------------------------------
+
+const OVERRIDES_PATH := "user://input.json"
+static var overrides: Dictionary = {} # action -> {"keys": [Key], "buttons": [JoyButton]}
+
+
+## Human-readable current binding: "Enter, KP Enter / A".
+static func describe(action: String) -> String:
+	if not InputMap.has_action(action):
+		return "unbound"
+	var keys: PackedStringArray = []
+	var pads: PackedStringArray = []
+	for e: InputEvent in InputMap.action_get_events(action):
+		if e is InputEventKey:
+			keys.append(OS.get_keycode_string((e as InputEventKey).physical_keycode))
+		elif e is InputEventJoypadButton:
+			pads.append(_button_name((e as InputEventJoypadButton).button_index))
+		elif e is InputEventJoypadMotion:
+			pads.append("axis %d" % (e as InputEventJoypadMotion).axis)
+	var out := ", ".join(keys) if not keys.is_empty() else "no key"
+	if not pads.is_empty():
+		out += " / " + ", ".join(pads)
+	return out
+
+
+static func _button_name(button: int) -> String:
+	match button:
+		JOY_BUTTON_A: return "A"
+		JOY_BUTTON_B: return "B"
+		JOY_BUTTON_X: return "X"
+		JOY_BUTTON_Y: return "Y"
+		JOY_BUTTON_LEFT_SHOULDER: return "LB"
+		JOY_BUTTON_RIGHT_SHOULDER: return "RB"
+		JOY_BUTTON_START: return "Start"
+		JOY_BUTTON_BACK: return "Select"
+		JOY_BUTTON_DPAD_UP: return "D-up"
+		JOY_BUTTON_DPAD_DOWN: return "D-down"
+		JOY_BUTTON_DPAD_LEFT: return "D-left"
+		JOY_BUTTON_DPAD_RIGHT: return "D-right"
+	return "button %d" % button
+
+
+## Rebinds `action` to `event` (a key or pad button): replaces the events
+## of the same class, keeps the other class. Returns false for events of
+## other kinds (mouse, axes).
+static func rebind(action: String, event: InputEvent) -> bool:
+	if not InputMap.has_action(action):
+		return false
+	var spec: Dictionary = overrides.get(action, {}) # only the rebound class is overridden
+	if event is InputEventKey:
+		var k := event as InputEventKey
+		spec["keys"] = [int(k.physical_keycode if k.physical_keycode != KEY_NONE else k.keycode)]
+	elif event is InputEventJoypadButton:
+		spec["buttons"] = [int((event as InputEventJoypadButton).button_index)]
+	else:
+		return false
+	overrides[action] = spec
+	_apply_action(action)
+	return true
+
+
+## Rebuilds one action from BINDINGS plus its override.
+static func _apply_action(action: String) -> void:
+	if not InputMap.has_action(action):
+		InputMap.add_action(action)
+	InputMap.action_erase_events(action)
+	var spec: Dictionary = BINDINGS.get(action, {})
+	var over: Dictionary = overrides.get(action, {})
+	var keys: Array = over.get("keys", spec.get("keys", [])) if over.has("keys") else spec.get("keys", [])
+	var buttons: Array = over.get("buttons", spec.get("buttons", [])) if over.has("buttons") else spec.get("buttons", [])
+	for key: int in keys:
+		var k := InputEventKey.new()
+		k.physical_keycode = key as Key
+		InputMap.action_add_event(action, k)
+	for button: int in buttons:
+		var b := InputEventJoypadButton.new()
+		b.button_index = button as JoyButton
+		InputMap.action_add_event(action, b)
+	for axis_spec: Array in spec.get("axes", []):
+		var m := InputEventJoypadMotion.new()
+		m.axis = int(axis_spec[0]) as JoyAxis
+		m.axis_value = float(axis_spec[1])
+		InputMap.action_add_event(action, m)
+
+
+static func apply_overrides(dict: Dictionary) -> void:
+	overrides = {}
+	for action: String in dict:
+		if not BINDINGS.has(action):
+			continue
+		var raw: Dictionary = dict[action]
+		var spec: Dictionary = {}
+		if raw.has("keys"):
+			var keys: Array = []
+			for k: Variant in raw["keys"]:
+				keys.append(int(k))
+			spec["keys"] = keys
+		if raw.has("buttons"):
+			var buttons: Array = []
+			for b: Variant in raw["buttons"]:
+				buttons.append(int(b))
+			spec["buttons"] = buttons
+		overrides[action] = spec
+	ensure()
+	for action: String in overrides:
+		_apply_action(action)
+
+
+static func reset_overrides() -> void:
+	overrides = {}
+	ensure()
+	for action: String in BINDINGS:
+		_apply_action(action)
+
+
+static func load_overrides(path: String = OVERRIDES_PATH) -> void:
+	if not FileAccess.file_exists(path):
+		return
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return
+	var json := JSON.new()
+	if json.parse(file.get_as_text()) == OK and json.data is Dictionary:
+		apply_overrides(json.data)
+
+
+static func save_overrides(path: String = OVERRIDES_PATH) -> Error:
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	file.store_string(JSON.stringify(overrides, "  "))
+	return OK

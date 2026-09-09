@@ -22,6 +22,7 @@ func _process(_delta: float) -> bool:
 	if _ran:
 		return true
 	_ran = true
+	Engine.set_meta("neon_weave_tests", true) # worlds skip the title screen
 	var failed := run_all()
 	quit(1 if failed > 0 else 0)
 	return true

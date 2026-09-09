@@ -50,7 +50,7 @@ Select (swap), and map the right trackpad to the mouse so the pointer path
 stays available. Until then the Deck's built-in "Gamepad" template works
 as-is.
 
-## Remapping
+## Remapping and glyphs
 
 Bindings are code, not project settings, so mods cannot change them yet.
-Remapping UI and a `user://input.json` override are on the M2 list.
+Settings (Start / Esc → Settings, or the title screen) rebinds any action to a new key or pad button; overrides live in `user://input.json` on top of the defaults, and Reset restores them. Pad glyphs follow the connected pad (Xbox or PlayStation names) unless you pick a style.
