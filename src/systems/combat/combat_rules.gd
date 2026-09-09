@@ -48,6 +48,9 @@ var ai_cover_weight: int = 4
 var ai_elevation_weight: int = 4
 var ai_corrosive_penalty: int = 8
 var ai_mana_pool_weight: int = 3
+## A rusher at or under this fraction of its HP breaks off once toward its
+## allies while any are still up (S28).
+var ai_retreat_hp_fraction: float = 0.3
 
 
 static func from_entry(entry: Dictionary) -> CombatRules:
@@ -88,4 +91,5 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.ai_elevation_weight = int(entry.get("ai_elevation_weight", r.ai_elevation_weight))
 	r.ai_corrosive_penalty = int(entry.get("ai_corrosive_penalty", r.ai_corrosive_penalty))
 	r.ai_mana_pool_weight = int(entry.get("ai_mana_pool_weight", r.ai_mana_pool_weight))
+	r.ai_retreat_hp_fraction = float(entry.get("ai_retreat_hp_fraction", r.ai_retreat_hp_fraction))
 	return r

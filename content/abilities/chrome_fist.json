@@ -2,7 +2,7 @@
   "name": "Chrome Fist",
   "sound": "sfx_slash",
   "summary": "Chrome-addict: a bolted-on arm swung with no regard for the shoulder.",
-  "ap": 1,
+  "ap": 2,
   "range": 1,
   "damage": [3, 6],
   "accuracy": 70,

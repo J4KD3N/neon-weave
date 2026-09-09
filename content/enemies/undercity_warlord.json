@@ -4,7 +4,7 @@
   "archetype": "controller",
   "tier": "boss",
   "summary": "The scav who owns this stretch of pipe. Nets you, then closes and brings the whole chrome arm down.",
-  "stats": { "hp": 24, "move": 5, "evasion": 15, "initiative": 2 },
+  "stats": { "hp": 16, "move": 5, "evasion": 10, "initiative": 2 },
   "abilities": ["net_launcher", "chrome_haymaker"],
   "awareness": 6,
   "xp": 30,

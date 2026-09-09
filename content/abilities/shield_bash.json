@@ -2,7 +2,7 @@
   "name": "Shield Bash",
   "sound": "sfx_slash",
   "summary": "Warden: a bash that always lands.",
-  "ap": 1,
+  "ap": 2,
   "range": 1,
   "damage": [2, 4],
   "accuracy": 100,

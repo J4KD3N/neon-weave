@@ -2,7 +2,7 @@
   "name": "Turret Shot",
   "sound": "sfx_zap",
   "summary": "Artificer: a long, patient shot.",
-  "ap": 1,
+  "ap": 2,
   "range": 7,
   "damage": [2, 5],
   "accuracy": 90,

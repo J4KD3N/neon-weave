@@ -2,7 +2,7 @@
   "name": "Arc Bolt",
   "sound": "sfx_bolt",
   "summary": "Aetherbinder: a lance of Weft-charge. Needs a clear line.",
-  "ap": 2,
+  "ap": 3,
   "range": 5,
   "damage": [3, 6],
   "accuracy": 90,

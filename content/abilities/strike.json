@@ -2,7 +2,7 @@
   "name": "Strike",
   "sound": "sfx_slash",
   "summary": "A basic melee blow anyone can make.",
-  "ap": 1,
+  "ap": 2,
   "range": 1,
   "damage": [2, 4],
   "accuracy": 85,

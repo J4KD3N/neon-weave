@@ -4,7 +4,10 @@
 ##   ranged     keeps [KITE_MIN, range] with line of sight and shoots;
 ##   stealther  hides, closes unseen, ambushes;
 ##   summoner   calls minions up to its limit, then behaves as ranged;
-##   controller lands control effects (root, silence) on fresh targets, then ranged.
+##   controller lands control effects (root, silence) on fresh targets, then
+##              closes (melee finisher) or kites (ranged).
+## Every archetype focuses the lowest-HP hostile it can reach this turn; a
+## rusher at low HP with allies up breaks off once toward them (S28).
 ## Every move is scored: closer/better range first, then cover between the
 ## cell and the target, high ground, a mana pool for arcane casters, and a
 ## penalty for corrosive biogrowth (weights in `rules/combat`).
@@ -18,9 +21,14 @@ const UNREACHABLE := 1000
 ## Returns {"type": "ability", "id": ..., "target": Vector2i} |
 ## {"type": "move", "to": Vector2i} | {"type": "end"}.
 static func next_action(state: CombatState, actor: Combatant) -> Dictionary:
-	var target := nearest_hostile(state, actor)
+	var target := pick_target(state, actor)
 	if target == null:
 		return {"type": "end"}
+	if actor.archetype == "rusher" and should_retreat(state, actor):
+		var to := retreat_cell(state, actor)
+		if to != actor.cell:
+			actor.retreated = true
+			return {"type": "move", "to": to}
 	match actor.archetype:
 		"ranged":
 			return _ranged(state, actor, target)
@@ -296,3 +304,84 @@ static func _better_kite_cell_exists(state: CombatState, actor: Combatant, targe
 		if int(key[0]) > int(here[0]) or (int(key[0]) == int(here[0]) and int(key[1]) > int(here[1])):
 			return true
 	return false
+
+
+# --- focus fire and retreat (S28) ----------------------------------------------
+
+## Focus fire: among the hostiles this actor could hit this turn (walk plus
+## its longest range), the one with the least HP left; ties go to the
+## nearest. Nothing in reach: the nearest, to walk at.
+static func pick_target(state: CombatState, actor: Combatant) -> Combatant:
+	var reach := actor.move_left + _max_range(state, actor)
+	var best: Combatant = null
+	var best_key: Array = []
+	for c: Combatant in state.active():
+		if not c.is_hostile_to(actor) or c.hidden:
+			continue
+		var d := LineOfSight.distance(actor.cell, c.cell)
+		var key := [0 if d <= reach else 1, c.hp if d <= reach else 0, d, c.id]
+		if best == null or key < best_key:
+			best = c
+			best_key = key
+	return best
+
+
+## A rusher breaks off once: at or under the retreat fraction of its HP, with
+## an ally still up (a lone survivor fights to the end), a hostile within two
+## cells, and movement left.
+static func should_retreat(state: CombatState, actor: Combatant) -> bool:
+	if actor.retreated or actor.move_left <= 0 or actor.max_hp <= 0:
+		return false
+	if float(actor.hp) > state.rules.ai_retreat_hp_fraction * float(actor.max_hp):
+		return false
+	var ally_up := false
+	var threatened := false
+	for c: Combatant in state.active():
+		if c == actor:
+			continue
+		if c.is_hostile_to(actor):
+			if not c.hidden and LineOfSight.distance(actor.cell, c.cell) <= 2:
+				threatened = true
+		else:
+			ally_up = true
+	return ally_up and threatened
+
+
+## The reachable cell that gains the most distance from the nearest hostile
+## (at least two cells), nearest to an ally among equals. The current cell
+## when nothing qualifies.
+static func retreat_cell(state: CombatState, actor: Combatant) -> Vector2i:
+	var hostiles: Array[Combatant] = []
+	var allies: Array[Combatant] = []
+	for c: Combatant in state.active():
+		if c == actor:
+			continue
+		if c.is_hostile_to(actor):
+			if not c.hidden:
+				hostiles.append(c)
+		else:
+			allies.append(c)
+	if hostiles.is_empty():
+		return actor.cell
+	var here := _nearest_distance(actor.cell, hostiles)
+	var best := actor.cell
+	var best_key: Array = [here, -_nearest_distance(actor.cell, allies)]
+	var reach := state.reachable_cells(actor)
+	var cells: Array = reach.keys()
+	cells.sort()
+	for cell: Vector2i in cells:
+		var gain := _nearest_distance(cell, hostiles)
+		if gain < here + 2:
+			continue
+		var key: Array = [gain, -_nearest_distance(cell, allies)]
+		if key > best_key:
+			best = cell
+			best_key = key
+	return best
+
+
+static func _nearest_distance(cell: Vector2i, others: Array[Combatant]) -> int:
+	var best := UNREACHABLE
+	for c: Combatant in others:
+		best = mini(best, LineOfSight.distance(cell, c.cell))
+	return best

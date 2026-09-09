@@ -2,7 +2,7 @@
   "name": "Wire Cut",
   "sound": "sfx_zap",
   "summary": "Wireghost: a monofilament slash. From hiding it is an ambush.",
-  "ap": 1,
+  "ap": 2,
   "range": 1,
   "damage": [3, 5],
   "accuracy": 90,

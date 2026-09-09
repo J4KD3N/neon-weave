@@ -2,7 +2,7 @@
   "name": "Ghost Hack",
   "sound": "sfx_zap",
   "summary": "Phantom: a hack from cover; leaves no trace.",
-  "ap": 1,
+  "ap": 2,
   "range": 4,
   "damage": [2, 4],
   "accuracy": 90,

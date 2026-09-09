@@ -60,7 +60,7 @@ func test_seed_sweep_is_always_solvable_and_within_budget() -> void:
 	var size: Dictionary = template["size"]
 	var room_spec: Dictionary = template["rooms"]
 	var enemy_spec: Dictionary = template["enemies"]
-	var max_enemies := int(Array(enemy_spec["groups"])[1]) * int(Array(enemy_spec["group_size"])[1])
+	var max_enemies := int(Array(enemy_spec["groups"])[1]) * (int(Array(enemy_spec["group_size"])[1]) + 1) # groups past the ramp are one larger
 	var total_enemies := 0
 	for seed_value: int in range(1, SEEDS + 1):
 		var e := ShardGenerator.generate(template, seed_value)

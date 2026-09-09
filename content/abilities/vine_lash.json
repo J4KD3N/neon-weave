@@ -2,7 +2,7 @@
   "name": "Vine Lash",
   "sound": "sfx_net",
   "summary": "Canopy Matron: vines pin the target; it cannot move on its next turn.",
-  "ap": 1,
+  "ap": 2,
   "range": 3,
   "damage": [2, 3],
   "accuracy": 90,

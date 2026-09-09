@@ -331,3 +331,50 @@ func test_melee_controller_closes_in_after_its_nets() -> void:
 	s2.use_ability(shooter, "net", p.cell)
 	var c := EnemyBrain.next_action(s2, shooter)
 	assert_true(c["type"] == "ability" and c["id"] == "zap" or c["type"] == "move", "a ranged controller still shoots or kites: %s" % [c])
+
+
+# --- S28: focus fire and retreat -------------------------------------------------
+
+func test_focus_fire_picks_the_weakest_target_in_reach() -> void:
+	var tank := _tc("t", "party", Vector2i(2, 1), "rusher", ["strike"])
+	var weak := _tc("w", "party", Vector2i(4, 1), "rusher", ["strike"])
+	var far := _tc("f", "party", Vector2i(9, 1), "rusher", ["strike"])
+	var e := _tc("e", "enemy", Vector2i(1, 1), "rusher", ["strike"])
+	var s := _tstate(["..........", "..........", ".........."], [tank, weak, far, e], "enemy")
+	tank.hp = 20
+	weak.hp = 3
+	far.hp = 1
+	assert_eq(EnemyBrain.pick_target(s, e), weak, "the weakest hostile it can reach this turn, not the nearest")
+	assert_eq(EnemyBrain.nearest_hostile(s, e), tank, "nearest is still nearest")
+	e.move_left = 0
+	assert_eq(EnemyBrain.pick_target(s, e), tank, "with no movement only the adjacent one is in reach")
+	var a := EnemyBrain.next_action(s, e)
+	assert_eq(a["type"], "ability")
+	assert_eq(a["target"], tank.cell)
+
+
+func test_a_wounded_rusher_breaks_off_once_toward_its_allies() -> void:
+	var p := _tc("p", "party", Vector2i(2, 1), "rusher", ["strike"])
+	var e := _tc("e", "enemy", Vector2i(3, 1), "rusher", ["strike"])
+	var ally := _tc("a", "enemy", Vector2i(9, 1), "rusher", ["strike"])
+	var s := _tstate(["..........", "..........", ".........."], [p, e, ally], "enemy")
+	e.max_hp = 10
+	e.hp = 3
+	assert_true(EnemyBrain.should_retreat(s, e), "3/10 next to a hostile with an ally up")
+	var a := EnemyBrain.next_action(s, e)
+	assert_eq(a["type"], "move", "breaks off: %s" % [a])
+	var to: Vector2i = a["to"]
+	assert_true(LineOfSight.distance(to, p.cell) >= 3, "gains at least two cells: %s" % to)
+	assert_true(LineOfSight.distance(to, ally.cell) < LineOfSight.distance(e.cell, ally.cell), "toward the ally")
+	assert_true(e.retreated)
+	s.move(e, to)
+	assert_false(EnemyBrain.should_retreat(s, e), "once per fight")
+	var b := EnemyBrain.next_action(s, e)
+	assert_true(b["type"] != "move" or LineOfSight.distance(Vector2i(b["to"]), p.cell) < LineOfSight.distance(to, p.cell), "then fights on")
+	# Alone, it never runs.
+	var lone := _tc("l", "enemy", Vector2i(3, 1), "rusher", ["strike"])
+	var s2 := _tstate(["......", "......", "......"], [p, lone], "enemy")
+	lone.max_hp = 10
+	lone.hp = 1
+	assert_false(EnemyBrain.should_retreat(s2, lone), "a lone survivor fights to the end")
+	assert_eq(EnemyBrain.next_action(s2, lone)["type"], "ability")
