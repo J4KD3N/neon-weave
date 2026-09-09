@@ -32,6 +32,7 @@ without a schema; keep the two in step.
 | subclasses | name, class, abilities | stat_mods, damage_bonus, summary |
 | talents | name, branch, tier, cost, effects | requires, summary |
 | tiles | name, layer, walkable, art | blocks_sight, cover, height, surface, door, waypoint, sound |
+| achievements | name, steam_id, when (conditions) | summary |
 | audio | name, kind (sfx or music), synth or file | volume_db, loop, summary |
 
 Trigger effect keys: approval, flags, recruit, quest, reputation, toast,

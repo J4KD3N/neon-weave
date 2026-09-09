@@ -26,3 +26,5 @@ mods/*
 .DS_Store
 Thumbs.db
 !build/.gdignore
+addons/godotsteam/
+steam_appid.txt

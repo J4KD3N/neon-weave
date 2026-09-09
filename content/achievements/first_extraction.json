@@ -1,0 +1,7 @@
+{
+  "name": "First Extraction",
+  "summary": "Bank a haul from a Shard and walk out.",
+  "steam_id": "ACH_FIRST_EXTRACTION",
+  "when": { "flags": { "first_extraction": true } },
+  "milestone": "M2"
+}
