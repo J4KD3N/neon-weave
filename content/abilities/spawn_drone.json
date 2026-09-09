@@ -1,5 +1,6 @@
 {
   "name": "Spawn Drone",
+  "sound": "sfx_summon",
   "summary": "Drone-Mother: births a feral drone beside her (two at a time, then waits).",
   "ap": 2,
   "range": 0,

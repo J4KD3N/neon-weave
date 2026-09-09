@@ -1,5 +1,6 @@
 {
   "name": "Overcharge",
+  "sound": "sfx_zap",
   "summary": "Drone Shepherd: dump 2 Scrap into the drone's capacitor for a heavy shot.",
   "ap": 2,
   "range": 5,

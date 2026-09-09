@@ -1,0 +1,7 @@
+{
+  "name": "Door",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "noise", "freq": 180, "duration": 0.4, "sweep": -1.0, "decay": true, "volume": 0.5 },
+  "volume_db": -8
+}

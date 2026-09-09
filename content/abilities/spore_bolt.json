@@ -1,5 +1,6 @@
 {
   "name": "Spore Bolt",
+  "sound": "sfx_zap",
   "summary": "A puff of hardened spores.",
   "ap": 1,
   "range": 4,

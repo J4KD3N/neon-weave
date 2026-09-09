@@ -1,5 +1,6 @@
 {
   "name": "Spore bed",
+  "sound": "sfx_step_spore",
   "summary": "Drifting spores. Whoever stands in them is harder to hit.",
   "layer": "ground",
   "walkable": true,

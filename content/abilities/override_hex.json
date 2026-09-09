@@ -1,5 +1,6 @@
 {
   "name": "Override Hex",
+  "sound": "sfx_hex",
   "summary": "Glitchbinder: a tech-flavoured hex; leaves a mark.",
   "ap": 1,
   "range": 5,

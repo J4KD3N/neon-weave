@@ -64,6 +64,8 @@ var demo_end_menu: DemoEndMenu
 var title_menu: TitleMenu
 var settings_menu: SettingsMenu
 var settings: Settings = Settings.new()
+var audio: AudioDirector
+var _last_step_cell := Vector2i(-1, -1)
 var _settings_return_to_title: bool = false
 ## Cold starts show the title; tests (Engine meta) and CLI staging skip it.
 @export var show_title_on_start: bool = true
@@ -150,6 +152,10 @@ func _ready() -> void:
 	settings = Settings.load_or_default()
 	settings.apply()
 	InputActions.load_overrides()
+	audio = AudioDirector.new()
+	audio.name = "Audio"
+	add_child(audio)
+	audio.setup(registry)
 	spawn_npcs()
 	spawn_buildings()
 	auto_start_quests()
@@ -187,6 +193,7 @@ func _ready() -> void:
 	var staged := not OS.get_cmdline_user_args().is_empty() and not OS.get_cmdline_user_args().has("--title")
 	if show_title_on_start and not Engine.has_meta("neon_weave_tests") and not staged:
 		show_title()
+	refresh_music()
 
 
 func _exit_tree() -> void:
@@ -310,6 +317,9 @@ func _enter(entry: Dictionary) -> bool:
 	spawn_buildings()
 	mode = "explore"
 	restore_map_doors()
+	_last_step_cell = Vector2i(-1, -1)
+	if audio != null:
+		refresh_music()
 	party.active = true
 	if dialogue_menu != null:
 		dialogue_menu.visible = false
@@ -904,6 +914,7 @@ func check_pickups() -> Array[Dictionary]:
 			gained.append({"pickup": p.pickup_id, "dialogue": site_dialogue})
 			continue
 		run.pickups += 1
+		play_event("explore.pickup")
 		var got := _gain(scale_grants(p.grants(), rarity_multiplier(p.rarity)))
 		got["pickup"] = p.pickup_id
 		got["rarity"] = p.rarity
@@ -957,6 +968,7 @@ func extract() -> bool:
 	_bank(take, true)
 	run.clear()
 	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
+	play_event("explore.extract")
 	narrative.set_flag("first_extraction", true)
 	narrative.set_flag("extracted_depth_%d" % map_depth(), true) # quests read these
 	enter_map(home_map)
@@ -1030,6 +1042,7 @@ func start_combat(first_strike: bool) -> void:
 	mode = "combat"
 	party.stop()
 	party.active = false
+	refresh_music()
 	var preferred: Array[Vector2i] = []
 	for m: PartyMember in party.members:
 		preferred.append(member_cell(m))
@@ -1072,6 +1085,7 @@ func _on_combat_ended(result: String) -> void:
 		party.trail.reset(party.leader().position)
 		party.active = true
 		mode = "explore"
+		refresh_music()
 		if not pending_victory_flag.is_empty():
 			narrative.set_flag(pending_victory_flag, true)
 			pending_victory_flag = ""
@@ -1099,6 +1113,17 @@ func _on_combat_ended(result: String) -> void:
 # --- input & frame ---------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Menu sounds: any open text menu ticks, confirms and cancels the same way.
+	var menu_open := in_title() or (settings_menu != null and settings_menu.visible) or (system_menu != null and system_menu.visible) \
+		or (weave_menu != null and weave_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
+		or (journal_menu != null and journal_menu.visible) or in_dialogue()
+	if menu_open and audio != null and not (settings_menu != null and not settings_menu.rebinding.is_empty()):
+		if event.is_action_pressed("confirm"):
+			play_event("ui.confirm")
+		elif event.is_action_pressed("cancel"):
+			play_event("ui.cancel")
+		elif event.is_action_pressed("ui_up") or event.is_action_pressed("ui_down"):
+			play_event("ui.move")
 	if settings_menu != null and settings_menu.visible:
 		if not settings_menu.rebinding.is_empty():
 			capture_rebind(event)
@@ -1301,6 +1326,11 @@ func _process(delta: float) -> void:
 		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		if dir != Vector2.ZERO:
 			party.steer_leader(dir, delta, map_view.is_walkable_world)
+		var step := leader_cell()
+		if step != _last_step_cell:
+			if _last_step_cell.x >= 0 and audio != null:
+				audio.play(footstep_sound(step))
+			_last_step_cell = step
 		check_pickups()
 		check_secrets()
 		check_triggers()
@@ -1579,6 +1609,7 @@ func _on_level_up(from_level: int, to_level: int) -> void:
 	if from_level < sub_lv and to_level >= sub_lv:
 		note += " Subclasses open in the Weave (T at home)."
 	overlay.toast(note, 4.0)
+	play_event("explore.level_up")
 
 
 ## Empty string on success, else the reason. Changing an existing subclass
@@ -1828,6 +1859,7 @@ func open_door(cell: Vector2i, silent: bool = false) -> bool:
 		elif kind == "locked":
 			line = "The gate unlocks and swings wide."
 		overlay.toast(line, 2.5)
+		play_event("explore.door")
 	return true
 
 
@@ -2398,6 +2430,7 @@ func show_title() -> void:
 		return
 	party.stop()
 	title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
+	refresh_music()
 
 
 func in_title() -> bool:
@@ -2563,3 +2596,38 @@ func capture_rebind(event: InputEvent) -> bool:
 	settings_menu.rebinding = ""
 	refresh_settings()
 	return true
+
+
+# --- audio ------------------------------------------------------------------
+
+## Music for where the party is: the title, the Bastion, a biome, or a fight.
+func refresh_music() -> void:
+	if audio == null:
+		return
+	if in_title():
+		audio.set_state("title")
+	elif mode == "combat":
+		audio.set_state("combat")
+	elif map_id == home_map and not map_entry.has("generation"):
+		audio.set_state("bastion")
+	else:
+		audio.set_state("explore", map_data.biome_id if map_data != null else "")
+
+
+## The footstep sound of a cell: the tile's own `sound`, else the default.
+func footstep_sound(cell: Vector2i) -> String:
+	var tile := map_data.tile_at(cell)
+	var own := String(tile.get("sound", ""))
+	if not own.is_empty():
+		return own
+	return String(Dictionary(audio.rules.get("explore", {})).get("footstep", ""))
+
+
+func play_sound(id: String) -> void:
+	if audio != null:
+		audio.play(id)
+
+
+func play_event(path: String) -> void:
+	if audio != null:
+		audio.event(path)

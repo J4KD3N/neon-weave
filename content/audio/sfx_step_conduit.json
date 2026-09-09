@@ -1,0 +1,7 @@
+{
+  "name": "Step on a conduit",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "square", "freq": 1800, "duration": 0.06, "sweep": 0, "decay": true, "volume": 0.5 },
+  "volume_db": -16
+}

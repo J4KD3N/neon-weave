@@ -1,5 +1,6 @@
 {
   "name": "Sap Bolt",
+  "sound": "sfx_bolt",
   "summary": "Root Shaman: a bolt of Weft-charged sap. Needs a clear line.",
   "ap": 1,
   "range": 4,

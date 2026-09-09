@@ -1,5 +1,6 @@
 {
   "name": "Scrap Shot",
+  "sound": "sfx_zap",
   "summary": "Drone Shepherd: a drone's rail-flick. Cheap and steady.",
   "ap": 1,
   "range": 5,

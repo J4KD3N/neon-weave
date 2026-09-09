@@ -1,5 +1,6 @@
 {
   "name": "Ward Shard",
+  "sound": "sfx_bolt",
   "summary": "Wardweaver: a cheap, sure shard of ward-light.",
   "ap": 1,
   "range": 4,

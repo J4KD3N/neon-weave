@@ -1,0 +1,7 @@
+{
+  "name": "Shadow step",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "sine", "freq": 220, "duration": 0.3, "sweep": -1.0, "decay": true, "volume": 0.5 },
+  "volume_db": -10
+}

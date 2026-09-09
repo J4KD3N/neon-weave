@@ -1,5 +1,6 @@
 {
   "name": "Null Cut",
+  "sound": "sfx_slash",
   "summary": "Null Blade: a blade that drinks the Weft.",
   "ap": 1,
   "range": 1,

@@ -1,5 +1,6 @@
 {
   "name": "Extraction pad",
+  "sound": "sfx_step_pad",
   "summary": "A Beacon-linked waypoint. Stand here to pull the party out of a Shard.",
   "layer": "ground",
   "walkable": true,

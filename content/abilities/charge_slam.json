@@ -1,5 +1,6 @@
 {
   "name": "Charge Slam",
+  "sound": "sfx_slash",
   "summary": "Juggernaut: two cells of momentum ending in a shoulder.",
   "ap": 2,
   "range": 2,

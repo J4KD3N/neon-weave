@@ -4,7 +4,8 @@ extends TestCase
 
 ## kind -> required keys. A key written "a|b" means at least one of them.
 const SCHEMAS: Dictionary = {
-	"abilities": ["name", "ap", "range", "damage", "accuracy"],
+	"abilities": ["name", "sound", "ap", "range", "damage", "accuracy"],
+	"audio": ["name", "kind", "synth|file"],
 	"biomes": ["name", "palette"],
 	"branches": ["name", "color"],
 	"buildings": ["name", "order", "levels"],

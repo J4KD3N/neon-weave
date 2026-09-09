@@ -1,5 +1,6 @@
 {
   "name": "Moss floor",
+  "sound": "sfx_step_concrete",
   "summary": "Rack floor under a carpet of fibre-moss.",
   "layer": "ground",
   "walkable": true,

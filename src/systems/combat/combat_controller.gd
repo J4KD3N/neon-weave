@@ -415,6 +415,7 @@ func _sync_actor(id: String) -> void:
 
 func _on_event(e: Dictionary) -> void:
 	hud.set_log(state.history)
+	_sound_for_event(e)
 	match String(e["type"]):
 		"summon":
 			var minion := world.spawn_summoned(String(e["kind"]), e["cell"])
@@ -431,6 +432,34 @@ func _on_event(e: Dictionary) -> void:
 		"chain", "surface", "overload", "vent":
 			if not animate:
 				_sync_actor(String(e.get("target", e.get("actor", ""))))
+
+
+## Sounds for combat events: the ability's own `sound`, then the hit or
+## miss, then deaths; turn starts tick; summons, stealth and vents have
+## their own events (rules/audio).
+func _sound_for_event(e: Dictionary) -> void:
+	var audio := world.audio
+	if audio == null:
+		return
+	match String(e["type"]):
+		"ability":
+			var ability: Dictionary = state.abilities.get(String(e.get("ability", "")), {})
+			audio.play(String(ability.get("sound", "")))
+			audio.event("combat.hit" if bool(e.get("hit", false)) else "combat.miss")
+			if bool(e.get("killed", false)) or bool(e.get("downed", false)):
+				audio.event("combat.death")
+		"turn_begin":
+			audio.event("combat.turn")
+		"summon":
+			audio.event("combat.summon")
+		"stealth":
+			audio.event("combat.stealth")
+		"vent":
+			audio.event("combat.vent")
+		"chain", "surface", "overload":
+			audio.event("combat.hit")
+			if bool(e.get("killed", false)) or bool(e.get("downed", false)):
+				audio.event("combat.death")
 
 
 func _after_state_change() -> void:

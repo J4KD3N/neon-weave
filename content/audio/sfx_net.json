@@ -1,0 +1,7 @@
+{
+  "name": "Net or pulse",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "square", "freq": 260, "duration": 0.2, "sweep": -0.3, "decay": true, "volume": 0.5 },
+  "volume_db": -8
+}

@@ -1,5 +1,6 @@
 {
   "name": "Detonate",
+  "sound": "sfx_detonate",
   "summary": "Circuit-Witch: burst every hex on the target: +3 damage per stack, then the stack is gone.",
   "ap": 2,
   "range": 5,

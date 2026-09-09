@@ -1,5 +1,6 @@
 {
   "name": "Sap pool",
+  "sound": "sfx_step_pool",
   "summary": "Weft-charged sap. Arcane cast from it hits harder.",
   "layer": "ground",
   "walkable": true,

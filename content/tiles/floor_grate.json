@@ -1,5 +1,6 @@
 {
   "name": "Steel grate",
+  "sound": "sfx_step_grate",
   "layer": "ground",
   "walkable": true,
   "art": { "shape": "floor", "fill": "grate", "edge": "floor_edge", "pattern": "grate", "pattern_color": "grate_line" }

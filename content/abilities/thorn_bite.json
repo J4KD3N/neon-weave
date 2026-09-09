@@ -1,5 +1,6 @@
 {
   "name": "Thorn Bite",
+  "sound": "sfx_slash",
   "summary": "Verdant hybrids: a bite of woody thorns.",
   "ap": 1,
   "range": 1,

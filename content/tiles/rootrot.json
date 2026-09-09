@@ -1,5 +1,6 @@
 {
   "name": "Rootrot",
+  "sound": "sfx_step_bio",
   "summary": "Fusion-rot in the root mass. Whoever starts a turn in it takes damage.",
   "layer": "ground",
   "walkable": true,
