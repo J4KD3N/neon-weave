@@ -23,7 +23,7 @@ without a schema; keep the two in step.
 | origins | name, dialogue_tag | stat_mods |
 | parties | name, members | summary |
 | pickups | name, grants or dialogue, art | rarity (placement-side) |
-| quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?}} | companion, main, faction, auto_start |
+| quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?, next?, next_toast?}} | companion, main, faction, auto_start |
 | races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only) |
 | resources | name, max | builds_on, gain_per_cast, damage_per_stack, lock_ap_at_max, vent_ability, kind "marks", mark, max_per_target, gain_on_kill, gain_on_surface, gain_on_stealth, reveal_at_max, absorb {type,fraction}, gain_per_absorbed |
 | rules | name | per-rule fields (combat, attributes, progression, loot, demo) |

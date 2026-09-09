@@ -1,37 +1,34 @@
 # Gaps & assumptions
 
 Updated every session. Remove items when closed; note the closing commit.
+Triaged at the end of M2 (S27, 2026-09-09): closed items from M0–M2 are
+gone (see `docs/decisions.md` and git history); what is left is grouped
+by who can close it and roughly ordered by how much it hurts the demo.
 
-## Open (as of 2026-09-08, M1 complete; M2 sessions in docs/m2-plan.md)
+## Needs a person (not a session)
 
-- **M0 question still open**: the loop exists end to end (yard → Shard → fight/collect → extract or wipe → yard → Bastion) but nobody has played it. "Is the loop fun?" needs a person with the editor open. Balance numbers are all first guesses, including building costs.
-- ~~XP and Ciphers have no sink~~ closed 2026-09-08: XP levels the party (S14), Ciphers open vaults and merchants sell them (S18). Item loot and affixes are still missing.
-- ~~Bastion is a text screen over the yard~~ closed 2026-09-08 (S19): the Bastion map is home and its four buildings stand on the plaza, growing a storey per level. The B menu is still text; buildings are placeholder blocks.
-- **The demo slice is thin**: one map per story beat, no writing pass, well under the planned 2–3 hours; the deeper→throat hand-off is a stage the slice does not yet author in data (the test sets it); Pell has no follow-up and the relay station has one fight.
-- **Narrative is three companions and one faction deep** (Sera, Kaj-7, Dax; the Lattice has an envoy and a score, the Rootched and Ashfound only scores); no romance, portraits, journal UI, or companion reactions in combat; banter is a toast; dialogue is a text panel with number keys; NPCs never move; the death-stakes mode is still a rule flag with no setup UI (Mortal mode works but you cannot choose it in game).
-- **Pad support is functional, not native**: the combat cursor steps one cell per press with key-repeat pacing (no analog glide), there is no on-screen button glyph swap when a pad is detected, no rumble, no Steam Input template yet (M2 with GodotSteam), and the system menu is the only way to save/load on a pad. Mouse remains the fastest way to target in combat.
-- **Creator is a text screen too**: no appearance customisation beyond the race overlay, no portrait, not yet part of New game (C at home is still the entry point), origins gate nothing yet (`dialogue_tag` waits for S11's dialogue data), and only the five M2 races exist.
-- ~~Depth only adds bodies~~ closed 2026-09-08 (S16, D-068): HP and damage scale with depth, elites roll in, the Warlord guards the pad from depth 3. Pools do not change by depth yet.
-- **Shards have features but no items**: secrets, Cipher vaults, relay waypoints, merchants, a distance ramp and loot rarity exist (S18, D-071), but there is no item loot, no affixes, no cyberware drops and only two pickup types; merchants sell three things each and secrets hold a single pickup.
-- **Enemies on a previous map are forgotten** when you leave it (trigger-spawned ambushes do not repeat, but map-placed enemies respawn on re-entry); N (launch) and H (home) are still keys and menu items rather than a Beacon interaction on the map; transitions fire on step-on with no confirmation.
-- **Saves have a list, not a UI**: the system menu and the title Load reach all three slots and the autosave with summaries (S13, S23); F5/F9 still mean slot 1; no confirmation on overwrite, no content-version check (a save from a different content set loads by index and may misplace deltas).
-- **Map format is ASCII-only** stays true for handcrafted maps; generated ones go through the same rows format by design (D-028).
+- **Nobody outside the author has played the demo.** M2's exit criterion "two external playtesters finish the slice" is unmet. `test_balance.gd` is the instrument a playtest will be measured against; the S13 triage row stays open for whatever they find.
+- **The AP economy question** (D-081): 4 AP with 1-AP basic attacks means every body swings four times a turn for ~10 damage against 12–20 HP. Trash fights end in one or two rounds and initiative decides them; the naive policy wipes ~30% of depth-1 Shards through chained fights. The obvious experiment is basic attacks at 2 AP with 1-AP utility (marks, nets, silence, vent). It touches every ability entry and a dozen tests, and it is a feel call: run the harness before and after.
+- **Art is generated placeholders**: `v0.2.0-demo` ships them with a title-screen note (D-079). The store page has no capsules, trailer or artist (`docs/store-page.md`). The pipeline is real (S10); the only sheets are tool-generated rigs for Trueborn and Scav, every other race and enemy uses the static capsule, overlays are stamped not composited, no per-biome palette, no CRT shader, no lighting or glow pass.
+- **Audio is synthesised placeholders** (S24): no recorded sound or composed music; no separate music and SFX volume buses.
+- **Steam is wired but unverified** (S25, D-078): no GodotSteam binaries, app id or Steamworks definitions here; achievements, cloud sync and the Steam Input template have never touched a live client; `steam/app_build.vdf` waits on depot ids.
+- **macOS is ad-hoc signed, not notarized** (D-079): Gatekeeper warns; no Apple account. Only the Linux binary is exercised by CI; Windows was booted by hand for v0.2.0; macOS by nobody.
 
-- **Combat texture is in but shallow**: cover, elevation, surfaces and Surge/Heat exist (S7) and the AI now weighs them (D-067); elevation has no movement cost or stairs, there are no hackable turrets/doors, no stealth openers, no difficulty settings or Iron Weave; enemies never move in exploration; awareness is a radius, not a cone. Turn groups (D-057), hover previews (D-058), camera pan and move undo (S13) exist, but there is no attack-of-opportunity or reaction system, and previews do not cover conduit chains.
-- ~~Death-stakes mode has no setup UI~~ closed 2026-09-08 (S23): New game asks Story-Protected or Mortal and the choice rides with the save. Downed members revive at 1 HP after victory; there is no healing yet, so HP only goes down between fights.
-- **Five AI archetypes** (rusher, ranged, stealther, summoner, controller) share one texture score (D-067). Still missing: retreat when losing, focus fire, target selection beyond nearest, and difficulty settings. Hidden combatants are drawn faint for both sides; no true fog or detection roll yet.
-- **Drone Shepherd has no drones**: no summons or turrets yet (Swarmlord/Artificer are subclasses, M2+); the class is a Scrap-spending gunner for now. Circuit-Witch has no Glitchbinder/Plaguecoder spread mechanics.
-- **Progression is shallow** (S14): one party-wide level, subclasses are one ability plus stat mods, talents are six flat stat buffs in two tiers, no multiclassing or capstones; subclass identities (chain lightning, taunts, drone swarms, turrets) need mechanics the ability vocabulary does not have yet; stealth, ambush, absorption and silence exist since S15. XP now has a sink; Ciphers still do not.
-- **Party settling can look odd**: members snap to the nearest free cells around their exploration positions with no animation.
-- **Balance is unplaytested**: numbers in `content/rules/combat.json`, class stats and enemy stats are first guesses; the seeded scene test wins 4v3 but that is one seed.
+## Demo content (M2 leftovers, sessions can close)
 
-- ~~Not yet opened in the editor~~ closed 2026-09-08: the project runs locally on Godot 4.7.2 (PR #19 committed the `.uid` sidecars, PR #22 pinned CI to the same version); the first playtest drove S11b. Real-time feel on a real window is now the M1 playtest question for S13.
-- **Audio is synthesised placeholders** (S24): every event plays a tiny generated wave or loop; no recorded sound or composed music exists, and there are no separate music/SFX volume buses.
-- **Art is generated placeholders**: the v0.2.0-demo build ships them with a title-screen note (D-079); the store page has no capsules, trailer or artist (`docs/store-page.md`). The pipeline is real (S10) but the only sheets are tool-generated rigs for Trueborn and Scav; every other race/enemy uses the static capsule. Race overlays are not composited onto sheets yet (the placeholder rig still stamps them); tiles have no per-biome palette swap beyond the placeholder atlas; no CRT shader; no lighting/glow pass.
-- **Movement is placeholder-simple**: followers pass through each other, no actor-vs-actor collision, and WASD steering lets you stand visually "behind" a tall wall's top face.
-- ~~Release workflow unverified~~ closed 2026-09-09 (S26, D-079): `v0.2.0-demo` built all three platforms and the Linux export smoke-booted in CI. Still open: **macOS is ad-hoc signed, not notarized** (Gatekeeper warns; no Apple account), and only the Linux binary is exercised by CI; Windows is checked by hand, macOS by nobody yet.
-- **No per-kind content schemas yet.** The registry loads anything; validation (required fields, enum values, cross-references like `subclasses` ids) lands with each system. Track in `docs/content-schemas.md` when created.
-- **Steam is wired but unverified** (S25, D-078): the Steam backend exists and passes the contract shape, but no GodotSteam binaries, app id or Steamworks definitions exist here; achievements, cloud sync and the Steam Input template have never touched a live client. Needs the user with Steamworks access; S26 shipped Steam-free and `steam/app_build.vdf` waits on depot ids.
-- **Content is placeholder-thin**: 2 races and 2 classes carry only descriptive fields. Mechanical hooks (`hooks`, `resource`) are strings until the class/race systems define them.
-- ~~Branch protection~~ closed 2026-09-08: `main` requires a PR with a green, up-to-date `ci` check, enforced for admins, no force-pushes or deletions.
-- ~~No `.gdignore` for a `build/` dir~~ closed 2026-09-08: `build/.gdignore` is committed (git-ignore exception) so local exports and screenshots never enter the editor scan.
+- **The demo slice is thin**: one map per story beat, no writing pass, well under the planned 2–3 hours; Pell has no follow-up and the relay station has one fight. The deeper→throat hand-off is in data since S27 (D-081).
+- **Narrative depth**: three companions and one faction (Sera, Kaj-7, Dax; the Lattice has an envoy and a score, the Rootched and Ashfound only scores); no romance, portraits or companion reactions in combat; banter is a toast; dialogue is a text panel with number keys; NPCs never move.
+- **Economy is first-guess**: the road nets roughly 10–18 salvage and 1–3 Aether against a 15/2 Beacon upgrade, so most players run one Shard before depth 2; building costs, loot ranges and XP values have been checked only by the harness.
+- **Shards have features but no items**: secrets, vaults, waypoints, merchants, ramp and rarity exist (D-071), but no item loot, affixes or cyberware drops; two pickup types; merchants sell three things; secrets hold one pickup.
+- **Enemies on a previous map are forgotten** when you leave it (map-placed enemies respawn on re-entry); transitions fire on step-on with no confirmation.
+
+## Systems (M3+)
+
+- **Combat texture is shallow**: cover, elevation, surfaces and resources exist and the AI weighs them (D-067); no movement cost for elevation, no hackable turrets or doors, no difficulty settings or Iron Weave; enemies never move in exploration; awareness is a radius, not a cone; no attack of opportunity or reactions; previews skip conduit chains.
+- **Five AI archetypes** share one texture score. Missing: retreat when losing, focus fire, target selection beyond nearest. Hidden combatants are drawn faint for both sides; no true fog or detection roll.
+- **Progression is shallow** (S14): one party-wide level, subclasses are one ability plus stat mods, six flat talents in two tiers, no multiclassing or capstones; subclass identities (chain lightning, taunts, drone swarms, turrets) need mechanics the ability vocabulary lacks. Drone Shepherd has no drones or turrets; Circuit-Witch has no spread mechanics.
+- **Pad support is functional, not native**: the combat cursor steps one cell per press, no analog glide, no rumble; mouse is still the fastest way to target.
+- **Creator is a text screen**: no appearance beyond the race overlay, no portrait, not part of New game (C at home), origins gate nothing yet.
+- **Saves**: F5/F9 still mean slot 1; no confirmation on overwrite. Content mismatches are refused since S27 (D-080); a save inside a Shard is also refused when `ShardGenerator.LAYOUT_VERSION` moves, which is by hand.
+- **Movement is placeholder-simple**: followers pass through each other, no actor collision, WASD lets you stand visually behind a tall wall; party settling snaps with no animation.
+- **Map format is ASCII-only** for handcrafted maps by design (D-028).

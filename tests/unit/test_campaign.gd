@@ -135,7 +135,7 @@ func test_gate_road_plays_end_to_end() -> void:
 	_stand_on(Vector2i(12, 4))
 	assert_eq(world.check_triggers(), 1)
 	assert_eq(world.mode, "combat")
-	assert_eq(world.living_enemies().size(), 2)
+	assert_eq(world.living_enemies().size(), 3)
 	for e: EnemyActor in world.living_enemies():
 		assert_eq(e.enemy_id, "scav")
 	_win_the_fight()

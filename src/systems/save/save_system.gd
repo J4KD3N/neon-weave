@@ -4,11 +4,16 @@
 ## deltas against the map (dead enemies, collected pickups). Shards are not
 ## stored as tiles: they regenerate from template + seed + depth.
 ##
-## Steam Cloud sync of the saves directory is an M2 concern behind `Platform`.
+## v2 (S27) stamps every save with the content it was made against: the
+## fingerprint of the map or Shard template its deltas index into, and the
+## fingerprint of the whole content set. A save whose location fingerprint
+## no longer matches is refused rather than misloaded (D-080).
+##
+## Steam Cloud sync of the saves directory is behind `Platform`.
 class_name SaveSystem
 extends RefCounted
 
-const VERSION := 1
+const VERSION := 2
 const SLOTS := 3
 const AUTOSAVE := "autosave"
 
@@ -44,10 +49,16 @@ static func capture(world: ExploreWorld) -> Dictionary:
 		location = {"kind": "shard", "template": String(gen.get("template", "")), "seed": int(gen.get("seed", 0)), "depth": int(gen.get("depth", 1)), "extras": Array(gen.get("extra_pickups", [])).duplicate()}
 	else:
 		location = {"kind": "map", "id": world.map_id}
+	location["fingerprint"] = location_fingerprint(world)
 	return {
 		"version": VERSION,
 		"saved_at": Time.get_datetime_string_from_system(true, true),
 		"map_name": world.map_data.name,
+		"content": {
+			"game_version": String(ProjectSettings.get_setting("application/config/version", "0.0.0")),
+			"fingerprint": world.registry.fingerprint(),
+			"mods": world.registry.mod_ids(),
+		},
 		"ledger": world.ledger.to_dict(),
 		"location": location,
 		"run": {"haul": world.run.haul.duplicate(), "xp": world.run.xp, "kills": world.run.kills, "pickups": world.run.pickups, "opened": world.run.opened.duplicate(true), "waypoints_used": world.run.waypoints_used.duplicate(true)},
@@ -59,10 +70,59 @@ static func capture(world: ExploreWorld) -> Dictionary:
 	}
 
 
+## The fingerprint of whatever the deltas index into: the handcrafted map
+## entry, or the Shard template plus the generator's layout version.
+static func location_fingerprint(world: ExploreWorld) -> String:
+	if world.run.in_shard:
+		var gen: Dictionary = world.map_entry.get("generation", {})
+		return shard_fingerprint(world.registry, String(gen.get("template", "")))
+	return world.registry.entry_fingerprint("maps", world.map_id)
+
+
+static func shard_fingerprint(registry: ContentRegistry, template: String) -> String:
+	var f := registry.entry_fingerprint("shards", template)
+	return "" if f.is_empty() else "%s@%d" % [f, ShardGenerator.LAYOUT_VERSION]
+
+
+## Why `data` cannot be loaded against `registry`, or "" when it can. A
+## save with no location fingerprint (v1) cannot be matched and is refused;
+## so is one whose map or template has changed since it was written.
+static func content_check(data: Dictionary, registry: ContentRegistry) -> String:
+	var location: Dictionary = data.get("location", {})
+	var saved := String(location.get("fingerprint", ""))
+	if saved.is_empty():
+		return "this save predates content checks and cannot be matched to the current content; start a new game"
+	var current := ""
+	var where := ""
+	match String(location.get("kind", "map")):
+		"shard":
+			var template := String(location.get("template", ""))
+			where = "Shard template '%s'" % template
+			current = shard_fingerprint(registry, template)
+		_:
+			var id := String(location.get("id", ""))
+			where = "map '%s'" % id
+			current = registry.entry_fingerprint("maps", id)
+	if current.is_empty():
+		return "%s no longer exists in the current content; this save cannot be loaded" % where
+	if current != saved:
+		return "%s has changed since this save was written; loading it would misplace what happened there, so it is refused (start a new game or restore the old content)" % where
+	return ""
+
+
+## True when the save was written against a different content set than
+## the one loaded (a balance patch, a mod added or removed). Such a save
+## still loads when its location matches; the list marks it.
+static func content_changed(data: Dictionary, registry: ContentRegistry) -> bool:
+	var content: Dictionary = data.get("content", {})
+	return String(content.get("fingerprint", "")) != registry.fingerprint()
+
+
 # --- restore ---------------------------------------------------------------
 
 ## Rebuilds the world from `data`. Returns problems found; an empty array
-## means a clean restore. Refuses while combat is running.
+## means a clean restore. Refuses while combat is running, and refuses a
+## save whose content check fails before touching the world.
 static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	if world.mode == "combat":
@@ -71,6 +131,10 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 	var data := migrate(raw)
 	if int(data.get("version", 0)) > VERSION:
 		errors.append("save version %d is newer than this build (%d)" % [int(data["version"]), VERSION])
+		return errors
+	var why := content_check(data, world.registry)
+	if not why.is_empty():
+		errors.append(why)
 		return errors
 
 	world.ledger.apply(data.get("ledger", {}))
@@ -204,21 +268,34 @@ static func migrate(data: Dictionary) -> Dictionary:
 	if version < 1:
 		# Pre-release saves had no version; the shape is otherwise v1.
 		d["version"] = 1
+	if version < 2:
+		# v2 stamps content fingerprints. A v1 save has none and cannot be
+		# given one after the fact: content_check refuses it.
+		d["content"] = d.get("content", {})
+		d["version"] = 2
 	if d.has("ledger"):
 		d["ledger"] = Ledger.migrate(d["ledger"])
 	return d
 
 
-static func summarize(data: Dictionary) -> String:
+## One line for the save lists. With a registry, marks a save the current
+## content refuses (✗) or one written against other content that still loads.
+static func summarize(data: Dictionary, registry: ContentRegistry = null) -> String:
 	if data.has("_error"):
 		return String(data["_error"])
 	var ledger := Ledger.new()
 	ledger.apply(Ledger.migrate(data.get("ledger", {})))
-	return "%s — %s — %s" % [data.get("map_name", "?"), data.get("saved_at", "?"), ledger.summary()]
+	var note := ""
+	if registry != null:
+		if not content_check(migrate(data), registry).is_empty():
+			note = " · ✗ content changed, needs a new game"
+		elif content_changed(data, registry):
+			note = " · content changed"
+	return "%s — %s — %s%s" % [data.get("map_name", "?"), data.get("saved_at", "?"), ledger.summary(), note]
 
 
-## One line per slot plus the autosave: {"name", "path", "exists", "summary"}.
-static func list_saves(dir: String) -> Array[Dictionary]:
+## One line per slot plus the autosave: {"name", "path", "exists", "summary", "loadable"}.
+static func list_saves(dir: String, registry: ContentRegistry = null) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var names: Array[String] = []
 	for n: int in range(1, SLOTS + 1):
@@ -227,5 +304,7 @@ static func list_saves(dir: String) -> Array[Dictionary]:
 	for save_name: String in names:
 		var path := path_for(dir, save_name)
 		var exists := FileAccess.file_exists(path)
-		out.append({"name": save_name, "path": path, "exists": exists, "summary": summarize(read(path)) if exists else "empty"})
+		var data := read(path) if exists else {}
+		var loadable := exists and not data.has("_error") and (registry == null or content_check(migrate(data), registry).is_empty())
+		out.append({"name": save_name, "path": path, "exists": exists, "summary": summarize(data, registry) if exists else "empty", "loadable": loadable})
 	return out

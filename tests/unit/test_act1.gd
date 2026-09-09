@@ -213,10 +213,10 @@ func test_the_demo_plays_from_the_plaza_to_the_end_panel() -> void:
 	assert_true(world.at_home(), "line 212")
 	assert_true(world.narrative.flag("extracted_depth_2"), "line 213")
 	var journal := world.journal_text()
-	assert_contains(journal, "✓ Raise the Beacon to depth 2")
-	assert_contains(journal, "✓ Extract from a depth-2 Shard")
-	# The stage does not advance by itself: the throat needs the stage. Give it.
-	world.narrative.set_stage("main_waking", "throat")
+	assert_contains(journal, "Enter the Undercity throat", "the journal already shows the next stage")
+	assert_true(world.narrative.flag("building_beacon_l1") and world.narrative.flag("extracted_depth_2"), "both deeper objectives done")
+	# The extraction autosave advances the stage: the deeper stage declares `next`.
+	assert_eq(world.narrative.stage_of("main_waking"), "throat", "the hand-off is data now")
 	_step_on(Vector2i(22, 7))
 	assert_eq(world.map_id, "proto_yard")
 	_step_on(Vector2i(10, 14))
@@ -261,6 +261,10 @@ func test_the_demo_plays_from_the_plaza_to_the_end_panel() -> void:
 
 
 func test_stage_stays_deeper_until_the_throat_is_reached_and_a_wipe_keeps_the_story() -> void:
+	for id: String in ["sera", "dax", "kaj7"]:
+		assert_true(world.add_companion(id), "the demo party reaches the throat together")
+	world.ledger.xp = 40
+	world.refresh_progression()
 	world.narrative.set_stage("main_waking", "deeper")
 	world.narrative.set_flag("building_beacon_l1", true)
 	world.narrative.set_flag("extracted_depth_2", true)

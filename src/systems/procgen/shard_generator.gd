@@ -10,6 +10,10 @@
 class_name ShardGenerator
 extends RefCounted
 
+## Bump when the same template, seed and depth would lay out differently:
+## saves made inside a Shard carry it and are refused across a change (D-080).
+const LAYOUT_VERSION := 1
+
 const WALL := "#"
 const FLOOR := "."
 const GRATE := ","
