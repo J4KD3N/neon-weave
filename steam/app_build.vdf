@@ -1,0 +1,22 @@
+"AppBuild"
+{
+	"AppID"		"0"
+	"Desc"		"Neon Weave demo v0.2.0 (placeholder art and audio)"
+	"ContentRoot"		"../build/"
+	"BuildOutput"		"../build/steam_output/"
+	"Depots"
+	{
+		"0"		// Windows depot id from Steamworks
+		{
+			"FileMapping" { "LocalPath" "windows/*" "DepotPath" "." "recursive" "1" }
+		}
+		"0"		// Linux depot id
+		{
+			"FileMapping" { "LocalPath" "linux/*" "DepotPath" "." "recursive" "1" }
+		}
+		"0"		// macOS depot id
+		{
+			"FileMapping" { "LocalPath" "macos/*" "DepotPath" "." "recursive" "1" }
+		}
+	}
+}
