@@ -50,6 +50,23 @@ jobs:
           godot --headless --path . --export-release "macOS" build/macos/neon-weave.zip
           ls -la build/*
 
+      - name: Smoke test the Linux build (boots to the title and renders a frame)
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri libegl1 libxcursor1 libxinerama1 libxrandr2 libxi6 >/dev/null
+          chmod +x build/linux/neon-weave.x86_64
+          timeout 120 xvfb-run -a -s "-screen 0 1280x720x24" \
+            build/linux/neon-weave.x86_64 --rendering-method gl_compatibility --rendering-driver opengl3 \
+              --resolution 1280x720 --audio-driver Dummy -- --screenshot="$PWD/build/smoke-title.png" --title
+          test -s build/smoke-title.png
+
+      - name: Upload the smoke screenshot
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-title
+          path: build/smoke-title.png
+
       - name: Package
         run: |
           set -euo pipefail

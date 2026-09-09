@@ -29,6 +29,12 @@ func _ready() -> void:
 	title_label.add_theme_color_override("font_color", Color(0.71, 0.55, 1.0))
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title_label)
+	var version := Label.new()
+	version.text = "demo v%s · placeholder art and audio, real ones in progress" % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
+	version.add_theme_font_size_override("font_size", 15)
+	version.add_theme_color_override("font_color", Color(0.6, 0.58, 0.72))
+	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	box.add_child(version)
 	label = Label.new()
 	label.add_theme_font_size_override("font_size", 22)
 	label.add_theme_color_override("font_color", Color(0.9, 0.87, 1.0))

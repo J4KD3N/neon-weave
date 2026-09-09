@@ -49,7 +49,7 @@ S13 first because playtest findings may reorder everything after it. S14 before 
 - **Demo length** is 2–3 hours of Act 1's ~8, ending before first contact with the lucid Choir fragment so the full game keeps its reveal. Revisit at S22.
 - **Level cap 6 in the demo** (subclass at 3, one talent tier). The full game's cap is `[12]` per the GDD and lives in `rules/progression` from S14.
 - **Dax is a Vaultkin**, a race outside the five playable M2 races. It ships as a companion-only race entry with a rig overlay; making it playable is M3 with races 6–10.
-- **Placeholder art can ship in the demo** if no artist is attached by S22; the store page cannot. S22 has passed with no artist attached: the demo currently ships generated placeholders. Decision owed by the user before S26.
+- **Placeholder art can ship in the demo** if no artist is attached by S22; the store page cannot. S22 has passed with no artist attached: the demo currently ships generated placeholders. Decision owed by the user before S26. S26 shipped with placeholders and a title-screen note (D-079); the store page still cannot go up without capsules.
 - **Steam is never required**: CI, tests and the open repo run the null backend; GodotSteam is a GDExtension in `addons/` loaded only when present.
 - **No balance pass before S27**; sessions may adjust `content/rules/` for their own feature.
 
@@ -67,3 +67,4 @@ S13 first because playtest findings may reorder everything after it. S14 before 
 - S24 Audio pipeline — done: `audio` kind with synthesised placeholders, `rules/audio` event map, sound on every ability and walkable tile, footsteps, music per title/Bastion/biome/combat with crossfades, AudioDirector log for tests. D-077.
 - S23 Front end — done: title screen with new game (death-stakes choice), continue, load, settings and quit; settings persist; rebinding to `user://input.json`; pad glyphs; the system menu is the pause menu. D-076.
 - S22 Act 1 demo slice — done, thin: five main-quest stages across the gate road, Relay Station Nine, a depth-2 extraction and the Undercity Throat, ending at first contact with the Choir and an end panel; interactable buildings; retryable boss triggers; content schemas pinned. The writing pass and the length target (2–3 hours) remain open; the art decision falls to the user (see assumptions). D-075.
+- S26 Release — done: `v0.2.0-demo` tagged; release.yml tests, exports all three platforms, smoke-boots the Linux export under Xvfb to the title, packages and publishes a GitHub Release. macOS ad-hoc signed; placeholders ship with a title-screen note; `steam/app_build.vdf` lays out the demo depot; `docs/store-page.md` is the asset checklist; `docs/release-notes/v0.2.0-demo.md`. D-079.

@@ -19,3 +19,7 @@ Everything Steam-specific lives here or behind `Platform` (`src/core/platform/`)
 ## Demo depot
 
 The demo is the same build with `"demo": true` in `steam/steam.json` (a separate demo app id). S26 adds the depot layout and the build script.
+
+## Demo depot
+
+`app_build.vdf` is the SteamPipe build script: one depot per platform, fed from `build/<platform>/` as `release.yml` lays them out (unzip the release artifacts into `build/` first). Replace every `0` with the ids Steamworks assigns to the demo app and its three depots, then run `steamcmd +login <account> +run_app_build ../steam/app_build.vdf +quit` from the SteamSDK `tools/ContentBuilder` directory. The same build with `"demo": false` in `steam.json` is the full-game depot later.
