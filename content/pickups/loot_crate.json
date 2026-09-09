@@ -1,0 +1,6 @@
+{
+  "name": "Loot crate",
+  "summary": "A sealed crate with a maker mark. Something inside still works.",
+  "grants": { "item": true, "xp": 1 },
+  "art": { "color": "#ffb347" }
+}

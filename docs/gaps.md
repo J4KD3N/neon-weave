@@ -21,7 +21,7 @@ M3 is planned in `docs/m3-plan.md` (D-082); the items below are its parallel tra
 - **The demo slice is thin**: one map per story beat, no writing pass, well under the planned 2–3 hours; Pell has no follow-up and the relay station has one fight. The deeper→throat hand-off is in data since S27 (D-081).
 - **Narrative depth**: three companions and one faction (Sera, Kaj-7, Dax; the Lattice has an envoy and a score, the Rootched and Ashfound only scores); no romance, portraits or companion reactions in combat; banter is a toast; dialogue is a text panel with number keys; NPCs never move.
 - **Economy is first-guess**: the road nets roughly 10–18 salvage and 1–3 Aether against a 15/2 Beacon upgrade, so most players run one Shard before depth 2; building costs, loot ranges and XP values have been checked only by the harness.
-- **Shards have features but no items**: secrets, vaults, waypoints, merchants, ramp and rarity exist (D-071), but no item loot, affixes or cyberware drops; two pickup types; merchants sell three things; secrets hold one pickup.
+- **Items are thin** (S29, D-084): twelve bases and eight affixes, one crate pickup type, no consumables or resource costs on gear, no item art beyond a colour, no family-specific drop tables yet (`families` exists on items but nothing uses it), no sell-back; secrets still hold one pickup.
 - **Enemies on a previous map are forgotten** when you leave it (map-placed enemies respawn on re-entry); transitions fire on step-on with no confirmation.
 
 ## Systems (M3+)

@@ -1,8 +1,14 @@
 {
   "name": "Loot rules",
-  "summary": "Pickup rarity multiplies every grant; vault pickups are at least the vault rarity.",
+  "summary": "Pickup rarity multiplies every grant; vault pickups are at least the vault rarity. Items (S29): affix counts by rarity, drop chance and rarity by enemy tier, the equipment slots every member has, and the cyberware slots a race adds.",
   "rarities": { "common": 1.0, "rare": 2.0, "epic": 4.0 },
   "colors": { "rare": "#ffd24d", "epic": "#ff5df0" },
   "vault_rarity": "rare",
+  "rarity_order": ["common", "rare", "epic"],
+  "affixes_by_rarity": { "common": 0, "rare": 1, "epic": 2 },
+  "drop_chance_by_tier": { "normal": 0.12, "elite": 0.5, "boss": 1.0 },
+  "drop_rarity_by_tier": { "normal": "common", "elite": "rare", "boss": "epic" },
+  "slots": ["weapon", "armour", "trinket", "trinket"],
+  "cyberware_slots_default": 0,
   "milestone": "M2"
 }

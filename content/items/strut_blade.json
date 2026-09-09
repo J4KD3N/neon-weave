@@ -1,0 +1,10 @@
+{
+  "name": "Strut blade",
+  "slot": "weapon",
+  "summary": "A sharpened support strut with tape for a grip. The Undercity standard.",
+  "damage_bonus": 1,
+  "weight": 6,
+  "price": 10,
+  "craft": { "cost": { "salvage": 8 }, "workshop": 1 },
+  "art": { "color": "#c9ced6" }
+}

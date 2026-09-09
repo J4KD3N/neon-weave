@@ -1,0 +1,10 @@
+{
+  "name": "Bolt pistol",
+  "slot": "weapon",
+  "summary": "Pre-Sundering sidearm rechambered for scrap bolts. Quick to draw.",
+  "damage_bonus": 1,
+  "stat_mods": { "initiative": 1 },
+  "weight": 4,
+  "price": 14,
+  "art": { "color": "#8fb8b0" }
+}

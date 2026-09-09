@@ -1,0 +1,1 @@
+{ "name": "Sturdy", "prefix": true, "slots": ["armour", "trinket", "cyberware"], "stat_mods": { "hp": 2 }, "weight": 4, "summary": "Built by someone careful." }

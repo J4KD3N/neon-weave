@@ -50,7 +50,11 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 				abilities.append(id)
 		data["level"] = level
 		data["subclass"] = String(build.get("subclass", "")) if level >= Progression.subclass_level(cls, prog_rules) else ""
-		data["damage_bonus"] = int(fx["damage_bonus"])
+		var eq := ItemSystem.equipment_mods(registry, build.get("equipment", {}))
+		for key: String in eq["stats"]:
+			if stats.has(key):
+				stats[key] = maxi(int(stats[key]) + int(eq["stats"][key]), 1)
+		data["damage_bonus"] = int(fx["damage_bonus"]) + int(eq["damage_bonus"])
 		specs.append({
 			"data": data,
 			"color": class_color(registry, String(data.get("class", ""))),

@@ -15,16 +15,18 @@ without a schema; keep the two in step.
 | classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level |
 | companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start |
 | dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]) |
-| enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot |
+| enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity) |
 | factions | name, color, rivals, joinable_act | summary |
+| items | name, slot (weapon / armour / trinket / cyberware), art | stat_mods, damage_bonus, weight, price, min_rarity, families, craft {cost, workshop}, summary |
+| affixes | name, slots (["any"] or slot names), weight | prefix (false = suffix), stat_mods, damage_bonus, min_rarity, summary |
 | maps | name, biome, spawn_marker, legend, rows | npcs (companion / merchant / npc + when), pickups, enemies, transitions, triggers, doors, buildings |
-| merchants | name, stock [{id,label,cost,effect}] | art |
+| merchants | name, stock [{id,label,cost,effect}] | art; effect keys heal_fraction, grant, item (a common instance into the pack) |
 | npcs | name, dialogue | short_name, faction, art |
 | origins | name, dialogue_tag | stat_mods |
 | parties | name, members | summary |
-| pickups | name, grants or dialogue, art | rarity (placement-side) |
+| pickups | name, grants or dialogue, art | rarity (placement-side); grants.item = true drops an item of the pickup's rarity |
 | quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?, next?, next_toast?}} | companion, main, faction, auto_start |
-| races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only) |
+| races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only), cyberware_slots (extra equipment slots, Chromed) |
 | resources | name, max | builds_on, gain_per_cast, damage_per_stack, lock_ap_at_max, vent_ability, kind "marks", mark, max_per_target, gain_on_kill, gain_on_surface, gain_on_stealth, reveal_at_max, absorb {type,fraction}, gain_per_absorbed |
 | rules | name | per-rule fields (combat, attributes, progression, loot, demo) |
 | shards | name, biome, tiles, rooms, enemies | corridors, surfaces, pickups, features, requires_unlock, grate_patch_chance, debris_density, size |

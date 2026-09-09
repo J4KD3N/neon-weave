@@ -15,6 +15,8 @@ const SCHEMAS: Dictionary = {
 	"dialogue": ["name", "nodes|lines"],
 	"enemies": ["name", "family", "archetype", "stats", "abilities", "art"],
 	"factions": ["name", "color", "rivals", "joinable_act"],
+	"items": ["name", "slot", "art"],
+	"affixes": ["name", "slots", "weight"],
 	"maps": ["name", "biome", "spawn_marker", "legend", "rows"],
 	"merchants": ["name", "stock"],
 	"npcs": ["name", "dialogue"],

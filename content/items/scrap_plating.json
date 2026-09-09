@@ -1,0 +1,10 @@
+{
+  "name": "Scrap plating",
+  "slot": "armour",
+  "summary": "Hull panels riveted over a jacket. Ugly, and it stops a strut.",
+  "stat_mods": { "hp": 3 },
+  "weight": 6,
+  "price": 12,
+  "craft": { "cost": { "salvage": 10 }, "workshop": 1 },
+  "art": { "color": "#b0653f" }
+}

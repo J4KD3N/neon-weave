@@ -57,6 +57,7 @@ var npcs: Array[NpcActor] = []
 var dialogue_menu: DialogueMenu
 var system_menu: SystemMenu
 var weave_menu: WeaveMenu
+var inventory_menu: InventoryMenu
 var merchant_menu: MerchantMenu
 var current_merchant: String = ""
 var journal_menu: JournalMenu
@@ -135,6 +136,9 @@ func _ready() -> void:
 	weave_menu = WeaveMenu.new()
 	weave_menu.name = "WeaveMenu"
 	add_child(weave_menu)
+	inventory_menu = InventoryMenu.new()
+	inventory_menu.name = "InventoryMenu"
+	add_child(inventory_menu)
 	merchant_menu = MerchantMenu.new()
 	merchant_menu.name = "MerchantMenu"
 	add_child(merchant_menu)
@@ -336,6 +340,8 @@ func _enter(entry: Dictionary) -> bool:
 		system_menu.close()
 	if weave_menu != null:
 		weave_menu.visible = false
+	if inventory_menu != null:
+		inventory_menu.visible = false
 	close_merchant()
 	if combat != null:
 		combat.release_cursor()
@@ -931,6 +937,10 @@ func check_pickups() -> Array[Dictionary]:
 		run.pickups += 1
 		play_event("explore.pickup")
 		var got := _gain(scale_grants(p.grants(), rarity_multiplier(p.rarity)))
+		if p.grants().has("item"):
+			var inst := drop_item(p.rarity)
+			if not inst.is_empty():
+				got["item"] = inst
 		got["pickup"] = p.pickup_id
 		got["rarity"] = p.rarity
 		gained.append(got)
@@ -944,7 +954,12 @@ func on_enemy_killed(enemy: EnemyActor) -> Dictionary:
 	run.kills += 1
 	var loot: Dictionary = enemy.entry.get("loot", {}).duplicate()
 	loot["xp"] = int(enemy.entry.get("xp", 0))
-	return _gain(loot)
+	var got := _gain(loot)
+	var inst := roll_enemy_drop(enemy)
+	if not inst.is_empty():
+		got["item"] = inst
+		overlay.toast("%s dropped %s" % [enemy.display_name, ItemSystem.display_name(registry, inst)], 2.5)
+	return got
 
 
 ## Rolls a grant block into the run haul; banks straight away off-Shard.
@@ -1130,7 +1145,7 @@ func _on_combat_ended(result: String) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	# Menu sounds: any open text menu ticks, confirms and cancels the same way.
 	var menu_open := in_title() or (settings_menu != null and settings_menu.visible) or (system_menu != null and system_menu.visible) \
-		or (weave_menu != null and weave_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
+		or (weave_menu != null and weave_menu.visible) or (inventory_menu != null and inventory_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
 		or (journal_menu != null and journal_menu.visible) or in_dialogue()
 	if menu_open and audio != null and not (settings_menu != null and not settings_menu.rebinding.is_empty()):
 		if event.is_action_pressed("confirm"):
@@ -1226,6 +1241,22 @@ func _unhandled_input(event: InputEvent) -> void:
 			merchant_menu.move(1)
 			refresh_merchant()
 		return
+	if inventory_menu != null and inventory_menu.visible:
+		if event.is_action_pressed("inventory") or event.is_action_pressed("cancel"):
+			close_inventory()
+		elif event.is_action_pressed("confirm"):
+			confirm_inventory()
+		elif event.is_action_pressed("ui_up"):
+			inventory_menu.move(-1)
+			refresh_inventory()
+		elif event.is_action_pressed("ui_down"):
+			inventory_menu.move(1)
+			refresh_inventory()
+		elif event.is_action_pressed("ui_left"):
+			inventory_member(-1)
+		elif event.is_action_pressed("ui_right"):
+			inventory_member(1)
+		return
 	if weave_menu != null and weave_menu.visible:
 		if event.is_action_pressed("weave") or event.is_action_pressed("cancel"):
 			close_weave()
@@ -1289,6 +1320,8 @@ func _unhandled_input(event: InputEvent) -> void:
 				open_creator()
 			elif event.is_action_pressed("weave"):
 				open_weave()
+			elif event.is_action_pressed("inventory"):
+				open_inventory()
 			elif event.is_action_pressed("journal"):
 				open_journal()
 			elif event.is_action_pressed("confirm"):
@@ -1402,7 +1435,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "platform", "title", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "inventory", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "platform", "title", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1426,6 +1459,7 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
 	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
 	items.append({"id": "weave", "label": "The Weave (level %d · %s)" % [party_level(), xp_line()], "enabled": home, "why": "only at home"})
+	items.append({"id": "inventory", "label": "The pack (%d banked item%s)" % [ledger.items.size(), "" if ledger.items.size() == 1 else "s"], "enabled": home, "why": "only at home"})
 	items.append({"id": "journal", "label": "Journal (%d quests)" % narrative.quests.size(), "enabled": true})
 	var saves := SaveSystem.list_saves(saves_dir, registry)
 	for n: int in SaveSystem.SLOTS:
@@ -1483,6 +1517,8 @@ func activate_system_item(id: String) -> bool:
 			return open_creator()
 		"weave":
 			return open_weave()
+		"inventory":
+			return open_inventory()
 		"journal":
 			return open_journal()
 		"save_1", "save_2", "save_3":
@@ -1591,7 +1627,7 @@ func xp_line() -> String:
 
 func build_for(member_id: String) -> Dictionary:
 	var b: Dictionary = ledger.builds.get(member_id, {})
-	return {"subclass": String(b.get("subclass", "")), "talents": Array(b.get("talents", [])).duplicate()}
+	return {"subclass": String(b.get("subclass", "")), "talents": Array(b.get("talents", [])).duplicate(), "equipment": Dictionary(b.get("equipment", {})).duplicate(true)}
 
 
 func can_respec() -> bool:
@@ -1674,7 +1710,7 @@ func respec(member_id: String) -> String:
 		return "nothing to reset"
 	var refund := Progression.refund_for(registry, b, bastion.effect("respec_refund", 0.0))
 	ledger.resources["aether"] = ledger.total("aether") + refund
-	ledger.builds[member_id] = {"subclass": "", "talents": []}
+	ledger.builds[member_id] = {"subclass": "", "talents": [], "equipment": Dictionary(b.get("equipment", {})).duplicate(true)} # gear stays on
 	ledger.save()
 	refresh_progression()
 	overlay.toast("%s reset; %d Aether returned" % [member_by_id(member_id).display_name, refund], 2.5)
@@ -2016,6 +2052,9 @@ func buy(item_id: String) -> String:
 		var grant: Dictionary = effect.get("grant", {})
 		if not grant.is_empty():
 			ledger.bank(grant)
+		var bought := String(effect.get("item", ""))
+		if not bought.is_empty() and registry.has_entry("items", bought):
+			ledger.items.append(ItemSystem.make(bought, [], "common", int(randi())))
 		ledger.save()
 		overlay.toast("Bought: %s" % item.get("label", item_id), 2.0)
 		return ""
@@ -2719,3 +2758,205 @@ func advance_quests() -> Array[String]:
 		if not moved_now:
 			break
 	return moved
+
+
+
+# --- items: the pack, equipment, drops, crafting (S29, D-084) ---------------
+
+func inventory_slots(m: PartyMember) -> Array[String]:
+	return ItemSystem.slot_keys(registry, registry.get_entry("races", m.race_id))
+
+
+func equipment_of(member_id: String) -> Dictionary:
+	return Dictionary(ledger.builds.get(member_id, {})).get("equipment", {})
+
+
+## Moves a banked instance (by uid) into a slot of a member; whatever was
+## there goes back to the pack. Empty string on success, else the reason.
+func equip(member_id: String, slot_key: String, uid: int) -> String:
+	var m := member_by_id(member_id)
+	if m == null:
+		return "no such member"
+	if not inventory_slots(m).has(slot_key):
+		return "no such slot"
+	var i := ItemSystem.find_uid(ledger.items, uid)
+	if i < 0:
+		return "not in the pack"
+	var inst: Dictionary = ledger.items[i]
+	if not ItemSystem.fits(registry, inst, slot_key):
+		return "does not fit the %s slot" % ItemSystem.slot_base(slot_key)
+	var b := build_for(member_id)
+	var equipment: Dictionary = Dictionary(b.get("equipment", {})).duplicate(true)
+	if equipment.has(slot_key):
+		ledger.items.append(equipment[slot_key])
+	ledger.items.remove_at(i)
+	equipment[slot_key] = inst
+	b["equipment"] = equipment
+	ledger.builds[member_id] = b
+	ledger.save()
+	refresh_progression()
+	return ""
+
+
+func unequip(member_id: String, slot_key: String) -> String:
+	var b := build_for(member_id)
+	var equipment: Dictionary = Dictionary(b.get("equipment", {})).duplicate(true)
+	if not equipment.has(slot_key):
+		return "nothing there"
+	ledger.items.append(equipment[slot_key])
+	equipment.erase(slot_key)
+	b["equipment"] = equipment
+	ledger.builds[member_id] = b
+	ledger.save()
+	refresh_progression()
+	return ""
+
+
+## Why an item cannot be crafted now; empty when it can.
+func craft_reason(item_id: String) -> String:
+	var item := registry.get_entry("items", item_id)
+	var recipe: Dictionary = item.get("craft", {})
+	if item.is_empty() or recipe.is_empty():
+		return "not craftable"
+	if not at_home():
+		return "only at home"
+	var need := int(recipe.get("workshop", 1))
+	if bastion.level("workshop") < need:
+		return "needs Workshop level %d" % need
+	if not ledger.can_afford(recipe.get("cost", {})):
+		return "needs %s" % BastionState.describe_cost(recipe.get("cost", {}))
+	return ""
+
+
+## Crafts a common instance at the Workshop into the pack.
+func craft(item_id: String) -> String:
+	var why := craft_reason(item_id)
+	if not why.is_empty():
+		return why
+	var item := registry.get_entry("items", item_id)
+	ledger.spend(Dictionary(item.get("craft", {})).get("cost", {}))
+	ledger.items.append(ItemSystem.make(item_id, [], "common", int(randi())))
+	ledger.save()
+	return ""
+
+
+## Rolls an item drop of `rarity` into the run haul (banked at once off-Shard).
+func drop_item(rarity: String, family: String = "") -> Dictionary:
+	var inst := ItemSystem.roll_drop(registry, run.rng, rarity, family)
+	if inst.is_empty():
+		return inst
+	run.items.append(inst)
+	if not run.in_shard:
+		_bank(run.take(), false)
+		run.clear()
+	return inst
+
+
+## Drop chance and rarity for an enemy by tier (`rules/loot`); the entry's
+## own `loot.item_chance` / `loot.item_rarity` win when present.
+func roll_enemy_drop(enemy: EnemyActor) -> Dictionary:
+	var loot: Dictionary = enemy.entry.get("loot", {})
+	var tier := enemy.tier if not enemy.tier.is_empty() else "normal"
+	var chance := float(loot.get("item_chance", Dictionary(loot_rules().get("drop_chance_by_tier", {})).get(tier, 0.0)))
+	if chance <= 0.0 or run.rng.randf() >= chance:
+		return {}
+	var rarity := String(loot.get("item_rarity", Dictionary(loot_rules().get("drop_rarity_by_tier", {})).get(tier, "common")))
+	return drop_item(rarity, String(enemy.entry.get("family", "")))
+
+
+func open_inventory() -> bool:
+	if inventory_menu == null or mode != "explore" or not at_home() or in_dialogue():
+		return false
+	if (creator_menu != null and creator_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (weave_menu != null and weave_menu.visible):
+		return false
+	if system_menu != null:
+		system_menu.close()
+	inventory_menu.member_index = clampi(inventory_menu.member_index, 0, party.members.size() - 1)
+	refresh_inventory()
+	return true
+
+
+func close_inventory() -> void:
+	if inventory_menu != null:
+		inventory_menu.close()
+
+
+func inventory_member(delta: int) -> void:
+	if inventory_menu == null or party.members.is_empty():
+		return
+	inventory_menu.member_index = posmod(inventory_menu.member_index + delta, party.members.size())
+	inventory_menu.cursor = 0
+	refresh_inventory()
+
+
+func refresh_inventory() -> void:
+	if inventory_menu == null or party.members.is_empty():
+		return
+	var m := party.members[clampi(inventory_menu.member_index, 0, party.members.size() - 1)]
+	var eq := ItemSystem.equipment_mods(registry, equipment_of(m.member_id))
+	var header := "%s · pack %d\n%s — %s %s · HP %d/%d · move %d · evasion %d · initiative %d · from gear: %s" % [
+		ledger.summary(), ledger.items.size(), m.display_name, String(registry.get_entry("races", m.race_id).get("name", m.race_id)),
+		String(registry.get_entry("classes", m.class_id).get("name", m.class_id)), m.hp, m.max_hp, int(m.stats.get("move", 0)), int(m.stats.get("evasion", 0)), int(m.stats.get("initiative", 0)), ItemSystem.describe_mods(eq)]
+	inventory_menu.show_rows(header, inventory_rows(m.member_id))
+
+
+func inventory_rows(member_id: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var m := member_by_id(member_id)
+	if m == null:
+		return rows
+	var equipment := equipment_of(member_id)
+	var slots := inventory_slots(m)
+	for slot_key: String in slots:
+		var held: Dictionary = equipment.get(slot_key, {})
+		var label := "%s: %s" % [slot_key.capitalize(), ItemSystem.describe(registry, held) if not held.is_empty() else "empty"]
+		rows.append({"kind": "slot", "id": slot_key, "label": label, "enabled": not held.is_empty(), "why": "empty"})
+	for inst: Dictionary in ledger.items:
+		var fits := false
+		for slot_key: String in slots:
+			if ItemSystem.fits(registry, inst, slot_key):
+				fits = true
+		var slot_name := String(registry.get_entry("items", String(inst.get("item", ""))).get("slot", "?"))
+		rows.append({"kind": "item", "id": int(inst.get("uid", 0)), "label": ItemSystem.describe(registry, inst), "enabled": fits, "why": "no %s slot" % slot_name})
+	for item: Dictionary in registry.get_all("items"):
+		if not item.has("craft"):
+			continue
+		var why := craft_reason(String(item["id"]))
+		var recipe: Dictionary = item["craft"]
+		rows.append({"kind": "craft", "id": String(item["id"]), "label": "%s (%s): %s — %s" % [item.get("name", item["id"]), item.get("slot", "?"), ItemSystem.describe_mods(ItemSystem.mods(registry, ItemSystem.make(String(item["id"])))), BastionState.describe_cost(recipe.get("cost", {}))], "enabled": why.is_empty(), "why": why})
+	return rows
+
+
+## Enter / A on the pack screen: unequip a slot, equip a pack item into an
+## empty slot that fits (else swap into the first that fits), or craft.
+func confirm_inventory() -> bool:
+	if inventory_menu == null or not inventory_menu.visible or party.members.is_empty():
+		return false
+	var row := inventory_menu.selected()
+	if row.is_empty():
+		return false
+	var m := party.members[clampi(inventory_menu.member_index, 0, party.members.size() - 1)]
+	var why := ""
+	match String(row.get("kind", "")):
+		"slot":
+			why = unequip(m.member_id, String(row["id"]))
+		"item":
+			var uid := int(row["id"])
+			var i := ItemSystem.find_uid(ledger.items, uid)
+			if i < 0:
+				why = "not in the pack"
+			else:
+				var equipment := equipment_of(m.member_id)
+				var target := ""
+				for slot_key: String in inventory_slots(m):
+					if not ItemSystem.fits(registry, ledger.items[i], slot_key):
+						continue
+					if target.is_empty() or (equipment.has(target) and not equipment.has(slot_key)):
+						target = slot_key
+				why = equip(m.member_id, target, uid) if not target.is_empty() else "no slot fits"
+		"craft":
+			why = craft(String(row["id"]))
+	if not why.is_empty():
+		overlay.toast("%s: %s" % [row.get("label", row.get("id", "")), why], 2.0)
+	refresh_inventory()
+	return why.is_empty()

@@ -1,0 +1,9 @@
+{
+  "name": "Tuned servos",
+  "slot": "trinket",
+  "summary": "Knee servos off a security drone, retuned for a human stride.",
+  "stat_mods": { "move": 1 },
+  "weight": 3,
+  "price": 12,
+  "art": { "color": "#8fb8b0" }
+}

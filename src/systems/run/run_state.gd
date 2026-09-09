@@ -14,6 +14,8 @@ var haul: Dictionary = {"salvage": 0, "aether": 0, "ciphers": 0}
 var xp: int = 0
 var kills: int = 0
 var pickups: int = 0
+## Unbanked item instances (ItemSystem), lost with the haul on a wipe.
+var items: Array = []
 ## Shard-feature deltas, saved with the run: opened door cells ([x, y]) and
 ## relay waypoints already used ([x, y]).
 var opened: Array = []
@@ -32,6 +34,7 @@ func clear() -> void:
 	for key: String in Ledger.RESOURCES:
 		haul[key] = 0
 	xp = 0
+	items = []
 	kills = 0
 	pickups = 0
 	opened = []
@@ -44,9 +47,12 @@ func clear_haul() -> void:
 	for key: String in Ledger.RESOURCES:
 		haul[key] = 0
 	xp = 0
+	items = []
 
 
 func is_empty() -> bool:
+	if not items.is_empty():
+		return false
 	for key: String in Ledger.RESOURCES:
 		if int(haul[key]) > 0:
 			return false
@@ -77,6 +83,7 @@ func collect(grants: Dictionary) -> Dictionary:
 func take() -> Dictionary:
 	var out := haul.duplicate()
 	out["xp"] = xp
+	out["items"] = items.duplicate(true)
 	return out
 
 
@@ -91,6 +98,9 @@ static func describe(gained: Dictionary) -> String:
 			parts.append("+%d %s" % [int(gained[key]), key])
 	if int(gained.get("xp", 0)) > 0:
 		parts.append("+%d xp" % int(gained["xp"]))
+	var n := Array(gained.get("items", [])).size() + (1 if gained.has("item") else 0)
+	if n > 0:
+		parts.append("+%d item%s" % [n, "" if n == 1 else "s"])
 	return ", ".join(parts) if not parts.is_empty() else "nothing"
 
 

@@ -38,7 +38,7 @@ func test_collect_accumulates_and_take_snapshots() -> void:
 	assert_eq(run.xp, 6)
 	assert_false(run.is_empty())
 	var t := run.take()
-	assert_eq(t, {"salvage": 5, "aether": 1, "ciphers": 0, "xp": 6})
+	assert_eq(t, {"salvage": 5, "aether": 1, "ciphers": 0, "xp": 6, "items": []})
 	run.clear()
 	assert_true(run.is_empty())
 	assert_eq(t["salvage"], 5, "take() returned a copy")

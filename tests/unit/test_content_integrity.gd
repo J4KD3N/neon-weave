@@ -152,7 +152,7 @@ func test_shard_templates_reference_existing_tiles_enemies_and_biomes() -> void:
 func test_pickups_have_valid_grants_and_placements() -> void:
 	var pickups := registry.get_all("pickups")
 	assert_true(pickups.size() >= 2)
-	var allowed: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp"]
+	var allowed: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp", "item"]
 	for p: Dictionary in pickups:
 		var grants: Dictionary = p.get("grants", {})
 		if p.has("dialogue"):
