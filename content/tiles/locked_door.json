@@ -1,0 +1,9 @@
+{
+  "name": "Locked gate",
+  "summary": "A pre-Sundering gate on a dead lock. Something on this map opens it.",
+  "layer": "wall",
+  "walkable": false,
+  "blocks_sight": true,
+  "door": "locked",
+  "art": { "shape": "block", "height": 24, "top": "neon_body", "left": "wall_left", "right": "wall_right" }
+}

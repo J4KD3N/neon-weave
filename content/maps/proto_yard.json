@@ -34,6 +34,10 @@
   "npcs": [
     { "companion": "sera", "cell": [5, 3] }
   ],
+  "transitions": [
+    { "cell": [1, 7], "to": "bastion", "arrive": [21, 7], "label": "Back to the Bastion" },
+    { "cell": [18, 14], "to": "gate_road", "arrive": [1, 4], "label": "The road east" }
+  ],
   "pickups": [
     { "type": "salvage_cache", "cell": [5, 10] },
     { "type": "aether_shard", "cell": [16, 13] }

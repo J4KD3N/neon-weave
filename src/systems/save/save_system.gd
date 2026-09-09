@@ -95,7 +95,7 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 				errors.append("unknown shard template '%s'" % location.get("template"))
 				entered = false
 		_:
-			if not world.enter_map(String(location.get("id", ExploreWorld.HOME_MAP))):
+			if not world.enter_map(String(location.get("id", world.home_map))):
 				errors.append("unknown map '%s'" % location.get("id"))
 				entered = false
 	world.loading = false

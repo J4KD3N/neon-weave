@@ -35,6 +35,8 @@ static func _cleanup() -> void:
 func _fresh_scene() -> ExploreWorld:
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	var w := packed.instantiate() as ExploreWorld
+	w.map_id = "proto_yard"
+	w.home_map = "proto_yard"
 	w.combat_seed = 1234
 	w.ledger_path = LEDGER
 	w.saves_dir = SAVES
