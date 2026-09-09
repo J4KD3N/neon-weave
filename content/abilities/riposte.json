@@ -1,5 +1,6 @@
 {
   "name": "Riposte",
+  "sound": "sfx_slash",
   "summary": "Voidfencer: a precise counter-cut.",
   "ap": 1,
   "range": 1,

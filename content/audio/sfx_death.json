@@ -1,0 +1,7 @@
+{
+  "name": "Death",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "saw", "freq": 140, "duration": 0.5, "sweep": -1.5, "decay": true, "volume": 0.5 },
+  "volume_db": -6
+}

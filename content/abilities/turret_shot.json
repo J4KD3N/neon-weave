@@ -1,5 +1,6 @@
 {
   "name": "Turret Shot",
+  "sound": "sfx_zap",
   "summary": "Artificer: a long, patient shot.",
   "ap": 1,
   "range": 7,

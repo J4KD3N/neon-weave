@@ -1,5 +1,6 @@
 {
   "name": "Canopy",
+  "sound": "sfx_step_grate",
   "summary": "A raised platform of woven cable-vine. High ground.",
   "layer": "ground",
   "walkable": true,

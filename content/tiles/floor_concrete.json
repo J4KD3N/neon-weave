@@ -1,5 +1,6 @@
 {
   "name": "Cracked concrete",
+  "sound": "sfx_step_concrete",
   "layer": "ground",
   "walkable": true,
   "art": { "shape": "floor", "fill": "floor", "edge": "floor_edge", "pattern": "cracked" }

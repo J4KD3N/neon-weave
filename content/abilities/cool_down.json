@@ -1,5 +1,6 @@
 {
   "name": "Cool Down",
+  "sound": "sfx_vent",
   "summary": "Wireghost: dump all Heat and catch a breath (+1 HP).",
   "ap": 1,
   "range": 0,

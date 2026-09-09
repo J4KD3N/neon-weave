@@ -1,0 +1,7 @@
+{
+  "name": "Tech zap",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "square", "freq": 1500, "duration": 0.14, "sweep": -1.2, "decay": true, "volume": 0.5 },
+  "volume_db": -6
+}

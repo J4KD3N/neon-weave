@@ -1,5 +1,6 @@
 {
   "name": "Net Launcher",
+  "sound": "sfx_net",
   "summary": "Warlord: a weighted net. The target cannot move on its next turn.",
   "ap": 1,
   "range": 4,

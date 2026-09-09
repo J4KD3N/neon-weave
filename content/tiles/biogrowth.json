@@ -1,5 +1,6 @@
 {
   "name": "Corrosive biogrowth",
+  "sound": "sfx_step_bio",
   "summary": "Fusion-rot that eats plating and skin alike. Whoever starts a turn in it takes damage.",
   "layer": "ground",
   "walkable": true,

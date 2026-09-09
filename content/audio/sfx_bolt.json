@@ -1,0 +1,7 @@
+{
+  "name": "Arcane bolt",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "saw", "freq": 520, "duration": 0.22, "sweep": 0.8, "decay": true, "volume": 0.5 },
+  "volume_db": -6
+}

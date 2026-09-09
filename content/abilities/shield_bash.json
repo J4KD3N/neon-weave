@@ -1,5 +1,6 @@
 {
   "name": "Shield Bash",
+  "sound": "sfx_slash",
   "summary": "Warden: a bash that always lands.",
   "ap": 1,
   "range": 1,

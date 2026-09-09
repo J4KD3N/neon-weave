@@ -1,5 +1,6 @@
 {
   "name": "Swarm Volley",
+  "sound": "sfx_zap",
   "summary": "Swarmlord: the drones fire together. Spends 1 Scrap.",
   "ap": 2,
   "range": 4,

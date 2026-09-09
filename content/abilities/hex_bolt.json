@@ -1,5 +1,6 @@
 {
   "name": "Hex Bolt",
+  "sound": "sfx_hex",
   "summary": "Circuit-Witch: a weak jolt that leaves a hex on the target (stacks to 3).",
   "ap": 1,
   "range": 5,

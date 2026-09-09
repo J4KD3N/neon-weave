@@ -1,5 +1,6 @@
 {
   "name": "Data vine",
+  "sound": "sfx_step_conduit",
   "summary": "A live cable-vine. Tech or arcane hits on it arc along the whole run.",
   "layer": "ground",
   "walkable": true,

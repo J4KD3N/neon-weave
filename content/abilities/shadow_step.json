@@ -1,5 +1,6 @@
 {
   "name": "Shadow Step",
+  "sound": "sfx_stealth",
   "summary": "Wireghost: drop out of sight. Enemies cannot target you until you strike or take damage. Builds 2 Heat.",
   "ap": 1,
   "range": 0,

@@ -1,5 +1,6 @@
 {
   "name": "Ghost Hack",
+  "sound": "sfx_zap",
   "summary": "Phantom: a hack from cover; leaves no trace.",
   "ap": 1,
   "range": 4,

@@ -1,5 +1,6 @@
 {
   "name": "Plague Hex",
+  "sound": "sfx_hex",
   "summary": "Plaguecoder: a hex from further away.",
   "ap": 1,
   "range": 6,

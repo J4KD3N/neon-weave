@@ -1,5 +1,6 @@
 {
   "name": "Live conduit",
+  "sound": "sfx_step_conduit",
   "summary": "Exposed power trunking. A tech or arcane hit on anyone standing on it arcs to everyone on the connected run.",
   "layer": "ground",
   "walkable": true,

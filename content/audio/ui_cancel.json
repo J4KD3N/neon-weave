@@ -1,0 +1,7 @@
+{
+  "name": "UI cancel",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "sine", "freq": 440, "duration": 0.1, "sweep": -0.5, "decay": true, "volume": 0.5 },
+  "volume_db": -8
+}

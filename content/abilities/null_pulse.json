@@ -1,5 +1,6 @@
 {
   "name": "Null Pulse",
+  "sound": "sfx_net",
   "summary": "Null Blade: a pulse that silences arcane abilities for 2 turns.",
   "ap": 1,
   "range": 3,

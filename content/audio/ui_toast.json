@@ -1,0 +1,7 @@
+{
+  "name": "UI toast",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "sine", "freq": 660, "duration": 0.12, "sweep": 0.2, "decay": true, "volume": 0.5 },
+  "volume_db": -12
+}

@@ -1,5 +1,6 @@
 {
   "name": "Relay waypoint",
+  "sound": "sfx_step_pad",
   "summary": "A working relay. Stand on it and press E to bank the haul without leaving; one use.",
   "layer": "ground",
   "walkable": true,

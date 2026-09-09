@@ -26,6 +26,7 @@ Updated every session. Remove items when closed; note the closing commit.
 - **Balance is unplaytested**: numbers in `content/rules/combat.json`, class stats and enemy stats are first guesses; the seeded scene test wins 4v3 but that is one seed.
 
 - ~~Not yet opened in the editor~~ closed 2026-09-08: the project runs locally on Godot 4.7.2 (PR #19 committed the `.uid` sidecars, PR #22 pinned CI to the same version); the first playtest drove S11b. Real-time feel on a real window is now the M1 playtest question for S13.
+- **Audio is synthesised placeholders** (S24): every event plays a tiny generated wave or loop; no recorded sound or composed music exists, and there are no separate music/SFX volume buses.
 - **Art is generated placeholders**: the pipeline is real (S10) but the only sheets are tool-generated rigs for Trueborn and Scav; every other race/enemy uses the static capsule. Race overlays are not composited onto sheets yet (the placeholder rig still stamps them); tiles have no per-biome palette swap beyond the placeholder atlas; no CRT shader; no lighting/glow pass.
 - **Movement is placeholder-simple**: followers pass through each other, no actor-vs-actor collision, and WASD steering lets you stand visually "behind" a tall wall's top face.
 - **Release workflow unverified** until the first `v*` tag. macOS export from Linux uses ad-hoc signing and no notarization; a real Apple signing path is an M2/M4 task.

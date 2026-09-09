@@ -1,5 +1,6 @@
 {
   "name": "Vine Lash",
+  "sound": "sfx_net",
   "summary": "Canopy Matron: vines pin the target; it cannot move on its next turn.",
   "ap": 1,
   "range": 3,

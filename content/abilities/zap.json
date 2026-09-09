@@ -1,5 +1,6 @@
 {
   "name": "Zap",
+  "sound": "sfx_zap",
   "summary": "Feral drone: a stuttering shock from a failing emitter.",
   "ap": 1,
   "range": 5,

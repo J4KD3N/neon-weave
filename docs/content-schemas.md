@@ -8,7 +8,7 @@ without a schema; keep the two in step.
 
 | Kind | Required | Optional (read by) |
 |---|---|---|
-| abilities | name, ap, range, damage [min,max], accuracy | damage_type, requires_los, targets ("self"), effect (vent/mark/detonate/stealth/silence/root/summon), mark, damage_per_mark, duration, cooldown, resource_cost, heal, summon, summon_max |
+| abilities | name, ap, range, damage [min,max], accuracy | sound, damage_type, requires_los, targets ("self"), effect (vent/mark/detonate/stealth/silence/root/summon), mark, damage_per_mark, duration, cooldown, resource_cost, heal, summon, summon_max |
 | biomes | name, palette (16 roles) | recolors |
 | branches | name, color | summary |
 | buildings | name, order, levels [{cost, effects, blurb}] | levels[].unlocks |
@@ -31,7 +31,8 @@ without a schema; keep the two in step.
 | sprites | image or sheet, frame | see docs/art-pipeline.md |
 | subclasses | name, class, abilities | stat_mods, damage_bonus, summary |
 | talents | name, branch, tier, cost, effects | requires, summary |
-| tiles | name, layer, walkable, art | blocks_sight, cover, height, surface, door, waypoint |
+| tiles | name, layer, walkable, art | blocks_sight, cover, height, surface, door, waypoint, sound |
+| audio | name, kind (sfx or music), synth or file | volume_db, loop, summary |
 
 Trigger effect keys: approval, flags, recruit, quest, reputation, toast,
 open_doors, enemies, victory_flag, grant, dialogue, transition.

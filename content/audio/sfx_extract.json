@@ -1,0 +1,7 @@
+{
+  "name": "Extract",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "saw", "freq": 440, "duration": 0.6, "sweep": 1.0, "decay": true, "volume": 0.5 },
+  "volume_db": -6
+}

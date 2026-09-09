@@ -1,5 +1,6 @@
 {
   "name": "Vent",
+  "sound": "sfx_vent",
   "summary": "Scrap-Knight: blow the heat off. Free, resets Heat, patches 2 HP.",
   "ap": 0,
   "range": 0,

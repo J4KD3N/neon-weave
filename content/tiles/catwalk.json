@@ -1,5 +1,6 @@
 {
   "name": "Catwalk",
+  "sound": "sfx_step_grate",
   "summary": "Raised grating. High ground: easier to hit from, harder to hit onto.",
   "layer": "ground",
   "walkable": true,

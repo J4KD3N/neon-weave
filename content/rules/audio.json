@@ -1,0 +1,15 @@
+{
+  "name": "Audio events",
+  "summary": "Event names the code fires, mapped to `audio` entries. Abilities and tiles carry their own `sound`; everything else is looked up here.",
+  "crossfade_seconds": 1.5,
+  "ui": { "confirm": "ui_confirm", "cancel": "ui_cancel", "move": "ui_tick", "toast": "ui_toast" },
+  "combat": { "hit": "sfx_hit", "miss": "sfx_miss", "death": "sfx_death", "turn": "sfx_turn", "summon": "sfx_summon", "stealth": "sfx_stealth", "vent": "sfx_vent" },
+  "explore": { "footstep": "sfx_step_concrete", "pickup": "sfx_pickup", "door": "sfx_door", "extract": "sfx_extract", "level_up": "sfx_level_up" },
+  "music": {
+    "title": "music_title",
+    "bastion": "music_bastion",
+    "combat": "music_combat",
+    "explore": { "default": "music_undercity", "rusted_undercity": "music_undercity", "verdant_datacore": "music_datacore" }
+  },
+  "milestone": "M2"
+}

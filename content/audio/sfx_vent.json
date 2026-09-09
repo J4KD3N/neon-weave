@@ -1,0 +1,7 @@
+{
+  "name": "Vent",
+  "kind": "sfx",
+  "summary": "Placeholder synth; drop a file next to this sidecar and add \"file\" to replace it.",
+  "synth": { "wave": "noise", "freq": 300, "duration": 0.35, "sweep": -0.4, "decay": true, "volume": 0.5 },
+  "volume_db": -8
+}
