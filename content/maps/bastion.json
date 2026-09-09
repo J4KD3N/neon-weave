@@ -39,7 +39,9 @@
   "transitions": [
     { "cell": [22, 7], "to": "proto_yard", "arrive": [2, 7], "label": "The yard gate" }
   ],
-  "npcs": [],
+  "npcs": [
+    { "npc": "lattice_envoy", "cell": [12, 13], "when": { "flags": { "road_end": true } } }
+  ],
   "pickups": [],
   "enemies": []
 }

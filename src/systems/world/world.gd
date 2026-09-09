@@ -460,6 +460,20 @@ func spawn_npcs() -> void:
 	for p: Dictionary in placements:
 		var raw: Array = p.get("cell", [0, 0])
 		var cell := Vector2i(int(raw[0]), int(raw[1]))
+		if p.has("npc"):
+			var npc_id := String(p["npc"])
+			var story: Dictionary = registry.get_entry("npcs", npc_id)
+			if story.is_empty() or not map_data.is_walkable(cell):
+				push_warning("map %s places unknown or blocked npc %s at %s" % [map_data.id, npc_id, cell])
+				continue
+			if not Conditions.passes(p.get("when", {}), dialogue_ctx()):
+				continue
+			var figure := NpcActor.new()
+			figure.setup_npc(npc_id, story, cell, Color.html(String(Dictionary(story.get("art", {})).get("color", "#d8c46a"))))
+			figure.position = map_view.cell_to_world(cell)
+			npcs_node.add_child(figure)
+			npcs.append(figure)
+			continue
 		if p.has("merchant"):
 			var merchant_id := String(p["merchant"])
 			var merchant: Dictionary = registry.get_entry("merchants", merchant_id)
@@ -540,6 +554,8 @@ func speaker_names() -> Dictionary:
 	var names: Dictionary = {"narrator": "—", "player": party.leader().display_name if party.leader() != null else "You"}
 	for c: Dictionary in registry.get_all("companions"):
 		names[c["id"]] = String(c.get("short_name", c.get("name", c["id"])))
+	for n: Dictionary in registry.get_all("npcs"):
+		names[n["id"]] = String(n.get("short_name", n.get("name", n["id"])))
 	return names
 
 
@@ -568,7 +584,10 @@ func in_dialogue() -> bool:
 func talk_to(companion_id: String) -> bool:
 	var entry: Dictionary = registry.get_entry("companions", companion_id)
 	if entry.is_empty():
-		return false
+		var story: Dictionary = registry.get_entry("npcs", companion_id)
+		if story.is_empty():
+			return false
+		return open_dialogue(String(story.get("dialogue", "")))
 	var d: Dictionary = entry.get("dialogue", {})
 	var id := String(d.get("talk" if narrative.is_recruited(companion_id) else "recruit", ""))
 	return open_dialogue(id)
@@ -580,6 +599,8 @@ func choose(index: int) -> bool:
 		return false
 	if not dialogue.choose(index):
 		return false
+	if not dialogue.applied.is_empty():
+		react_to_reputation(dialogue.applied[dialogue.applied.size() - 1])
 	for id: String in dialogue.recruited:
 		add_companion(id)
 	dialogue.recruited.clear()
@@ -1168,7 +1189,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				elif npc != null and npc.is_merchant() and LineOfSight.distance(leader_cell(), cell) <= 2:
 					open_merchant(npc)
 				elif npc != null and LineOfSight.distance(leader_cell(), cell) <= 2:
-					talk_to(npc.companion_id)
+					talk_to(npc.npc_id if npc.is_story_npc() else npc.companion_id)
 				elif enemy != null and LineOfSight.distance(leader_cell(), cell) <= enemy.awareness:
 					start_combat(true)
 				else:
@@ -1389,7 +1410,7 @@ func interact() -> bool:
 		if d <= 2 and (best == null or d < LineOfSight.distance(here, best.cell)):
 			best = npc
 	if best != null:
-		return talk_to(best.companion_id)
+		return talk_to(best.npc_id if best.is_story_npc() else best.companion_id)
 	overlay.toast("Nothing to interact with here", 1.2)
 	return false
 
@@ -2049,6 +2070,7 @@ func fire_trigger(t: Dictionary) -> bool:
 	var effects: Dictionary = t.get("effects", {})
 	for companion: String in Conditions.apply(effects, narrative):
 		add_companion(companion)
+	react_to_reputation(effects)
 	if effects.has("toast"):
 		overlay.toast(String(effects["toast"]), 3.5)
 	for raw: Array in effects.get("open_doors", []):
@@ -2097,7 +2119,19 @@ func journal_entries() -> Array[Dictionary]:
 
 
 func journal_text() -> String:
-	return JournalMenu.render(journal_entries())
+	return JournalMenu.render(journal_entries()) + "\n" + standing_text()
+
+
+## "Standing: The Lattice +2 · The Ashfound -1" for every faction with a score.
+func standing_text() -> String:
+	var parts: PackedStringArray = []
+	for f: Dictionary in registry.get_all("factions"):
+		var rep := narrative.reputation_of(String(f["id"]))
+		if rep != 0:
+			parts.append("%s %+d" % [f.get("name", f["id"]), rep])
+	if parts.is_empty():
+		return "Standing: no faction has an opinion of you yet."
+	return "Standing: " + " · ".join(parts)
 
 
 func open_journal() -> bool:
@@ -2114,3 +2148,42 @@ func open_journal() -> bool:
 func close_journal() -> void:
 	if journal_menu != null:
 		journal_menu.close()
+
+
+
+# --- factions ---------------------------------------------------------------
+
+func faction_name(id: String) -> String:
+	return String(registry.get_entry("factions", id).get("name", id))
+
+
+## The casting rule as a mechanic: when an effect block moves a faction's
+## reputation, every recruited companion who leans that way approves and
+## every one leaning toward a rival is wounded, one point per step, and
+## the change is toasted. Approval written directly by the same block is
+## left alone (it already said who approves).
+func react_to_reputation(effects: Dictionary) -> void:
+	var reputation: Dictionary = effects.get("reputation", {})
+	if reputation.is_empty():
+		return
+	var explicit: Dictionary = effects.get("approval", {})
+	for faction: String in reputation:
+		var delta := int(reputation[faction])
+		if delta == 0:
+			continue
+		var step := 1 if delta > 0 else -1
+		var rivals: Array = registry.get_entry("factions", faction).get("rivals", [])
+		var notes: PackedStringArray = ["%s %+d" % [faction_name(faction), delta]]
+		for id: String in narrative.recruited:
+			if explicit.has(id):
+				continue
+			var lean := String(registry.get_entry("companions", id).get("faction", ""))
+			var change := 0
+			if lean == faction:
+				change = step
+			elif rivals.has(lean):
+				change = -step
+			if change != 0:
+				narrative.add_approval(id, change)
+				notes.append("%s %s" % [String(registry.get_entry("companions", id).get("short_name", id)), "approves" if change > 0 else "disapproves"])
+		overlay.toast(" · ".join(notes), 3.0)

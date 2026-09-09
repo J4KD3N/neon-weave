@@ -35,6 +35,14 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 			return false
 		if bounds.has("max") and v > int(bounds["max"]):
 			return false
+	var reputation: Dictionary = requires.get("reputation", {})
+	for faction: String in reputation:
+		var bounds: Dictionary = reputation[faction]
+		var rep := n.reputation_of(faction)
+		if bounds.has("min") and rep < int(bounds["min"]):
+			return false
+		if bounds.has("max") and rep > int(bounds["max"]):
+			return false
 	if requires.has("recruited") and not n.is_recruited(String(requires["recruited"])):
 		return false
 	if requires.has("not_recruited") and n.is_recruited(String(requires["not_recruited"])):
@@ -60,6 +68,9 @@ static func apply(effects: Dictionary, n: NarrativeState) -> Array[String]:
 	var flags: Dictionary = effects.get("flags", {})
 	for name: String in flags:
 		n.set_flag(name, bool(flags[name]))
+	var reputation: Dictionary = effects.get("reputation", {})
+	for faction: String in reputation:
+		n.add_reputation(faction, int(reputation[faction]))
 	if effects.has("recruit"):
 		var id := String(effects["recruit"])
 		if not n.is_recruited(id):

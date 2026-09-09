@@ -1,0 +1,8 @@
+{
+  "name": "The Lattice",
+  "summary": "Purge the Weft, restore the machine-order. Clean, bright, quietly inhuman. Courts Synths; fears what it cannot index.",
+  "color": "#8fd3ff",
+  "rivals": ["rootched", "ashfound"],
+  "joinable_act": 2,
+  "milestone": "M2"
+}

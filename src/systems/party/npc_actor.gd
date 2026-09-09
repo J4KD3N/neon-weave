@@ -32,6 +32,22 @@ func is_merchant() -> bool:
 	return not merchant_id.is_empty()
 
 
+## A generic story NPC (`npcs` content kind): talking opens its `dialogue`.
+var npc_id: String = ""
+
+
+func setup_npc(p_id: String, p_entry: Dictionary, p_cell: Vector2i, color: Color) -> void:
+	npc_id = p_id
+	entry = p_entry
+	cell = p_cell
+	name = "npc_%s" % p_id
+	build_visuals(String(entry.get("short_name", entry.get("name", p_id))), color, "capsule", {}, null)
+
+
+func is_story_npc() -> bool:
+	return not npc_id.is_empty()
+
+
 func dialogue_id(recruited: bool) -> String:
 	var d: Dictionary = entry.get("dialogue", {})
 	return String(d.get("talk" if recruited else "recruit", ""))

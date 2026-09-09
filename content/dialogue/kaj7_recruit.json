@@ -1,6 +1,7 @@
 {
   "name": "Kaj-7 — the road",
   "start": [
+    { "node": "lattice_word", "requires": { "recruited": "kaj7", "flags": { "lattice_wants_kaj7": true, "kaj7_lattice_talked": false } } },
     { "node": "recruited", "requires": { "recruited": "kaj7" } },
     { "node": "not_yet", "requires": { "quest": { "id": "main_waking", "stage": "gate" } } },
     { "node": "refused", "requires": { "flags": { "kaj7_refused": true } } },
@@ -45,6 +46,14 @@
       "choices": [
         { "text": "It's different. Walk with us.", "effects": { "recruit": "kaj7", "flags": { "kaj7_recruited": true, "kaj7_refused": false }, "quest": { "id": "kaj7_maker_signal", "stage": "start" } }, "end": true },
         { "text": "Same answer.", "end": true }
+      ]
+    },
+    "lattice_word": {
+      "speaker": "kaj7",
+      "text": "The envoy said restored. I looked the word up in myself. It means the version of me that did not ask to walk with you. I would like to keep asking.",
+      "choices": [
+        { "text": "Nobody restores you without your say.", "effects": { "approval": { "kaj7": 1 }, "flags": { "kaj7_lattice_talked": true } }, "end": true },
+        { "text": "We will see what the Lattice can offer.", "effects": { "approval": { "kaj7": -1 }, "reputation": { "lattice": 1 }, "flags": { "kaj7_lattice_talked": true } }, "end": true }
       ]
     },
     "recruited": {

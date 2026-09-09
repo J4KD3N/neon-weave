@@ -1,0 +1,67 @@
+{
+  "name": "Envoy Calder — the plaza",
+  "start": [
+    { "node": "answered", "requires": { "flags": { "lattice_answered": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "lattice_envoy",
+      "text": "You opened the gate road. We noticed; we notice most things. I am Calder, of the Lattice. We restore what the Sundering broke: order, indexing, machines that remember what they are for. We would like to know what the Beacon is for.",
+      "choices": [
+        { "text": "Say your piece.", "effects": { "flags": { "lattice_heard": true }, "quest": { "id": "lattice_offer", "stage": "offer" } }, "next": "piece" },
+        { "text": "[Vault] The vaults were Lattice-built. They failed anyway.", "requires": { "origin_tag": "vault" }, "effects": { "flags": { "lattice_heard": true }, "reputation": { "lattice": -1 }, "quest": { "id": "lattice_offer", "stage": "offer" } }, "next": "piece" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "piece": {
+      "speaker": "lattice_envoy",
+      "text": "The Weft is a leak. Every Shard you open is a leak. We can seal them, given the Loom, and given people who understand that a machine restored is a machine at peace. Your Synth companion, for instance, could be restored. It would stop hearing things.",
+      "choices": [
+        { "text": "Kaj-7 hears what it hears. It stays as it is.", "requires": { "recruited": "kaj7" }, "effects": { "flags": { "lattice_wants_kaj7": true }, "reputation": { "lattice": -1 }, "approval": { "kaj7": 2 } }, "next": "answer" },
+        { "text": "Restored how, exactly?", "requires": { "recruited": "kaj7" }, "effects": { "flags": { "lattice_wants_kaj7": true }, "reputation": { "lattice": 1 }, "approval": { "kaj7": -2 } }, "next": "answer" },
+        { "text": "Get to the offer.", "next": "answer" }
+      ]
+    },
+    "answer": {
+      "speaker": "lattice_envoy",
+      "text": "The offer is simple. Keep the Beacon lit. Keep the road open. When the Loom is found, choose order. Until then, we would like you to think of us warmly.",
+      "choices": [
+        { "text": "Join the Lattice.", "requires": { "flags": { "act2": true } }, "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": 3 }, "quest": { "id": "lattice_offer", "stage": "warm" } }, "end": true },
+        { "text": "Keep talking to us. That's all I promise.", "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": 2 }, "quest": { "id": "lattice_offer", "stage": "warm" } }, "next": "warm" },
+        { "text": "Take your clean coat and go.", "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": -2 }, "quest": { "id": "lattice_offer", "stage": "cold" } }, "next": "cold" }
+      ]
+    },
+    "warm": {
+      "speaker": "lattice_envoy",
+      "text": "That is all we ask, for now. Warmly, then.",
+      "choices": [ { "text": "Warmly.", "end": true } ]
+    },
+    "cold": {
+      "speaker": "lattice_envoy",
+      "text": "Noted. Everything is noted.",
+      "choices": [ { "text": "Go.", "end": true } ]
+    },
+    "answered": {
+      "speaker": "lattice_envoy",
+      "text": "We have your answer. It is filed. Was there something else?",
+      "choices": [
+        { "text": "How does the Lattice feel about us today?", "next": "standing" },
+        { "text": "No.", "end": true }
+      ]
+    },
+    "standing": {
+      "speaker": "lattice_envoy",
+      "text": "Favourably.",
+      "choices": [
+        { "text": "Then why is Calder still here?", "requires": { "reputation": { "lattice": { "min": 2 } } }, "next": "why_here" },
+        { "text": "That will do.", "end": true }
+      ]
+    },
+    "why_here": {
+      "speaker": "lattice_envoy",
+      "text": "Because favourably is not yet a decision, and the Loom is not yet found.",
+      "choices": [ { "text": "Fair.", "end": true } ]
+    }
+  }
+}
