@@ -14,6 +14,10 @@ var haul: Dictionary = {"salvage": 0, "aether": 0, "ciphers": 0}
 var xp: int = 0
 var kills: int = 0
 var pickups: int = 0
+## Shard-feature deltas, saved with the run: opened door cells ([x, y]) and
+## relay waypoints already used ([x, y]).
+var opened: Array = []
+var waypoints_used: Array = []
 var rng := RandomNumberGenerator.new()
 
 
@@ -30,6 +34,16 @@ func clear() -> void:
 	xp = 0
 	kills = 0
 	pickups = 0
+	opened = []
+	waypoints_used = []
+
+
+## Empties the haul and XP after a relay bank; kills, pickups and the
+## feature deltas stay with the run.
+func clear_haul() -> void:
+	for key: String in Ledger.RESOURCES:
+		haul[key] = 0
+	xp = 0
 
 
 func is_empty() -> bool:

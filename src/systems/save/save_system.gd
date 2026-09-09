@@ -50,7 +50,7 @@ static func capture(world: ExploreWorld) -> Dictionary:
 		"map_name": world.map_data.name,
 		"ledger": world.ledger.to_dict(),
 		"location": location,
-		"run": {"haul": world.run.haul.duplicate(), "xp": world.run.xp, "kills": world.run.kills, "pickups": world.run.pickups},
+		"run": {"haul": world.run.haul.duplicate(), "xp": world.run.xp, "kills": world.run.kills, "pickups": world.run.pickups, "opened": world.run.opened.duplicate(true), "waypoints_used": world.run.waypoints_used.duplicate(true)},
 		"party": members,
 		"protagonist": world.protagonist.duplicate(true),
 		"narrative": world.narrative.to_dict(),
@@ -109,6 +109,14 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 	world.run.xp = int(run.get("xp", 0))
 	world.run.kills = int(run.get("kills", 0))
 	world.run.pickups = int(run.get("pickups", 0))
+	for raw_w: Variant in run.get("waypoints_used", []):
+		var w: Array = raw_w
+		if w.size() == 2:
+			world.run.waypoints_used.append([int(w[0]), int(w[1])])
+	for raw_o: Variant in run.get("opened", []):
+		var o: Array = raw_o
+		if o.size() == 2 and not world.open_door(Vector2i(int(o[0]), int(o[1])), true):
+			errors.append("saved door at %s is not a door" % [o])
 
 	world.apply_bastion_bonuses()
 	var by_id: Dictionary = {}

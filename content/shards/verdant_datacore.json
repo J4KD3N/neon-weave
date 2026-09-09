@@ -11,7 +11,19 @@
     "floor": "floor_moss",
     "grate": "floor_grate",
     "debris": "debris",
-    "extraction": "extraction_pad"
+    "extraction": "extraction_pad",
+    "secret_door": "secret_door",
+    "vault_door": "vault_door",
+    "waypoint": "waypoint"
+  },
+  "features": {
+    "secrets": [1, 3],
+    "vaults": [1, 1],
+    "vault_cost": { "ciphers": 1 },
+    "merchant": "root_trader",
+    "waypoints": [1, 2],
+    "rarity": { "rare": 0.2, "epic": 0.05 },
+    "ramp_far_fraction": 0.6
   },
   "grate_patch_chance": 0.15,
   "surfaces": {

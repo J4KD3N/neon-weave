@@ -60,9 +60,12 @@ func _check_invariants(tag: String) -> void:
 	if world.mode == "combat":
 		var s := world.combat.state
 		var cells: Array[Vector2i] = []
+		var ids: Array[String] = []
 		for c: Combatant in s.active():
-			assert_false(cells.has(c.cell), "%s two combatants on %s\n  %s" % [tag, c.cell, _where()])
+			var clash := cells.find(c.cell)
+			assert_false(clash >= 0, "%s two combatants on %s: %s and %s\n  %s" % [tag, c.cell, c.id, ids[clash] if clash >= 0 else "", _where()])
 			cells.append(c.cell)
+			ids.append(c.id)
 		assert_true(s.current() != null, "%s combat with no current actor\n  %s" % [tag, _where()])
 
 
@@ -134,7 +137,35 @@ func _explore_step(in_shard: bool) -> void:
 		_note("save/load slot 2 at %s" % cell)
 		return
 	if in_shard:
-		var pickups := world.remaining_pickups()
+		# Shard features first: bank at a relay, open a vault, trade.
+		if world.on_waypoint().x >= 0:
+			var haul_before: Dictionary = world.run.haul.duplicate()
+			assert_true(world.bank_at_waypoint(), "relay bank\n  %s" % _where())
+			assert_true(world.run.is_empty(), "relay empties the haul\n  %s" % _where())
+			_note("banked %s at a relay" % haul_before)
+			return
+		var door := world.adjacent_door()
+		if door.x >= 0 and world.map_data.door_kind(door) == "vault":
+			var why := world.open_vault(door)
+			_note("vault at %s: %s" % [door, "opened" if why.is_empty() else why])
+			if why.is_empty():
+				assert_true(world.map_data.door_kind(door).is_empty(), "vault door became floor\n  %s" % _where())
+				return
+		var trader := world.merchant_near()
+		if trader != null and roll < 0.5:
+			assert_true(world.open_merchant(trader), "merchant opens\n  %s" % _where())
+			for row: Dictionary in world.merchant_menu.rows:
+				if bool(row["enabled"]):
+					assert_eq(world.buy(String(row["id"])), "", "buy %s\n  %s" % [row["id"], _where()])
+					_note("bought %s" % row["id"])
+					break
+			world.close_merchant()
+			return
+		var reach := ShardValidator.reachable_from(world.map_data, world.leader_cell())
+		var pickups: Array[PickupActor] = []
+		for p: PickupActor in world.remaining_pickups():
+			if reach.has(p.cell):
+				pickups.append(p)
 		var goal := world.extraction_cell()
 		if not pickups.is_empty() and roll < 0.6:
 			goal = pickups[rng.randi_range(0, pickups.size() - 1)].cell

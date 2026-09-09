@@ -160,3 +160,35 @@ func walkable_count() -> int:
 			if is_walkable(Vector2i(x, y)):
 				n += 1
 	return n
+
+
+## "secret" or "vault" when the cell is a closed door tile, else "".
+func door_kind(cell: Vector2i) -> String:
+	return String(tile_at(cell).get("door", ""))
+
+
+func is_waypoint(cell: Vector2i) -> bool:
+	return bool(tile_at(cell).get("waypoint", false))
+
+
+## Replaces the tile on `cell` (an opened door becomes floor). The tile entry
+## is registered so later lookups resolve it even if the map never used it.
+func set_tile(cell: Vector2i, tile_entry: Dictionary) -> void:
+	if not in_bounds(cell) or tile_entry.is_empty():
+		return
+	var id := String(tile_entry.get("id", ""))
+	if id.is_empty():
+		return
+	_tiles[id] = tile_entry
+	_cells[cell.y * width + cell.x] = id
+
+
+## Every closed door cell of the given kind ("" for any).
+func door_cells(kind: String = "") -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for y: int in height:
+		for x: int in width:
+			var k := door_kind(Vector2i(x, y))
+			if not k.is_empty() and (kind.is_empty() or k == kind):
+				out.append(Vector2i(x, y))
+	return out

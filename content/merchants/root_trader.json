@@ -1,0 +1,10 @@
+{
+  "name": "Root Trader",
+  "summary": "A Rootkin who never left the racks. Trades sap and secrets for Salvage.",
+  "stock": [
+    { "id": "sap", "label": "Sap poultice: heal the party by half", "cost": { "salvage": 6 }, "effect": { "heal_fraction": 0.5 } },
+    { "id": "cipher", "label": "A Cipher key", "cost": { "salvage": 14 }, "effect": { "grant": { "ciphers": 1 } } },
+    { "id": "aether", "label": "Three vials of Aether", "cost": { "salvage": 10 }, "effect": { "grant": { "aether": 3 } } }
+  ],
+  "art": { "color": "#9ab83a" }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "The Fence",
+  "summary": "A scav who trades with anyone still breathing. Banked Salvage only; no credit.",
+  "stock": [
+    { "id": "medkit", "label": "Field medkit: heal the party by half", "cost": { "salvage": 6 }, "effect": { "heal_fraction": 0.5 } },
+    { "id": "cipher", "label": "A Cipher key", "cost": { "salvage": 15 }, "effect": { "grant": { "ciphers": 1 } } },
+    { "id": "aether", "label": "Two vials of Aether", "cost": { "salvage": 8 }, "effect": { "grant": { "aether": 2 } } }
+  ],
+  "art": { "color": "#d8c46a" }
+}

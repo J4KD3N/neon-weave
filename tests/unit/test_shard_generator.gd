@@ -77,7 +77,7 @@ func test_seed_sweep_is_always_solvable_and_within_budget() -> void:
 		assert_true(enemies.size() >= 1, "seed %d has no enemies" % seed_value)
 		assert_true(enemies.size() <= max_enemies, "seed %d enemies %d" % [seed_value, enemies.size()])
 		var pickups: Array = e["pickups"]
-		assert_true(pickups.size() >= 1 and pickups.size() <= 6, "seed %d pickups %d" % [seed_value, pickups.size()])
+		assert_true(pickups.size() >= 1 and pickups.size() <= 10, "seed %d pickups %d" % [seed_value, pickups.size()])
 		for p: Dictionary in pickups:
 			assert_true(registry.has_entry("pickups", String(p["type"])), "seed %d pickup type %s" % [seed_value, p["type"]])
 		total_enemies += enemies.size()
@@ -137,8 +137,8 @@ func test_depth_adds_groups_and_pickups_and_stays_valid() -> void:
 		assert_false(String(d1["name"]).contains("depth"))
 		var p1: Array = d1["pickups"]
 		var p3: Array = d3["pickups"]
-		assert_true(p1.size() >= 1 and p1.size() <= 6, "seed %d depth-1 pickups %d" % [seed_value, p1.size()])
-		assert_true(p3.size() >= 3 and p3.size() <= 8, "seed %d depth-3 pickups %d" % [seed_value, p3.size()])
+		assert_true(p1.size() >= 1 and p1.size() <= 10, "seed %d depth-1 pickups %d" % [seed_value, p1.size()])
+		assert_true(p3.size() >= 3 and p3.size() <= 12, "seed %d depth-3 pickups %d" % [seed_value, p3.size()])
 
 
 func test_surface_patches_appear_and_stay_solvable() -> void:
@@ -250,3 +250,128 @@ static func _floor_count(entry: Dictionary) -> int:
 			if ch != "#":
 				n += 1
 	return n
+
+
+
+# --- S18: secrets, vaults, waypoints, merchant, ramp, rarity ---------------
+
+func _first_with_features(depth: int = 1) -> Dictionary:
+	for seed_value: int in range(1, 40):
+		var e := ShardGenerator.generate(template, seed_value, depth)
+		if Array(e["secrets"]).size() >= 1 and Array(e["vaults"]).size() >= 1 and Array(e["waypoints"]).size() >= 1 and Array(e["npcs"]).size() >= 1:
+			return e
+	return {}
+
+
+func test_every_feature_is_emitted_as_data_and_validates() -> void:
+	var counts := {"secrets": 0, "vaults": 0, "waypoints": 0, "npcs": 0}
+	for seed_value: int in range(1, 31):
+		var e := ShardGenerator.generate(template, seed_value, 1)
+		assert_eq(ShardValidator.validate(e, tiles), [], "seed %d with features" % seed_value)
+		for key: String in counts:
+			counts[key] += Array(e[key]).size()
+		var gen: Dictionary = e["generation"]
+		assert_true(int(gen["ramp_far_distance"]) > 0, "seed %d ramp" % seed_value)
+	for key: String in counts:
+		assert_true(int(counts[key]) >= 15, "%s appear in most seeds (%d over thirty)" % [key, counts[key]])
+	var e := _first_with_features()
+	assert_false(e.is_empty(), "some seed carries every feature")
+	var map := MapData.parse(e, tiles)
+	var secret: Dictionary = e["secrets"][0]
+	var door := Vector2i(int(secret["door"][0]), int(secret["door"][1]))
+	assert_eq(map.door_kind(door), "secret")
+	assert_false(map.is_walkable(door), "closed doors block")
+	var reach := ShardValidator.reachable_from(map, map.spawn_cells()[0])
+	for raw: Array in secret["cells"]:
+		assert_false(reach.has(Vector2i(int(raw[0]), int(raw[1]))), "pocket sealed")
+	var vault: Dictionary = e["vaults"][0]
+	assert_eq(vault["cost"], {"ciphers": 1})
+	var vault_door := Vector2i(int(vault["door"][0]), int(vault["door"][1]))
+	assert_eq(map.door_kind(vault_door), "vault")
+	var vault_loot := 0
+	for p: Dictionary in e["pickups"]:
+		var c := Vector2i(int(p["cell"][0]), int(p["cell"][1]))
+		for raw: Array in vault["cells"]:
+			if c == Vector2i(int(raw[0]), int(raw[1])):
+				vault_loot += 1
+				assert_true(["rare", "epic"].has(String(p.get("rarity", "common"))), "vault loot is at least rare")
+	assert_eq(vault_loot, Array(vault["cells"]).size(), "one pickup per vault cell")
+	var w := Vector2i(int(e["waypoints"][0][0]), int(e["waypoints"][0][1]))
+	assert_true(map.is_waypoint(w))
+	assert_true(reach.has(w), "waypoints are on the open path")
+	var npc: Dictionary = e["npcs"][0]
+	assert_eq(npc["merchant"], "undercity_fence")
+	var m := Vector2i(int(npc["cell"][0]), int(npc["cell"][1]))
+	assert_true(reach.has(m) and map.is_walkable(m))
+
+
+func test_features_never_change_with_depth_or_extras() -> void:
+	var extras: Array[String] = ["sera_village_site"]
+	for seed_value: int in range(1, 11):
+		var a := ShardGenerator.generate(template, seed_value, 1)
+		var b := ShardGenerator.generate(template, seed_value, 3, extras)
+		assert_eq(a["rows"], b["rows"], "seed %d layout" % seed_value)
+		assert_eq(a["secrets"], b["secrets"], "seed %d secrets" % seed_value)
+		assert_eq(a["vaults"], b["vaults"], "seed %d vaults" % seed_value)
+		assert_eq(a["waypoints"], b["waypoints"], "seed %d waypoints" % seed_value)
+		assert_eq(a["npcs"], b["npcs"], "seed %d merchant" % seed_value)
+
+
+func test_ramp_puts_elites_and_bigger_groups_far_from_the_spawn() -> void:
+	var far_elites := 0
+	for seed_value: int in range(1, 21):
+		var e := ShardGenerator.generate(template, seed_value, 3)
+		var map := MapData.parse(e, tiles)
+		var origin_raw: Array = Dictionary(e["generation"])["ramp_origin"]
+		var walk := ShardValidator.walking_distances(map, Vector2i(int(origin_raw[0]), int(origin_raw[1])), true)
+		var far := int(Dictionary(e["generation"])["ramp_far_distance"])
+		for p: Dictionary in e["enemies"]:
+			if String(p.get("tier", "")) == "elite":
+				far_elites += 1
+				var c := Vector2i(int(p["cell"][0]), int(p["cell"][1]))
+				assert_true(int(walk.get(c, -1)) >= far, "seed %d elite at %s past %d" % [seed_value, c, far])
+	assert_true(far_elites >= 5, "elites roll past the ramp (%d)" % far_elites)
+
+
+func test_validator_rejects_broken_features() -> void:
+	var e := _first_with_features()
+	assert_false(e.is_empty())
+	var ok := ShardValidator.validate(e, tiles)
+	assert_eq(ok, [])
+	# A secret whose pocket is exposed: punch the door open in the rows.
+	var exposed := e.duplicate(true)
+	var door: Array = exposed["secrets"][0]["door"]
+	var rows: Array = exposed["rows"]
+	var row := String(rows[int(door[1])])
+	rows[int(door[1])] = row.substr(0, int(door[0])) + "." + row.substr(int(door[0]) + 1)
+	var errs := ShardValidator.validate(exposed, tiles)
+	assert_true(_any(errs, "is not a secret door tile") and _any(errs, "reachable without the door"), str(errs))
+	# A vault with no cost.
+	var free := e.duplicate(true)
+	free["vaults"][0]["cost"] = {}
+	assert_true(_any(ShardValidator.validate(free, tiles), "has no cost"))
+	# A waypoint claimed on plain floor.
+	var fake := e.duplicate(true)
+	var spawn := MapData.parse(e, tiles).spawn_cells()[0]
+	fake["waypoints"].append([spawn.x + 1, spawn.y])
+	var werrs := ShardValidator.validate(fake, tiles)
+	assert_true(_any(werrs, "is not a waypoint tile"), str(werrs))
+	# A merchant on the pad.
+	var greedy := e.duplicate(true)
+	greedy["npcs"][0]["cell"] = greedy["extraction"].duplicate()
+	assert_true(_any(ShardValidator.validate(greedy, tiles), "merchant shares"))
+	# An elite before the ramp and an unknown rarity.
+	var early := e.duplicate(true)
+	early["enemies"][0]["tier"] = "elite"
+	early["generation"]["ramp_far_distance"] = 9999
+	assert_true(_any(ShardValidator.validate(early, tiles), "before the ramp"))
+	var odd := e.duplicate(true)
+	odd["pickups"][0]["rarity"] = "mythic"
+	assert_true(_any(ShardValidator.validate(odd, tiles), "unknown rarity"))
+
+
+static func _any(errors: Array[String], fragment: String) -> bool:
+	for e: String in errors:
+		if e.contains(fragment):
+			return true
+	return false

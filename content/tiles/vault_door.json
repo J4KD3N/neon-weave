@@ -1,0 +1,9 @@
+{
+  "name": "Vault door",
+  "summary": "A pre-Sundering lock. A Cipher opens it; the good loot is behind it.",
+  "layer": "wall",
+  "walkable": false,
+  "blocks_sight": false,
+  "door": "vault",
+  "art": { "shape": "block", "height": 20, "top": "neon_tech", "left": "wall_left", "right": "wall_right" }
+}

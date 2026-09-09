@@ -1173,3 +1173,164 @@ func test_spores_shroud_the_target_in_a_real_fight() -> void:
 	var mods := s.attack_modifiers(attacker, s.abilities["strike"], target)
 	assert_eq(int(mods["shroud"]), 10)
 	assert_true(s.hit_chance(attacker, s.abilities["strike"], target, false, int(mods["hit"])) <= plain - 10 or plain <= world.rules.min_hit_chance + 10)
+
+
+
+# --- S18: Shard features in the real scene ----------------------------------
+
+func _enter_featured_shard() -> Dictionary:
+	for seed_value: int in range(1, 40):
+		var e := world.enter_shard("rusted_undercity", seed_value)
+		if Array(e["secrets"]).size() >= 1 and Array(e["vaults"]).size() >= 1 and Array(e["waypoints"]).size() >= 1 and Array(e["npcs"]).size() >= 1:
+			return e
+	return {}
+
+
+static func _v(raw: Array) -> Vector2i:
+	return Vector2i(int(raw[0]), int(raw[1]))
+
+
+func test_secret_doors_give_when_the_party_stands_beside_them() -> void:
+	var e := _enter_featured_shard()
+	assert_false(e.is_empty())
+	var secret: Dictionary = e["secrets"][0]
+	var door := _v(secret["door"])
+	var inside := _v(secret["cells"][0])
+	assert_eq(world.map_data.door_kind(door), "secret")
+	assert_false(world.map_data.is_walkable(door))
+	var outside := door + (door - inside)
+	assert_true(world.map_data.is_walkable(outside), "the room side of the door")
+	world.teleport_party(outside)
+	assert_true(world.leader_cell() == outside or LineOfSight.distance(world.leader_cell(), door) <= 2)
+	var free := world.map_data.nearest_free_cells(outside, 1, [])
+	world.party.leader().position = world.map_view.cell_to_world(outside)
+	assert_eq(world.check_secrets(), 1, "one door gives")
+	assert_eq(world.map_data.door_kind(door), "")
+	assert_true(world.map_data.is_walkable(door), "opened doors are floor")
+	assert_eq(world.run.opened, [[door.x, door.y]])
+	assert_eq(world.check_secrets(), 0, "and stays open")
+	assert_true(free.size() >= 1)
+	var reach := ShardValidator.reachable_from(world.map_data, world.leader_cell())
+	assert_true(reach.has(inside), "the pocket is reachable now")
+	assert_eq(world.save_slot(2), OK)
+	var again := _fresh_scene()
+	assert_eq(again.load_slot(2), [])
+	assert_true(again.map_data.is_walkable(door), "a reload keeps the passage open")
+	assert_eq(again.run.opened, [[door.x, door.y]])
+	_drop(again)
+
+
+func test_vault_doors_cost_a_cipher_and_hold_rare_loot() -> void:
+	var e := _enter_featured_shard()
+	var vault: Dictionary = e["vaults"][0]
+	var door := _v(vault["door"])
+	var inside := _v(vault["cells"][0])
+	var outside := door + (door - inside)
+	world.teleport_party(outside)
+	world.party.leader().position = world.map_view.cell_to_world(outside)
+	assert_eq(world.adjacent_door(), door)
+	assert_contains(world.status_line(), "VAULT DOOR")
+	world.ledger.resources["ciphers"] = 0
+	assert_eq(world.open_vault(door), "needs %s" % BastionState.describe_cost({"ciphers": 1}))
+	assert_false(world.interact(), "interact refuses too")
+	assert_eq(world.map_data.door_kind(door), "vault")
+	world.ledger.resources["ciphers"] = 2
+	assert_true(world.interact(), "Enter / A opens it")
+	assert_eq(world.ledger.total("ciphers"), 1, "one Cipher spent")
+	assert_eq(world.map_data.door_kind(door), "")
+	assert_eq(world.open_vault(door), "not a vault door")
+	var loot := 0
+	for p: PickupActor in world.remaining_pickups():
+		for raw: Array in vault["cells"]:
+			if p.cell == _v(raw):
+				loot += 1
+				assert_true(["rare", "epic"].has(p.rarity))
+				assert_true(p.tint == world.rarity_color(p.rarity), "rare loot is tinted")
+	assert_true(loot >= 2)
+
+
+func test_relay_waypoint_banks_the_haul_and_a_wipe_cannot_take_it() -> void:
+	var e := _enter_featured_shard()
+	var w := _v(e["waypoints"][0])
+	world.run.collect({"salvage": 7, "aether": 2, "xp": 3})
+	world.teleport_party(w)
+	world.party.leader().position = world.map_view.cell_to_world(w)
+	assert_eq(world.on_waypoint(), w)
+	assert_contains(world.status_line(), "RELAY WAYPOINT")
+	var banked_before := world.ledger.total("salvage")
+	assert_true(world.bank_at_waypoint())
+	assert_eq(world.ledger.total("salvage"), banked_before + 7)
+	assert_eq(world.ledger.xp, 3)
+	assert_true(world.run.is_empty(), "the haul is empty but the run goes on")
+	assert_true(world.run.in_shard)
+	assert_eq(world.run.waypoints_used, [[w.x, w.y]])
+	assert_eq(world.on_waypoint(), Vector2i(-1, -1), "one use")
+	assert_false(world.bank_at_waypoint())
+	world.run.collect({"salvage": 4})
+	world.mode = "combat"
+	for m: PartyMember in world.party.members:
+		m.hp = 0
+		m.downed = true
+	world._on_combat_ended("defeat")
+	assert_eq(world.mode, "defeated")
+	world.return_home()
+	assert_eq(world.ledger.total("salvage"), banked_before + 7, "the relay bank survived the wipe; the later 4 did not")
+
+
+func test_merchant_trades_from_the_banked_ledger() -> void:
+	var e := _enter_featured_shard()
+	var m := _v(e["npcs"][0]["cell"])
+	var trader := world.npc_at(m)
+	assert_true(trader != null and trader.is_merchant())
+	assert_eq(trader.merchant_id, "undercity_fence")
+	var free := world.map_data.nearest_free_cells(m, 1, [m])
+	world.teleport_party(free[0])
+	world.party.leader().position = world.map_view.cell_to_world(free[0])
+	assert_eq(world.merchant_near(), trader)
+	assert_contains(world.status_line(), "The Fence")
+	world.ledger.resources["salvage"] = 0
+	assert_true(world.interact(), "Enter / A opens the stock")
+	assert_true(world.merchant_menu.visible)
+	var six := BastionState.describe_cost({"salvage": 6})
+	assert_contains(world.merchant_menu.label.text, "Field medkit: heal the party by half — %s  (needs %s)" % [six, six])
+	assert_eq(world.buy("medkit"), "needs %s" % six)
+	assert_eq(world.buy("nothing"), "no such item")
+	world.ledger.resources["salvage"] = 20
+	var leader := world.party.leader()
+	leader.hp = 4
+	world.refresh_merchant()
+	assert_true(world.confirm_merchant(), "row 0 is the medkit")
+	assert_eq(world.ledger.total("salvage"), 14)
+	assert_eq(leader.hp, mini(leader.max_hp, 4 + int(ceil(leader.max_hp * 0.5))))
+	assert_eq(world.buy("cipher"), "needs %s" % BastionState.describe_cost({"salvage": 15}))
+	assert_eq(world.buy("aether"), "")
+	assert_eq(world.ledger.total("salvage"), 6)
+	assert_eq(world.ledger.total("aether"), 2)
+	world.close_merchant()
+	assert_false(world.merchant_menu.visible)
+	assert_eq(world.current_merchant, "")
+
+
+func test_rarity_multiplies_grants() -> void:
+	assert_eq(world.rarity_multiplier("common"), 1.0)
+	assert_eq(world.rarity_multiplier("epic"), 4.0)
+	assert_eq(ExploreWorld.scale_grants({"salvage": [2, 5], "xp": 1, "cipher_chance": 0.1}, 2.0), {"salvage": [4, 10], "xp": 2, "cipher_chance": 0.2})
+	world.enter_shard("rusted_undercity", 7)
+	var rare: PickupActor = null
+	for p: PickupActor in world.remaining_pickups():
+		if p.rarity != "common":
+			rare = p
+			break
+	if rare == null:
+		return
+	var reach := ShardValidator.reachable_from(world.map_data, world.leader_cell())
+	if not reach.has(rare.cell):
+		return
+	world.teleport_party(rare.cell)
+	world.party.leader().position = world.map_view.cell_to_world(rare.cell)
+	var gained := world.check_pickups()
+	assert_eq(gained.size(), 1)
+	assert_eq(gained[0]["rarity"], rare.rarity)
+	var mult := world.rarity_multiplier(rare.rarity)
+	var span: Array = Dictionary(rare.grants()).get("salvage", [0, 0])
+	assert_true(int(gained[0]["salvage"]) >= int(round(float(span[0]) * mult)), "scaled minimum")

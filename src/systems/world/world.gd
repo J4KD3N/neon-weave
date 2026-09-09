@@ -53,6 +53,8 @@ var npcs: Array[NpcActor] = []
 var dialogue_menu: DialogueMenu
 var system_menu: SystemMenu
 var weave_menu: WeaveMenu
+var merchant_menu: MerchantMenu
+var current_merchant: String = ""
 var dialogue: DialogueRunner
 var enemies: Array[EnemyActor] = []
 var pickups: Array[PickupActor] = []
@@ -109,6 +111,9 @@ func _ready() -> void:
 	weave_menu = WeaveMenu.new()
 	weave_menu.name = "WeaveMenu"
 	add_child(weave_menu)
+	merchant_menu = MerchantMenu.new()
+	merchant_menu.name = "MerchantMenu"
+	add_child(merchant_menu)
 	spawn_npcs()
 	combat = CombatController.new()
 	combat.name = "Combat"
@@ -265,6 +270,7 @@ func _enter(entry: Dictionary) -> bool:
 		system_menu.close()
 	if weave_menu != null:
 		weave_menu.visible = false
+	close_merchant()
 	if combat != null:
 		combat.release_cursor()
 	if camera != null:
@@ -424,12 +430,24 @@ func spawn_npcs() -> void:
 		return
 	var placements: Array = map_entry.get("npcs", [])
 	for p: Dictionary in placements:
+		var raw: Array = p.get("cell", [0, 0])
+		var cell := Vector2i(int(raw[0]), int(raw[1]))
+		if p.has("merchant"):
+			var merchant_id := String(p["merchant"])
+			var merchant: Dictionary = registry.get_entry("merchants", merchant_id)
+			if merchant.is_empty() or not map_data.is_walkable(cell):
+				push_warning("map %s places unknown or blocked merchant %s at %s" % [map_data.id, merchant_id, cell])
+				continue
+			var trader := NpcActor.new()
+			trader.setup_merchant(merchant_id, merchant, cell, Color.html(String(Dictionary(merchant.get("art", {})).get("color", "#d8c46a"))))
+			trader.position = map_view.cell_to_world(cell)
+			npcs_node.add_child(trader)
+			npcs.append(trader)
+			continue
 		var id := String(p.get("companion", ""))
 		var entry: Dictionary = registry.get_entry("companions", id)
 		if entry.is_empty() or narrative.is_recruited(id):
 			continue
-		var raw: Array = p.get("cell", [0, 0])
-		var cell := Vector2i(int(raw[0]), int(raw[1]))
 		if not map_data.is_walkable(cell):
 			push_warning("map %s places npc %s on blocked %s" % [map_data.id, id, cell])
 			continue
@@ -696,6 +714,9 @@ func spawn_pickups() -> void:
 			continue
 		var actor := PickupActor.new()
 		actor.setup(type, entry, cell)
+		var rarity := String(p.get("rarity", "common"))
+		if rarity != "common":
+			actor.set_rarity(rarity, rarity_color(rarity))
 		actor.position = map_view.cell_to_world(cell)
 		pickups_node.add_child(actor)
 		pickups.append(actor)
@@ -804,10 +825,12 @@ func check_pickups() -> Array[Dictionary]:
 			gained.append({"pickup": p.pickup_id, "dialogue": site_dialogue})
 			continue
 		run.pickups += 1
-		var got := _gain(p.grants())
+		var got := _gain(scale_grants(p.grants(), rarity_multiplier(p.rarity)))
 		got["pickup"] = p.pickup_id
+		got["rarity"] = p.rarity
 		gained.append(got)
-		overlay.toast("%s: %s" % [p.entry.get("name", p.pickup_id), RunState.describe(got)], 2.0)
+		var tag := "" if p.rarity == "common" else " (%s)" % p.rarity
+		overlay.toast("%s%s: %s" % [p.entry.get("name", p.pickup_id), tag, RunState.describe(got)], 2.0)
 	return gained
 
 
@@ -878,6 +901,12 @@ func status_line() -> String:
 		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · C creator · N new shard (depth %d) · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
 	if can_extract():
 		line3 = "▶ ON THE EXTRACTION PAD — press E to extract ◀"
+	elif mode == "explore" and on_waypoint().x >= 0:
+		line3 = "▶ RELAY WAYPOINT — press E to bank the haul and keep going ◀"
+	elif mode == "explore" and adjacent_door().x >= 0 and map_data.door_kind(adjacent_door()) == "vault":
+		line3 = "▶ VAULT DOOR — Enter / A opens it for %s ◀" % BastionState.describe_cost(vault_at(adjacent_door()).get("cost", {"ciphers": 1}))
+	elif mode == "explore" and merchant_near() != null:
+		line3 = "▶ %s — Enter / A to trade ◀" % merchant_near().display_name
 	elif mode == "defeated":
 		line3 = "▶ R: return to the yard · Esc: reload the combat checkpoint ◀"
 	return "%s\n%s\n%s" % [line1, line2, line3]
@@ -1019,6 +1048,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("ui_down"):
 			system_menu.move(1)
 		return
+	if merchant_menu != null and merchant_menu.visible:
+		if event.is_action_pressed("cancel"):
+			close_merchant()
+		elif event.is_action_pressed("confirm"):
+			confirm_merchant()
+		elif event.is_action_pressed("ui_up"):
+			merchant_menu.move(-1)
+			refresh_merchant()
+		elif event.is_action_pressed("ui_down"):
+			merchant_menu.move(1)
+			refresh_merchant()
+		return
 	if weave_menu != null and weave_menu.visible:
 		if event.is_action_pressed("weave") or event.is_action_pressed("cancel"):
 			close_weave()
@@ -1088,14 +1129,19 @@ func _unhandled_input(event: InputEvent) -> void:
 				var cell := map_view.world_to_cell(get_global_mouse_position())
 				var enemy := enemy_at(cell)
 				var npc := npc_at(cell)
-				if npc != null and LineOfSight.distance(leader_cell(), cell) <= 2:
+				if not map_data.door_kind(cell).is_empty() and LineOfSight.distance(leader_cell(), cell) <= 1:
+					interact()
+				elif npc != null and npc.is_merchant() and LineOfSight.distance(leader_cell(), cell) <= 2:
+					open_merchant(npc)
+				elif npc != null and LineOfSight.distance(leader_cell(), cell) <= 2:
 					talk_to(npc.companion_id)
 				elif enemy != null and LineOfSight.distance(leader_cell(), cell) <= enemy.awareness:
 					start_combat(true)
 				else:
 					command_move(cell)
 			elif event.is_action_pressed("extract"):
-				extract()
+				if not extract():
+					bank_at_waypoint()
 			elif event.is_action_pressed("new_shard"):
 				enter_shard(selected_shard, int(randi() % 1000000))
 			elif event.is_action_pressed("go_home"):
@@ -1128,6 +1174,7 @@ func _process(delta: float) -> void:
 		if dir != Vector2.ZERO:
 			party.steer_leader(dir, delta, map_view.is_walkable_world)
 		check_pickups()
+		check_secrets()
 		check_encounters()
 	elif mode == "combat":
 		_tick_cursor(Input.get_vector("move_left", "move_right", "move_up", "move_down"), delta)
@@ -1278,6 +1325,17 @@ func interact() -> bool:
 		return false
 	if can_extract():
 		return extract()
+	if on_waypoint().x >= 0:
+		return bank_at_waypoint()
+	var door := adjacent_door()
+	if door.x >= 0 and map_data.door_kind(door) == "vault":
+		var why := open_vault(door)
+		if not why.is_empty():
+			overlay.toast("Vault: %s" % why, 2.0)
+		return why.is_empty()
+	var trader := merchant_near()
+	if trader != null:
+		return open_merchant(trader)
 	var here := leader_cell()
 	var best: NpcActor = null
 	for npc: NpcActor in npcs:
@@ -1553,3 +1611,220 @@ func launch_shard(template_id: String) -> bool:
 		return false
 	selected_shard = template_id
 	return not enter_shard(selected_shard, int(randi() % 1000000)).is_empty()
+
+
+
+# --- shard features: doors, vaults, waypoints, merchant, rarity -------------
+
+func loot_rules() -> Dictionary:
+	return registry.get_entry("rules", "loot")
+
+
+func rarity_multiplier(rarity: String) -> float:
+	return float(Dictionary(loot_rules().get("rarities", {})).get(rarity, 1.0))
+
+
+func rarity_color(rarity: String) -> Color:
+	var colors: Dictionary = loot_rules().get("colors", {})
+	if colors.has(rarity):
+		return Color.html(String(colors[rarity]))
+	return Color.TRANSPARENT
+
+
+## Grants scaled by rarity: ranges and numbers alike, XP included.
+static func scale_grants(grants: Dictionary, mult: float) -> Dictionary:
+	var out: Dictionary = {}
+	for key: String in grants:
+		var v: Variant = grants[key]
+		if v is Array:
+			var arr: Array = v
+			out[key] = [int(round(float(arr[0]) * mult)), int(round(float(arr[arr.size() - 1]) * mult))]
+		elif key == "cipher_chance":
+			out[key] = minf(float(v) * mult, 1.0)
+		elif v is int or v is float:
+			out[key] = int(round(float(v) * mult))
+		else:
+			out[key] = v
+	return out
+
+
+## The floor tile the current map uses for opened doors (its own floor).
+func _floor_tile_entry() -> Dictionary:
+	var legend: Dictionary = map_entry.get("legend", {})
+	var marker := String(map_entry.get("spawn_marker", "P"))
+	var id := String(legend.get(marker, legend.get(".", "floor_concrete")))
+	return registry.get_entry("tiles", id)
+
+
+## Turns a closed door into floor. `silent` for restores. False when the
+## cell is not a door.
+func open_door(cell: Vector2i, silent: bool = false) -> bool:
+	var kind := map_data.door_kind(cell)
+	if kind.is_empty():
+		return false
+	map_data.set_tile(cell, _floor_tile_entry())
+	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id))
+	if highlighter != null:
+		highlighter.map_view = map_view
+	var raw: Array = [cell.x, cell.y]
+	if not run.opened.has(raw):
+		run.opened.append(raw)
+	if not silent:
+		overlay.toast("A hidden passage opens." if kind == "secret" else "The vault door grinds open.", 2.5)
+	return true
+
+
+## Secret doors give when a party member stands beside them.
+func check_secrets() -> int:
+	if mode != "explore":
+		return 0
+	var doors := map_data.door_cells("secret")
+	if doors.is_empty():
+		return 0
+	var opened_now := 0
+	for m: PartyMember in party.members:
+		var here := member_cell(m)
+		for door: Vector2i in doors:
+			if LineOfSight.distance(here, door) == 1 and map_data.door_kind(door) == "secret":
+				if open_door(door):
+					opened_now += 1
+	return opened_now
+
+
+## The vault entry whose door is `cell`, or {}.
+func vault_at(cell: Vector2i) -> Dictionary:
+	for v: Dictionary in map_entry.get("vaults", []):
+		var raw: Array = v.get("door", [])
+		if raw.size() == 2 and Vector2i(int(raw[0]), int(raw[1])) == cell:
+			return v
+	return {}
+
+
+## Spends the vault cost from the banked ledger and opens the door. Empty
+## string on success, else the reason.
+func open_vault(cell: Vector2i) -> String:
+	if map_data.door_kind(cell) != "vault":
+		return "not a vault door"
+	var vault := vault_at(cell)
+	var cost: Dictionary = vault.get("cost", {"ciphers": 1})
+	if not ledger.can_afford(cost):
+		return "needs %s" % BastionState.describe_cost(cost)
+	ledger.spend(cost)
+	ledger.save()
+	open_door(cell)
+	return ""
+
+
+## A closed door next to any party member, nearest first; (-1, -1) when none.
+func adjacent_door() -> Vector2i:
+	for m: PartyMember in party.members:
+		var here := member_cell(m)
+		for door: Vector2i in map_data.door_cells():
+			if LineOfSight.distance(here, door) == 1:
+				return door
+	return Vector2i(-1, -1)
+
+
+func on_waypoint() -> Vector2i:
+	var here := leader_cell()
+	if map_data.is_waypoint(here) and not run.waypoints_used.has([here.x, here.y]):
+		return here
+	return Vector2i(-1, -1)
+
+
+## Banks the haul at a relay waypoint without leaving the Shard; the run
+## goes on with an empty haul. One use per waypoint.
+func bank_at_waypoint() -> bool:
+	var here := on_waypoint()
+	if here.x < 0 or mode != "explore":
+		return false
+	var take := run.take()
+	_bank(take, false)
+	run.clear_haul()
+	run.waypoints_used.append([here.x, here.y])
+	overlay.toast("Relay: banked %s" % RunState.describe(take), 3.0)
+	autosave()
+	return true
+
+
+func merchant_near() -> NpcActor:
+	var here := leader_cell()
+	var best: NpcActor = null
+	for npc: NpcActor in npcs:
+		if not is_instance_valid(npc) or not npc.is_merchant():
+			continue
+		var d := LineOfSight.distance(here, npc.cell)
+		if d <= 2 and (best == null or d < LineOfSight.distance(here, best.cell)):
+			best = npc
+	return best
+
+
+func merchant_rows(merchant: Dictionary) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for item: Dictionary in merchant.get("stock", []):
+		var cost: Dictionary = item.get("cost", {})
+		var why := "" if ledger.can_afford(cost) else "needs %s" % BastionState.describe_cost(cost)
+		rows.append({"id": String(item.get("id", "")), "label": "%s — %s" % [item.get("label", item.get("id", "?")), BastionState.describe_cost(cost)], "enabled": why.is_empty(), "why": why})
+	return rows
+
+
+func open_merchant(npc: NpcActor) -> bool:
+	if merchant_menu == null or npc == null or not npc.is_merchant() or mode != "explore":
+		return false
+	current_merchant = npc.merchant_id
+	refresh_merchant()
+	return true
+
+
+func close_merchant() -> void:
+	if merchant_menu != null:
+		merchant_menu.close()
+	current_merchant = ""
+
+
+func refresh_merchant() -> void:
+	var merchant: Dictionary = registry.get_entry("merchants", current_merchant)
+	if merchant.is_empty():
+		close_merchant()
+		return
+	var header := "%s\n%s\n%s" % [merchant.get("name", current_merchant), merchant.get("summary", ""), ledger.summary()]
+	merchant_menu.show_rows(header, merchant_rows(merchant))
+
+
+## Buys one stock item by id from the open merchant. Empty string on
+## success, else the reason.
+func buy(item_id: String) -> String:
+	var merchant: Dictionary = registry.get_entry("merchants", current_merchant)
+	for item: Dictionary in merchant.get("stock", []):
+		if String(item.get("id", "")) != item_id:
+			continue
+		var cost: Dictionary = item.get("cost", {})
+		if not ledger.can_afford(cost):
+			return "needs %s" % BastionState.describe_cost(cost)
+		ledger.spend(cost)
+		var effect: Dictionary = item.get("effect", {})
+		var heal := float(effect.get("heal_fraction", 0.0))
+		if heal > 0.0:
+			for m: PartyMember in party.members:
+				if not m.downed:
+					m.hp = mini(m.max_hp, m.hp + int(ceil(m.max_hp * heal)))
+		var grant: Dictionary = effect.get("grant", {})
+		if not grant.is_empty():
+			ledger.bank(grant)
+		ledger.save()
+		overlay.toast("Bought: %s" % item.get("label", item_id), 2.0)
+		return ""
+	return "no such item"
+
+
+func confirm_merchant() -> bool:
+	if merchant_menu == null or not merchant_menu.visible:
+		return false
+	var row := merchant_menu.selected()
+	if row.is_empty():
+		return false
+	var why := buy(String(row["id"]))
+	if not why.is_empty():
+		overlay.toast("%s: %s" % [row.get("label", row["id"]), why], 2.0)
+	refresh_merchant()
+	return why.is_empty()
