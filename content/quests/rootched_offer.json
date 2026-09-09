@@ -1,0 +1,14 @@
+{
+  "name": "A Seed Offered",
+  "main": true,
+  "companion": "",
+  "faction": "rootched",
+  "summary": "The Rootched have noticed the Beacon. Their speaker wants to talk about how a seed ends.",
+  "start": "offer",
+  "stages": {
+    "offer": { "summary": "Speaker Ilex of the Rootched is waiting on the plaza.", "objectives": [ { "text": "Hear the Rootched speaker out", "done_when": { "flags": { "rootched_heard": true } } }, { "text": "Give the speaker an answer", "done_when": { "flags": { "rootched_answered": true } } } ] },
+    "warm": { "summary": "You kept the door open. The Rootched grow toward it.", "complete": true },
+    "cold": { "summary": "You sent the speaker away. The moss stays.", "complete": true },
+    "joined": { "summary": "You joined the Rootched. The grove behind the Beacon is open; the Lattice and the Ashfound are closed.", "complete": true }
+  }
+}

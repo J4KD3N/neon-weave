@@ -10,6 +10,8 @@ var approval: Dictionary = {}
 var reputation: Dictionary = {}
 var quests: Dictionary = {} # quest id -> stage id
 var recruited: Array[String] = []
+## The faction joined (D-087); "" until Act 2 commits. Joining is exclusive.
+var faction: String = ""
 
 
 func flag(name: String) -> bool:
@@ -58,7 +60,7 @@ func dismiss(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate()}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -76,4 +78,20 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	for k: String in q:
 		n.quests[k] = String(q[k])
 	n.recruited.assign(d.get("recruited", []))
+	n.faction = String(d.get("faction", ""))
 	return n
+
+
+func has_joined() -> bool:
+	return not faction.is_empty()
+
+
+## Commits to a faction; false when one is already joined. Flags
+## `joined_<id>` and `faction_locked` ride along for content to read.
+func join_faction(id: String) -> bool:
+	if has_joined() or id.is_empty():
+		return false
+	faction = id
+	set_flag("joined_%s" % id, true)
+	set_flag("faction_locked", true)
+	return true

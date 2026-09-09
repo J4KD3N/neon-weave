@@ -4,5 +4,9 @@
   "color": "#8fd3ff",
   "rivals": ["rootched", "ashfound"],
   "joinable_act": 2,
+  "envoy": "lattice_envoy",
+  "vendor": "lattice_quartermaster",
+  "area": "lattice_enclave",
+  "join_reputation": { "lattice": 3, "rootched": -2, "ashfound": -2 },
   "milestone": "M2"
 }

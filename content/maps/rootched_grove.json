@@ -1,0 +1,20 @@
+{
+  "name": "The Rootched Grove",
+  "summary": "A hollow behind the Beacon where the biogrowth was let win. It is warm. It hums.",
+  "biome": "verdant_datacore",
+  "spawn_marker": "P",
+  "legend": { ".": "floor_concrete", "b": "biogrowth", "#": "wall_rust", "P": "floor_concrete" },
+  "rows": [
+    "##############",
+    "#............#",
+    "#.PP.bbb.....#",
+    "#.PP.bbb..b..#",
+    "#....bbb..b..#",
+    "#............#",
+    "##############"
+  ],
+  "transitions": [ { "cell": [1, 3], "to": "bastion", "arrive": [11, 2], "label": "Back to the plaza" } ],
+  "npcs": [ { "merchant": "rootched_grove_keeper", "cell": [10, 2] } ],
+  "pickups": [],
+  "enemies": []
+}

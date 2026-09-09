@@ -1,0 +1,11 @@
+{
+  "name": "Ashfound Armourer",
+  "summary": "Sells things that do not sing. Members only.",
+  "stock": [
+    { "id": "plate", "label": "Heavy plate (armour, +6 HP)", "cost": { "salvage": 18 }, "effect": { "item": "heavy_plate" } },
+    { "id": "maul", "label": "Shock maul (weapon, +2 damage)", "cost": { "salvage": 16 }, "effect": { "item": "shock_maul" } },
+    { "id": "blade", "label": "Strut blade (weapon, +1 damage)", "cost": { "salvage": 8 }, "effect": { "item": "strut_blade" } },
+    { "id": "medkit", "label": "Field medkit: heal the party by half", "cost": { "salvage": 5 }, "effect": { "heal_fraction": 0.5 } }
+  ],
+  "art": { "color": "#ff7a6b" }
+}

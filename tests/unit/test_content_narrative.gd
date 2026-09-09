@@ -3,8 +3,8 @@
 extends TestCase
 
 const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
-const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation"]
-const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "class", "approval", "recruited", "not_recruited", "quest", "reputation"]
+const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction"]
+const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction"]
 
 var registry: ContentRegistry
 

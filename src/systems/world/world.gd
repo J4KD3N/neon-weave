@@ -665,6 +665,7 @@ func choose(index: int) -> bool:
 		return false
 	if not dialogue.applied.is_empty():
 		react_to_reputation(dialogue.applied[dialogue.applied.size() - 1])
+		handle_join_effect(dialogue.applied[dialogue.applied.size() - 1])
 	for id: String in dialogue.recruited:
 		add_companion(id)
 	dialogue.recruited.clear()
@@ -2276,6 +2277,7 @@ func fire_trigger(t: Dictionary) -> bool:
 	for companion: String in Conditions.apply(effects, narrative):
 		add_companion(companion)
 	react_to_reputation(effects)
+	handle_join_effect(effects)
 	if effects.has("victory_flag"):
 		pending_victory_flag = String(effects["victory_flag"])
 	if effects.has("grant"):
@@ -2340,9 +2342,10 @@ func standing_text() -> String:
 		var rep := narrative.reputation_of(String(f["id"]))
 		if rep != 0:
 			parts.append("%s %+d" % [f.get("name", f["id"]), rep])
+	var sworn := "" if not narrative.has_joined() else "Sworn to %s. " % faction_name(narrative.faction)
 	if parts.is_empty():
-		return "Standing: no faction has an opinion of you yet."
-	return "Standing: " + " · ".join(parts)
+		return sworn + "Standing: no faction has an opinion of you yet."
+	return sworn + "Standing: " + " · ".join(parts)
 
 
 func open_journal() -> bool:
@@ -3077,3 +3080,38 @@ func multiclass_rows(member_id: String) -> Array[Dictionary]:
 		var split := Progression.class_levels(level, build, prules)
 		rows.append({"kind": "multiclass_level", "id": member_id, "label": "Put a level into %s (%d there, %d in %s)" % [registry.get_entry("classes", current).get("name", current), int(split["second"]), int(split["main"]), cls.get("name", m.class_id)], "enabled": why.is_empty(), "why": why})
 	return rows
+
+
+# --- factions v2: joining (S32, D-087) ---------------------------------------
+
+## Commits the party to a faction: exclusive, gated on the act flag the
+## faction names (`joinable_act`), moves reputation by the faction's
+## `join_reputation` so every companion reacts per the casting rule
+## (D-074), and opens its area and vendor through `faction` conditions.
+## Empty string on success, else the reason.
+func join_faction(id: String) -> String:
+	var f: Dictionary = registry.get_entry("factions", id)
+	if f.is_empty():
+		return "no such faction"
+	if narrative.has_joined():
+		return "already sworn to %s" % faction_name(narrative.faction)
+	var act_flag := "act%d" % int(f.get("joinable_act", 2))
+	if not narrative.flag(act_flag):
+		return "not before %s" % act_flag
+	narrative.join_faction(id)
+	var deltas: Dictionary = f.get("join_reputation", {id: 3})
+	Conditions.apply({"reputation": deltas}, narrative)
+	react_to_reputation({"reputation": deltas})
+	overlay.toast("You have joined %s." % faction_name(id), 4.0)
+	autosave()
+	return ""
+
+
+## Runs a `join_faction` effect key from a dialogue choice or a trigger.
+func handle_join_effect(effects: Dictionary) -> void:
+	var id := String(effects.get("join_faction", ""))
+	if id.is_empty():
+		return
+	var why := join_faction(id)
+	if not why.is_empty():
+		overlay.toast("Cannot join %s: %s" % [faction_name(id), why], 3.0)

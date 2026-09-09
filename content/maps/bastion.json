@@ -37,10 +37,15 @@
     { "id": "arcanum", "cell": [17, 10] }
   ],
   "transitions": [
-    { "cell": [22, 7], "to": "proto_yard", "arrive": [2, 7], "label": "The yard gate" }
+    { "cell": [22, 7], "to": "proto_yard", "arrive": [2, 7], "label": "The yard gate" },
+    { "cell": [2, 1], "to": "lattice_enclave", "arrive": [2, 2], "label": "The Lattice enclave", "when": { "faction": "lattice" } },
+    { "cell": [11, 1], "to": "rootched_grove", "arrive": [2, 2], "label": "The grove path", "when": { "faction": "rootched" } },
+    { "cell": [21, 1], "to": "ashfound_forge", "arrive": [2, 2], "label": "The forge door", "when": { "faction": "ashfound" } }
   ],
   "npcs": [
-    { "npc": "lattice_envoy", "cell": [12, 13], "when": { "flags": { "road_end": true } } }
+    { "npc": "lattice_envoy", "cell": [12, 13], "when": { "flags": { "road_end": true } } },
+    { "npc": "rootched_envoy", "cell": [8, 13], "when": { "flags": { "road_end": true } } },
+    { "npc": "ashfound_envoy", "cell": [16, 13], "when": { "flags": { "road_end": true } } }
   ],
   "pickups": [],
   "enemies": []

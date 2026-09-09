@@ -1,0 +1,20 @@
+{
+  "name": "The Lattice Enclave",
+  "summary": "A clean room bolted onto the plaza wall: white light, indexed shelves, a quartermaster who has already logged your visit.",
+  "biome": "rusted_undercity",
+  "spawn_marker": "P",
+  "legend": { ".": "floor_concrete", ",": "floor_grate", "#": "wall_rust", "P": "floor_concrete", "c": "conduit" },
+  "rows": [
+    "##############",
+    "#............#",
+    "#.PP.,,,.....#",
+    "#.PP.,,,..c..#",
+    "#....,,,..c..#",
+    "#............#",
+    "##############"
+  ],
+  "transitions": [ { "cell": [1, 3], "to": "bastion", "arrive": [2, 2], "label": "Back to the plaza" } ],
+  "npcs": [ { "merchant": "lattice_quartermaster", "cell": [10, 2] } ],
+  "pickups": [],
+  "enemies": []
+}

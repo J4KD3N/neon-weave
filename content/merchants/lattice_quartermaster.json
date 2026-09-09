@@ -1,0 +1,11 @@
+{
+  "name": "Lattice Quartermaster",
+  "summary": "Indexed stock, fair prices, a receipt for everything. Members only.",
+  "stock": [
+    { "id": "optics", "label": "Optic suite (cyberware, +5 evasion)", "cost": { "salvage": 14 }, "effect": { "item": "optic_suite" } },
+    { "id": "reflex", "label": "Reflex port (cyberware, +3 initiative)", "cost": { "salvage": 14 }, "effect": { "item": "reflex_port" } },
+    { "id": "medkit", "label": "Field medkit: heal the party by half", "cost": { "salvage": 5 }, "effect": { "heal_fraction": 0.5 } },
+    { "id": "cipher", "label": "A Cipher key, catalogued", "cost": { "salvage": 12 }, "effect": { "grant": { "ciphers": 1 } } }
+  ],
+  "art": { "color": "#8fd3ff" }
+}

@@ -14,6 +14,7 @@
       ]
     },
     "warm": { "summary": "You kept the door open. The Lattice will send more than an envoy when the Loom is found.", "complete": true },
-    "cold": { "summary": "You sent the envoy away. The Lattice remembers refusals as data.", "complete": true }
+    "cold": { "summary": "You sent the envoy away. The Lattice remembers refusals as data.", "complete": true },
+    "joined": { "summary": "You joined the Lattice. The enclave in the north wall is open; the Rootched and the Ashfound are closed.", "complete": true }
   }
 }

@@ -1,6 +1,8 @@
 {
   "name": "Envoy Calder — the plaza",
   "start": [
+    { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "lattice" } },
+    { "node": "joined_greet", "requires": { "faction": "lattice" } },
     { "node": "answered", "requires": { "flags": { "lattice_answered": true } } },
     { "node": "greet" }
   ],
@@ -27,7 +29,7 @@
       "speaker": "lattice_envoy",
       "text": "The offer is simple. Keep the Beacon lit. Keep the road open. When the Loom is found, choose order. Until then, we would like you to think of us warmly.",
       "choices": [
-        { "text": "Join the Lattice.", "requires": { "flags": { "act2": true } }, "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": 3 }, "quest": { "id": "lattice_offer", "stage": "warm" } }, "end": true },
+        { "text": "Join the Lattice.", "requires": { "flags": { "act2": true }, "faction": "" }, "effects": { "flags": { "lattice_answered": true }, "join_faction": "lattice", "quest": { "id": "lattice_offer", "stage": "joined" } }, "next": "joined" },
         { "text": "Keep talking to us. That's all I promise.", "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": 2 }, "quest": { "id": "lattice_offer", "stage": "warm" } }, "next": "warm" },
         { "text": "Take your clean coat and go.", "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": -2 }, "quest": { "id": "lattice_offer", "stage": "cold" } }, "next": "cold" }
       ]
@@ -62,6 +64,9 @@
       "speaker": "lattice_envoy",
       "text": "Because favourably is not yet a decision, and the Loom is not yet found.",
       "choices": [ { "text": "Fair.", "end": true } ]
-    }
+    },
+    "joined": { "speaker": "lattice_envoy", "text": "Then the enclave is open to you: the clean door in the north wall, by the Beacon. The quartermaster has already logged your visit.", "choices": [ { "text": "Logged.", "end": true } ] },
+    "joined_greet": { "speaker": "lattice_envoy", "text": "A member. The enclave is through the north door; everything else is filed.", "choices": [ { "text": "Filed.", "end": true } ] },
+    "locked": { "speaker": "lattice_envoy", "text": "You chose elsewhere. Noted. Everything is noted.", "choices": [ { "text": "Go.", "end": true } ] }
   }
 }
