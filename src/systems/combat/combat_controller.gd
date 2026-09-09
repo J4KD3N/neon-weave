@@ -319,9 +319,9 @@ func undo_move() -> bool:
 func _pan_to(id: String) -> void:
 	if world.camera == null:
 		return
-	var node: WorldActor = actors.get(id)
-	if node != null and is_instance_valid(node):
-		world.camera.target = node
+	var raw: Variant = actors.get(id)
+	if typeof(raw) == TYPE_OBJECT and is_instance_valid(raw):
+		world.camera.target = raw
 
 
 func end_player_turn() -> void:
@@ -395,7 +395,11 @@ func _show_hit_text(target_node: WorldActor, e: Dictionary) -> void:
 
 func _sync_actor(id: String) -> void:
 	var c := state.by_id(id)
-	var node: WorldActor = actors.get(id)
+	var raw: Variant = actors.get(id) # untyped: a freed instance cannot be assigned to a typed variable
+	if typeof(raw) == TYPE_OBJECT and not is_instance_valid(raw):
+		actors.erase(id) # faded out and freed after a death: nothing left to sync
+		return
+	var node: WorldActor = raw
 	if c == null or node == null:
 		return
 	node.hp = c.hp

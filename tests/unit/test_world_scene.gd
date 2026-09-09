@@ -1343,3 +1343,27 @@ func test_rarity_multiplies_grants() -> void:
 	var mult := world.rarity_multiplier(rare.rarity)
 	var span: Array = Dictionary(rare.grants()).get("salvage", [0, 0])
 	assert_true(int(gained[0]["salvage"]) >= int(round(float(span[0]) * mult)), "scaled minimum")
+
+
+## A dead combatant's node fades and is freed in the real game (animate on);
+## every later sync must skip it instead of writing to a freed instance,
+## which paused the editor mid-fight (2026-09-09 playtest).
+func test_combat_sync_skips_freed_actor_nodes() -> void:
+	world.teleport_party(Vector2i(13, 4))
+	world.start_combat(true)
+	var s := world.combat.state
+	var victim: Combatant = null
+	for c: Combatant in s.combatants:
+		if c.team == Combatant.TEAM_ENEMY:
+			victim = c
+			break
+	assert_true(victim != null)
+	var node: WorldActor = world.combat.actors[victim.id]
+	victim.hp = 0
+	world.combat._sync_actor(victim.id)
+	assert_true(node.dead, "marked dead and queued for freeing")
+	node.free() # what the fade tween does 0.4 s later in the real game
+	world.combat._sync_all() # must not touch the freed node
+	assert_false(world.combat.actors.has(victim.id), "dropped from the actor table")
+	world.combat._sync_all()
+	assert_true(s.by_id(victim.id) != null, "the combatant itself is still in the state")
