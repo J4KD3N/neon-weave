@@ -1,0 +1,9 @@
+{
+  "name": "Archive",
+  "order": 5,
+  "levels": [
+    { "cost": {}, "effects": {}, "blurb": "A sealed reading room. Fragments you find wait here unread." },
+    { "cost": { "salvage": 12 }, "effects": { "archive": 1 }, "blurb": "The Archivist reads: every fragment you bring back is assembled into the history of the Sundering." },
+    { "cost": { "salvage": 28, "aether": 3 }, "effects": { "archive": 2, "aether_per_fragment": 1 }, "blurb": "Cross-referencing: each new fragment read yields an Aether of insight." }
+  ]
+}

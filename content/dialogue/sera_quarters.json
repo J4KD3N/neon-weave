@@ -1,0 +1,17 @@
+{
+  "name": "Sera — the Quarters",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "sera",
+      "text": "Door closes. Good. I wanted to say this somewhere the Envoys cannot hear it. The village I purged. I have started to think it was not the last one they will ask for, if we go their way. I would like you to know I will refuse, next time. Whatever it costs.",
+      "choices": [
+        { "text": "It will not come to that while I run the Beacon.", "effects": { "approval": { "sera": 2 }, "flags": { "sera_quarters_promise": true } }, "next": "promise" },
+        { "text": "You do not have to refuse alone. Say the word and the party walks.", "effects": { "approval": { "sera": 3 }, "flags": { "sera_quarters_together": true } }, "next": "together" },
+        { "text": "Noted. Get some sleep, Sera.", "effects": { "approval": { "sera": -1 } }, "end": true }
+      ]
+    },
+    "promise": { "speaker": "sera", "text": "Then I am holding you to it. Sleep well.", "choices": [ { "text": "You too.", "end": true } ] },
+    "together": { "speaker": "sera", "text": "That is the first time anyone has said that to me and meant it. Sleep well.", "choices": [ { "text": "You too.", "end": true } ] }
+  }
+}

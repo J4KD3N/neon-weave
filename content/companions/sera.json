@@ -12,5 +12,6 @@
     "banter": "sera_banter"
   },
   "quest": "sera_purge_village",
+  "scenes": [ { "id": "sera_quarters", "label": "Something the Envoys cannot hear", "dialogue": "sera_quarters", "requires": { "approval": { "sera": { "min": 3 } } }, "quarters": 1 } ],
   "approval_start": 0
 }

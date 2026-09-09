@@ -1,0 +1,9 @@
+{
+  "name": "Quarters",
+  "order": 7,
+  "levels": [
+    { "cost": {}, "effects": {}, "blurb": "Bunks in a container. Nobody talks here yet." },
+    { "cost": { "salvage": 12 }, "effects": { "quarters": 1 }, "blurb": "Rooms with doors: companions who trust you enough will talk here, once." },
+    { "cost": { "salvage": 25, "aether": 3 }, "effects": { "quarters": 2 }, "blurb": "A common room and a roof you can sit on. Some conversations go further." }
+  ]
+}

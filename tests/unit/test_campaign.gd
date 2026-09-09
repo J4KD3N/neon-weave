@@ -61,7 +61,7 @@ func test_home_is_the_bastion_with_visible_buildings() -> void:
 	assert_eq(world.home_map, "bastion")
 	assert_true(world.at_home())
 	assert_eq(world.map_data.name, "The Bastion")
-	assert_eq(world.buildings.size(), 4, "Beacon, Med-bay, Workshop, Arcanum stand on the plaza")
+	assert_eq(world.buildings.size(), 7, "all seven buildings stand on the plaza")
 	var beacon := world.building_at(Vector2i(4, 2))
 	assert_true(beacon != null)
 	assert_eq(beacon.building_id, "beacon")

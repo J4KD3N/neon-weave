@@ -1,0 +1,16 @@
+{
+  "name": "Kaj-7 — the Quarters",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "kaj7",
+      "text": "I do not sleep. I sit here and I listen to the signal, and lately I listen to you all sleep instead. It is a better signal. I wanted to tell you that in a room with a door, because the Envoy would call it a fault.",
+      "choices": [
+        { "text": "It is not a fault. It is the best thing about you.", "effects": { "approval": { "kaj7": 3 }, "flags": { "kaj7_quarters_heard": true } }, "next": "heard" },
+        { "text": "Whatever you are, you are ours. Nobody restores you.", "effects": { "approval": { "kaj7": 2 }, "flags": { "kaj7_quarters_ours": true } }, "next": "heard" },
+        { "text": "Keep listening. Wake me if the signal changes.", "effects": { "approval": { "kaj7": 0 } }, "end": true }
+      ]
+    },
+    "heard": { "speaker": "kaj7", "text": "Logged. Permanently, this time.", "choices": [ { "text": "Good night, Kaj.", "end": true } ] }
+  }
+}

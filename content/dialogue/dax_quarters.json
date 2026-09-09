@@ -1,0 +1,17 @@
+{
+  "name": "Dax — the Quarters",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "dax",
+      "text": "Vault rule: you do not talk about the seal in front of the people it is keeping alive. So. Here. If it goes, my family goes, and I will not be much use to you after. I am telling you so you can plan for it. That is all this is.",
+      "choices": [
+        { "text": "We plan for it by not letting it go. The seal is on the list.", "effects": { "approval": { "dax": 2 }, "flags": { "dax_quarters_list": true } }, "next": "list" },
+        { "text": "You would still be use to us. You are not only the seal.", "effects": { "approval": { "dax": 3 }, "flags": { "dax_quarters_more": true } }, "next": "more" },
+        { "text": "Understood. Thank you for telling me.", "effects": { "approval": { "dax": 1 } }, "end": true }
+      ]
+    },
+    "list": { "speaker": "dax", "text": "Then put it high. Good night.", "choices": [ { "text": "Good night, Dax.", "end": true } ] },
+    "more": { "speaker": "dax", "text": "That is a magic-user thing to say. I will let it go this once. Good night.", "choices": [ { "text": "Good night, Dax.", "end": true } ] }
+  }
+}

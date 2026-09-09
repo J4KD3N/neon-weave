@@ -1,0 +1,6 @@
+{
+  "name": "Lore fragment",
+  "summary": "A shard of pre-Sundering record: a council minute, a maintenance log, a voice. The Archive can read it.",
+  "grants": { "lore": true, "xp": 2 },
+  "art": { "color": "#e8d8ff" }
+}

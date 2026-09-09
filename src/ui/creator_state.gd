@@ -19,7 +19,7 @@ var _registry: ContentRegistry
 var _rules: CombatRules
 
 
-func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary = {}) -> void:
+func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary = {}, unlocked: Array[String] = []) -> void:
 	_registry = registry
 	_rules = rules
 	attr_rules = registry.get_entry("rules", "attributes")
@@ -29,6 +29,8 @@ func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary =
 			races.append(r["id"])
 	origins.clear()
 	for o: Dictionary in registry.get_all("origins"):
+		if o.has("unlock_flag") and not unlocked.has("origin:%s" % String(o["id"])):
+			continue # earned on the account by an earlier playthrough (S35)
 		origins.append(o["id"])
 	classes.clear()
 	for c: Dictionary in registry.get_all("classes"):

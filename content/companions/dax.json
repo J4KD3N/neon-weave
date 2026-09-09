@@ -12,5 +12,6 @@
     "banter": "dax_banter"
   },
   "quest": "dax_failing_seal",
+  "scenes": [ { "id": "dax_quarters", "label": "Vault rule", "dialogue": "dax_quarters", "requires": { "approval": { "dax": { "min": 3 } } }, "quarters": 1 } ],
   "approval_start": 0
 }
