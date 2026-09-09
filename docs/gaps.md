@@ -7,6 +7,8 @@ by who can close it and roughly ordered by how much it hurts the demo.
 
 ## Needs a person (not a session)
 
+M3 is planned in `docs/m3-plan.md` (D-082); the items below are its parallel tracks.
+
 - **Nobody outside the author has played the demo.** M2's exit criterion "two external playtesters finish the slice" is unmet. `test_balance.gd` is the instrument a playtest will be measured against; the S13 triage row stays open for whatever they find.
 - **The AP economy question** (D-081): 4 AP with 1-AP basic attacks means every body swings four times a turn for ~10 damage against 12–20 HP. Trash fights end in one or two rounds and initiative decides them; the naive policy wipes ~30% of depth-1 Shards through chained fights. The obvious experiment is basic attacks at 2 AP with 1-AP utility (marks, nets, silence, vent). It touches every ability entry and a dozen tests, and it is a feel call: run the harness before and after.
 - **Art is generated placeholders**: `v0.2.0-demo` ships them with a title-screen note (D-079). The store page has no capsules, trailer or artist (`docs/store-page.md`). The pipeline is real (S10); the only sheets are tool-generated rigs for Trueborn and Scav, every other race and enemy uses the static capsule, overlays are stamped not composited, no per-biome palette, no CRT shader, no lighting or glow pass.
