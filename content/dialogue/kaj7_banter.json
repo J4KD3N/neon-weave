@@ -5,6 +5,9 @@
     { "trigger": "enter_shard", "text": "The signal is louder here. I am logging that as weather.", "once": "kaj7_banter_first_shard" },
     { "trigger": "enter_shard", "text": "Sera, you walk in front of the drones every time. I have noticed. I have not decided how I feel about it.", "requires": { "recruited": "sera" }, "once": "kaj7_banter_sera" },
     { "trigger": "victory", "text": "Dax, you cut the last one without looking. Was that skill or the absence of interest?", "requires": { "recruited": "dax" }, "once": "kaj7_banter_dax" },
+    { "trigger": "enter_shard", "text": "Whisper, you have scanned me four times. I have scanned you five. We should stop.", "requires": { "recruited": "whisper" }, "once": "kaj7_banter_whisper" },
+    { "trigger": "victory", "text": "Cinder, you were made twice as well. I would like to compare notes on the second time.", "requires": { "recruited": "cinder" }, "once": "kaj7_banter_cinder" },
+    { "trigger": "extract", "text": "Yev hears the Weft the way I hear the signal. We have agreed not to compare volumes.", "requires": { "recruited": "yev" }, "effects": { "approval": { "yev": 1 } }, "once": "kaj7_banter_yev" },
     { "trigger": "victory", "text": "Nobody was decommissioned. I like this outcome." },
     { "trigger": "extract", "text": "Home is where the graph stops climbing.", "requires": { "flags": { "kaj7_opened_up": true } } },
     { "trigger": "extract", "text": "Extracted. I will recharge and think about doors." }

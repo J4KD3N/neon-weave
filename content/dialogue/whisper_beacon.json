@@ -1,0 +1,44 @@
+{
+  "name": "Whisper — the beacon",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "whisper_dead": true } } },
+    { "node": "with_whisper", "requires": { "recruited": "whisper" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_whisper": {
+      "speaker": "whisper",
+      "text": "There. Lattice hardware, my line's band. The sender signs as Archivist Tal. My maker is a filing clerk. I do not know if that is better or worse.",
+      "choices": [
+        { "text": "Spoof it. Report yourself destroyed.", "effects": { "approval": { "whisper": 2, "kaj7": 1 }, "reputation": { "lattice": -1 }, "flags": { "whisper_beacon_found": true, "whisper_recall_spoofed": true }, "quest": { "id": "whisper_recall", "stage": "silenced" } }, "next": "spoofed" },
+        { "text": "Trace it. We find Tal in person.", "effects": { "approval": { "whisper": 1 }, "flags": { "whisper_beacon_found": true, "whisper_maker_found": true }, "quest": { "id": "whisper_recall", "stage": "traced" } }, "next": "traced" },
+        { "text": "Answer it. Let them see you are not coming.", "effects": { "approval": { "whisper": -1, "sera": 1 }, "reputation": { "lattice": 1 }, "flags": { "whisper_beacon_found": true, "whisper_maker_found": true, "whisper_answered_recall": true }, "quest": { "id": "whisper_recall", "stage": "traced" } }, "next": "answered" }
+      ]
+    },
+    "spoofed": {
+      "speaker": "whisper",
+      "text": "Dead. Officially. I have never felt lighter. Do not tell Kaj.",
+      "choices": [ { "text": "Your secret.", "end": true } ]
+    },
+    "traced": {
+      "speaker": "whisper",
+      "text": "Tal. In an archive somewhere behind the Lattice enclave. When we go, I go in first.",
+      "choices": [ { "text": "Agreed.", "end": true } ]
+    },
+    "answered": {
+      "speaker": "whisper",
+      "text": "They know my face now. Fine. Let them file it.",
+      "choices": [ { "text": "Let them.", "end": true } ]
+    },
+    "alone": {
+      "speaker": "player",
+      "text": "A Lattice beacon on an unused band, calling assets home by gene-line. Somebody built people to answer this.",
+      "choices": [ { "text": "Log the band.", "effects": { "flags": { "whisper_beacon_found": true }, "quest": { "id": "whisper_recall", "stage": "done_alone" } }, "end": true } ]
+    },
+    "dead": {
+      "speaker": "player",
+      "text": "Whisper never had to hear this one answered. You cut the beacon for her.",
+      "choices": [ { "text": "Cut it.", "effects": { "flags": { "whisper_beacon_found": true, "whisper_recall_spoofed": true }, "quest": { "id": "whisper_recall", "stage": "done_posthumous" } }, "end": true } ]
+    }
+  }
+}

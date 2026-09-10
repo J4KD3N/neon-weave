@@ -1,11 +1,58 @@
 {
-  "name": "Yev — recruit (placeholder: S38 writes her recruitment)",
-  "start": [ { "node": "start" } ],
+  "name": "Yev — the plaza",
+  "start": [
+    { "node": "recruited", "requires": { "recruited": "yev" } },
+    { "node": "refused", "requires": { "flags": { "yev_refused": true } } },
+    { "node": "greet" }
+  ],
   "nodes": {
-    "start": {
+    "greet": {
       "speaker": "yev",
-      "text": "The current has not brought us together yet. It will, or it will not. Go well.",
-      "choices": [ { "text": "Go well.", "end": true } ]
+      "text": "The grove felt you go down the throat. The whole Weft flinched, and then it sang, and the Rootched sent me to find out what a Weaver is. I am Yev. I keep the grove. I did, until they started cutting from it. I would like to walk with the flinch.",
+      "choices": [
+        { "text": "What are they cutting?", "next": "cutting" },
+        { "text": "The Rootched sent a spy.", "effects": { "approval": { "yev": -1 } }, "next": "cutting" },
+        { "text": "[Rootkin] I know the grove. It sang to me as a child.", "requires": { "race": "rootkin" }, "effects": { "approval": { "yev": 1 }, "flags": { "yev_shared_grove": true } }, "next": "cutting" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "cutting": {
+      "speaker": "yev",
+      "text": "Cuttings. Living Weft, taken to grow somewhere else. My faction calls it completion. I call it a wound. Take me with you. I can find where the cuttings went, and I will not pretend I do not want to know.",
+      "choices": [
+        { "text": "Walk with us. We will find your cuttings.", "effects": { "recruit": "yev", "approval": { "yev": 1, "kaj7": 1, "dax": -1 }, "flags": { "yev_recruited": true }, "quest": { "id": "yev_grove", "stage": "start" } }, "end": true },
+        { "text": "Kaj, she sees the Weft the way you hear the signal. Thoughts?", "requires": { "recruited": "kaj7" }, "next": "kaj_call" },
+        { "text": "We do not take Rootched.", "effects": { "approval": { "yev": -2 }, "reputation": { "rootched": -1 }, "flags": { "yev_refused": true } }, "end": true }
+      ]
+    },
+    "kaj_call": {
+      "speaker": "kaj7",
+      "text": "She listened to me without correcting me. Nobody has done that since you. Yes.",
+      "choices": [
+        { "text": "Then walk with us.", "effects": { "recruit": "yev", "approval": { "yev": 1, "kaj7": 1, "dax": -1 }, "flags": { "yev_recruited": true }, "quest": { "id": "yev_grove", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
+      ]
+    },
+    "refused": {
+      "speaker": "yev",
+      "text": "The current brought you back. It does that.",
+      "choices": [
+        { "text": "It did. Walk with us.", "effects": { "recruit": "yev", "flags": { "yev_recruited": true, "yev_refused": false }, "quest": { "id": "yev_grove", "stage": "start" } }, "end": true },
+        { "text": "Same answer.", "end": true }
+      ]
+    },
+    "recruited": {
+      "speaker": "yev",
+      "text": "Your Bastion has roots under the plaza. Old ones. They are listening to the Beacon.",
+      "choices": [
+        { "text": "Do they like what they hear?", "requires": { "approval": { "yev": { "min": 2 } } }, "effects": { "approval": { "yev": 1 }, "flags": { "yev_opened_up": true } }, "next": "roots" },
+        { "text": "Later.", "end": true }
+      ]
+    },
+    "roots": {
+      "speaker": "yev",
+      "text": "They have not decided. Roots are slow. So am I.",
+      "choices": [ { "text": "Slowly is fine.", "end": true } ]
     }
   }
 }

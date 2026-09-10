@@ -48,7 +48,8 @@
   "npcs": [
     { "npc": "lattice_envoy", "cell": [12, 13], "when": { "flags": { "road_end": true } } },
     { "npc": "rootched_envoy", "cell": [8, 13], "when": { "flags": { "road_end": true } } },
-    { "npc": "ashfound_envoy", "cell": [16, 13], "when": { "flags": { "road_end": true } } }
+    { "npc": "ashfound_envoy", "cell": [16, 13], "when": { "flags": { "road_end": true } } },
+    { "companion": "yev", "cell": [5, 13], "when": { "flags": { "choir_contact": true } } }
   ],
   "pickups": [],
   "enemies": []

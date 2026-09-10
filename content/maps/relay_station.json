@@ -27,7 +27,8 @@
     "##########################"
   ],
   "npcs": [
-    { "npc": "pell", "cell": [5, 6], "when": { "flags": { "pell_left": false } } }
+    { "npc": "pell", "cell": [5, 6], "when": { "flags": { "pell_left": false } } },
+    { "companion": "whisper", "cell": [24, 6], "when": { "flags": { "hive_cleared": true } } }
   ],
   "pickups": [
     { "type": "expedition_log", "cell": [23, 8] },

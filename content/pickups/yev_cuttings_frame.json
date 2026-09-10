@@ -1,0 +1,7 @@
+{
+  "name": "Growing-frame",
+  "summary": "A Rootched growing-frame with something green wound round something that is not. Quest site for Yev's story; opens a dialogue instead of granting loot.",
+  "dialogue": "yev_cuttings",
+  "grants": {},
+  "art": { "color": "#7ae582" }
+}

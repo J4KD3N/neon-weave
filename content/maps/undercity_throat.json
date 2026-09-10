@@ -38,7 +38,7 @@
   "transitions": [
     { "cell": [1, 1], "to": "proto_yard", "arrive": [10, 13], "label": "Back up to the yard" }
   ],
-  "npcs": [],
+  "npcs": [ { "companion": "cinder", "cell": [23, 7], "when": { "flags": { "warlord_beaten": true } } } ],
   "pickups": [ { "type": "aether_shard", "cell": [4, 7] } ],
   "enemies": []
 }

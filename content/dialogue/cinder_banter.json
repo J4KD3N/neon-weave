@@ -1,0 +1,12 @@
+{
+  "name": "Cinder — banter",
+  "kind": "banter",
+  "lines": [
+    { "trigger": "enter_shard", "text": "The Weft is thin here. I can hear the floor.", "once": "cinder_banter_first_shard" },
+    { "trigger": "enter_shard", "text": "The vault man keeps a hand on his blade near me. He is right to. I would.", "requires": { "recruited": "dax" }, "once": "cinder_banter_dax" },
+    { "trigger": "victory", "text": "Kaj-7. You and I are the only ones here who were made twice.", "requires": { "recruited": "kaj7" }, "effects": { "approval": { "kaj7": 1 } }, "once": "cinder_banter_kaj7" },
+    { "trigger": "victory", "text": "Whisper, you fight like someone who was taught to leave no witnesses. I am a witness. Consider it.", "requires": { "recruited": "whisper" }, "once": "cinder_banter_whisper" },
+    { "trigger": "victory", "text": "They are not drowned. Yet." },
+    { "trigger": "extract", "text": "Up. The living always go up." }
+  ]
+}

@@ -19,6 +19,9 @@ var map_edits: Dictionary = {}
 ## The companion the leader is committed to (S37, D-092); "" for nobody.
 ## One at a time: a second commitment is refused until this one ends.
 var romance: String = ""
+## Recruited companions waiting at the Bastion (S38, D-093): the party holds
+## three, the rest wait and swap in from the Roster at home.
+var benched: Array[String] = []
 
 
 func flag(name: String) -> bool:
@@ -64,10 +67,33 @@ func recruit(companion: String) -> void:
 
 func dismiss(companion: String) -> void:
 	recruited.erase(companion)
+	benched.erase(companion)
+
+
+## Recruited companions who walk with the party, in recruitment order.
+func active_companions() -> Array[String]:
+	var out: Array[String] = []
+	for id: String in recruited:
+		if not benched.has(id):
+			out.append(id)
+	return out
+
+
+func is_benched(companion: String) -> bool:
+	return benched.has(companion)
+
+
+func bench(companion: String) -> void:
+	if recruited.has(companion) and not benched.has(companion):
+		benched.append(companion)
+
+
+func unbench(companion: String) -> void:
+	benched.erase(companion)
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "romance": romance}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "romance": romance, "benched": benched.duplicate()}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -89,6 +115,7 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	n.lore.assign(d.get("lore", []))
 	n.map_edits = Dictionary(d.get("map_edits", {})).duplicate(true)
 	n.romance = String(d.get("romance", ""))
+	n.benched.assign(d.get("benched", []))
 	return n
 
 

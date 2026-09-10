@@ -1,0 +1,19 @@
+{
+  "name": "Cinder",
+  "short_name": "Cinder",
+  "race": "hollow",
+  "class": "aetherbinder",
+  "summary": "Echo-priest who died in the Sundering and remembers it. Something still tethers him to the Weft; he wants to know what, and whether to cut it. The party's living lore source.",
+  "faction": "",
+  "romanceable": false,
+  "dialogue": {
+    "recruit": "cinder_recruit",
+    "talk": "cinder_recruit",
+    "banter": "cinder_banter"
+  },
+  "quest": "cinder_tether",
+  "scenes": [
+    { "id": "cinder_quarters", "label": "What the drowned remember", "dialogue": "cinder_quarters", "requires": { "approval": { "cinder": { "min": 3 } } }, "quarters": 1 }
+  ],
+  "approval_start": 0
+}

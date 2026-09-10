@@ -1,0 +1,17 @@
+{
+  "name": "Cinder — the Quarters",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "cinder",
+      "text": "You gave the dead man a room. Do you know what the Sundering was? Not a flood. A choice. The makers were offered the Choir's bargain and they said no, and the no was the flood. I said yes. That is why I am still here and they are not.",
+      "choices": [
+        { "text": "Would you say yes again?", "next": "again" },
+        { "text": "Then you are the one who should tell it. All of it, in the Archive.", "effects": { "approval": { "cinder": 3 }, "flags": { "cinder_quarters_archive": true } }, "next": "told" },
+        { "text": "Sleep, if you do.", "effects": { "approval": { "cinder": -1 } }, "end": true }
+      ]
+    },
+    "again": { "speaker": "cinder", "text": "Ask me when we find the Key. Ask me then.", "choices": [ { "text": "I will.", "effects": { "approval": { "cinder": 2 }, "flags": { "cinder_quarters_asked": true } }, "end": true } ] },
+    "told": { "speaker": "cinder", "text": "Then I will. Every name. The Archive will not like the order.", "choices": [ { "text": "Let it.", "end": true } ] }
+  }
+}
