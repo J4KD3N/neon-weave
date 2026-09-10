@@ -4,11 +4,14 @@
   "lines": [
     { "trigger": "enter_shard", "text": "Shields up. Corridors first, rooms second. I've buried people who did it the other way round.", "once": "sera_banter_first_shard" },
     { "trigger": "enter_shard", "text": "Third depth is where the village is. Deeper Beacon, deeper hole.", "requires": { "quest": { "id": "sera_purge_village", "stage": "start" } }, "once": "sera_banter_depth" },
+    { "trigger": "enter_shard", "text": "Whisper. Front or back, pick one. Rafters are not a formation.", "requires": { "recruited": "whisper" }, "once": "sera_banter_whisper" },
     { "trigger": "victory", "text": "Clean. Nobody carried.", "requires": { "flags": { "sera_opened_up": false } }, "once": "sera_banter_first_win" },
     { "trigger": "victory", "text": "That one nearly had me. Good line-holding.", "requires": { "approval": { "sera": { "min": 3 } } }, "effects": { "approval": { "sera": 1 } }, "once": "sera_banter_praise" },
-    { "trigger": "extract", "text": "Home. Never thought I'd say it about a scrap yard." },
-    { "trigger": "enter_shard", "text": "Watch the grates. Drones nest under them." },
     { "trigger": "victory", "text": "Dax. You fight like you are late for something.", "requires": { "recruited": "dax" }, "once": "sera_banter_dax" },
-    { "trigger": "extract", "text": "Kaj. Stop counting my steps.", "requires": { "recruited": "kaj7" }, "once": "sera_banter_kaj7" }
+    { "trigger": "victory", "text": "Priest. You stood in the fire and did not flinch. I have known men who did that. None of them were dead.", "requires": { "recruited": "cinder" }, "effects": { "approval": { "cinder": 1 } }, "once": "sera_banter_cinder" },
+    { "trigger": "extract", "text": "Kaj. Stop counting my steps.", "requires": { "recruited": "kaj7" }, "once": "sera_banter_kaj7" },
+    { "trigger": "extract", "text": "Yev. Your people took a village from me. I know it was not you. I am telling you so you know I know.", "requires": { "recruited": "yev" }, "once": "sera_banter_yev" },
+    { "trigger": "extract", "text": "Home. Never thought I'd say it about a scrap yard." },
+    { "trigger": "enter_shard", "text": "Watch the grates. Drones nest under them." }
   ]
 }

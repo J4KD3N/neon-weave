@@ -1,13 +1,17 @@
 {
   "name": "Recall Notice",
   "companion": "whisper",
-  "summary": "Whisper's gene-line is being recalled by the maker who wrote it. She intends not to answer. (S38 writes the stages; this is the shape.)",
+  "summary": "Someone on Whisper's gene-line band is calling every asset home to be wiped. She intends not to answer, and to find out who is asking.",
   "start": "start",
   "stages": {
     "start": {
-      "summary": "Find out who is recalling the Splicekin infiltration line, and from where.",
-      "objectives": [ { "text": "Find the source of the recall signal", "done_when": { "flags": { "whisper_maker_found": true } } } ]
+      "summary": "Find the recall sender's beacon. It is somewhere in the Shards, on a band nobody else uses.",
+      "objectives": [ { "text": "Find the recall beacon in a Shard", "done_when": { "flags": { "whisper_beacon_found": true } } } ],
+      "shard_site": { "pickup": "whisper_recall_beacon" }
     },
-    "done": { "summary": "The recall is answered, one way or another.", "complete": true }
+    "silenced": { "summary": "Whisper reported herself destroyed. Officially, nobody's line has an asset by her number.", "complete": true },
+    "traced": { "summary": "The sender signs as Archivist Tal of the Lattice. Whisper's maker is a filing clerk, and she means to meet him.", "complete": true },
+    "done_alone": { "summary": "You found the beacon without Whisper: a Lattice node calling assets home by gene-line. The band is logged.", "complete": true },
+    "done_posthumous": { "summary": "Whisper never had to hear the recall answered. You cut the beacon for her.", "complete": true }
   }
 }

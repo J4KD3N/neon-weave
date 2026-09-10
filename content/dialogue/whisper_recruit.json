@@ -1,11 +1,53 @@
 {
-  "name": "Whisper — recruit (placeholder: S38 writes her recruitment)",
-  "start": [ { "node": "start" } ],
+  "name": "Whisper — the rafters",
+  "start": [
+    { "node": "recruited", "requires": { "recruited": "whisper" } },
+    { "node": "refused", "requires": { "flags": { "whisper_refused": true } } },
+    { "node": "greet" }
+  ],
   "nodes": {
-    "start": {
+    "greet": {
       "speaker": "whisper",
-      "text": "Not yet. You have not met the version of me that says yes, and she is not on any map you own.",
-      "choices": [ { "text": "Fair.", "end": true } ]
+      "text": "Don't shoot. I have been in the rafters since Halden's crew came through. I watched the hive eat them, and I watched you not get eaten, and that is the first interesting thing this station has done. I am Whisper. I am nobody's, currently, and I would like to stay that way somewhere with walls.",
+      "choices": [
+        { "text": "Why were you in the rafters?", "next": "why" },
+        { "text": "Nobody's? Everybody is somebody's.", "effects": { "approval": { "whisper": -1 } }, "next": "why" },
+        { "text": "[Splicekin] I know a recall when I hear one. Same band?", "requires": { "race": "splicekin" }, "effects": { "approval": { "whisper": 1 }, "flags": { "whisper_shared_line": true } }, "next": "why" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "why": {
+      "speaker": "whisper",
+      "text": "Someone on my line's band is sending a recall. Every asset of my gene-line that hears it walks home to be wiped and reissued. I can hear it. I am not walking. This relay was the loudest place to hear it and the best place to hide from it, and you cannot hide from a thing and listen to it at once. So: I come with you, and we find the sender.",
+      "choices": [
+        { "text": "Come with us. We will find who is sending it.", "effects": { "recruit": "whisper", "approval": { "whisper": 1, "dax": 1, "sera": -1 }, "flags": { "whisper_recruited": true }, "quest": { "id": "whisper_recall", "stage": "start" } }, "end": true },
+        { "text": "Dax, you have hired people. Your read?", "requires": { "recruited": "dax" }, "next": "dax_read" },
+        { "text": "We do not carry corporate property.", "effects": { "approval": { "whisper": -2 }, "flags": { "whisper_refused": true } }, "end": true }
+      ]
+    },
+    "dax_read": {
+      "speaker": "dax",
+      "text": "She hasn't lied yet. Everyone who came at us in the yard lied in the first sentence. Hire her.",
+      "choices": [
+        { "text": "Then she is hired.", "effects": { "recruit": "whisper", "approval": { "whisper": 1, "dax": 1, "sera": -1 }, "flags": { "whisper_recruited": true }, "quest": { "id": "whisper_recall", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
+      ]
+    },
+    "refused": {
+      "speaker": "whisper",
+      "text": "You changed your mind, or the recall got louder for you too?",
+      "choices": [
+        { "text": "Changed it. Come with us.", "effects": { "recruit": "whisper", "flags": { "whisper_recruited": true, "whisper_refused": false }, "quest": { "id": "whisper_recall", "stage": "start" } }, "end": true },
+        { "text": "Same answer.", "end": true }
+      ]
+    },
+    "recruited": {
+      "speaker": "whisper",
+      "text": "The recall is quieter when you are between me and it. I have not decided what that means.",
+      "choices": [
+        { "text": "It means you picked the right side of the room.", "requires": { "approval": { "whisper": { "min": 2 } } }, "effects": { "approval": { "whisper": 1 }, "flags": { "whisper_opened_up": true } }, "end": true },
+        { "text": "Keep listening.", "end": true }
+      ]
     }
   }
 }

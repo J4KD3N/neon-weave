@@ -1,0 +1,53 @@
+{
+  "name": "Cinder — the source",
+  "start": [
+    { "node": "recruited", "requires": { "recruited": "cinder" } },
+    { "node": "refused", "requires": { "flags": { "cinder_refused": true } } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "cinder",
+      "text": "You came down for the singing. So did I, four hundred years ago, and it kept me. I am Cinder. I was a priest of the Echo before there was an Echo to be priest of. I do not breathe; please do not stare. Something down here holds my tether, and the drowned do not get to look for it alone. It turns out.",
+      "choices": [
+        { "text": "What is a tether?", "next": "tether" },
+        { "text": "You are dead.", "effects": { "approval": { "cinder": -1 } }, "next": "tether" },
+        { "text": "[Hollow] I know the pull. Mine leads nowhere yet.", "requires": { "race": "hollow" }, "effects": { "approval": { "cinder": 1 }, "flags": { "cinder_shared_hollow": true } }, "next": "tether" },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "tether": {
+      "speaker": "cinder",
+      "text": "The thread the Weft forgot to cut. It runs from me to a thing in the deep that the Choir calls a Key. I remember the Sundering. I remember the Choir before it was drowned. Take me with you and I will tell you all of it, which is more than your Archive knows.",
+      "choices": [
+        { "text": "Walk with us, priest.", "effects": { "recruit": "cinder", "approval": { "cinder": 1, "sera": 1, "dax": -1 }, "flags": { "cinder_recruited": true }, "quest": { "id": "cinder_tether", "stage": "start" } }, "end": true },
+        { "text": "Sera, you have buried people. Is he one?", "requires": { "recruited": "sera" }, "next": "sera_call" },
+        { "text": "We do not walk with the dead.", "effects": { "approval": { "cinder": -2 }, "flags": { "cinder_refused": true } }, "end": true }
+      ]
+    },
+    "sera_call": {
+      "speaker": "sera",
+      "text": "I have carried out worse-looking men who were alive. He asked. That is more than the dead usually do. Bring him.",
+      "choices": [
+        { "text": "Then walk with us.", "effects": { "recruit": "cinder", "approval": { "cinder": 1, "sera": 1, "dax": -1 }, "flags": { "cinder_recruited": true }, "quest": { "id": "cinder_tether", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
+      ]
+    },
+    "refused": {
+      "speaker": "cinder",
+      "text": "You came back. The dead are patient, and I am the patient dead. Is the answer different?",
+      "choices": [
+        { "text": "It is different. Walk with us.", "effects": { "recruit": "cinder", "flags": { "cinder_recruited": true, "cinder_refused": false }, "quest": { "id": "cinder_tether", "stage": "start" } }, "end": true },
+        { "text": "Same answer.", "end": true }
+      ]
+    },
+    "recruited": {
+      "speaker": "cinder",
+      "text": "The tether pulls harder the deeper the Beacon reaches. It is not unpleasant. That is what worries me.",
+      "choices": [
+        { "text": "We will cut it if you ask.", "requires": { "approval": { "cinder": { "min": 2 } } }, "effects": { "approval": { "cinder": 1 }, "flags": { "cinder_opened_up": true } }, "end": true },
+        { "text": "Noted.", "end": true }
+      ]
+    }
+  }
+}

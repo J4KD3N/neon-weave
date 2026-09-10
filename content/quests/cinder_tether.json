@@ -1,0 +1,17 @@
+{
+  "name": "The Tether",
+  "companion": "cinder",
+  "summary": "Something in the deep holds the thread the Weft forgot to cut. Cinder wants to know what, and whether to cut it.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "Find what holds Cinder's tether. It is wound round something in the Shards.",
+      "objectives": [ { "text": "Find the knot of Cinder's tether in a Shard", "done_when": { "flags": { "cinder_knot_found": true } } } ],
+      "shard_site": { "pickup": "cinder_tether_knot" }
+    },
+    "cut": { "summary": "You cut the tether. Cinder is nobody's now, and a Key somewhere is loose.", "complete": true },
+    "traced": { "summary": "You followed the thread. It runs to a Key the Choir keeps under a place with pews: the Null Cathedral, found.", "complete": true },
+    "done_alone": { "summary": "You found the knot without Cinder and followed it down and east. The Cathedral is found.", "complete": true },
+    "done_posthumous": { "summary": "Cinder was gone before the knot was found. His tether hangs slack; nothing holds it now.", "complete": true }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "The Knot",
+  "summary": "A knot of Weft-thread pulled taut into the dark. Quest site for Cinder's story; opens a dialogue instead of granting loot.",
+  "dialogue": "cinder_knot",
+  "grants": {},
+  "art": { "color": "#9ad8ff" }
+}

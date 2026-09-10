@@ -2,7 +2,8 @@
 ##
 ## `requires` block: {"flags": {name: bool}, "origin_tag": "x", "race": "x",
 ## "class": "x", "approval": {companion: {"min": n, "max": n}},
-## "recruited": "companion", "not_recruited": "companion",
+## "recruited": "companion" (walking with the party now: recruited and not
+## waiting at the Bastion, D-093), "not_recruited": "companion",
 ## "quest": {"id": "q", "stage": "s"}, "faction": "id" (the joined faction;
 ## "" for none yet), "not_faction": "id", "romance": "id" (the committed
 ## companion; "" for nobody), "not_romance": "id", "romance_open": "id"
@@ -48,7 +49,7 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 			return false
 		if bounds.has("max") and rep > int(bounds["max"]):
 			return false
-	if requires.has("recruited") and not n.is_recruited(String(requires["recruited"])):
+	if requires.has("recruited") and not _walking(n, String(requires["recruited"])):
 		return false
 	if requires.has("faction") and n.faction != String(requires["faction"]): # "" means none joined
 		return false
@@ -64,13 +65,18 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	if requires.has("romance_open") and not n.romance.is_empty() and n.romance != String(requires["romance_open"]):
 		return false
-	if requires.has("not_recruited") and n.is_recruited(String(requires["not_recruited"])):
+	if requires.has("not_recruited") and _walking(n, String(requires["not_recruited"])):
 		return false
 	if requires.has("quest"):
 		var q: Dictionary = requires["quest"]
 		if n.stage_of(String(q.get("id", ""))) != String(q.get("stage", "")):
 			return false
 	return true
+
+
+## Recruited and not benched: the companion is here to speak.
+static func _walking(n: NarrativeState, id: String) -> bool:
+	return n.is_recruited(id) and not n.is_benched(id)
 
 
 ## Applies an `effects` block to the narrative state. Returns the list of

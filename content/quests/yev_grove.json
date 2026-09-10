@@ -1,13 +1,18 @@
 {
   "name": "The Weaponised Grove",
   "companion": "yev",
-  "summary": "The Rootched have taken cuttings from Yev's grove and are growing something with them. (S38 writes the stages; this is the shape.)",
+  "summary": "The Rootched have taken cuttings from Yev's grove and are growing something with them. She wants to know what, and whose it is.",
   "start": "start",
   "stages": {
     "start": {
-      "summary": "Learn what the Rootched are growing from the grove's cuttings.",
-      "objectives": [ { "text": "Find the Rootched growing-house", "done_when": { "flags": { "yev_grove_found": true } } } ]
+      "summary": "Find where the grove's cuttings went. Rootched growing-frames turn up in the Shards.",
+      "objectives": [ { "text": "Find the Rootched growing-frame in a Shard", "done_when": { "flags": { "yev_frame_found": true } } } ],
+      "shard_site": { "pickup": "yev_cuttings_frame" }
     },
-    "done": { "summary": "The grove's cuttings are accounted for.", "complete": true }
+    "burned": { "summary": "You burned the frame. The Rootched will know whose hand it was, and Yev could not have done it herself.", "complete": true },
+    "saved": { "summary": "A cutting rides home to the Garden. The grove will grow again where the Bastion's roots are.", "complete": true },
+    "left": { "summary": "You left the frame growing. Whatever a Key grows into, you will come back and see whose it is.", "complete": true },
+    "done_alone": { "summary": "You found the frame without Yev: her grove, taught to grow round a shard of the Loom. Logged.", "complete": true },
+    "done_posthumous": { "summary": "Yev's grove grows on in a frame without her. You took one cutting, for the pot on her bunk.", "complete": true }
   }
 }

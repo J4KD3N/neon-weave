@@ -1,0 +1,38 @@
+{
+  "name": "Cinder — the knot",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "cinder_dead": true } } },
+    { "node": "with_cinder", "requires": { "recruited": "cinder" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_cinder": {
+      "speaker": "cinder",
+      "text": "Here. The knot. It is not a thing, it is a direction: down and east, under a place with pews. The Choir keeps one of the Keys there and my thread is wound round it. Cut it here and I am free and the Key is loose. Follow it and I stay tied, and we know the way.",
+      "choices": [
+        { "text": "Cut it. Nobody gets to keep you.", "effects": { "approval": { "cinder": 2, "kaj7": 1 }, "flags": { "cinder_knot_found": true, "cinder_tether_cut": true }, "quest": { "id": "cinder_tether", "stage": "cut" } }, "next": "cut" },
+        { "text": "Follow it. We need that Key.", "effects": { "approval": { "cinder": 1, "dax": 1 }, "flags": { "cinder_knot_found": true, "cinder_tether_followed": true, "null_cathedral_found": true }, "quest": { "id": "cinder_tether", "stage": "traced" } }, "next": "followed" }
+      ]
+    },
+    "cut": {
+      "speaker": "cinder",
+      "text": "Quiet. I did not know it was loud until now. Thank you. I will still remember the Sundering; that was never the tether's.",
+      "choices": [ { "text": "Then keep remembering.", "end": true } ]
+    },
+    "followed": {
+      "speaker": "cinder",
+      "text": "Then I know the way to the Cathedral, and it knows I am coming. Fair.",
+      "choices": [ { "text": "Fair.", "end": true } ]
+    },
+    "alone": {
+      "speaker": "player",
+      "text": "A knot of Weft-thread pulled taut into the dark, down and east. Something at the other end is a Key. Something at this end was a person.",
+      "choices": [ { "text": "Follow the thread.", "effects": { "flags": { "cinder_knot_found": true, "null_cathedral_found": true }, "quest": { "id": "cinder_tether", "stage": "done_alone" } }, "end": true } ]
+    },
+    "dead": {
+      "speaker": "player",
+      "text": "Cinder's tether hangs slack. Whatever held him has let go, now that there is nothing to hold.",
+      "choices": [ { "text": "Let it go.", "effects": { "flags": { "cinder_knot_found": true, "cinder_tether_cut": true }, "quest": { "id": "cinder_tether", "stage": "done_posthumous" } }, "end": true } ]
+    }
+  }
+}

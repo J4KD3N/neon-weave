@@ -134,6 +134,8 @@ func test_map_npcs_are_companions_on_walkable_cells() -> void:
 				continue
 			found += 1
 			assert_true(registry.has_entry("companions", String(p.get("companion", ""))), "map %s npc" % m["id"])
+			for k: String in p.get("when", {}):
+				assert_true(REQUIRES_KEYS.has(k), "map %s companion when.%s" % [m["id"], k])
 	assert_true(found >= 1, "Sera stands somewhere")
 
 

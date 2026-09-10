@@ -222,23 +222,39 @@ func test_quest_sites_for_both_appear_and_resolve_with_them() -> void:
 	var relay := _site_cell(entry, "kaj_signal_relay")
 	var seal := _site_cell(entry, "dax_vault_seal")
 	assert_true(relay.x >= 0 and seal.x >= 0, "both sites placed")
-	world.teleport_party(relay)
-	world.check_pickups()
-	assert_eq(world.dialogue.node_id, "with_kaj7")
-	assert_true(_choose_text("You are home"))
-	assert_eq(world.narrative.stage_of("kaj7_maker_signal"), "heard")
-	assert_true(_choose_text("Deal"))
-	assert_eq(world.narrative.stage_of("kaj7_maker_signal"), "done")
-	assert_true(world.narrative.flag("choir_named_kaj7"))
-	assert_eq(world.narrative.approval_of("kaj7"), 2)
-	world.teleport_party(seal)
-	world.check_pickups()
-	assert_eq(world.dialogue.node_id, "with_dax")
-	assert_eq(world.dialogue.available_choices().size(), 1, "the clean route needs approval 2")
-	assert_true(_choose_text("Reset it"))
-	assert_eq(world.narrative.stage_of("dax_failing_seal"), "sealed")
-	assert_true(_choose_text("That's what you do"))
-	assert_false(world.in_dialogue())
+	# Sites cluster in the far room and a full party covers several cells, so
+	# whichever site is underfoot opens first; one opens per check (S38).
+	var village := _site_cell(entry, "sera_village_site")
+	var plan := {"with_kaj7": relay, "with_dax": seal, "with_sera": village}
+	var guard := 0
+	while not plan.is_empty() and guard < 9:
+		guard += 1
+		if not world.in_dialogue():
+			world.check_pickups()
+		if not world.in_dialogue():
+			world.teleport_party(plan[plan.keys()[0]])
+			world.check_pickups()
+		assert_true(world.in_dialogue(), "a site opened")
+		var node := world.dialogue.node_id
+		assert_true(plan.has(node), "site node %s" % node)
+		if node == "with_kaj7":
+			assert_true(_choose_text("You are home"))
+			assert_eq(world.narrative.stage_of("kaj7_maker_signal"), "heard")
+			assert_true(_choose_text("Deal"))
+			assert_eq(world.narrative.stage_of("kaj7_maker_signal"), "done")
+			assert_true(world.narrative.flag("choir_named_kaj7"))
+		elif node == "with_dax":
+			assert_eq(world.dialogue.available_choices().size(), 1, "the clean route needs approval 2")
+			assert_true(_choose_text("Reset it"))
+			assert_eq(world.narrative.stage_of("dax_failing_seal"), "sealed")
+			assert_true(_choose_text("That's what you do"))
+		else:
+			assert_true(_choose_text("You didn't know"))
+			while world.in_dialogue():
+				world.choose(0)
+		assert_false(world.in_dialogue())
+		plan.erase(node)
+	assert_true(plan.is_empty(), "every site played: %s left" % [plan.keys()])
 	assert_eq(world.narrative.approval_of("dax"), 2)
 	assert_eq(world.narrative.approval_of("kaj7"), 3, "the Weft choice pleases Kaj-7")
 	var journal := world.journal_text()

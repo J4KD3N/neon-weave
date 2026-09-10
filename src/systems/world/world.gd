@@ -534,7 +534,7 @@ func spawn_party(id: String) -> void:
 	var positions: Array[Vector2] = []
 	for cell: Vector2i in map_data.spawn_cells():
 		positions.append(map_view.cell_to_world(cell))
-	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, positions, narrative.recruited, party_level(), ledger.builds)
+	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, positions, narrative.active_companions(), party_level(), ledger.builds)
 	for spec: Dictionary in specs:
 		spec["sheet"] = sheet_for(String(spec.get("sheet_id", "")))
 	party.spawn_members(specs)
@@ -580,7 +580,9 @@ func spawn_npcs() -> void:
 			continue
 		var id := String(p.get("companion", ""))
 		var entry: Dictionary = registry.get_entry("companions", id)
-		if entry.is_empty() or narrative.is_recruited(id):
+		if entry.is_empty() or narrative.is_recruited(id) or narrative.flag("%s_dead" % id):
+			continue
+		if not Conditions.passes(p.get("when", {}), dialogue_ctx()): # a companion can wait on a story beat (S38)
 			continue
 		if not map_data.is_walkable(cell):
 			push_warning("map %s places npc %s on blocked %s" % [map_data.id, id, cell])
@@ -604,7 +606,11 @@ func npc_at(cell: Vector2i) -> NpcActor:
 ## so nobody's HP resets) and removes their NPC stand-in.
 func add_companion(id: String) -> bool:
 	if party.members.size() >= rules.party_max:
-		overlay.toast("The party is full.", 2.0)
+		# Six companions, a party of four (D-093): the newcomer waits at the Bastion.
+		narrative.bench(id)
+		_remove_stand_in(id)
+		var c: Dictionary = registry.get_entry("companions", id)
+		overlay.toast("The party is full. %s will wait at the Bastion; swap from the Roster at home." % c.get("short_name", id), 3.5)
 		return false
 	var preset := {"members": []}
 	var specs := PartyBuilder.member_specs(registry, preset, {}, rules, [], [id])
@@ -619,6 +625,11 @@ func add_companion(id: String) -> bool:
 	spec["position"] = map_view.cell_to_world(free[0]) if not free.is_empty() else party.leader().position
 	var member := party.add_member(spec)
 	member.set_hp_bonus(bastion.hp_bonus())
+	_remove_stand_in(id)
+	return true
+
+
+func _remove_stand_in(id: String) -> void:
 	for n: NpcActor in npcs:
 		if is_instance_valid(n) and n.companion_id == id:
 			n.queue_free()
@@ -627,7 +638,6 @@ func add_companion(id: String) -> bool:
 		if is_instance_valid(n) and n.companion_id != id:
 			kept.append(n)
 	npcs = kept
-	return true
 
 
 # --- dialogue ----------------------------------------------------------------
@@ -720,7 +730,7 @@ func leave_dialogue() -> bool:
 ## each). Returns the lines shown.
 func banter(trigger: String) -> Array[Dictionary]:
 	var shown: Array[Dictionary] = []
-	for id: String in narrative.recruited:
+	for id: String in narrative.active_companions():
 		var c: Dictionary = registry.get_entry("companions", id)
 		var d: Dictionary = c.get("dialogue", {})
 		var banter_entry: Dictionary = registry.get_entry("dialogue", String(d.get("banter", "")))
@@ -978,7 +988,7 @@ func check_pickups() -> Array[Dictionary]:
 		if not site_dialogue.is_empty():
 			open_dialogue(site_dialogue)
 			gained.append({"pickup": p.pickup_id, "dialogue": site_dialogue})
-			continue
+			break # one site at a time: anything else underfoot waits for the next check (S38)
 		run.pickups += 1
 		play_event("explore.pickup")
 		var got := _gain(scale_grants(p.grants(), rarity_multiplier(p.rarity)))
@@ -1508,7 +1518,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "inventory", "journal", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "platform", "title", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "inventory", "journal", "roster", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "platform", "title", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1534,6 +1544,7 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "weave", "label": "The Weave (level %d · %s)" % [party_level(), xp_line()], "enabled": home, "why": "only at home"})
 	items.append({"id": "inventory", "label": "The pack (%d banked item%s)" % [ledger.items.size(), "" if ledger.items.size() == 1 else "s"], "enabled": home, "why": "only at home"})
 	items.append({"id": "journal", "label": "Journal (%d quests)" % narrative.quests.size(), "enabled": true})
+	items.append({"id": "roster", "label": "Roster (%d with you, %d waiting)" % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and not narrative.recruited.is_empty(), "why": "only at home" if not home else "nobody recruited"})
 	var saves := SaveSystem.list_saves(saves_dir, registry)
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
@@ -1613,6 +1624,12 @@ func activate_system_item(id: String) -> bool:
 		return launch_shard(id.trim_prefix("shard_"))
 	if id.begins_with("scene_"):
 		return play_scene(id.trim_prefix("scene_"))
+	if id == "roster":
+		return open_roster()
+	if id.begins_with("bench_"):
+		return bench_companion(id.trim_prefix("bench_"))
+	if id.begins_with("take_"):
+		return take_companion(id.trim_prefix("take_"))
 	return false
 
 
@@ -1715,7 +1732,7 @@ func can_respec() -> bool:
 func refresh_progression() -> void:
 	var preset: Dictionary = registry.get_entry("parties", party_id)
 	var none: Array[Vector2] = []
-	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, none, narrative.recruited, party_level(), ledger.builds)
+	var specs := PartyBuilder.member_specs(registry, preset, protagonist, rules, none, narrative.active_companions(), party_level(), ledger.builds)
 	for spec: Dictionary in specs:
 		var data: Dictionary = spec["data"]
 		for m: PartyMember in party.members:
@@ -3470,3 +3487,47 @@ func close_ending() -> void:
 	ending_menu.close()
 	if title_menu != null and not Engine.has_meta("neon_weave_tests"):
 		show_title()
+
+
+# --- the roster (S38, D-093) -------------------------------------------------
+
+## Who walks with the party and who waits at the Bastion: every recruited
+## companion, with a bench or take item. Three walk (`party_max` less the
+## leader); the rest wait. Swapping respawns the party at the plaza.
+func roster_items() -> Array[Dictionary]:
+	var items: Array[Dictionary] = []
+	var room := narrative.active_companions().size() < rules.party_max - 1
+	for id: String in narrative.recruited:
+		var c: Dictionary = registry.get_entry("companions", id)
+		var name := String(c.get("short_name", id))
+		if narrative.is_benched(id):
+			items.append({"id": "take_%s" % id, "label": "%s waits at the Bastion: take along" % name, "enabled": room, "why": "the party is full"})
+		else:
+			items.append({"id": "bench_%s" % id, "label": "%s walks with you: leave at the Bastion" % name, "enabled": true})
+	items.append({"id": "resume", "label": "Done", "enabled": true})
+	return items
+
+
+func open_roster() -> bool:
+	if system_menu == null or mode != "explore" or not at_home() or narrative.recruited.is_empty():
+		return false
+	system_menu.open(roster_items())
+	return true
+
+
+func bench_companion(id: String) -> bool:
+	if not at_home() or mode != "explore" or not narrative.is_recruited(id) or narrative.is_benched(id):
+		return false
+	narrative.bench(id)
+	respawn_party()
+	overlay.toast("%s waits at the Bastion." % registry.get_entry("companions", id).get("short_name", id), 2.0)
+	return true
+
+
+func take_companion(id: String) -> bool:
+	if not at_home() or mode != "explore" or not narrative.is_benched(id) or narrative.active_companions().size() >= rules.party_max - 1:
+		return false
+	narrative.unbench(id)
+	respawn_party()
+	overlay.toast("%s walks with you." % registry.get_entry("companions", id).get("short_name", id), 2.0)
+	return true

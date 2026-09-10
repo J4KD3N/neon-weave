@@ -21,7 +21,7 @@ without a schema; keep the two in step.
 | factions | name, color, rivals, joinable_act | summary, envoy (npc id), vendor (merchant id), area (map id), join_reputation {faction: delta} applied on joining |
 | items | name, slot (weapon / armour / trinket / cyberware), art | stat_mods, damage_bonus, weight, price, min_rarity, families, craft {cost, workshop}, summary |
 | affixes | name, slots (["any"] or slot names), weight | prefix (false = suffix), stat_mods, damage_bonus, min_rarity, summary |
-| maps | name, biome, spawn_marker, legend, rows | npcs (companion / merchant / npc + when), pickups, enemies, transitions, triggers, doors, buildings |
+| maps | name, biome, spawn_marker, legend, rows | npcs (companion / merchant / npc, each with an optional `when`; a companion placement also waits on the flag and never stands in once dead, S38), pickups, enemies, transitions, triggers, doors, buildings |
 | merchants | name, stock [{id,label,cost,effect}] | art; effect keys heal_fraction, grant, item (a common instance into the pack) |
 | npcs | name, dialogue | short_name, faction, art |
 | origins | name, dialogue_tag | stat_mods, traits, unlock_flag (earned for the account when a playthrough sets it), unlock_blurb |
@@ -44,7 +44,8 @@ open_doors, enemies, victory_flag, grant, dialogue, transition, join_faction,
 map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause], ending (true),
 romance ({commit: id} | {end: true}; a commitment is refused while another stands).
 Condition keys (`requires` / `when` / `done_when`): flags, origin_tag,
-race, race_tag, class, approval, reputation, recruited, not_recruited, quest,
+race, race_tag, class, approval, reputation, recruited (walking with the party:
+recruited and not waiting at the Bastion, D-093), not_recruited, quest,
 faction (the joined faction id, "" for none yet), not_faction, party_approval_min
 (every recruited companion at or above n), romance (the committed companion id,
 "" for nobody), not_romance, romance_open (nobody, or that companion).

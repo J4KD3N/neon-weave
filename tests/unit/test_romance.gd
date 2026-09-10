@@ -282,4 +282,4 @@ func test_whisper_and_yev_stand_in_the_party_ahead_of_their_stories() -> void:
 	assert_true(world.talk_to("whisper"), "the placeholder recruit line opens")
 	world.leave_dialogue()
 	assert_eq(world.banter("enter_shard").size(), 2, "both have a first-Shard line")
-	assert_eq(world.registry.count("companions"), 5)
+	assert_eq(world.registry.count("companions"), 6)

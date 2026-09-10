@@ -5,6 +5,9 @@
     { "trigger": "enter_shard", "text": "Air's bad down here. Better than the vault's, which tells you something.", "once": "dax_banter_first_shard" },
     { "trigger": "enter_shard", "text": "Sera. Purge detail. I read the marks. Don't stand behind me.", "requires": { "recruited": "sera" }, "effects": { "approval": { "sera": -1 } }, "once": "dax_banter_sera" },
     { "trigger": "victory", "text": "The machine fights fine. I'll say that once.", "requires": { "recruited": "kaj7" }, "effects": { "approval": { "kaj7": 1 } }, "once": "dax_banter_kaj7" },
+    { "trigger": "enter_shard", "text": "Corporate splice. Fine. At least she knows she was built.", "requires": { "recruited": "whisper" }, "effects": { "approval": { "whisper": 1 } }, "once": "dax_banter_whisper" },
+    { "trigger": "enter_shard", "text": "Priest. Walk on the other side. Nothing personal. Everything personal.", "requires": { "recruited": "cinder" }, "effects": { "approval": { "cinder": -1 } }, "once": "dax_banter_cinder" },
+    { "trigger": "extract", "text": "Rootched. Your lot wanted to grow over my vault. I have not forgotten.", "requires": { "recruited": "yev" }, "effects": { "approval": { "yev": -1 } }, "once": "dax_banter_yev" },
     { "trigger": "victory", "text": "Done. Count the air." },
     { "trigger": "extract", "text": "Banked. Every run is one more the seal has to hold." }
   ]

@@ -1,0 +1,7 @@
+{
+  "name": "Recall beacon",
+  "summary": "Lattice hardware singing on a gene-line band. Quest site for Whisper's story; opens a dialogue instead of granting loot.",
+  "dialogue": "whisper_beacon",
+  "grants": {},
+  "art": { "color": "#c9a7ff" }
+}

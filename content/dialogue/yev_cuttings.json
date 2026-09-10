@@ -1,0 +1,44 @@
+{
+  "name": "Yev — the growing-frame",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "yev_dead": true } } },
+    { "node": "with_yev", "requires": { "recruited": "yev" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_yev": {
+      "speaker": "yev",
+      "text": "Here. A growing-frame, Rootched work, and inside it my grove, taught to grow around a shard of the Loom. They are growing a Key. Out of my grove.",
+      "choices": [
+        { "text": "Burn the frame.", "effects": { "approval": { "yev": 1, "sera": 1 }, "reputation": { "rootched": -2 }, "flags": { "yev_frame_found": true, "yev_frame_burned": true }, "quest": { "id": "yev_grove", "stage": "burned" } }, "next": "burned" },
+        { "text": "Take a cutting home. The Garden can hold it.", "effects": { "approval": { "yev": 2, "kaj7": 1 }, "flags": { "yev_frame_found": true, "yev_cutting_saved": true }, "quest": { "id": "yev_grove", "stage": "saved" } }, "next": "saved" },
+        { "text": "Leave it. Let us see what a Key grows into.", "effects": { "approval": { "yev": -1, "dax": 1 }, "reputation": { "rootched": 1 }, "flags": { "yev_frame_found": true, "yev_frame_left": true }, "quest": { "id": "yev_grove", "stage": "left" } }, "next": "left" }
+      ]
+    },
+    "burned": {
+      "speaker": "yev",
+      "text": "Thank you. I could not have. I would have talked to it.",
+      "choices": [ { "text": "Someone had to.", "end": true } ]
+    },
+    "saved": {
+      "speaker": "yev",
+      "text": "It will grow in your Garden. Slowly. The grove taught it slowly.",
+      "choices": [ { "text": "Slowly is fine.", "end": true } ]
+    },
+    "left": {
+      "speaker": "yev",
+      "text": "Then we will come back, and it will have grown, and we will see whose it is.",
+      "choices": [ { "text": "We will.", "end": true } ]
+    },
+    "alone": {
+      "speaker": "player",
+      "text": "A Rootched growing-frame, and in it something green wound round something that is not.",
+      "choices": [ { "text": "Log the frame.", "effects": { "flags": { "yev_frame_found": true }, "quest": { "id": "yev_grove", "stage": "done_alone" } }, "end": true } ]
+    },
+    "dead": {
+      "speaker": "player",
+      "text": "Yev's grove, in a frame, growing without her. You take one cutting, for the pot on her bunk.",
+      "choices": [ { "text": "Take it.", "effects": { "flags": { "yev_frame_found": true, "yev_cutting_saved": true }, "quest": { "id": "yev_grove", "stage": "done_posthumous" } }, "end": true } ]
+    }
+  }
+}
