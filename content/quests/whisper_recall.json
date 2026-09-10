@@ -1,0 +1,13 @@
+{
+  "name": "Recall Notice",
+  "companion": "whisper",
+  "summary": "Whisper's gene-line is being recalled by the maker who wrote it. She intends not to answer. (S38 writes the stages; this is the shape.)",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "Find out who is recalling the Splicekin infiltration line, and from where.",
+      "objectives": [ { "text": "Find the source of the recall signal", "done_when": { "flags": { "whisper_maker_found": true } } } ]
+    },
+    "done": { "summary": "The recall is answered, one way or another.", "complete": true }
+  }
+}

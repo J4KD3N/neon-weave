@@ -1,0 +1,15 @@
+{
+  "name": "Kaj-7 — the cold cradle",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "narrator",
+      "text": "Kaj-7's corner. The cradle it charged in, cold. One drone shell, powered down, waiting for a signal that will not come.",
+      "choices": [
+        { "text": "Power the drone down for good.", "effects": { "flags": { "kaj7_mourned": true, "kaj7_drone_down": true } }, "next": "down" },
+        { "text": "Leave it listening.", "effects": { "flags": { "kaj7_mourned": true } }, "end": true }
+      ]
+    },
+    "down": { "speaker": "narrator", "text": "The light goes out. The room is very quiet without the hum you stopped hearing years ago.", "choices": [ { "text": "Close the door.", "end": true } ] }
+  }
+}

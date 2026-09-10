@@ -1,0 +1,15 @@
+{
+  "name": "Yev — one leaf",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "narrator",
+      "text": "Yev's corner. A pot of grove-soil, still damp. Something in it has put out one leaf since she died, on no light at all.",
+      "choices": [
+        { "text": "Water it.", "effects": { "flags": { "yev_mourned": true, "yev_leaf_watered": true } }, "next": "water" },
+        { "text": "Let it be.", "effects": { "flags": { "yev_mourned": true } }, "end": true }
+      ]
+    },
+    "water": { "speaker": "narrator", "text": "It does not need you to. It does it anyway.", "choices": [ { "text": "Close the door.", "end": true } ] }
+  }
+}

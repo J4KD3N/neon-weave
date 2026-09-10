@@ -1,0 +1,17 @@
+{
+  "name": "Kaj-7 — a question no archive has",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "kaj7",
+      "text": "I have a question I could not find in any archive. When you look at me for longer than the tactical situation requires, what is that? I have observed it four times. I have started to look back.",
+      "choices": [
+        { "text": "It is what it looks like, Kaj.", "effects": { "approval": { "kaj7": 1 }, "flags": { "romance_kaj7_interested": true } }, "next": "looked" },
+        { "text": "It is affection. The friend kind. I want you to have the right word.", "effects": { "flags": { "romance_kaj7_closed": true } }, "next": "word" },
+        { "text": "Ask me on a quieter night.", "end": true }
+      ]
+    },
+    "looked": { "speaker": "kaj7", "text": "Then I will keep looking. I have decided this is not a fault, whatever the Envoy says.", "choices": [ { "text": "It is not.", "end": true } ] },
+    "word": { "speaker": "kaj7", "text": "Friend. Logged. That is a good word. I will use it often.", "choices": [ { "text": "Please do.", "end": true } ] }
+  }
+}

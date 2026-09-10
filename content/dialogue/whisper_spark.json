@@ -1,0 +1,17 @@
+{
+  "name": "Whisper — not in the design",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "whisper",
+      "text": "Don't look at me like that. I know that look; I was built to produce it in marks. The problem is I did not produce it. It just happened. That is not in my design.",
+      "choices": [
+        { "text": "Then it is yours. Not the design's.", "effects": { "approval": { "whisper": 1 }, "flags": { "romance_whisper_interested": true } }, "next": "yours" },
+        { "text": "Whisper, I trust you with my back. That is all it is.", "effects": { "flags": { "romance_whisper_closed": true } }, "next": "back" },
+        { "text": "Say it again when you mean it.", "end": true }
+      ]
+    },
+    "yours": { "speaker": "whisper", "text": "Mine. Huh. Don't tell anyone. Especially not me.", "choices": [ { "text": "Never.", "end": true } ] },
+    "back": { "speaker": "whisper", "text": "Good. Backs are simpler. I am very good at backs.", "choices": [ { "text": "I know.", "end": true } ] }
+  }
+}

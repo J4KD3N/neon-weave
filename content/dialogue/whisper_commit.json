@@ -1,0 +1,17 @@
+{
+  "name": "Whisper — something to keep",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "whisper",
+      "text": "Here is the thing about assets. We do not get to keep anything. My maker is out there recalling my whole line and I have been walking around with a thing I would like to keep. If you say yes I will not know what to do with it. I would like to find out.",
+      "choices": [
+        { "text": "Yes. We find out together.", "effects": { "romance": { "commit": "whisper" }, "approval": { "whisper": 2 } }, "next": "yes" },
+        { "text": "I cannot be something you keep, Whisper.", "effects": { "flags": { "romance_whisper_closed": true } }, "next": "no" },
+        { "text": "Ask me after we deal with your maker.", "end": true }
+      ]
+    },
+    "yes": { "speaker": "whisper", "text": "Okay. Okay. Nobody hears about this. Nobody hears about anything, I will see to that.", "choices": [ { "text": "Deal.", "end": true } ] },
+    "no": { "speaker": "whisper", "text": "Right. Noted. You still get the back. That was never up for review.", "choices": [ { "text": "Thank you.", "end": true } ] }
+  }
+}

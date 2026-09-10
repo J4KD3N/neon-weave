@@ -1,0 +1,23 @@
+{
+  "name": "Yev",
+  "short_name": "Yev",
+  "race": "rootkin",
+  "class": "circuit_witch",
+  "summary": "Serene fusion mystic, unsettling calm, sees the Weft as sacred. Her grove is being weaponised by her own faction. Recruitment, banter and her quest are S38's; her romance is here (S37).",
+  "faction": "rootched",
+  "romanceable": true,
+  "dialogue": {
+    "recruit": "yev_recruit",
+    "talk": "yev_recruit",
+    "banter": "yev_banter"
+  },
+  "quest": "yev_grove",
+  "scenes": [
+    { "id": "yev_quarters", "label": "Three moons", "dialogue": "yev_quarters", "requires": { "approval": { "yev": { "min": 3 } } }, "quarters": 1 },
+    { "id": "yev_spark", "label": "A stone in the stream", "dialogue": "yev_spark", "romance": true, "once": false, "requires": { "approval": { "yev": { "min": 5 } }, "flags": { "scene_yev_quarters_seen": true, "romance_yev_interested": false, "romance_yev_closed": false } }, "quarters": 1 },
+    { "id": "yev_commit", "label": "One root", "dialogue": "yev_commit", "romance": true, "once": false, "requires": { "approval": { "yev": { "min": 7 } }, "flags": { "romance_yev_interested": true, "romance_yev": false, "romance_yev_closed": false } }, "quarters": 2 },
+    { "id": "yev_night", "label": "Just green", "dialogue": "yev_night", "romance": true, "requires": { "romance": "yev" }, "quarters": 2 },
+    { "id": "yev_lost", "label": "One leaf", "dialogue": "yev_lost", "dead": true, "requires": { "flags": { "romance_yev_lost": true } }, "quarters": 1 }
+  ],
+  "approval_start": 0
+}

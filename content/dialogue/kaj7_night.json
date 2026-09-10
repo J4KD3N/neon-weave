@@ -1,0 +1,16 @@
+{
+  "name": "Kaj-7 — standby",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "kaj7",
+      "text": "The others say I do not sleep, but I do something like it beside you. I stop scanning. Nobody made me. I decided.",
+      "choices": [
+        { "text": "Then stop scanning. I have the watch.", "effects": { "approval": { "kaj7": 1 }, "flags": { "kaj7_night_watch": true } }, "next": "watch" },
+        { "text": "Kaj, this cannot go on. Not with what is coming.", "effects": { "romance": { "end": true } }, "next": "ended" }
+      ]
+    },
+    "watch": { "speaker": "kaj7", "text": "Watch taken. Standby.", "choices": [ { "text": "Standby.", "end": true } ] },
+    "ended": { "speaker": "kaj7", "text": "Understood. I will resume scanning. It was not a fault. I have logged that too.", "choices": [ { "text": "It was not.", "end": true } ] }
+  }
+}

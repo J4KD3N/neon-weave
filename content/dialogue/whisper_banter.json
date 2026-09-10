@@ -1,0 +1,9 @@
+{
+  "name": "Whisper — banter",
+  "kind": "banter",
+  "lines": [
+    { "trigger": "enter_shard", "text": "Cameras. There are always cameras. Smile, or don't; they log both.", "once": "whisper_banter_first_shard" },
+    { "trigger": "victory", "text": "Clean. Nobody saw. Nobody ever sees.", "once": "whisper_banter_first_win" },
+    { "trigger": "extract", "text": "Home. I keep saying it to see if it sticks." }
+  ]
+}

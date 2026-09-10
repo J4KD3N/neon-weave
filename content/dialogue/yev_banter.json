@@ -1,0 +1,9 @@
+{
+  "name": "Yev — banter",
+  "kind": "banter",
+  "lines": [
+    { "trigger": "enter_shard", "text": "The current runs strong here. Step where it pools; it will hold you up.", "once": "yev_banter_first_shard" },
+    { "trigger": "victory", "text": "They are in the Weft now. Everything is, in the end.", "once": "yev_banter_first_win" },
+    { "trigger": "extract", "text": "The Bastion has roots. Did you know? Under the plaza. They are very old." }
+  ]
+}

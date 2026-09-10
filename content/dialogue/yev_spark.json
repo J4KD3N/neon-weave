@@ -1,0 +1,17 @@
+{
+  "name": "Yev — a stone in the stream",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "yev",
+      "text": "Sit. The Weft is loud tonight and you are the quietest thing in it. When I reach for the current I find you at the edge, every time, like a stone in a stream. I have started to reach for the stone.",
+      "choices": [
+        { "text": "Reach, then.", "effects": { "approval": { "yev": 1 }, "flags": { "romance_yev_interested": true } }, "next": "reach" },
+        { "text": "Yev, I am your friend. The stream is enough for me.", "effects": { "flags": { "romance_yev_closed": true } }, "next": "stream" },
+        { "text": "Not tonight, Yev.", "end": true }
+      ]
+    },
+    "reach": { "speaker": "yev", "text": "Then I will. Slowly. The grove taught me slowly.", "choices": [ { "text": "Slowly is fine.", "end": true } ] },
+    "stream": { "speaker": "yev", "text": "The stream is a good thing to be. So be it, friend.", "choices": [ { "text": "Good night, Yev.", "end": true } ] }
+  }
+}

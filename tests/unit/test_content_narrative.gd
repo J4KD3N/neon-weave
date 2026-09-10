@@ -3,8 +3,8 @@
 extends TestCase
 
 const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
-const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction"]
-const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction"]
+const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction", "romance"]
+const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction", "romance", "not_romance", "romance_open"]
 
 var registry: ContentRegistry
 
@@ -135,3 +135,45 @@ func test_map_npcs_are_companions_on_walkable_cells() -> void:
 			found += 1
 			assert_true(registry.has_entry("companions", String(p.get("companion", ""))), "map %s npc" % m["id"])
 	assert_true(found >= 1, "Sera stands somewhere")
+
+
+## Quarters scenes (S35, S37): every scene opens a real dialogue, its gates
+## use the condition vocabulary, romance scenes belong to romanceable
+## companions only, and every romanceable companion has a spark, a
+## commitment, a night and a scene for their death (D-092).
+func test_quarters_scenes_are_well_formed_and_every_romance_is_complete() -> void:
+	var romanceable := 0
+	for c: Dictionary in registry.get_all("companions"):
+		var ids: Array[String] = []
+		var romance_scenes := 0
+		var dead_scenes := 0
+		var commits := 0
+		for s: Dictionary in c.get("scenes", []):
+			var sid := String(s.get("id", ""))
+			assert_false(sid.is_empty() or ids.has(sid), "companion %s scene id %s" % [c["id"], sid])
+			ids.append(sid)
+			var d := registry.get_entry("dialogue", String(s.get("dialogue", "")))
+			assert_false(d.is_empty(), "companion %s scene %s dialogue" % [c["id"], sid])
+			for k: String in s.get("requires", {}):
+				assert_true(REQUIRES_KEYS.has(k), "companion %s scene %s requires.%s" % [c["id"], sid, k])
+			assert_true(int(s.get("quarters", 1)) >= 1, "scene %s needs the Quarters" % sid)
+			if bool(s.get("romance", false)):
+				assert_true(bool(c.get("romanceable", false)), "companion %s is not romanceable but scene %s is a romance" % [c["id"], sid])
+				romance_scenes += 1
+				for node_id: String in d.get("nodes", {}):
+					for ch: Dictionary in Dictionary(d["nodes"][node_id]).get("choices", []):
+						var r: Dictionary = Dictionary(ch.get("effects", {})).get("romance", {})
+						if r.has("commit"):
+							assert_eq(String(r["commit"]), String(c["id"]), "scene %s commits to its own companion" % sid)
+							commits += 1
+			if bool(s.get("dead", false)):
+				dead_scenes += 1
+				assert_true(Dictionary(Dictionary(s.get("requires", {})).get("flags", {})).has("romance_%s_lost" % c["id"]) or not bool(c.get("romanceable", false)), "a romanceable companion's death scene reads romance_<id>_lost")
+		if bool(c.get("romanceable", false)):
+			romanceable += 1
+			assert_true(romance_scenes >= 3, "companion %s: spark, commitment and a night" % c["id"])
+			assert_eq(commits, 1, "companion %s: exactly one commitment" % c["id"])
+			assert_true(dead_scenes >= 1, "companion %s: a dead partner is a scene, not a crash" % c["id"])
+		else:
+			assert_eq(romance_scenes, 0, "companion %s has no romance" % c["id"])
+	assert_eq(romanceable, 4, "Sera, Kaj-7, Whisper and Yev")

@@ -1,0 +1,16 @@
+{
+  "name": "Yev — just green",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "yev",
+      "text": "I dreamed the grove was whole again and you were in it. Not weaponised. Not sacred. Just green. Is that what after looks like?",
+      "choices": [
+        { "text": "If we make it so.", "effects": { "approval": { "yev": 1 }, "flags": { "yev_night_green": true } }, "next": "green" },
+        { "text": "Yev, there is no after for us. I am ending it now.", "effects": { "romance": { "end": true } }, "next": "ended" }
+      ]
+    },
+    "green": { "speaker": "yev", "text": "Then we make it so.", "choices": [ { "text": "We do.", "end": true } ] },
+    "ended": { "speaker": "yev", "text": "The current turns. It always turns. I will not pretend it does not hurt; I am serene, not stone. Go well.", "choices": [ { "text": "Go well, Yev.", "end": true } ] }
+  }
+}

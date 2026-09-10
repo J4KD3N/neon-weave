@@ -1,0 +1,15 @@
+{
+  "name": "Whisper — a stripped frame",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "narrator",
+      "text": "Whisper's bunk, stripped to the frame. She never left anything in it; assets do not. Under the mattress, one thing: a chip with your name on it and nothing else.",
+      "choices": [
+        { "text": "Keep the chip.", "effects": { "flags": { "whisper_mourned": true, "whisper_chip_kept": true } }, "next": "chip" },
+        { "text": "Leave it. She would have wanted the room swept.", "effects": { "flags": { "whisper_mourned": true } }, "end": true }
+      ]
+    },
+    "chip": { "speaker": "narrator", "text": "It holds no data. It was never for anyone but you.", "choices": [ { "text": "Close the door.", "end": true } ] }
+  }
+}

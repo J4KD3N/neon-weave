@@ -1,0 +1,16 @@
+{
+  "name": "Whisper — no handler",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "whisper",
+      "text": "I ran a check on you. Old habit. Do you know what I found? Nothing. No handler, no recall code. You are just a person. I did not know I was allowed one of those.",
+      "choices": [
+        { "text": "You are allowed. Sleep.", "effects": { "approval": { "whisper": 1 }, "flags": { "whisper_night_allowed": true } }, "next": "allowed" },
+        { "text": "Whisper, I am ending this. I have to.", "effects": { "romance": { "end": true } }, "next": "ended" }
+      ]
+    },
+    "allowed": { "speaker": "whisper", "text": "Allowed. Filed under things I will never say sober.", "choices": [ { "text": "Filed.", "end": true } ] },
+    "ended": { "speaker": "whisper", "text": "Ha. There it is. The recall. Fine. I have had cleaner extractions. Your back is still covered; that was never the deal.", "choices": [ { "text": "I know.", "end": true } ] }
+  }
+}

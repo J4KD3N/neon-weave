@@ -1,0 +1,13 @@
+{
+  "name": "The Weaponised Grove",
+  "companion": "yev",
+  "summary": "The Rootched have taken cuttings from Yev's grove and are growing something with them. (S38 writes the stages; this is the shape.)",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "Learn what the Rootched are growing from the grove's cuttings.",
+      "objectives": [ { "text": "Find the Rootched growing-house", "done_when": { "flags": { "yev_grove_found": true } } } ]
+    },
+    "done": { "summary": "The grove's cuttings are accounted for.", "complete": true }
+  }
+}

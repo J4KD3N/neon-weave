@@ -16,6 +16,9 @@ var faction: String = ""
 var lore: Array[String] = []
 ## Persistent handcrafted-map edits (S36): map id -> [[x, y, tile id], ...].
 var map_edits: Dictionary = {}
+## The companion the leader is committed to (S37, D-092); "" for nobody.
+## One at a time: a second commitment is refused until this one ends.
+var romance: String = ""
 
 
 func flag(name: String) -> bool:
@@ -64,7 +67,7 @@ func dismiss(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true)}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "romance": romance}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -85,6 +88,7 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	n.faction = String(d.get("faction", ""))
 	n.lore.assign(d.get("lore", []))
 	n.map_edits = Dictionary(d.get("map_edits", {})).duplicate(true)
+	n.romance = String(d.get("romance", ""))
 	return n
 
 
@@ -100,4 +104,36 @@ func join_faction(id: String) -> bool:
 	faction = id
 	set_flag("joined_%s" % id, true)
 	set_flag("faction_locked", true)
+	return true
+
+
+## Commits to `companion` (D-092). False while committed to someone else:
+## one romance at a time, ended by choice or by death, never by jealousy.
+## Flags `romance_<id>` for content to read.
+func commit_romance(companion: String) -> bool:
+	if companion.is_empty() or (not romance.is_empty() and romance != companion):
+		return false
+	romance = companion
+	set_flag("romance_%s" % companion, true)
+	return true
+
+
+## Ends the current romance by choice: `romance_<id>` off, `romance_<id>_ended` on.
+func end_romance() -> bool:
+	if romance.is_empty():
+		return false
+	set_flag("romance_%s" % romance, false)
+	set_flag("romance_%s_ended" % romance, true)
+	romance = ""
+	return true
+
+
+## A dead partner (Mortal mode): the romance ends with `romance_<id>_lost`
+## set, which a Quarters scene marked `dead` can read; `romance_<id>` stays
+## as history.
+func lose_romance(companion: String) -> bool:
+	if companion.is_empty() or romance != companion:
+		return false
+	set_flag("romance_%s_lost" % companion, true)
+	romance = ""
 	return true
