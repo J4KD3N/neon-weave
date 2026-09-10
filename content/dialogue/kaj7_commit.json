@@ -1,0 +1,17 @@
+{
+  "name": "Kaj-7 — permanently",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "kaj7",
+      "text": "I have thought about what I am. Not a person as the Lattice defines one. Not a machine as the Ashfound define one. When I am near you the question stops mattering, and I would like it to stop mattering permanently. If you would.",
+      "choices": [
+        { "text": "Permanently. Yes.", "effects": { "romance": { "commit": "kaj7" }, "approval": { "kaj7": 2 } }, "next": "yes" },
+        { "text": "I love you as you are, Kaj. Not as a partner.", "effects": { "flags": { "romance_kaj7_closed": true } }, "next": "no" },
+        { "text": "Let me think, Kaj. Properly.", "end": true }
+      ]
+    },
+    "yes": { "speaker": "kaj7", "text": "Logged. The signal is quieter tonight. I think it is listening to us.", "choices": [ { "text": "Let it.", "end": true } ] },
+    "no": { "speaker": "kaj7", "text": "Understood. Logged without a fault marker. Thank you for the precision.", "choices": [ { "text": "Good night, Kaj.", "end": true } ] }
+  }
+}

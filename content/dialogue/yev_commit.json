@@ -1,0 +1,17 @@
+{
+  "name": "Yev — one root",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "yev",
+      "text": "My people would call this heresy: choosing one root when the whole grove is offered. I have thought about it under three moons. I choose the root. If you will be chosen.",
+      "choices": [
+        { "text": "I will.", "effects": { "romance": { "commit": "yev" }, "approval": { "yev": 2 } }, "next": "chosen" },
+        { "text": "I cannot be one root, Yev. I am sorry.", "effects": { "flags": { "romance_yev_closed": true } }, "next": "no" },
+        { "text": "Give me a moon more.", "end": true }
+      ]
+    },
+    "chosen": { "speaker": "yev", "text": "Then it is done, and the Weft can say what it likes. Sleep. I will keep the current off you.", "choices": [ { "text": "Stay.", "end": true } ] },
+    "no": { "speaker": "yev", "text": "Then be the stream. Nothing is wasted in a grove.", "choices": [ { "text": "Good night, Yev.", "end": true } ] }
+  }
+}

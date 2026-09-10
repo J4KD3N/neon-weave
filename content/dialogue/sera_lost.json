@@ -1,0 +1,15 @@
+{
+  "name": "Sera — the empty bunk",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "narrator",
+      "text": "Sera's bunk. The shield propped where she left it, dented in the shape of the last thing that hit it. Nobody has moved it. Nobody will.",
+      "choices": [
+        { "text": "Take the shield. Someone has to hold the left.", "effects": { "flags": { "sera_mourned": true, "sera_shield_kept": true } }, "next": "taken" },
+        { "text": "Leave it. Shut the door.", "effects": { "flags": { "sera_mourned": true } }, "end": true }
+      ]
+    },
+    "taken": { "speaker": "narrator", "text": "It is heavier than it looks. She never said.", "choices": [ { "text": "Close the door.", "end": true } ] }
+  }
+}

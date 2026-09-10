@@ -1,0 +1,11 @@
+{
+  "name": "Whisper — recruit (placeholder: S38 writes her recruitment)",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "whisper",
+      "text": "Not yet. You have not met the version of me that says yes, and she is not on any map you own.",
+      "choices": [ { "text": "Fair.", "end": true } ]
+    }
+  }
+}

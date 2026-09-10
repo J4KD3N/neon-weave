@@ -1,0 +1,17 @@
+{
+  "name": "Sera — stay",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "sera",
+      "text": "The common room. Everyone else asleep. I have carried people out of fire and I have never once been this afraid. If we do this, I do not do it halfway. I do not know how.",
+      "choices": [
+        { "text": "Neither do I. Stay.", "effects": { "romance": { "commit": "sera" }, "approval": { "sera": 2 } }, "next": "stay" },
+        { "text": "I cannot give you that. Not now, maybe not ever.", "effects": { "flags": { "romance_sera_closed": true } }, "next": "closed" },
+        { "text": "Not tonight. Let me be sure before I say it.", "end": true }
+      ]
+    },
+    "stay": { "speaker": "sera", "text": "Then I am staying. The door stays shut tonight.", "choices": [ { "text": "Shut it.", "end": true } ] },
+    "closed": { "speaker": "sera", "text": "Then I will hold the line and nothing else. Do not apologise. I asked.", "choices": [ { "text": "Good night, Sera.", "end": true } ] }
+  }
+}

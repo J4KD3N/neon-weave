@@ -1,0 +1,11 @@
+{
+  "name": "Yev — recruit (placeholder: S38 writes her recruitment)",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "yev",
+      "text": "The current has not brought us together yet. It will, or it will not. Go well.",
+      "choices": [ { "text": "Go well.", "end": true } ]
+    }
+  }
+}

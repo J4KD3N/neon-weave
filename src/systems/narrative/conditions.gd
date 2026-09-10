@@ -4,7 +4,9 @@
 ## "class": "x", "approval": {companion: {"min": n, "max": n}},
 ## "recruited": "companion", "not_recruited": "companion",
 ## "quest": {"id": "q", "stage": "s"}, "faction": "id" (the joined faction;
-## "" for none yet), "not_faction": "id"}. Every listed key must hold.
+## "" for none yet), "not_faction": "id", "romance": "id" (the committed
+## companion; "" for nobody), "not_romance": "id", "romance_open": "id"
+## (nobody, or that companion)}. Every listed key must hold.
 ##
 ## `ctx`: {"narrative": NarrativeState, "origin_tag": String, "race": String,
 ## "class": String}
@@ -56,6 +58,12 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 				return false
 	if requires.has("not_faction") and n.faction == String(requires["not_faction"]) and not n.faction.is_empty():
 		return false
+	if requires.has("romance") and n.romance != String(requires["romance"]): # "" means nobody
+		return false
+	if requires.has("not_romance") and n.romance == String(requires["not_romance"]) and not n.romance.is_empty():
+		return false
+	if requires.has("romance_open") and not n.romance.is_empty() and n.romance != String(requires["romance_open"]):
+		return false
 	if requires.has("not_recruited") and n.is_recruited(String(requires["not_recruited"])):
 		return false
 	if requires.has("quest"):
@@ -68,7 +76,7 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 ## Applies an `effects` block to the narrative state. Returns the list of
 ## companions recruited by it (the world spawns them).
 ## {"approval": {companion: delta}, "flags": {name: bool}, "recruit": "id",
-## "quest": {"id": "q", "stage": "s"}}
+## "quest": {"id": "q", "stage": "s"}, "romance": {"commit": "id"} | {"end": true}}
 static func apply(effects: Dictionary, n: NarrativeState) -> Array[String]:
 	var recruited: Array[String] = []
 	if effects.is_empty():
@@ -90,4 +98,10 @@ static func apply(effects: Dictionary, n: NarrativeState) -> Array[String]:
 	if effects.has("quest"):
 		var q: Dictionary = effects["quest"]
 		n.set_stage(String(q.get("id", "")), String(q.get("stage", "")))
+	if effects.has("romance"):
+		var r: Dictionary = effects["romance"]
+		if r.has("commit"):
+			n.commit_romance(String(r["commit"]))
+		if bool(r.get("end", false)):
+			n.end_romance()
 	return recruited

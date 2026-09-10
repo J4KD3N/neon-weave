@@ -13,9 +13,9 @@ without a schema; keep the two in step.
 | branches | name, color | summary |
 | buildings | name, order, levels [{cost, effects, blurb}] | levels[].unlocks; effect keys read: depth, heal_fraction, hp_bonus, damage_bonus, respec, respec_refund, archive, aether_per_fragment, garden, aether_on_return, quarters |
 | classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level, capstone (ability at `capstone_level` levels in the class) |
-| companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start, scenes [{id, label, dialogue, requires, quarters (level)}] (S35) |
+| companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction ("" for none), romanceable, approval_start, scenes [{id, label, dialogue, requires, quarters (level), once (default true), romance (only on a romanceable companion; hidden while `NarrativeState.romance` names someone else), dead (offered for a companion with `<id>_dead` instead of one in the party)}] (S35, S37 D-092) |
 | lore | name, text, order | source; found ids live in the narrative state and read in the Archive |
-| endings | name, summary, when | priority (highest holding wins; 0 for the drift), epilogue {companion: {alive, dead, absent}} (S36, D-091) |
+| endings | name, summary, when | priority (highest holding wins; 0 for the drift), epilogue {companion: {alive, dead, absent, romanced?, lost?}} (S36, D-091; partner lines S37) |
 | dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]) |
 | enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity), traits (same vocabulary as races) |
 | factions | name, color, rivals, joinable_act | summary, envoy (npc id), vendor (merchant id), area (map id), join_reputation {faction: delta} applied on joining |
@@ -41,8 +41,10 @@ without a schema; keep the two in step.
 
 Trigger effect keys: approval, flags, recruit, quest, reputation, toast,
 open_doors, enemies, victory_flag, grant, dialogue, transition, join_faction,
-map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause], ending (true).
+map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause], ending (true),
+romance ({commit: id} | {end: true}; a commitment is refused while another stands).
 Condition keys (`requires` / `when` / `done_when`): flags, origin_tag,
 race, race_tag, class, approval, reputation, recruited, not_recruited, quest,
 faction (the joined faction id, "" for none yet), not_faction, party_approval_min
-(every recruited companion at or above n).
+(every recruited companion at or above n), romance (the committed companion id,
+"" for nobody), not_romance, romance_open (nobody, or that companion).

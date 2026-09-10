@@ -1164,6 +1164,7 @@ func _on_combat_ended(result: String) -> void:
 			if narrative.is_recruited(m.member_id):
 				narrative.dismiss(m.member_id)
 				narrative.set_flag("%s_dead" % m.member_id, true)
+				narrative.lose_romance(m.member_id) # a dead partner ends the romance (D-092)
 				overlay.toast("%s is dead." % m.display_name, 4.0)
 			party.remove_member(m)
 		for m: PartyMember in party.members:
@@ -3236,14 +3237,31 @@ func tend_garden() -> bool:
 
 
 ## Companions with a Quarters scene they qualify for and have not had.
+## A scene marked `dead` is for a companion who died (`<id>_dead`) rather
+## than one in the party. A scene marked `romance` is offered only by a
+## romanceable companion and only while nobody else holds the leader's
+## heart: exclusivity without jealousy (D-092). `once: false` leaves a
+## scene on the list until its own `requires` close it.
 func quarters_scenes() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var ctx := dialogue_ctx()
-	for id: String in narrative.recruited:
-		var c: Dictionary = registry.get_entry("companions", id)
+	for c: Dictionary in registry.get_all("companions"):
+		var id := String(c["id"])
 		for scene: Dictionary in c.get("scenes", []):
 			var scene_id := String(scene.get("id", ""))
-			if scene_id.is_empty() or narrative.flag("scene_%s_seen" % scene_id):
+			if scene_id.is_empty():
+				continue
+			if bool(scene.get("dead", false)):
+				if not narrative.flag("%s_dead" % id):
+					continue
+			elif not narrative.is_recruited(id):
+				continue
+			if bool(scene.get("romance", false)):
+				if not bool(c.get("romanceable", false)):
+					continue
+				if not narrative.romance.is_empty() and narrative.romance != id:
+					continue
+			if bool(scene.get("once", true)) and narrative.flag("scene_%s_seen" % scene_id):
 				continue
 			if int(scene.get("quarters", 1)) > bastion.level("quarters"):
 				continue

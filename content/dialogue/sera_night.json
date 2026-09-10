@@ -1,0 +1,16 @@
+{
+  "name": "Sera — a gate on a hill",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "sera",
+      "text": "Awake? I was thinking about after. Whatever after is. There is a gate on a hill north of the purge line that nobody keeps any more. I would like to keep a gate with you.",
+      "choices": [
+        { "text": "Wherever you keep it.", "effects": { "approval": { "sera": 1 }, "flags": { "sera_night_after": true } }, "next": "after" },
+        { "text": "This has to end, Sera. I cannot carry it into what is coming.", "effects": { "romance": { "end": true } }, "next": "ended" }
+      ]
+    },
+    "after": { "speaker": "sera", "text": "Then it is a plan. Sleep.", "choices": [ { "text": "You first.", "end": true } ] },
+    "ended": { "speaker": "sera", "text": "Right. Clean break. I have had worse orders. The left is still yours; that was never about this.", "choices": [ { "text": "I know.", "end": true } ] }
+  }
+}

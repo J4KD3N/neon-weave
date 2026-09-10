@@ -220,7 +220,8 @@ func test_faction_content_is_consistent() -> void:
 		for r: String in f.get("rivals", []):
 			assert_true(ids.has(r) and r != String(f["id"]), "faction %s rival %s" % [f["id"], r])
 	for c: Dictionary in registry.get_all("companions"):
-		assert_true(ids.has(String(c.get("faction", ""))), "companion %s leans toward a real faction" % c["id"])
+		var lean := String(c.get("faction", ""))
+		assert_true(lean.is_empty() or ids.has(lean), "companion %s leans toward a real faction or none (Whisper)" % c["id"])
 	for n: Dictionary in registry.get_all("npcs"):
 		assert_true(registry.has_entry("dialogue", String(n.get("dialogue", ""))), "npc %s dialogue" % n["id"])
 		assert_true(ids.has(String(n.get("faction", ""))), "npc %s faction" % n["id"])

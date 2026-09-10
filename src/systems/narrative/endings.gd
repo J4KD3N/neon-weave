@@ -23,7 +23,9 @@ static func resolve(registry: ContentRegistry, ctx: Dictionary) -> Dictionary:
 
 
 ## One line per companion in the registry, from the ending's epilogue:
-## alive and recruited, dead (`<id>_dead`), or absent. Empty text is skipped.
+## alive and recruited, dead (`<id>_dead`), or absent; a partner reads
+## `romanced` (alive) or `lost` (dead) when the ending has those lines.
+## Empty text is skipped.
 static func fates(registry: ContentRegistry, ending: Dictionary, narrative: NarrativeState) -> Array[String]:
 	var out: Array[String] = []
 	var epilogue: Dictionary = ending.get("epilogue", {})
@@ -35,6 +37,11 @@ static func fates(registry: ContentRegistry, ending: Dictionary, narrative: Narr
 			key = "dead"
 		elif narrative.is_recruited(id):
 			key = "alive"
+		# A partner (D-092): "romanced" while alive, "lost" when dead, when the ending writes them.
+		if key == "alive" and narrative.romance == id and lines.has("romanced"):
+			key = "romanced"
+		elif key == "dead" and narrative.flag("romance_%s_lost" % id) and lines.has("lost"):
+			key = "lost"
 		var text := String(lines.get(key, ""))
 		if not text.is_empty():
 			out.append("%s: %s" % [c.get("short_name", c.get("name", id)), text])

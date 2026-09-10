@@ -172,8 +172,12 @@ func test_a_quarters_scene_fires_from_approval_once() -> void:
 		world.choose(0)
 	assert_eq(world.narrative.approval_of("sera"), before + 3)
 	assert_true(world.narrative.flag("sera_quarters_together"))
-	assert_eq(world.quarters_scenes().size(), 0, "once")
 	assert_true(world.narrative.flag("scene_sera_quarters_seen"))
+	var again := world.quarters_scenes()
+	assert_eq(again.size(), 1, "once: the trust scene is gone")
+	assert_eq(String(Dictionary(again[0])["scene"]), "sera_spark", "and at approval 6 her spark (S37) takes its place")
+	world.narrative.approval["sera"] = 4
+	assert_eq(world.quarters_scenes().size(), 0, "under the spark bar, nothing")
 	world.narrative.add_approval("dax", 3)
 	assert_eq(String(Dictionary(world.quarters_scenes()[0])["companion"]), "dax")
 

@@ -1,0 +1,17 @@
+{
+  "name": "Yev — the Quarters",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "yev",
+      "text": "You built a room with a door in a place that used to have neither. My grove had no doors. I am learning what they are for. Tonight I think they are for saying that the Rootched have taken cuttings from my grove and I do not know what they are growing.",
+      "choices": [
+        { "text": "Then we find out. Together, with the door shut.", "effects": { "approval": { "yev": 3 }, "flags": { "yev_quarters_together": true } }, "next": "together" },
+        { "text": "Whatever they grow, it does not get to grow through you.", "effects": { "approval": { "yev": 2 }, "flags": { "yev_quarters_promise": true } }, "next": "promise" },
+        { "text": "Sleep on it, Yev.", "effects": { "approval": { "yev": -1 } }, "end": true }
+      ]
+    },
+    "together": { "speaker": "yev", "text": "Together. That is a door I can walk through.", "choices": [ { "text": "Good night, Yev.", "end": true } ] },
+    "promise": { "speaker": "yev", "text": "You cannot promise that. Thank you for promising it.", "choices": [ { "text": "Good night, Yev.", "end": true } ] }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "Sera — the roof",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "sera",
+      "text": "You came up. Good. I have been standing here working out how to say a thing without it sounding like an order. I watch you in the line. Not the way I watch the line.",
+      "choices": [
+        { "text": "I watch you too.", "effects": { "approval": { "sera": 1 }, "flags": { "romance_sera_interested": true } }, "next": "yes" },
+        { "text": "Sera. Not like that. But I am glad it is you on my left.", "effects": { "flags": { "romance_sera_closed": true } }, "next": "no" },
+        { "text": "Ask me again when we are not bleeding.", "end": true }
+      ]
+    },
+    "yes": { "speaker": "sera", "text": "Then we are both fools. Get some sleep. Tomorrow I will stand a little closer.", "choices": [ { "text": "Do that.", "end": true } ] },
+    "no": { "speaker": "sera", "text": "Understood. That is not nothing. The left stays yours.", "choices": [ { "text": "Always.", "end": true } ] }
+  }
+}

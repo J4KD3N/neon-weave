@@ -1,0 +1,17 @@
+{
+  "name": "Whisper — the Quarters",
+  "start": [ { "node": "start" } ],
+  "nodes": {
+    "start": {
+      "speaker": "whisper",
+      "text": "Door. Good. I have swept this room twice for listeners and found one: me. I have been reporting on you to nobody, out of habit, and the reports are getting embarrassing. They say you are all right.",
+      "choices": [
+        { "text": "Keep filing them. I like knowing someone is watching.", "effects": { "approval": { "whisper": 2 }, "flags": { "whisper_quarters_filed": true } }, "next": "filed" },
+        { "text": "You do not owe anyone a report any more. Not even you.", "effects": { "approval": { "whisper": 3 }, "flags": { "whisper_quarters_free": true } }, "next": "free" },
+        { "text": "Sweep it again. I want to be sure.", "effects": { "approval": { "whisper": -1 } }, "end": true }
+      ]
+    },
+    "filed": { "speaker": "whisper", "text": "Filed. Redacted. You are welcome.", "choices": [ { "text": "Good night.", "end": true } ] },
+    "free": { "speaker": "whisper", "text": "That is the worst thing anyone has ever said to me. Say it again tomorrow.", "choices": [ { "text": "Tomorrow.", "end": true } ] }
+  }
+}
