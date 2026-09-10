@@ -1,0 +1,11 @@
+{
+  "name": "The Weaver's Mend",
+  "summary": "Three Keys, whole. A party that trusted you all the way down. A Choir fragment you chose not to kill. You reweave the Loom instead of ending it: human, machine and Weft held in tension, none of them drowned. The singing does not stop. It changes key.",
+  "priority": 10,
+  "when": { "flags": { "key_lattice": true, "key_rootched": true, "key_ashfound": true, "choir_spared": true }, "party_approval_min": 5 },
+  "epilogue": {
+    "sera": { "alive": "Sera stays. Someone has to teach the next Weavers what a shield is for.", "dead": "Sera would have hated the singing. You keep the gate for her.", "absent": "" },
+    "kaj7": { "alive": "Kaj-7 hears the whole Choir now, and answers it, and it answers back. It says the signal was always a question.", "dead": "The Choir remembers Kaj-7. It sings its part.", "absent": "" },
+    "dax": { "alive": "Dax's seal holds on Weft-light he can finally touch. His family came up to see the sky.", "dead": "Dax's seal holds. His family came up to see the sky, and to ask.", "absent": "" }
+  }
+}

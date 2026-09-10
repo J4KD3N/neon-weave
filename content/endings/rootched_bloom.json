@@ -1,0 +1,11 @@
+{
+  "name": "The Bloom",
+  "summary": "The Rootched finished what the Sundering started. The Loom is a tree now, and the districts are its roots, and everyone who stayed is part of everyone else. It is warm. It hums. It is not, quite, human.",
+  "priority": 5,
+  "when": { "faction": "rootched" },
+  "epilogue": {
+    "sera": { "alive": "Sera burned her way out of the green and kept going. There are still places it has not reached.", "dead": "The green grew over Sera's grave first. It remembered her.", "absent": "" },
+    "kaj7": { "alive": "Kaj-7 rooted beside the Beacon. It sings with the rest now, and it is finally not afraid.", "dead": "Something with Kaj-7's voice sings under the plaza. It is not Kaj-7.", "absent": "" },
+    "dax": { "alive": "Dax's vault opened from the inside. His family walked out into the green and did not walk back.", "dead": "The green found Dax's vault. The seal did not matter after all.", "absent": "" }
+  }
+}

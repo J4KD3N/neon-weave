@@ -61,6 +61,13 @@ var system_menu: SystemMenu
 var weave_menu: WeaveMenu
 var inventory_menu: InventoryMenu
 var archive_menu: ArchiveMenu
+var ending_menu: EndingMenu
+## A scripted sequence is running: input is off, the party stands still (S36).
+var sequence_running: bool = false
+## Skip sequence pauses (tests and staging).
+var instant_sequences: bool = false
+var last_sequence: Array = []
+var sequence_focus: Node2D
 var account: Account
 var merchant_menu: MerchantMenu
 var current_merchant: String = ""
@@ -148,6 +155,13 @@ func _ready() -> void:
 	archive_menu = ArchiveMenu.new()
 	archive_menu.name = "ArchiveMenu"
 	add_child(archive_menu)
+	ending_menu = EndingMenu.new()
+	ending_menu.name = "EndingMenu"
+	add_child(ending_menu)
+	sequence_focus = Node2D.new()
+	sequence_focus.name = "SequenceFocus"
+	add_child(sequence_focus)
+	instant_sequences = Engine.has_meta("neon_weave_tests")
 	account = Account.load_or_new(account_path)
 	merchant_menu = MerchantMenu.new()
 	merchant_menu.name = "MerchantMenu"
@@ -175,6 +189,7 @@ func _ready() -> void:
 	spawn_buildings()
 	auto_start_quests()
 	restore_map_doors()
+	restore_map_edits()
 	combat = CombatController.new()
 	combat.name = "Combat"
 	add_child(combat)
@@ -333,6 +348,7 @@ func _enter(entry: Dictionary) -> bool:
 	spawn_buildings()
 	mode = "explore"
 	restore_map_doors()
+	restore_map_edits()
 	_last_step_cell = Vector2i(-1, -1)
 	if audio != null:
 		refresh_music()
@@ -355,6 +371,8 @@ func _enter(entry: Dictionary) -> bool:
 		inventory_menu.visible = false
 	if archive_menu != null:
 		archive_menu.visible = false
+	if ending_menu != null:
+		ending_menu.visible = false
 	close_merchant()
 	if combat != null:
 		combat.release_cursor()
@@ -1187,6 +1205,12 @@ func _on_combat_ended(result: String) -> void:
 # --- input & frame ---------------------------------------------------------
 
 func _unhandled_input(event: InputEvent) -> void:
+	if sequence_running:
+		return # a scripted sequence owns the screen
+	if ending_menu != null and ending_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("confirm"):
+			close_ending()
+		return
 	# Menu sounds: any open text menu ticks, confirms and cancels the same way.
 	var menu_open := in_title() or (settings_menu != null and settings_menu.visible) or (system_menu != null and system_menu.visible) \
 		or (weave_menu != null and weave_menu.visible) or (inventory_menu != null and inventory_menu.visible) or (archive_menu != null and archive_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
@@ -2302,35 +2326,7 @@ func fire_trigger(t: Dictionary) -> bool:
 			pending_trigger_flag = trigger_flag(map_id, id) # spent only once the fight is won
 		else:
 			narrative.set_flag(trigger_flag(map_id, id), true)
-	for companion: String in Conditions.apply(effects, narrative):
-		add_companion(companion)
-	react_to_reputation(effects)
-	handle_join_effect(effects)
-	if effects.has("victory_flag"):
-		pending_victory_flag = String(effects["victory_flag"])
-	if effects.has("grant"):
-		var got := _gain(effects["grant"])
-		overlay.toast("Found: %s" % RunState.describe(got), 2.5)
-	if effects.has("toast"):
-		overlay.toast(String(effects["toast"]), 3.5)
-	for raw: Array in effects.get("open_doors", []):
-		open_door(Vector2i(int(raw[0]), int(raw[1])))
-	var placed: Array = effects.get("enemies", [])
-	if not placed.is_empty():
-		for p: Dictionary in placed:
-			var raw: Array = p.get("cell", [0, 0])
-			var cell := Vector2i(int(raw[0]), int(raw[1]))
-			var entry: Dictionary = registry.get_entry("enemies", String(p.get("type", "")))
-			if entry.is_empty() or not map_data.is_walkable(cell) or enemy_at(cell) != null:
-				continue
-			enemies.append(_make_enemy(String(p["type"]), entry, cell, String(p.get("tier", ""))))
-		start_combat(false)
-	if effects.has("dialogue") and mode == "explore":
-		open_dialogue(String(effects["dialogue"]))
-	if effects.has("transition"):
-		var tr: Dictionary = effects["transition"]
-		var raw_a: Array = tr.get("arrive", [])
-		travel(String(tr.get("to", "")), Vector2i(int(raw_a[0]), int(raw_a[1])) if raw_a.size() == 2 else Vector2i(-1, -1), String(tr.get("label", "")))
+	apply_effects(effects)
 	autosave()
 	check_demo_end()
 	return true
@@ -3293,3 +3289,166 @@ func grant_account_unlocks() -> Array[String]:
 		var origin := registry.get_entry("origins", key.get_slice(":", 1))
 		overlay.toast("Unlocked for every playthrough: %s" % origin.get("name", key), 4.0)
 	return fresh
+
+
+
+# --- campaign tooling v2: sequences, map edits, endings (S36, D-091) ---------
+
+## Applies one effects block: the trigger vocabulary (approval, flags,
+## recruit, quest, reputation, join_faction, victory_flag, grant, toast,
+## open_doors, enemies, dialogue, transition) plus map_edits, sequence and
+## ending. Triggers, dialogue choices and sequence steps all come here.
+func apply_effects(effects: Dictionary) -> void:
+	for companion: String in Conditions.apply(effects, narrative):
+		add_companion(companion)
+	react_to_reputation(effects)
+	handle_join_effect(effects)
+	if effects.has("victory_flag"):
+		pending_victory_flag = String(effects["victory_flag"])
+	if effects.has("grant"):
+		var got := _gain(effects["grant"])
+		overlay.toast("Found: %s" % RunState.describe(got), 2.5)
+	if effects.has("toast"):
+		overlay.toast(String(effects["toast"]), 3.5)
+	for raw: Array in effects.get("open_doors", []):
+		open_door(Vector2i(int(raw[0]), int(raw[1])))
+	for edit: Dictionary in effects.get("map_edits", []):
+		apply_map_edit(edit)
+	var placed: Array = effects.get("enemies", [])
+	if not placed.is_empty():
+		for p: Dictionary in placed:
+			var raw: Array = p.get("cell", [0, 0])
+			var cell := Vector2i(int(raw[0]), int(raw[1]))
+			var entry: Dictionary = registry.get_entry("enemies", String(p.get("type", "")))
+			if entry.is_empty() or not map_data.is_walkable(cell) or enemy_at(cell) != null:
+				continue
+			enemies.append(_make_enemy(String(p["type"]), entry, cell, String(p.get("tier", ""))))
+		start_combat(false)
+	if effects.has("dialogue") and mode == "explore":
+		open_dialogue(String(effects["dialogue"]))
+	if effects.has("transition"):
+		var tr: Dictionary = effects["transition"]
+		var raw_a: Array = tr.get("arrive", [])
+		travel(String(tr.get("to", "")), Vector2i(int(raw_a[0]), int(raw_a[1])) if raw_a.size() == 2 else Vector2i(-1, -1), String(tr.get("label", "")))
+	if effects.has("sequence"):
+		run_sequence(effects["sequence"])
+	if bool(effects.get("ending", false)):
+		show_ending()
+
+
+## A scripted sequence: steps run in order, each an effects block plus an
+## optional `camera` ([x, y] cell, or "leader") and `pause` (seconds).
+## Input is off and the party stands still while it runs; pauses are
+## skipped under tests. A `dialogue` or `enemies` step must be the last:
+## the sequence hands over to the dialogue or the fight. Returns the number
+## of steps that ran. `last_sequence` keeps a record for tests.
+func run_sequence(steps: Array) -> int:
+	if sequence_running:
+		return 0
+	sequence_running = true
+	party.active = false
+	party.stop()
+	last_sequence = []
+	var ran := 0
+	for raw: Variant in steps:
+		var step: Dictionary = raw
+		ran += 1
+		var record := {"step": ran, "camera": Vector2i(-1, -1)}
+		if step.has("camera"):
+			var focus: Variant = step["camera"]
+			if focus is Array and Array(focus).size() == 2:
+				var cell := Vector2i(int(Array(focus)[0]), int(Array(focus)[1]))
+				sequence_focus.position = map_view.cell_to_world(cell)
+				if camera != null:
+					camera.target = sequence_focus
+				record["camera"] = cell
+			elif String(focus) == "leader" and camera != null and party.leader() != null:
+				camera.target = party.leader()
+				record["camera"] = leader_cell()
+		var body := step.duplicate()
+		body.erase("camera")
+		body.erase("pause")
+		apply_effects(body)
+		last_sequence.append(record)
+		if in_dialogue() or mode != "explore":
+			break # the dialogue or the fight takes it from here
+		var pause := float(step.get("pause", 0.0))
+		if pause > 0.0 and not instant_sequences:
+			await get_tree().create_timer(pause).timeout
+	if camera != null and party.leader() != null and not (mode == "combat"):
+		camera.target = party.leader()
+	if mode == "explore":
+		party.active = true
+	sequence_running = false
+	return ran
+
+
+## A persistent change to a handcrafted map: {"map"?: id, "cell": [x, y],
+## "tile": tile id}. Recorded in the story (NarrativeState.map_edits) and
+## applied now when the map is the current one, else on the next entry.
+func apply_map_edit(edit: Dictionary) -> bool:
+	var target := String(edit.get("map", map_id))
+	var raw: Array = edit.get("cell", [])
+	var tile_id := String(edit.get("tile", ""))
+	if raw.size() != 2 or tile_id.is_empty() or not registry.has_entry("tiles", tile_id) or not registry.has_entry("maps", target):
+		return false
+	var cell := Vector2i(int(raw[0]), int(raw[1]))
+	var edits: Array = narrative.map_edits.get(target, [])
+	var kept: Array = []
+	for e: Variant in edits:
+		var old: Array = e
+		if old.size() == 3 and int(old[0]) == cell.x and int(old[1]) == cell.y:
+			continue # the latest edit of a cell wins
+		kept.append(old)
+	kept.append([cell.x, cell.y, tile_id])
+	narrative.map_edits[target] = kept
+	if target == map_id and not map_entry.has("generation"):
+		_set_map_tile(cell, tile_id)
+	return true
+
+
+func _set_map_tile(cell: Vector2i, tile_id: String) -> void:
+	if not map_data.in_bounds(cell):
+		return
+	map_data.set_tile(cell, registry.get_entry("tiles", tile_id))
+	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id))
+	if highlighter != null:
+		highlighter.map_view = map_view
+
+
+## Re-applies the story's edits to a handcrafted map on entry.
+func restore_map_edits() -> void:
+	if map_entry.has("generation"):
+		return
+	for e: Variant in narrative.map_edits.get(map_id, []):
+		var edit: Array = e
+		if edit.size() == 3:
+			_set_map_tile(Vector2i(int(edit[0]), int(edit[1])), String(edit[2]))
+
+
+## The ending the state machine resolves for the current story.
+func resolve_ending() -> Dictionary:
+	return Endings.resolve(registry, dialogue_ctx())
+
+
+## Shows the resolved ending once: flags `ending_<id>` and `ending_seen`,
+## the fates from its epilogue, the run in numbers.
+func show_ending() -> bool:
+	if ending_menu == null or narrative.flag("ending_seen"):
+		return false
+	var ending := resolve_ending()
+	if ending.is_empty():
+		return false
+	narrative.set_flag("ending_%s" % String(ending["id"]), true)
+	narrative.set_flag("ending_seen", true)
+	ending_menu.show_text(EndingMenu.render(ending, Endings.fates(registry, ending, narrative), demo_stats()))
+	autosave()
+	return true
+
+
+func close_ending() -> void:
+	if ending_menu == null:
+		return
+	ending_menu.close()
+	if title_menu != null and not Engine.has_meta("neon_weave_tests"):
+		show_title()
