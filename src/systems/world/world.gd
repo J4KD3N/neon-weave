@@ -2791,7 +2791,10 @@ func check_achievements() -> Array[String]:
 
 ## Quest stages that declare `next` advance once every objective of the
 ## current stage is done: the data hand-off between beats (D-081), so no
-## map trigger has to know the quest. Runs before every autosave, so the
+## map trigger has to know the quest. A stage may also declare `branches`
+## ([{"when": conditions, "next": stage, "toast"?}], S36): the first whose
+## conditions hold wins, `next` is the fallback, and a stage with branches
+## but no objectives forks as soon as one holds. Runs before every autosave, so the
 ## save carries the new stage. Returns the quest ids that moved.
 func advance_quests() -> Array[String]:
 	var moved: Array[String] = []
@@ -2805,11 +2808,12 @@ func advance_quests() -> Array[String]:
 			var stages: Dictionary = quest.get("stages", {})
 			var stage: Dictionary = stages.get(narrative.stage_of(quest_id), {})
 			var next := String(stage.get("next", ""))
-			if next.is_empty() or not stages.has(next):
+			var branches: Array = stage.get("branches", [])
+			if next.is_empty() and branches.is_empty():
 				continue
 			var objectives: Array = stage.get("objectives", [])
-			if objectives.is_empty():
-				continue
+			if objectives.is_empty() and branches.is_empty():
+				continue # a bare `next` needs objectives to finish; a fork stage may have none
 			var done := true
 			for o: Dictionary in objectives:
 				if not Conditions.passes(o.get("done_when", {}), ctx):
@@ -2817,10 +2821,21 @@ func advance_quests() -> Array[String]:
 					break
 			if not done:
 				continue
-			narrative.set_stage(quest_id, next)
+			# Branches (S36, D-091): the first whose `when` holds wins; `next` is the fallback.
+			var target := ""
+			var toast := String(stage.get("next_toast", ""))
+			for b: Dictionary in branches:
+				if Conditions.passes(b.get("when", {}), ctx):
+					target = String(b.get("next", ""))
+					toast = String(b.get("toast", toast))
+					break
+			if target.is_empty():
+				target = next
+			if target.is_empty() or not stages.has(target):
+				continue
+			narrative.set_stage(quest_id, target)
 			moved.append(quest_id)
 			moved_now = true
-			var toast := String(stage.get("next_toast", ""))
 			if not toast.is_empty() and overlay != null:
 				overlay.toast(toast, 4.0)
 		if not moved_now:
