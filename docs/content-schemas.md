@@ -15,6 +15,7 @@ without a schema; keep the two in step.
 | classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level, capstone (ability at `capstone_level` levels in the class) |
 | companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction, romanceable, approval_start, scenes [{id, label, dialogue, requires, quarters (level)}] (S35) |
 | lore | name, text, order | source; found ids live in the narrative state and read in the Archive |
+| endings | name, summary, when | priority (highest holding wins; 0 for the drift), epilogue {companion: {alive, dead, absent}} (S36, D-091) |
 | dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]) |
 | enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity), traits (same vocabulary as races) |
 | factions | name, color, rivals, joinable_act | summary, envoy (npc id), vendor (merchant id), area (map id), join_reputation {faction: delta} applied on joining |
@@ -39,7 +40,9 @@ without a schema; keep the two in step.
 | audio | name, kind (sfx or music), synth or file | volume_db, loop, summary |
 
 Trigger effect keys: approval, flags, recruit, quest, reputation, toast,
-open_doors, enemies, victory_flag, grant, dialogue, transition, join_faction.
+open_doors, enemies, victory_flag, grant, dialogue, transition, join_faction,
+map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause], ending (true).
 Condition keys (`requires` / `when` / `done_when`): flags, origin_tag,
 race, race_tag, class, approval, reputation, recruited, not_recruited, quest,
-faction (the joined faction id, "" for none yet), not_faction.
+faction (the joined faction id, "" for none yet), not_faction, party_approval_min
+(every recruited companion at or above n).

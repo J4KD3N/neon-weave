@@ -50,6 +50,10 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	if requires.has("faction") and n.faction != String(requires["faction"]): # "" means none joined
 		return false
+	if requires.has("party_approval_min"):
+		for id: String in n.recruited:
+			if n.approval_of(id) < int(requires["party_approval_min"]):
+				return false
 	if requires.has("not_faction") and n.faction == String(requires["not_faction"]) and not n.faction.is_empty():
 		return false
 	if requires.has("not_recruited") and n.is_recruited(String(requires["not_recruited"])):

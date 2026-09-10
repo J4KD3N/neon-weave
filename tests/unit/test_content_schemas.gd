@@ -17,6 +17,7 @@ const SCHEMAS: Dictionary = {
 	"factions": ["name", "color", "rivals", "joinable_act"],
 	"items": ["name", "slot", "art"],
 	"lore": ["name", "text", "order"],
+	"endings": ["name", "summary", "when"],
 	"affixes": ["name", "slots", "weight"],
 	"maps": ["name", "biome", "spawn_marker", "legend", "rows"],
 	"merchants": ["name", "stock"],

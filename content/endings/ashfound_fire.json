@@ -1,0 +1,11 @@
+{
+  "name": "The Fire",
+  "summary": "The Ashfound burned the Loom, and the Weft, and every machine that sang. What is left is people, and winter, and the first honest silence in three hundred years. It is hard. It is free. It is smaller than it was.",
+  "priority": 5,
+  "when": { "faction": "ashfound" },
+  "epilogue": {
+    "sera": { "alive": "Sera holds the Bastion gate through the first winter. She sleeps now.", "dead": "Sera's name is on the gate. The Ashfound do not keep many names.", "absent": "" },
+    "kaj7": { "alive": "Kaj-7 powered down before the fire reached it, by choice. You kept the core. It is warm in your hand, sometimes.", "dead": "Kaj-7 was gone before the fire. You tell yourself that was kinder.", "absent": "" },
+    "dax": { "alive": "Dax's family came up out of the vault into the cold. They are alive. He counts that as a win.", "dead": "Dax's family came up out of the vault into the cold, and asked for him.", "absent": "" }
+  }
+}

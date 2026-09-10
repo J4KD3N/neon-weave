@@ -1,0 +1,11 @@
+{
+  "name": "The Drift",
+  "summary": "You reached the Loom sworn to nobody and left it weaving. The Choir sings on under the floor; the factions circle; the Shards keep stirring. Nothing ended, which is a kind of ending.",
+  "priority": 0,
+  "when": {},
+  "epilogue": {
+    "sera": { "alive": "Sera keeps the yard gate. She has stopped counting the villages.", "dead": "Sera is buried under the catwalk by the Beacon, facing the gate.", "absent": "" },
+    "kaj7": { "alive": "Kaj-7 still listens. Lately the signal has started listening back.", "dead": "Kaj-7's chassis stands in the Workshop. Nobody has the heart to strip it.", "absent": "" },
+    "dax": { "alive": "Dax went back to the vault. The seal held; nobody knows for how long.", "dead": "Dax's family got the news from a stranger. The seal held.", "absent": "" }
+  }
+}

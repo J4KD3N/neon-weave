@@ -14,6 +14,8 @@ var recruited: Array[String] = []
 var faction: String = ""
 ## Lore fragment ids found (S35): story, never haul, so a wipe keeps them.
 var lore: Array[String] = []
+## Persistent handcrafted-map edits (S36): map id -> [[x, y, tile id], ...].
+var map_edits: Dictionary = {}
 
 
 func flag(name: String) -> bool:
@@ -62,7 +64,7 @@ func dismiss(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate()}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true)}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -82,6 +84,7 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	n.recruited.assign(d.get("recruited", []))
 	n.faction = String(d.get("faction", ""))
 	n.lore.assign(d.get("lore", []))
+	n.map_edits = Dictionary(d.get("map_edits", {})).duplicate(true)
 	return n
 
 

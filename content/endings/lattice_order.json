@@ -1,0 +1,11 @@
+{
+  "name": "Order",
+  "summary": "The Lattice took the Loom and closed the Weft. The lights came back on in every district at once, on schedule, and stayed on. Nothing sings any more. Nothing needs to.",
+  "priority": 5,
+  "when": { "faction": "lattice" },
+  "epilogue": {
+    "sera": { "alive": "Sera left the Bastion the night the lights came on. She did not say where.", "dead": "Sera did not live to see the lights. The Lattice filed her under losses.", "absent": "" },
+    "kaj7": { "alive": "Kaj-7 was restored. It is very efficient now. It does not remember your name.", "dead": "Kaj-7's signal stopped with the Loom. The Lattice logged it as noise.", "absent": "" },
+    "dax": { "alive": "Dax's vault was indexed, catalogued and opened. His family is on a list now, and safe, and watched.", "dead": "Dax's vault was opened by a Lattice crew. His family thanked them.", "absent": "" }
+  }
+}
