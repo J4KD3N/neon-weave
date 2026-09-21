@@ -1,0 +1,7 @@
+{
+  "name": "The Fire",
+  "summary": "See the Ashfound burn both.",
+  "steam_id": "ACH_ENDING_FIRE",
+  "when": { "flags": { "ending_ashfound_fire": true } },
+  "milestone": "M3"
+}

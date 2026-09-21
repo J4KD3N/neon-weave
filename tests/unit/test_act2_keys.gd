@@ -290,5 +290,4 @@ func test_the_catastrophe_resolves_by_prior_choices() -> void:
 	_catastrophe(["sera", "kaj7", "dax"], {"choir_invited": true}, "sera")
 	var mend := world.registry.get_entry("endings", "weavers_mend")
 	var fates := Endings.fates(world.registry, mend, world.narrative)
-	for line: String in fates:
-		assert_false(line.begins_with("Sera:"), "no line for the taken until S43 writes one")
+	assert_any_contains(fates, "Sera: Sera walked into the light before the Mend", "the taken have a line (S43)")

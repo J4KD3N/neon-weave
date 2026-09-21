@@ -1,11 +1,26 @@
 {
   "name": "The Drift",
-  "summary": "You reached the Loom sworn to nobody and left it weaving. The Choir sings on under the floor; the factions circle; the Shards keep stirring. Nothing ended, which is a kind of ending.",
+  "summary": "You reached the Loom and left it weaving. The Choir sings on under the floor; the factions circle; the Shards keep stirring. Nothing ended, which is a kind of ending.",
   "priority": 0,
   "when": {},
+  "modifiers": [
+    { "when": { "faction": "lattice" }, "text": "You were sworn to the Lattice, and you walked away with your hand off the Loom. They have filed you. They will send someone else." },
+    { "when": { "faction": "rootched" }, "text": "You were sworn to the Rootched, and you walked away. The Speaker says the current will bring you back. The current has not said." },
+    { "when": { "faction": "ashfound" }, "text": "You were sworn to the Ashfound, and you did not burn it. The Marshal has your name on a list that is not a good list." },
+    { "when": { "flags": { "key_lattice_broken": true } }, "text": "The Key of the Ledgers is broken, so the Loom weaves without counting. Nobody knows how much is left." },
+    { "when": { "flags": { "key_rootched_broken": true } }, "text": "The Key of the Heart is broken, so the Loom weaves without growing. The districts hold. For now." },
+    { "when": { "flags": { "key_ashfound_broken": true } }, "text": "The Key of the Quiet is broken, so nothing under the Cathedral goes quiet any more, and the fonts hum all night." },
+    { "when": { "flags": { "choir_ended": true } }, "text": "You ended the voice and left the Loom. It weaves without a voice now. The Choir under the floor has stopped singing and started listening." },
+    { "when": { "flags": { "choir_spared": true } }, "text": "You spared the voice and left it weaving. It asks, sometimes, through the conduits, whether you are coming back." },
+    { "when": { "flags": { "bastion_struck": true } }, "text": "The plaza is still broken from the night the Beacon lit itself. Nobody has fixed it. The tune is still under it." },
+    { "when": { "flags": { "catastrophe_took_someone": true } }, "text": "Someone walked into the Beacon's light on the plaza and did not come back, and the Loom is still weaving, so they are still down there. You could go back. You have not." }
+  ],
   "epilogue": {
-    "sera": { "alive": "Sera keeps the yard gate. She has stopped counting the villages.", "dead": "Sera is buried under the catwalk by the Beacon, facing the gate.", "absent": "" },
-    "kaj7": { "alive": "Kaj-7 still listens. Lately the signal has started listening back.", "dead": "Kaj-7's chassis stands in the Workshop. Nobody has the heart to strip it.", "absent": "" },
-    "dax": { "alive": "Dax went back to the vault. The seal held; nobody knows for how long.", "dead": "Dax's family got the news from a stranger. The seal held.", "absent": "" }
+    "sera": { "alive": "Sera keeps the yard gate. She has stopped counting the villages.", "loyal": "Sera keeps the yard gate and the roll of names, and reads them to the gate. She says it listens.", "dead": "Sera is buried under the catwalk by the Beacon, facing the gate.", "taken": "Sera walked into the light and the Loom is still weaving. Her shield is in the yard where she left it. You have not moved it.", "absent": "" },
+    "kaj7": { "alive": "Kaj-7 still listens. Lately the signal has started listening back.", "loyal": "Kaj-7 still listens, by choice, with its own name. It says the signal is a question and it has decided not to answer yet.", "dead": "Kaj-7's chassis stands in the Workshop. Nobody has the heart to strip it.", "taken": "Kaj-7 answered its name on the plaza. The signal has its voice now. You do not launch Shards at night.", "absent": "" },
+    "dax": { "alive": "Dax went back to the vault. The seal held; nobody knows for how long.", "loyal": "Dax's family got their choice. Whatever they chose, the seal holds, and he is on the road between the vault and the gate, always.", "dead": "Dax's family got the news from a stranger. The seal held.", "taken": "The Choir did not want Dax. He says that is the first sensible thing it has done.", "absent": "" },
+    "whisper": { "alive": "Whisper is in the rafters again, somewhere. The recall is still on the band. She is still not walking.", "loyal": "Whisper burned the numbers and the recall band went quiet. She sleeps in a bunk now, sometimes, with the door open.", "dead": "Whisper's chip holds no data. You keep it in the rafters, where she would have.", "taken": "Whisper walked into the light saying your name in a voice not hers. The recall band carries it now. You have stopped listening to the band.", "absent": "" },
+    "cinder": { "alive": "Cinder stands at the source under the throat and listens to the second singing. He says it has not decided anything either.", "loyal": "Cinder keeps the thread and stands at the end of it, and remembers, and was asked, and says that is enough.", "dead": "Cinder's tether hangs slack under the throat. The singing goes round it.", "taken": "Cinder said yes a second time on the plaza. He is down there with the first yes now. He always was, a little.", "absent": "" },
+    "yev": { "alive": "Yev keeps her grove and the Rootched keep cutting from it. She says the current turns. It has not turned yet.", "loyal": "Yev's grove has its heart back. It grows slowly, the way it taught her. The Rootched have stopped coming.", "dead": "One leaf in a pot of grove-soil is a sapling on the plaza now. Nobody planted it.", "taken": "Yev reached for the current on the plaza and it took her hand. The plaza is green where she stood, and warm, and it hums.", "absent": "" }
   }
 }

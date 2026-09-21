@@ -1,0 +1,7 @@
+{
+  "name": "The Drift",
+  "summary": "Leave the Loom weaving.",
+  "steam_id": "ACH_ENDING_DRIFT",
+  "when": { "flags": { "ending_drift": true } },
+  "milestone": "M3"
+}

@@ -225,3 +225,28 @@ func test_bound_sites_and_sequence_steps_are_well_formed() -> void:
 				if step.has("dismiss"):
 					assert_true(registry.has_entry("companions", String(step["dismiss"])), "map %s dismisses a stranger" % m["id"])
 	assert_true(conditional >= 10, "the catastrophe branches on prior choices")
+
+
+## Endings (S43): modifiers use the condition vocabulary, epilogue keys are
+## the known ladder, every companion has alive, dead and taken lines in
+## every ending, and romanced/lost lines only belong to romanceable ones.
+func test_endings_write_every_companion() -> void:
+	var keys: Array[String] = ["alive", "dead", "absent", "taken", "loyal", "romanced", "lost"]
+	for e: Dictionary in registry.get_all("endings"):
+		for k: String in e.get("when", {}):
+			assert_true(REQUIRES_KEYS.has(k) or k == "party_approval_min", "ending %s when.%s" % [e["id"], k])
+		for m: Dictionary in e.get("modifiers", []):
+			assert_false(String(m.get("text", "")).is_empty(), "ending %s modifier text" % e["id"])
+			for k: String in m.get("when", {}):
+				assert_true(REQUIRES_KEYS.has(k), "ending %s modifier when.%s" % [e["id"], k])
+		var epilogue: Dictionary = e.get("epilogue", {})
+		for c: Dictionary in registry.get_all("companions"):
+			var id := String(c["id"])
+			assert_true(epilogue.has(id), "ending %s writes %s" % [e["id"], id])
+			var lines: Dictionary = epilogue.get(id, {})
+			for k: String in lines:
+				assert_true(keys.has(k), "ending %s %s epilogue key %s" % [e["id"], id, k])
+				if k == "romanced" or k == "lost":
+					assert_true(bool(c.get("romanceable", false)), "ending %s writes a %s line for %s, who has no romance" % [e["id"], k, id])
+			for need: String in ["alive", "dead", "taken"]:
+				assert_false(String(lines.get(need, "")).is_empty(), "ending %s: %s has no %s line" % [e["id"], id, need])

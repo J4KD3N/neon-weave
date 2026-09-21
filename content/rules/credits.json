@@ -1,0 +1,13 @@
+{
+  "name": "Credits",
+  "summary": "The lines the ending panel rolls after the fates (S43). Parallel tracks that need people are listed as what they are.",
+  "lines": [
+    "An open-source, moddable CRPG. MIT code; CC-BY-SA art and story.",
+    "Design and writing: the Neon Weave sessions, one system at a time.",
+    "Engine: Godot 4.7.",
+    "Art and audio: generated placeholders; the real ones are a track that needs an artist and a composer.",
+    "Playtesting: nobody outside the author yet. You could be first.",
+    "Thank you for reaching the Loom."
+  ],
+  "milestone": "M3"
+}
