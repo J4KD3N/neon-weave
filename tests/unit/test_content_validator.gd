@@ -6,7 +6,7 @@
 extends TestCase
 
 const STRANGER := "res://examples/mods"
-const BROKEN := "res://tests/fixtures/mods"
+const BROKEN := "res://tests/fixtures/broken_mods"
 
 
 func test_the_base_game_validates_clean() -> void:
