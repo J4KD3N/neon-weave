@@ -1,0 +1,10 @@
+{
+  "name": "Ashwalker",
+  "analog": "None",
+  "identity": "People who walked out of the Ashfound's fires and kept walking. Soot in the lungs, no fear of heat.",
+  "traits": { "resist": { "fire": 0.5 }, "tags": ["ashwalker"] },
+  "stat_mods": { "hp": 1, "move": 0, "evasion": 2, "initiative": 0 },
+  "faction_lean": "ashfound",
+  "overlay": { "kind": "marks", "color": "#c86a3a" },
+  "playable": true
+}

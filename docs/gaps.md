@@ -27,6 +27,8 @@ M3 is planned in `docs/m3-plan.md` (D-082); the items below are its parallel tra
 
 ## Systems (M3+)
 
+- **Modding is documented and validated but unproven by a stranger** (S45): nobody outside the repo has written a mod; the validator checks what the tests knew to check and nothing about balance, art sheets or audio files; Workshop upload is M4.
+
 - **Combat texture is shallow**: cover, elevation, surfaces and resources exist and the AI weighs them (D-067); no movement cost for elevation, no hackable turrets or doors, no difficulty settings or Iron Weave; enemies never move in exploration; awareness is a radius, not a cone; no attack of opportunity or reactions; previews skip conduit chains.
 - **Five AI archetypes** share one texture score. Missing: retreat when losing, focus fire, target selection beyond nearest. Hidden combatants are drawn faint for both sides; no true fog or detection roll.
 - **Progression v2 leftovers** (S31, D-086): the second class of a multiclass has no subclass and no resource loop of its own; the Weave is the only place levels move and there is no preview of what a level would give; talents are still flat stat bumps; capstones are one ability each with no story or visual moment; party summons use the enemy placeholder art.

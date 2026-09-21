@@ -1,0 +1,23 @@
+{
+  "name": "Tamsin — the lamp room",
+  "act": 1,
+  "start": [
+    { "node": "recruited", "requires": { "recruited": "tamsin" } },
+    { "node": "greet" }
+  ],
+  "nodes": {
+    "greet": {
+      "speaker": "tamsin",
+      "text": "Mind the lamp. I keep it lit for whoever comes down here next, which today is you. Tamsin. I light rooms. Want one lit?",
+      "choices": [
+        { "text": "Walk with us. We go into dark rooms for a living.", "effects": { "recruit": "tamsin", "approval": { "tamsin": 1 }, "flags": { "tamsin_recruited": true }, "quest": { "id": "tamsin_lamp", "stage": "start" } }, "end": true },
+        { "text": "Not now.", "end": true }
+      ]
+    },
+    "recruited": {
+      "speaker": "tamsin",
+      "text": "Lamp's lit. Where to?",
+      "choices": [ { "text": "Down.", "end": true } ]
+    }
+  }
+}

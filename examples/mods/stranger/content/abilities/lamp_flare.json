@@ -1,0 +1,10 @@
+{
+  "name": "Lamp Flare",
+  "sound": "sfx_hit",
+  "summary": "A burst of lamplight: short range, sure to land.",
+  "ap": 2,
+  "range": 3,
+  "damage": [2, 4],
+  "accuracy": 95,
+  "damage_type": "fire"
+}

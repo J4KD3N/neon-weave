@@ -1,0 +1,7 @@
+{
+  "id": "stranger",
+  "name": "The Stranger's Mod",
+  "version": "1.0.0",
+  "priority": 0,
+  "description": "A race, a class with a subclass and a resource, an ability, an item, a companion with a recruit graph, banter and a quest, and a map: the smallest complete mod. Validate it with tools/validate_mods.gd."
+}

@@ -1513,6 +1513,8 @@ func _process(delta: float) -> void:
 
 
 func _resolve_registry() -> ContentRegistry:
+	if registry != null: # handed one before entering the tree (a test loading a mod, S45)
+		return registry
 	var existing := get_node_or_null("/root/Content") as ContentRegistry
 	if existing != null:
 		return existing

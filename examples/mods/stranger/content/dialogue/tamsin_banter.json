@@ -1,0 +1,8 @@
+{
+  "name": "Tamsin — banter",
+  "kind": "banter",
+  "lines": [
+    { "trigger": "enter_shard", "text": "Dark. Good. That is what the lamp is for.", "once": "tamsin_banter_first_shard" },
+    { "trigger": "extract", "text": "Lamp's still lit. Counts as a win." }
+  ]
+}

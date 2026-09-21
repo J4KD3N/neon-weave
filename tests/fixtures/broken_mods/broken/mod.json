@@ -1,0 +1,1 @@
+{ "id": "broken", "name": "A Broken Mod", "version": "0.0.1", "priority": 0, "description": "Every file in here is wrong on purpose; the validator test reads the report." }

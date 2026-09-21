@@ -1,0 +1,13 @@
+{
+  "name": "Tamsin Vell",
+  "short_name": "Tamsin",
+  "race": "ashwalker",
+  "class": "lamplighter",
+  "summary": "A lamplighter who walked out of a purge and lights the rooms nobody else will enter.",
+  "faction": "ashfound",
+  "romanceable": false,
+  "dialogue": { "recruit": "tamsin_recruit", "talk": "tamsin_recruit", "banter": "tamsin_banter" },
+  "quest": "tamsin_lamp",
+  "scenes": [],
+  "approval_start": 0
+}

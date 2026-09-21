@@ -39,6 +39,8 @@ without a schema; keep the two in step.
 | achievements | name, steam_id, when (conditions) | summary |
 | audio | name, kind (sfx or music), synth or file | volume_db, loop, summary |
 
+`tools/validate_mods.gd` and `ContentValidator` check every row above plus the vocabularies below (S45).
+
 Effect keys (triggers, sequence steps and dialogue choices alike since S39): approval, flags, recruit, quest, reputation, toast,
 open_doors, enemies ([{type, cell} or {type, offset: [dx, dy] from the leader}, tier?]), victory_flag, grant, lore (a fragment id), dialogue, transition, join_faction,
 map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause + when (a step skipped when its conditions fail, S41)], ending (true), dismiss (a companion id: off the roster and out of the party; flags are the content's), victory_flag (one flag or a list),
