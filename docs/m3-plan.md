@@ -72,15 +72,15 @@ S28 first because the AP economy shapes every fight authored afterwards and a fi
 
 ## Exit criteria (GDD §14, made testable)
 
-- Three acts playable start to finish on each of the three faction paths, in both death-stakes modes, by a scripted test in CI.
-- Four endings plus the Weaver's Mend, each reached by test only on its conditions.
-- Six companions recruitable, each with a personal quest and banter; four romances reaching scene and refusal.
-- Three factions joinable and mutually exclusive, with vendors, areas and companion consequences.
-- Ten playable races in the creator, each with a mechanical hook that is a rule and gated lines in every act.
-- Four biomes rendering in CI, each with a family, an elite and a boss, and harness rows in band.
-- Seven Bastion buildings.
-- Modding docs and a validator that a stranger's mod passes.
-- `v0.3.0` built on three platforms from one tag.
+- [x] Three acts playable start to finish on each of the three faction paths, in both death-stakes modes, by a scripted test in CI (S46).
+- [x] Four endings plus the Weaver's Mend, each reached by test only on its conditions (S43).
+- [x] Six companions recruitable, each with a personal quest and banter; four romances reaching scene and refusal (S37, S38).
+- [x] Three factions joinable and mutually exclusive, with vendors, areas and companion consequences (S32, S40).
+- [x] Ten playable races in the creator, each with a mechanical hook that is a rule and gated lines in every act (S30, S44).
+- [x] Four biomes rendering in CI, each with a family, an elite and a boss, and harness rows in band (S33, S34; low floors at depth 3, see gaps).
+- [x] Seven Bastion buildings (S35).
+- [x] Modding docs and a validator that a stranger's mod passes (S45).
+- [x] `v0.3.0` built on three platforms from one tag (S46).
 
 ## Progress
 - S28 Combat economy — done: the AP experiment ran as harness overrides first, then landed in content (every damaging ability +1 AP; two attacks or a heavy plus a self action per 4-AP turn); Warlord and Undercity gangs retuned on the new economy; AI focus fire (lowest-HP hostile in reach) and a once-per-fight rusher retreat behind `ai_retreat_hp_fraction`. No external playtest existed to triage. D-083.
@@ -101,3 +101,4 @@ S28 first because the AP economy shapes every fight authored afterwards and a fi
 - S43 Endings — done: faction endings require the oath and the matching hand on the Loom, the Mend requires `loom_mended` with its Keys, voice and loyalty, the Drift is what remains (a sworn player who walks away drifts); companion fates climb a ladder (lost/dead, taken, romanced, loyal, alive, absent) with every companion written alive, dead, taken and loyal in every ending; `modifiers` paragraphs for broken Keys, the voice, the struck plaza and the taken; credits from `rules/credits`; an achievement per ending; `test_endings.gd`. D-098.
 - S44 Reactivity pass — done: `party_race` / `party_race_tag` (anyone walking), `attribute` (the leader's creator attributes: the skill check) and `disguised` (a reshaping race whose arcane control clears the rules bar) conditions; every non-banter dialogue carries an `act`; about forty gated lines so every race has one in every act (Hollow and Swarmborn most, with Pell, Tal and Hesk reacting to them), every origin tag is used twice, and Tech, Body and Arcane checks exist in every act; `test_content_narrative.gd` counts the budget per race per act. D-099.
 - S45 Modding docs and tools — done: `ContentValidator` holds the schemas, the vocabularies and every cross-reference check and reports problems by kind, id and mod; `tools/validate_mods.gd` runs it from the command line (exit 0/1/2) and CI runs it on `examples/mods`; the stranger's example mod (race, class, subclass, resource, ability, item, companion, dialogue, quest, map) validates clean and loads in a test; `docs/modding.md` covers layout, the validator and how to add every kind; the Workshop layout is noted for M4. D-100.
+- S46 M3 close — done: `test_campaign_full.gd` plays three acts on every faction path and the unsworn in both death-stakes modes to eight endings in its own CI job (`--skip=` / `--only=campaign_full`); gaps retriaged at M3's end; `project.godot` 0.3.0 and `v0.3.0` tagged through `release.yml`; `docs/m4-plan.md` written. M3 complete. D-101.

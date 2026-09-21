@@ -40,7 +40,7 @@ jobs:
       - name: Unit tests
         run: |
           set -o pipefail
-          godot --headless --path . -s tests/test_runner.gd 2>&1 | tee test.log
+          godot --headless --path . -s tests/test_runner.gd -- --skip=campaign_full 2>&1 | tee test.log
           ! grep -q "SCRIPT ERROR" test.log
 
       - name: Validate the example mod (the modders' tool, S45)
@@ -128,3 +128,25 @@ jobs:
         with:
           name: screenshot
           path: build/screenshot*.png
+
+  # The scripted full campaign (S46): three acts on every faction path in
+  # both death-stakes modes. Its own job so the unit job stays quick.
+  campaign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Godot ${{ env.GODOT_VERSION }}
+        run: |
+          set -euo pipefail
+          curl -sSL -o godot.zip \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip"
+          unzip -q godot.zip
+          sudo install -m 0755 "Godot_v${GODOT_VERSION}_linux.x86_64" /usr/local/bin/godot
+      - name: Import project
+        run: godot --headless --path . --import
+      - name: Full campaign, every path, both modes
+        run: |
+          set -o pipefail
+          godot --headless --path . -s tests/test_runner.gd -- --only=campaign_full 2>&1 | tee campaign.log
+          ! grep -q "SCRIPT ERROR" campaign.log

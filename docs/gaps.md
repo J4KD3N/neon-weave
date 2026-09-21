@@ -1,39 +1,43 @@
 # Gaps & assumptions
 
 Updated every session. Remove items when closed; note the closing commit.
-Triaged at the end of M2 (S27, 2026-09-09): closed items from M0–M2 are
+Triaged at the end of M3 (S46, 2026-09-21): closed items from M0–M3 are
 gone (see `docs/decisions.md` and git history); what is left is grouped
-by who can close it and roughly ordered by how much it hurts the demo.
+by who can close it and ordered by how much it hurts a player. M4 is
+planned in `docs/m4-plan.md`.
 
 ## Needs a person (not a session)
 
-M3 is planned in `docs/m3-plan.md` (D-082); the items below are its parallel tracks.
-
-- **Nobody outside the author has played the demo.** M2's exit criterion "two external playtesters finish the slice" is unmet. `test_balance.gd` is the instrument a playtest will be measured against; the S13 triage row stays open for whatever they find.
-- ~~The AP economy question~~ closed 2026-09-09 (S28, D-083): every damaging ability costs one more AP; fights are two actions a turn. The first external playtest is still owed and will re-open whatever it finds.
-- **Art is generated placeholders**: `v0.2.0-demo` ships them with a title-screen note (D-079). The store page has no capsules, trailer or artist (`docs/store-page.md`). The pipeline is real (S10); the only sheets are tool-generated rigs for Trueborn and Scav, every other race and enemy uses the static capsule, overlays are stamped not composited, no per-biome palette, no CRT shader, no lighting or glow pass.
+- **Nobody outside the author has played it.** M2's exit criterion "two external playtesters finish the slice" is still unmet and M3 added two acts on top. `test_balance.gd` is the instrument a playtest will be measured against; S47 is the playtest and its triage.
+- **Art is generated placeholders**: every build ships them with a title-screen note (D-079). The store page has no capsules, trailer or artist (`docs/store-page.md`). The pipeline is real (S10); the only sheets are tool-generated rigs for Trueborn and Scav; every other race, family and NPC uses the standard rig with an overlay. `docs/art-pipeline.md` is the hand-off.
 - **Audio is synthesised placeholders** (S24): no recorded sound or composed music; no separate music and SFX volume buses.
-- **Steam is wired but unverified** (S25, D-078): no GodotSteam binaries, app id or Steamworks definitions here; achievements, cloud sync and the Steam Input template have never touched a live client; `steam/app_build.vdf` waits on depot ids.
-- **macOS is ad-hoc signed, not notarized** (D-079): Gatekeeper warns; no Apple account. Only the Linux binary is exercised by CI; Windows was booted by hand for v0.2.0; macOS by nobody.
+- **Steam is wired but unverified** (S25, D-078): no GodotSteam binaries, app id or Steamworks definitions here; achievements (twelve, five for the endings), cloud sync and the Steam Input template have never touched a live client; `steam/app_build.vdf` waits on depot ids; the demo depot must launch with `--demo`.
+- **macOS is ad-hoc signed, not notarized** (D-079): Gatekeeper warns; no Apple account. Only the Linux binary is exercised by CI.
+- **Modding is unproven by a stranger** (S45): nobody outside the repo has written a mod; the validator checks what the tests knew to check and nothing about balance, art sheets or audio files; Workshop upload is M4.
 
-## Demo content (M2 leftovers, sessions can close)
+## Balance (M4 sessions, after the playtest)
 
-- **Depth 3 is a wall for naive play** (S33 harness, geared level-6 party, no retreating or healing): Undercity and Ghost Markets both extract ~15% of depth-3 runs and the Datacore ~30% at depth 2, against 65–80% at depths 1–2. The boss posted at the pad after two extra groups with no healing between fights is the shape of it. Owned by the M4 balance pass; the harness rows hold low floors until then. The Null Cathedral and the Loom Approach are behind story flags no content sets yet (`loom_located` is set by the catastrophe and `null_cathedral_found` by Cinder's tether or the third voice since S41), so only tests and `--biome=` reach them. Under naive play the Cathedral extracts 0% at depth 3 and the Loom Approach 5% (silencing fonts, a room-wide hush, wardens three quarters off arcane); the harness prints the rows with no floor until the M4 pass sets one.
-- **Act 1 is wired, not dense** (S39, D-094): nine beats, four handcrafted fights, four Shard runs, roughly two to three hours of play against the GDD's eight; the relay hub has one fight and one follow-up, the three lost-crew sites are one dialogue each, and no writing pass has happened. The demo boundary is now `rules/demo.enabled` (off) plus `--demo`; the Steam demo depot must launch with `--demo` and has not been rebuilt since v0.2.0.
-- **Narrative depth**: six companions since S38 (Whisper, Cinder and Yev stand behind story flags with quests that intersect the plot; a benched companion still counts as recruited for scenes, loyalty and endings, and swapping at the Roster respawns the party at full HP, which the Med-bay makes moot at home); the five endings exist as data but nothing in Act 1 sets the Keys, spares a fragment or fires `ending` (S41–S43); the Quarters have a trust scene per companion (S35) and the four romances (S37, D-092: spark at approval 5, commitment at 7 with the Quarters at level 2), but Act 1 banks roughly 5 approval per companion at best, so the commitments are reachable only once Act 2 writes more approval;  all three factions have envoys, offer quests, areas and vendors since S32, joining opens a path quest per faction with a located Key at the end (S40) but the areas do not change and nothing past the Key is written; loyalty quests are one site each, the Choir's courting is three, and the Key delves are one site with a keeper each (S41); the keeper fights happen inside Shards so `test_balance.gd` cannot row them, and the Quiet Key's keeper under the Cathedral wipes naive play at level 9 (the S41 test lets it fall by fiat); the M4 balance pass owns all three; the Loom's Voice sits at 25% naive wins at level 11 (floor 20%, the last door is meant to be the hardest fight) and the Ashfound strike team is a walkover (S42); the endings read the hand on the Loom and write the taken, the loyal and the lost since S43, but no ending has a line for a companion who resisted the catastrophe beyond the alive one, and the credits are honest placeholders for people who do not exist yet; the Loom's hall has no lore beyond one fragment and no companion lines of its own; approval reaches 4 for loyalty about as slowly as it reaches 5 for romance; no portraits or companion reactions in combat; banter is a toast; dialogue is a text panel with number keys; NPCs never move.
-- **Economy is first-guess**: the road nets roughly 10–18 salvage and 1–3 Aether against a 15/2 Beacon upgrade, so most players run one Shard before depth 2; building costs, loot ranges and XP values have been checked only by the harness.
-- **Items are thin** (S29, D-084): twelve bases and eight affixes, one crate pickup type, no consumables or resource costs on gear, no item art beyond a colour, no family-specific drop tables yet (`families` exists on items but nothing uses it), no sell-back; secrets still hold one pickup.
+- **Depth 3 is a wall for naive play** (S33 harness): Undercity and Ghost Markets extract ~15% of depth-3 runs, the Datacore ~30% at depth 2, the Cathedral 0% and the Loom Approach 5%; the harness prints those rows with low or no floors.
+- **The Key keepers are unmeasured** (S41): they fight inside Shards, so the harness cannot row them, and the Quiet Key's keeper under the Cathedral wipes naive play at level 9; the campaign test lets every fight fall by fiat for that reason.
+- **The Loom** (S42): the Voice sits at 25% naive wins at level 11 with a 20% floor, the hardest fight by design; the Ashfound strike team is a walkover.
+- **Economy and approval are first-guess**: the road nets 10–18 salvage and 1–3 Aether against a 15/2 Beacon upgrade; approval reaches 4 for loyalty and 5 for romance about as slowly as Act 1 banks it, so the campaign test sets Sera's approval to 4 before her loyalty; building costs, loot ranges and XP have been checked only by the harness.
+
+## Content (wired, not dense)
+
+- **Length**: Act 1 is nine beats, four handcrafted fights and four Shard runs, two to three hours against the GDD's eight; Act 2 is the oath, one site and one report per path, one site per loyalty, three voices, three delves and the catastrophe; Act 3 is one Shard and one hall. No writing pass has happened; the relay hub has one fight, the loyalty and Key sites are one dialogue each, and the Loom's hall has one lore fragment and no companion lines of its own.
+- **Consequences past the door**: joining opens a path quest, an area and a vendor, but the areas never change and nothing past the Key is written per faction; a benched companion still counts as recruited for scenes, loyalty and endings; no ending has a line for a companion who resisted the catastrophe beyond the alive one.
+- **Items are thin** (S29, D-084): twelve bases and eight affixes plus the example mod's lamp, one crate pickup type, no consumables or resource costs on gear, no item art beyond a colour, no family-specific drop tables, no sell-back.
 - **Enemies on a previous map are forgotten** when you leave it (map-placed enemies respawn on re-entry); transitions fire on step-on with no confirmation.
+- **The credits** name an artist, a composer and a first playtester who do not exist yet.
 
-## Systems (M3+)
+## Systems (M4)
 
-- **Modding is documented and validated but unproven by a stranger** (S45): nobody outside the repo has written a mod; the validator checks what the tests knew to check and nothing about balance, art sheets or audio files; Workshop upload is M4.
-
-- **Combat texture is shallow**: cover, elevation, surfaces and resources exist and the AI weighs them (D-067); no movement cost for elevation, no hackable turrets or doors, no difficulty settings or Iron Weave; enemies never move in exploration; awareness is a radius, not a cone; no attack of opportunity or reactions; previews skip conduit chains.
-- **Five AI archetypes** share one texture score. Missing: retreat when losing, focus fire, target selection beyond nearest. Hidden combatants are drawn faint for both sides; no true fog or detection roll.
-- **Progression v2 leftovers** (S31, D-086): the second class of a multiclass has no subclass and no resource loop of its own; the Weave is the only place levels move and there is no preview of what a level would give; talents are still flat stat bumps; capstones are one ability each with no story or visual moment; party summons use the enemy placeholder art.
+- **Combat texture is shallow**: cover, elevation, surfaces and resources exist and the AI weighs them (D-067); no movement cost for elevation, no hackable turrets or doors, no difficulty settings or Iron Weave; enemies never move in exploration; awareness is a radius, not a cone; no attack of opportunity.
+- **Five AI archetypes** share one texture score with focus fire and a once-per-fight retreat (S28); hidden combatants are drawn faint for both sides; no true fog or detection roll.
+- **Progression v2 leftovers** (S31, D-086): the second class of a multiclass has no subclass and no resource loop of its own; the Weave is the only place levels move and there is no preview of what a level would give; talents are still flat stat bumps; capstones are one ability each with no story of their own.
 - **Pad support is functional, not native**: the combat cursor steps one cell per press, no analog glide, no rumble; mouse is still the fastest way to target.
-- **Creator is a text screen**: no appearance beyond the race overlay, no portrait, not part of New game (C at home), origins gate nothing yet. Ten races since S30; Hollow and Swarmborn get NPC reactions since S44 (Pell, Tal and Hesk; the disguise is an arcane check, not a roll), Synth still cannot repair with parts, and Skyborn knowledge and Swarmborn disguise are only tags until lines use them.
-- **Saves**: F5/F9 still mean slot 1; no confirmation on overwrite. Content mismatches are refused since S27 (D-080); a save inside a Shard is also refused when `ShardGenerator.LAYOUT_VERSION` moves, which is by hand.
+- **Creator is a text screen**: no appearance beyond the race overlay, no portrait, not part of New game (C at home); origins gate lines and unlocks but nothing mechanical; the Swarmborn disguise is an arcane check, not a roll; Synth still cannot repair with parts; Skyborn knowledge is a tag.
+- **Saves**: F5/F9 still mean slot 1; no confirmation on overwrite; content mismatches are refused (D-080); a save inside a Shard is refused when `ShardGenerator.LAYOUT_VERSION` moves, which is by hand.
 - **Movement is placeholder-simple**: followers pass through each other, no actor collision, WASD lets you stand visually behind a tall wall; party settling snaps with no animation.
 - **Map format is ASCII-only** for handcrafted maps by design (D-028).
+- **The campaign test wins its fights by fiat** and pins the global RNG; it proves wiring, not balance, and runs in its own CI job under a twenty-minute budget.

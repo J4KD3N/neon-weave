@@ -36,11 +36,16 @@ func run_all() -> int:
 	files.sort()
 	# `-- --only=soak` runs just the files whose name contains the fragment.
 	var only := ""
+	var skip := "" # `-- --skip=campaign_full` leaves out the files whose name contains the fragment (the long job runs them, S46)
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--only="):
 			only = arg.get_slice("=", 1)
+		if arg.begins_with("--skip="):
+			skip = arg.get_slice("=", 1)
 	for file: String in files:
 		if not (file.begins_with("test_") and file.get_extension() == "gd"):
+			continue
+		if not skip.is_empty() and file.contains(skip):
 			continue
 		if not only.is_empty() and not file.contains(only):
 			continue
