@@ -3429,6 +3429,8 @@ func _apply_world_effects(effects: Dictionary) -> void:
 		var taken: Array[Vector2i] = []
 		for m: PartyMember in party.members:
 			taken.append(member_cell(m))
+		for e: EnemyActor in living_enemies():
+			taken.append(e.cell)
 		for p: Dictionary in placed:
 			var entry: Dictionary = registry.get_entry("enemies", String(p.get("type", "")))
 			if entry.is_empty():
@@ -3437,10 +3439,10 @@ func _apply_world_effects(effects: Dictionary) -> void:
 			if p.has("offset"):
 				var off: Array = p["offset"]
 				var want := leader_cell() + Vector2i(int(off[0]), int(off[1]))
-				if map_data.is_walkable(want) and enemy_at(want) == null and not taken.has(want):
+				if map_data.is_walkable(want) and not taken.has(want):
 					cell = want
-				else:
-					var free := map_data.nearest_free_cells(want, 1, taken)
+				else: # the offset hit a wall or a body: the nearest free cell to the leader instead (a wall seeds no search)
+					var free := map_data.nearest_free_cells(leader_cell(), 1, taken)
 					cell = free[0] if not free.is_empty() else Vector2i(-1, -1)
 			else:
 				var raw: Array = p.get("cell", [0, 0])
