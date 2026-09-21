@@ -1,0 +1,8 @@
+{
+  "name": "Forge-master Hesk",
+  "short_name": "Hesk",
+  "summary": "The Ashfound's forge-master: forged the purge charges, keeps a watcher on everything he tells you to burn.",
+  "faction": "ashfound",
+  "dialogue": "ashfound_path_report",
+  "art": { "color": "#ff9f5a" }
+}

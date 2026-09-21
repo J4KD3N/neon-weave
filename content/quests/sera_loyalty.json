@@ -1,0 +1,17 @@
+{
+  "name": "The Roll of Names",
+  "companion": "sera",
+  "summary": "The Ninth Stair had a roll of names in the purge clerk's hand. Sera wants to find it, and to be watched finding it.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "The Ninth Stair had a roll of names in the purge clerk's hand. Sera wants to find it, and to be watched finding it.",
+      "objectives": [ { "text": "Find the purge roll in a Shard", "done_when": { "flags": { "sera_loyalty_done": true } } } ],
+      "shard_site": { "pickup": "sera_loyalty_site" },
+      "branches": [ { "when": { "flags": { "sera_loyal": true } }, "next": "loyal" } ],
+      "next": "broken"
+    },
+    "loyal": { "summary": "Sera read every name on the Ninth Stair aloud, and you stood there for all of them.", "complete": true },
+    "broken": { "summary": "The roll of names went somewhere Sera did not choose. She has not said what she thinks of that.", "complete": true }
+  }
+}

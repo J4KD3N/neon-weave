@@ -1,0 +1,7 @@
+{
+  "name": "The Vault Door",
+  "summary": "Loyalty site for dax's story (S40); opens a dialogue instead of granting loot.",
+  "dialogue": "dax_loyalty",
+  "grants": {},
+  "art": { "color": "#e0c07a" }
+}

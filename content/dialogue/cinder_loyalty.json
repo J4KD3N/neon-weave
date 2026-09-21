@@ -1,0 +1,26 @@
+{
+  "name": "Cinder — what holds",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "cinder_dead": true } } },
+    { "node": "with_cinder", "requires": { "recruited": "cinder" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_cinder": {
+      "speaker": "cinder",
+      "text": "The end of the thread. Not a Key; the place a Key was, and something of me wound round the absence. I could cut here and be nobody's, or leave it and keep remembering. I would like to be asked.",
+      "choices": [
+        { "text": "What do you want, Cinder?", "next": "asked" },
+        { "text": "Leave it, and let us go.", "effects": { "flags": { "cinder_loyalty_done": true, "cinder_loyal": true, "cinder_kept_thread": true }, "approval": { "cinder": 1 } }, "end": true },
+        { "text": "Cut it. Nobody should be tied to an absence.", "effects": { "flags": { "cinder_loyalty_done": true, "cinder_thread_cut": true }, "approval": { "cinder": -2 } }, "end": true }
+      ]
+    },
+    "asked": {
+      "speaker": "cinder",
+      "text": "To remember. It is the only thing I was for. Thank you for asking; nobody has, in four hundred years.",
+      "choices": [ { "text": "Then leave it.", "effects": { "flags": { "cinder_loyalty_done": true, "cinder_loyal": true, "cinder_kept_thread": true, "cinder_asked": true }, "approval": { "cinder": 3 } }, "end": true } ]
+    },
+    "alone": { "speaker": "player", "text": "A thread of Weft wound round nothing, taut. Something at the other end used to be here.", "choices": [ { "text": "Leave it.", "effects": { "flags": { "cinder_loyalty_done": true, "cinder_kept_thread": true } }, "end": true } ] },
+    "dead": { "speaker": "player", "text": "The end of Cinder's thread, slack now. He wanted to be asked. You ask the absence, out loud, and leave it.", "choices": [ { "text": "Leave it.", "effects": { "flags": { "cinder_loyalty_done": true, "cinder_loyal": true, "cinder_kept_thread": true } }, "end": true } ] }
+  }
+}

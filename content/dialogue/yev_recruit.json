@@ -1,6 +1,7 @@
 {
   "name": "Yev — the plaza",
   "start": [
+    { "node": "loyalty", "requires": { "recruited": "yev", "flags": { "act2": true, "yev_loyalty_offered": false }, "approval": { "yev": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "yev" } },
     { "node": "refused", "requires": { "flags": { "yev_refused": true } } },
     { "node": "greet" }
@@ -39,6 +40,14 @@
       "choices": [
         { "text": "It did. Walk with us.", "effects": { "recruit": "yev", "flags": { "yev_recruited": true, "yev_refused": false }, "quest": { "id": "yev_grove", "stage": "start" } }, "end": true },
         { "text": "Same answer.", "end": true }
+      ]
+    },
+    "loyalty": {
+      "speaker": "yev",
+      "text": "The heart-cutting. The first one they took, the one the rest grew from. I know where it is now. I would like to go and decide what it is for, and I would like you to not decide for me.",
+      "choices": [
+        { "text": "Yes. Let us go.", "effects": { "flags": { "yev_loyalty_offered": true }, "quest": { "id": "yev_loyalty", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
       ]
     },
     "recruited": {

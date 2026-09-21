@@ -1,0 +1,8 @@
+{
+  "name": "Speaker Oriel",
+  "short_name": "Oriel",
+  "summary": "The Rootched's speaker in the grove: serene, certain, and the one who ordered the cuttings from Yev's grove.",
+  "faction": "rootched",
+  "dialogue": "rootched_path_report",
+  "art": { "color": "#7ae582" }
+}

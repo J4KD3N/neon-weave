@@ -1,0 +1,26 @@
+{
+  "name": "Whisper — recall, answered",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "whisper_dead": true } } },
+    { "node": "with_whisper", "requires": { "recruited": "whisper" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_whisper": {
+      "speaker": "whisper",
+      "text": "Tal's terminal. Not Tal; a terminal with his hand on the other end. From here I can wipe my line's recall, or answer it in my own voice, or burn every asset's number so nobody can call anyone again. I would like you to not choose.",
+      "choices": [
+        { "text": "Your line, your call.", "next": "calls" },
+        { "text": "Wipe the recall. Clean and quiet.", "effects": { "flags": { "whisper_loyalty_done": true, "whisper_recall_wiped": true }, "approval": { "whisper": -1 } }, "end": true },
+        { "text": "Answer it in her name. Let Tal know she is ours.", "effects": { "flags": { "whisper_loyalty_done": true, "whisper_claimed": true }, "approval": { "whisper": -3 }, "reputation": { "lattice": 1 } }, "end": true }
+      ]
+    },
+    "calls": {
+      "speaker": "whisper",
+      "text": "Then the numbers burn. Nobody gets called home again, including me. Especially me.",
+      "choices": [ { "text": "Burn them.", "effects": { "flags": { "whisper_loyalty_done": true, "whisper_loyal": true, "whisper_numbers_burned": true }, "approval": { "whisper": 3 }, "reputation": { "lattice": -1 } }, "end": true } ]
+    },
+    "alone": { "speaker": "player", "text": "A Lattice terminal on the recall band, an archivist's hand on the other end. The numbers of a whole gene-line, filed.", "choices": [ { "text": "Burn the numbers.", "effects": { "flags": { "whisper_loyalty_done": true, "whisper_numbers_burned": true }, "reputation": { "lattice": -1 } }, "end": true } ] },
+    "dead": { "speaker": "player", "text": "Tal's terminal. Whisper never got to not choose. You burn the numbers, because she would have, especially hers.", "choices": [ { "text": "Burn them.", "effects": { "flags": { "whisper_loyalty_done": true, "whisper_loyal": true, "whisper_numbers_burned": true }, "reputation": { "lattice": -1 } }, "end": true } ] }
+  }
+}

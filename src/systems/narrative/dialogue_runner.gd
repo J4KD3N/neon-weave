@@ -51,6 +51,12 @@ func text() -> String:
 	return String(current_node().get("text", ""))
 
 
+## A borrowed voice (S40): the companion (or "player") whose voice the
+## speaker is using; "" when the speaker speaks as themselves.
+func voice() -> String:
+	return String(current_node().get("voice", ""))
+
+
 ## Choices whose `requires` pass, with their original index kept in "index".
 func available_choices() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []

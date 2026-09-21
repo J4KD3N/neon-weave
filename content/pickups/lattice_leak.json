@@ -1,0 +1,7 @@
+{
+  "name": "The marked leak",
+  "summary": "A conduit split open, Weft bleeding into the floor. The Lattice's site for The Index; opens a dialogue.",
+  "dialogue": "lattice_leak",
+  "grants": {},
+  "art": { "color": "#8fd3ff" }
+}

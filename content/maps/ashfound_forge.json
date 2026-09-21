@@ -14,7 +14,7 @@
     "##############"
   ],
   "transitions": [ { "cell": [1, 3], "to": "bastion", "arrive": [21, 2], "label": "Back to the plaza" } ],
-  "npcs": [ { "merchant": "ashfound_armoury", "cell": [10, 2] } ],
+  "npcs": [ { "merchant": "ashfound_armoury", "cell": [10, 2] }, { "npc": "ashfound_marshal", "cell": [7, 5] } ],
   "pickups": [],
   "enemies": []
 }

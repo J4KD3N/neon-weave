@@ -1,0 +1,36 @@
+{
+  "name": "Forge-master Hesk — the forge",
+  "start": [
+    { "node": "done", "requires": { "quest": { "id": "ashfound_path", "stage": "done" } } },
+    { "node": "report", "requires": { "quest": { "id": "ashfound_path", "stage": "report" } } },
+    { "node": "early", "requires": { "quest": { "id": "ashfound_path", "stage": "pyre" } } },
+    { "node": "idle" }
+  ],
+  "nodes": {
+    "report": {
+      "speaker": "ashfound_marshal",
+      "text": "Burned, and it stayed burned; I had a watcher. Good. The Marshal wants the next thing: a Key, the Choir's own, under the Null Cathedral's fringe where the fonts go quiet. Burn what sings around it; bring the Key out cold.",
+      "choices": [
+        { "text": "Cold. Understood.", "effects": { "flags": { "ashfound_path_reported": true, "key_ashfound_located": true }, "reputation": { "ashfound": 1 } }, "end": true },
+        { "text": "Sera. The Ninth Stair was one of his.", "requires": { "recruited": "sera" }, "next": "sera_asks" }
+      ]
+    },
+    "sera_asks": {
+      "speaker": "sera",
+      "text": "It was a schoolroom, Hesk. Who marked it?",
+      "choices": [ { "text": "Answer her.", "next": "hesk_answers" } ]
+    },
+    "hesk_answers": {
+      "speaker": "ashfound_marshal",
+      "text": "The Marshal marked it. I forged the charges. Ask me if I would again.",
+      "choices": [
+        { "text": "Would you?", "effects": { "flags": { "ashfound_path_reported": true, "key_ashfound_located": true, "sera_stair_named": true }, "approval": { "sera": 2 }, "reputation": { "ashfound": -1 } }, "next": "hesk_would" },
+        { "text": "Later, Sera. The Key first.", "effects": { "flags": { "ashfound_path_reported": true, "key_ashfound_located": true }, "approval": { "sera": -1 } }, "end": true }
+      ]
+    },
+    "hesk_would": { "speaker": "ashfound_marshal", "text": "No. Now go and get the Key before I forget I said that.", "choices": [ { "text": "Cold. Understood.", "end": true } ] },
+    "done": { "speaker": "ashfound_marshal", "text": "The Cathedral's fringe. Bring it out cold.", "choices": [ { "text": "Cold.", "end": true } ] },
+    "early": { "speaker": "ashfound_marshal", "text": "The shrine first. I have a watcher on it.", "choices": [ { "text": "The shrine.", "end": true } ] },
+    "idle": { "speaker": "ashfound_marshal", "text": "Forge is hot. Say what you want.", "choices": [ { "text": "Nothing.", "end": true } ] }
+  }
+}

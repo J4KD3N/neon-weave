@@ -1,0 +1,20 @@
+{
+  "name": "The Grafting — the conduit",
+  "start": [ { "node": "conduit" } ],
+  "nodes": {
+    "conduit": {
+      "speaker": "narrator",
+      "text": "The conduit Speaker Oriel marked, and the grafting-seed she gave you. Set the seed and the conduit will grow. Yev is holding the seed like it is warm.",
+      "choices": [
+        { "text": "Set the seed. Let it grow.", "effects": { "flags": { "rootched_graft_done": true, "rootched_graft_set": true }, "approval": { "yev": 1, "sera": -1, "dax": -1, "kaj7": -1 }, "reputation": { "rootched": 1 } }, "end": true },
+        { "text": "Yev, is this the grove's, or theirs?", "requires": { "recruited": "yev" }, "next": "yev_call" },
+        { "text": "Crush the seed. Log it planted.", "effects": { "flags": { "rootched_graft_done": true, "rootched_graft_lied": true }, "approval": { "dax": 1, "sera": 1 }, "reputation": { "rootched": -1 } }, "end": true }
+      ]
+    },
+    "yev_call": {
+      "speaker": "yev",
+      "text": "Both. That is the whole trouble. Set it. I will not let it be theirs.",
+      "choices": [ { "text": "Set it.", "effects": { "flags": { "rootched_graft_done": true, "rootched_graft_set": true, "yev_set_the_seed": true }, "approval": { "yev": 2, "sera": -1, "dax": -1 }, "reputation": { "rootched": 1 } }, "end": true } ]
+    }
+  }
+}

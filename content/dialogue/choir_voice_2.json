@@ -1,0 +1,21 @@
+{
+  "name": "Stolen voices — the second",
+  "start": [
+    { "node": "as_sera", "requires": { "recruited": "sera" } },
+    { "node": "as_kaj7", "requires": { "recruited": "kaj7" } },
+    { "node": "as_dax", "requires": { "recruited": "dax" } },
+    { "node": "as_whisper", "requires": { "recruited": "whisper" } },
+    { "node": "as_cinder", "requires": { "recruited": "cinder" } },
+    { "node": "as_yev", "requires": { "recruited": "yev" } },
+    { "node": "as_you" }
+  ],
+  "nodes": {
+    "as_sera": { "speaker": "choir", "voice": "sera", "text": "Clean. Nobody carried. She says that after a fight, when she means she is still counting. We can stop the counting. Come down.", "choices": [ { "text": "That is not her.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_refused_2": true }, "approval": { "sera": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_listened_2": true } }, "end": true } ] },
+    "as_kaj7": { "speaker": "choir", "voice": "kaj7", "text": "Nobody was decommissioned. I like this outcome. It says that after every fight, because it is afraid of the other outcome. We have no other outcome. Come down.", "choices": [ { "text": "That is not Kaj.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_refused_2": true }, "approval": { "kaj7": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_listened_2": true } }, "end": true } ] },
+    "as_dax": { "speaker": "choir", "voice": "dax", "text": "Done. Count the air. He says that because someone is always counting the air for forty people. We have air. Come down.", "choices": [ { "text": "That is not Dax.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_refused_2": true }, "approval": { "dax": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_listened_2": true } }, "end": true } ] },
+    "as_whisper": { "speaker": "choir", "voice": "whisper", "text": "Clean. Nobody saw. Nobody ever sees. She says that because she was built not to be seen. We see her. Come down and be seen.", "choices": [ { "text": "That is not Whisper.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_refused_2": true }, "approval": { "whisper": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_listened_2": true } }, "end": true } ] },
+    "as_cinder": { "speaker": "choir", "voice": "cinder", "text": "They are not drowned. Yet. He says that over the dead because he knows where they go. Come down; he can show you.", "choices": [ { "text": "That is not Cinder.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_refused_2": true }, "approval": { "cinder": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_listened_2": true } }, "end": true } ] },
+    "as_yev": { "speaker": "choir", "voice": "yev", "text": "They are in the Weft now. Everything is, in the end. She says that over the dead, and she is right, and we are the Weft. Come down.", "choices": [ { "text": "That is not Yev.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_refused_2": true }, "approval": { "yev": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_listened_2": true } }, "end": true } ] },
+    "as_you": { "speaker": "choir", "voice": "player", "text": "Who drowned you. You asked that. We have practised the answer in your voice. Come down and give it.", "choices": [ { "text": "That is not me.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_refused_2": true } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_2_heard": true, "choir_listened_2": true } }, "end": true } ] }
+  }
+}

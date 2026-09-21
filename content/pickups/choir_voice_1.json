@@ -1,0 +1,7 @@
+{
+  "name": "A voice you know",
+  "summary": "A corrupted relay speaking in a companion's voice. The Choir's first courting; opens a dialogue.",
+  "dialogue": "choir_voice_1",
+  "grants": {},
+  "art": { "color": "#c48cff" }
+}

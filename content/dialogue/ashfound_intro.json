@@ -36,8 +36,9 @@
     },
     "warm": { "speaker": "ashfound_envoy", "text": "Good enough. Honest people keep talking.", "choices": [ { "text": "Honest.", "end": true } ] },
     "cold": { "speaker": "ashfound_envoy", "text": "Noted. We do not need to be liked.", "choices": [ { "text": "Go.", "end": true } ] },
-    "joined": { "speaker": "ashfound_envoy", "text": "Then the forge door is yours. Left of the yard gate. The armourer there sells things that do not sing.", "choices": [ { "text": "Understood.", "end": true } ] },
+    "joined": { "speaker": "ashfound_envoy", "text": "Then the forge door is yours. Left of the yard gate. The armourer there sells things that do not sing.", "choices": [ { "text": "What does the Ashfound want first?", "requires": { "quest": { "id": "ashfound_path", "stage": "" } }, "effects": { "quest": { "id": "ashfound_path", "stage": "pyre" } }, "next": "first_task" }, { "text": "Understood.", "end": true } ] },
     "answered": { "speaker": "ashfound_envoy", "text": "You gave me an answer. I do not need another one.", "choices": [ { "text": "Nothing more.", "end": true } ] },
     "locked": { "speaker": "ashfound_envoy", "text": "You picked a side. Fine. We will see you at the Loom.", "choices": [ { "text": "We will.", "end": true } ] }
+    ,"first_task": { "speaker": "ashfound_envoy", "text": "A burning. Forge-master Hesk has marked a Choir shrine in the Shards and forged the charge for it. Burn it; report to him. We start with the singing.", "choices": [ { "text": "With the singing.", "end": true } ] }
   }
 }

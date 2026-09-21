@@ -1,0 +1,20 @@
+{
+  "name": "The Burning — the shrine",
+  "start": [ { "node": "shrine" } ],
+  "nodes": {
+    "shrine": {
+      "speaker": "narrator",
+      "text": "The shrine the Marshal marked: a Choir cache humming under a cairn of drone parts, still warm. The forge charge would burn it and everything that sings within fifty paces.",
+      "choices": [
+        { "text": "Burn it.", "effects": { "flags": { "ashfound_pyre_done": true, "ashfound_pyre_burned": true }, "approval": { "sera": 1, "dax": 1, "kaj7": -1, "yev": -1, "cinder": -1 }, "reputation": { "ashfound": 1 } }, "end": true },
+        { "text": "Sera. You have lit one of these before.", "requires": { "recruited": "sera" }, "next": "sera_call" },
+        { "text": "Pull the charge. Log it burned.", "effects": { "flags": { "ashfound_pyre_done": true, "ashfound_pyre_lied": true }, "approval": { "kaj7": 1, "cinder": 1 }, "reputation": { "ashfound": -1 } }, "end": true }
+      ]
+    },
+    "sera_call": {
+      "speaker": "sera",
+      "text": "I have. Light it. And this time I am going to watch what it is we are burning.",
+      "choices": [ { "text": "Light it.", "effects": { "flags": { "ashfound_pyre_done": true, "ashfound_pyre_burned": true, "sera_lit_the_pyre": true }, "approval": { "sera": 2, "dax": 1, "kaj7": -1 }, "reputation": { "ashfound": 1 } }, "end": true } ]
+    }
+  }
+}

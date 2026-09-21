@@ -1,0 +1,7 @@
+{
+  "name": "Recall, Answered",
+  "summary": "Loyalty site for whisper's story (S40); opens a dialogue instead of granting loot.",
+  "dialogue": "whisper_loyalty",
+  "grants": {},
+  "art": { "color": "#c9a7ff" }
+}

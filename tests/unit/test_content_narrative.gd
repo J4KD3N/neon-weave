@@ -179,3 +179,26 @@ func test_quarters_scenes_are_well_formed_and_every_romance_is_complete() -> voi
 		else:
 			assert_eq(romance_scenes, 0, "companion %s has no romance" % c["id"])
 	assert_eq(romanceable, 4, "Sera, Kaj-7, Whisper and Yev")
+
+
+## Borrowed voices (S40): a node's `voice` is a companion or "player"; quests
+## with `start_when` use the condition vocabulary and have a start stage.
+func test_borrowed_voices_and_start_when_are_well_formed() -> void:
+	var voices := 0
+	for d: Dictionary in registry.get_all("dialogue"):
+		for node_id: String in d.get("nodes", {}):
+			var v := String(Dictionary(d["nodes"][node_id]).get("voice", ""))
+			if v.is_empty():
+				continue
+			voices += 1
+			assert_true(v == "player" or registry.has_entry("companions", v), "dialogue %s node %s borrows an unknown voice %s" % [d["id"], node_id, v])
+	assert_true(voices >= 21, "the Choir borrows every companion's voice three times")
+	var started := 0
+	for q: Dictionary in registry.get_all("quests"):
+		if not q.has("start_when"):
+			continue
+		started += 1
+		for k: String in q["start_when"]:
+			assert_true(REQUIRES_KEYS.has(k), "quest %s start_when.%s" % [q["id"], k])
+		assert_true(Dictionary(q.get("stages", {})).has(String(q.get("start", ""))), "quest %s start stage" % q["id"])
+	assert_true(started >= 1, "Stolen Voices starts itself")

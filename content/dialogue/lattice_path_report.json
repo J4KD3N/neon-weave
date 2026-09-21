@@ -1,0 +1,30 @@
+{
+  "name": "Archivist Tal — the enclave",
+  "start": [
+    { "node": "done", "requires": { "quest": { "id": "lattice_path", "stage": "done" } } },
+    { "node": "report", "requires": { "quest": { "id": "lattice_path", "stage": "report" } } },
+    { "node": "early", "requires": { "quest": { "id": "lattice_path", "stage": "leak" } } },
+    { "node": "idle" }
+  ],
+  "nodes": {
+    "report": {
+      "speaker": "lattice_archivist",
+      "text": "The leak. Sealed, your log says. The Index does not take logs on trust; it takes them on file. Filed. Now: the Key. The Lattice has indexed where one sits: under the Ghost Markets, in the echo where the Choir keeps its ledgers.",
+      "choices": [
+        { "text": "Then that is where we go.", "effects": { "flags": { "lattice_path_reported": true, "key_lattice_located": true }, "reputation": { "lattice": 1 } }, "end": true },
+        { "text": "Whisper wants a word with you, Archivist.", "requires": { "recruited": "whisper" }, "next": "tal_whisper" }
+      ]
+    },
+    "tal_whisper": {
+      "speaker": "whisper",
+      "text": "Tal. You have been calling my line home to be wiped. I am home. I am not wiped. Stop calling.",
+      "choices": [
+        { "text": "You heard her. Stop the recall.", "effects": { "flags": { "lattice_path_reported": true, "key_lattice_located": true, "whisper_recall_stopped": true }, "approval": { "whisper": 2 }, "reputation": { "lattice": -1 } }, "end": true },
+        { "text": "The Archivist and I have business first.", "effects": { "flags": { "lattice_path_reported": true, "key_lattice_located": true }, "approval": { "whisper": -1 } }, "end": true }
+      ]
+    },
+    "done": { "speaker": "lattice_archivist", "text": "Filed. The Markets, Weaver. Do not lose the Key in the noise.", "choices": [ { "text": "Filed.", "end": true } ] },
+    "early": { "speaker": "lattice_archivist", "text": "The leak first. The Index does not skip lines.", "choices": [ { "text": "The leak.", "end": true } ] },
+    "idle": { "speaker": "lattice_archivist", "text": "Logged. Was there something else?", "choices": [ { "text": "No.", "end": true } ] }
+  }
+}

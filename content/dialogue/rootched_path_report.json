@@ -1,0 +1,35 @@
+{
+  "name": "Speaker Oriel — the grove",
+  "start": [
+    { "node": "done", "requires": { "quest": { "id": "rootched_path", "stage": "done" } } },
+    { "node": "report", "requires": { "quest": { "id": "rootched_path", "stage": "report" } } },
+    { "node": "early", "requires": { "quest": { "id": "rootched_path", "stage": "graft" } } },
+    { "node": "idle" }
+  ],
+  "nodes": {
+    "report": {
+      "speaker": "rootched_speaker",
+      "text": "The seed is set; the current says so. Good. The grove remembers where it was cut from: a Key sits in the Datacore's heart, where the biogrowth learned to count.",
+      "choices": [
+        { "text": "Then the Datacore.", "effects": { "flags": { "rootched_path_reported": true, "key_rootched_located": true }, "reputation": { "rootched": 1 } }, "end": true },
+        { "text": "Yev has a question about the cuttings.", "requires": { "recruited": "yev" }, "next": "yev_asks" }
+      ]
+    },
+    "yev_asks": {
+      "speaker": "yev",
+      "text": "Speaker. The cuttings from my grove. Whose Key are they growing?",
+      "choices": [ { "text": "Answer her, Speaker.", "next": "oriel_answers" } ]
+    },
+    "oriel_answers": {
+      "speaker": "rootched_speaker",
+      "text": "Ours, child. Yours. The grove's. There is no difference; that is the faith.",
+      "choices": [
+        { "text": "There is a difference. Say it.", "effects": { "flags": { "rootched_path_reported": true, "key_rootched_located": true, "yev_grove_answered": true }, "approval": { "yev": 2 }, "reputation": { "rootched": -1 } }, "end": true },
+        { "text": "The Speaker is right. It is all one grove.", "effects": { "flags": { "rootched_path_reported": true, "key_rootched_located": true }, "approval": { "yev": -1 }, "reputation": { "rootched": 1 } }, "end": true }
+      ]
+    },
+    "done": { "speaker": "rootched_speaker", "text": "The Datacore, Weaver. Go slowly; the grove did.", "choices": [ { "text": "Slowly.", "end": true } ] },
+    "early": { "speaker": "rootched_speaker", "text": "The seed first. Nothing grows from a report.", "choices": [ { "text": "The seed.", "end": true } ] },
+    "idle": { "speaker": "rootched_speaker", "text": "The current is with you. Go well.", "choices": [ { "text": "Go well.", "end": true } ] }
+  }
+}
