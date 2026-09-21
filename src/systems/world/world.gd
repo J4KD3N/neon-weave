@@ -718,17 +718,18 @@ func choose(index: int) -> bool:
 		return false
 	var last: Dictionary = dialogue.applied[dialogue.applied.size() - 1] if not dialogue.applied.is_empty() else {}
 	var applied_count := dialogue.applied.size()
+	var finished := dialogue.finished
 	for id: String in dialogue.recruited:
 		add_companion(id)
 	dialogue.recruited.clear()
-	if dialogue.finished:
+	if finished:
 		dialogue_menu.visible = false
 	else:
 		dialogue_menu.node_changed()
 	if applied_count > _world_effects_seen:
 		_world_effects_seen = applied_count
-		_apply_world_effects(last) # the runner did the story part; the world part can start a fight or a sequence (S39)
-	if dialogue.finished:
+		_apply_world_effects(last) # the runner did the story part; the world part can start a fight, a sequence, or a transition that closes this dialogue (S39, S42)
+	if finished:
 		autosave()
 		if mode == "explore" and not in_dialogue():
 			spawn_npcs() # placements that wait on a flag the talk just set (S39)
@@ -2317,6 +2318,11 @@ func check_transitions() -> bool:
 
 ## Loads `to` and places the party at `arrive` (or its spawn cells).
 func travel(to: String, arrive: Vector2i, label: String = "") -> bool:
+	if run.in_shard and registry.has_entry("maps", to): # a door out of a Shard (S42): the haul banks at the threshold
+		var take := run.take()
+		_bank(take, true)
+		run.clear()
+		overlay.toast("Banked at the threshold: %s" % RunState.describe(take), 3.0)
 	_arrive_cell = arrive
 	var ok := enter_map(to)
 	_arrive_cell = Vector2i(-1, -1)

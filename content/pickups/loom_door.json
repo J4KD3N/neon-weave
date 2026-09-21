@@ -1,0 +1,7 @@
+{
+  "name": "The Loom's door",
+  "summary": "A door at the bottom of the Loom Approach, humming. Site of the Loom quest (S42), bound to the Loom Approach; opens a dialogue that can carry the party through.",
+  "dialogue": "loom_door",
+  "grants": {},
+  "art": { "color": "#c48cff" }
+}

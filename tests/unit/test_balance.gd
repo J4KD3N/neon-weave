@@ -22,6 +22,8 @@ const BEATS: Array[Dictionary] = [
 	{"id": "the warlord (lvl 2)", "map": "undercity_throat", "cell": Vector2i(14, 4), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 39, "min_win": 0.3, "max_win": 0.9},
 	{"id": "the warlord (lvl 3)", "map": "undercity_throat", "cell": Vector2i(14, 4), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 60, "min_win": 0.5, "max_win": 0.95},
 	{"id": "the gallery (lvl 3)", "map": "throat_deep", "cell": Vector2i(11, 5), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 60, "min_win": 0.4, "max_win": 0.95},
+	{"id": "the loom: ashfound strike", "map": "the_loom", "cell": Vector2i(20, 6), "flags": {"loom_guard_beaten": false}, "companions": ["sera", "dax", "kaj7"], "xp": 900, "min_win": 0.3, "max_win": 1.0},
+	{"id": "the loom: the guard", "map": "the_loom", "cell": Vector2i(25, 6), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 900, "min_win": 0.2, "max_win": 0.95}, # the last door: the hardest fight in the game by design (S42)
 ]
 
 var world: ExploreWorld
