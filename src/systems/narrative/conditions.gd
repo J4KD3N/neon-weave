@@ -7,7 +7,10 @@
 ## "quest": {"id": "q", "stage": "s"}, "faction": "id" (the joined faction;
 ## "" for none yet), "not_faction": "id", "romance": "id" (the committed
 ## companion; "" for nobody), "not_romance": "id", "romance_open": "id"
-## (nobody, or that companion)}. Every listed key must hold.
+## (nobody, or that companion), "party_race": "id" and "party_race_tag": "tag"
+## (anyone walking with the party, S44), "attribute": {name: {"min", "max"}}
+## (the leader's creator attributes), "disguised": bool (a reshaping race
+## whose arcane control holds)}. Every listed key must hold.
 ##
 ## `ctx`: {"narrative": NarrativeState, "origin_tag": String, "race": String,
 ## "class": String}
@@ -33,6 +36,20 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	if requires.has("class") and String(requires["class"]) != String(ctx.get("class", "")):
 		return false
+	if requires.has("party_race") and not Array(ctx.get("party_races", [])).has(String(requires["party_race"])):
+		return false
+	if requires.has("party_race_tag") and not Array(ctx.get("party_race_tags", [])).has(String(requires["party_race_tag"])):
+		return false
+	if requires.has("disguised") and bool(ctx.get("disguised", false)) != bool(requires["disguised"]):
+		return false
+	var attribute: Dictionary = requires.get("attribute", {})
+	for name: String in attribute:
+		var bounds: Dictionary = attribute[name]
+		var v := int(Dictionary(ctx.get("attributes", {})).get(name, 0))
+		if bounds.has("min") and v < int(bounds["min"]):
+			return false
+		if bounds.has("max") and v > int(bounds["max"]):
+			return false
 	var approval: Dictionary = requires.get("approval", {})
 	for companion: String in approval:
 		var bounds: Dictionary = approval[companion]

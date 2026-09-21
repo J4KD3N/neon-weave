@@ -1,11 +1,18 @@
 {
   "name": "The Loom's heart",
+  "act": 3,
   "start": [ { "node": "lucid" } ],
   "nodes": {
     "lucid": {
       "speaker": "choir",
       "text": "You. Here at last, with Keys. We are lucid here; the Loom is the only place we are one voice. We drowned because they said no and we could not stop singing. Ask, before you set it, or do not. Somebody always chooses.",
       "choices": [
+        { "text": "[Choir-touched] You practised my name because I was already singing it. Stay.", "requires": { "origin_tag": "choir" }, "effects": { "flags": { "choir_spared": true, "choir_touched_stayed": true }, "approval": { "kaj7": 1, "cinder": 1 } }, "next": "set" },
+        { "text": "[Swarmborn] A colony knows a chorus. Sing on.", "requires": { "race": "swarmborn" }, "effects": { "flags": { "choir_spared": true, "swarm_kept_the_chorus": true }, "approval": { "kaj7": 1, "cinder": 1, "dax": -1 } }, "next": "set" },
+        { "text": "[Skyborn] The archive says you were a question. Stay asked.", "requires": { "race": "skyborn" }, "effects": { "flags": { "choir_spared": true, "skyborn_kept_the_question": true }, "approval": { "kaj7": 1, "cinder": 1, "dax": -1 } }, "next": "set" },
+        { "text": "[Chromed] Half of me hears you. The other half wants quiet. End it.", "requires": { "race": "chromed" }, "effects": { "flags": { "choir_ended": true, "chromed_ended_the_voice": true }, "approval": { "dax": 1, "sera": 1, "kaj7": -1, "cinder": -1 } }, "next": "set" },
+        { "text": "[Synth] A voice that asks is a voice. Stay.", "requires": { "race": "synth" }, "effects": { "flags": { "choir_spared": true, "synth_spared_the_voice": true }, "approval": { "kaj7": 2, "dax": -1 } }, "next": "set" },
+        { "text": "[Hollow] I drowned with you. I will not drown you.", "requires": { "race": "hollow" }, "effects": { "flags": { "choir_spared": true, "hollow_spared_the_voice": true }, "approval": { "cinder": 2, "kaj7": 1, "dax": -1 } }, "next": "set" },
         { "text": "You are a voice. I will not end you.", "effects": { "flags": { "choir_spared": true }, "approval": { "kaj7": 1, "cinder": 1, "dax": -1 } }, "next": "set" },
         { "text": "Kaj-7. Is this what you heard?", "requires": { "recruited": "kaj7" }, "next": "kaj" },
         { "text": "End it. All of it. No more voices.", "effects": { "flags": { "choir_ended": true }, "approval": { "dax": 1, "sera": 1, "kaj7": -1, "cinder": -1 } }, "next": "set" }

@@ -1,5 +1,6 @@
 {
   "name": "The Grafting — the conduit",
+  "act": 2,
   "start": [ { "node": "conduit" } ],
   "nodes": {
     "conduit": {

@@ -1,5 +1,6 @@
 {
   "name": "Yev — one leaf",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

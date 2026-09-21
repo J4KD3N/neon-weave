@@ -1,5 +1,6 @@
 {
   "name": "Whisper — no handler",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

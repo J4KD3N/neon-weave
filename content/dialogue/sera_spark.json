@@ -1,5 +1,6 @@
 {
   "name": "Sera — the roof",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

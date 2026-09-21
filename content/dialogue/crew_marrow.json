@@ -1,11 +1,13 @@
 {
   "name": "Crew Marrow — the cistern",
+  "act": 1,
   "start": [ { "node": "cistern" } ],
   "nodes": {
     "cistern": {
       "speaker": "narrator",
       "text": "The cistern route. Crew Marrow, all four, standing waist-deep in Weft-lit water, singing in a fifth with their eyes open. They are alive. They do not turn around.",
       "choices": [
+        { "text": "[Rootkin] The water is Weft-lit. I can feel what they are singing to, and it is not the Choir. Pull them out.", "requires": { "race": "rootkin" }, "effects": { "flags": { "crew_marrow_found": true, "marrow_saved": true, "rootkin_heard_the_loom": true }, "approval": { "sera": 1 } }, "end": true },
         { "text": "Pull them out. All of them.", "effects": { "flags": { "crew_marrow_found": true, "marrow_saved": true }, "approval": { "sera": 1, "dax": 1 } }, "end": true },
         { "text": "Yev, what are they singing to?", "requires": { "recruited": "yev" }, "next": "hears" },
         { "text": "Leave them. They chose this.", "effects": { "flags": { "crew_marrow_found": true, "marrow_left": true }, "approval": { "sera": -1, "cinder": 1 } }, "end": true }

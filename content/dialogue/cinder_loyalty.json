@@ -1,5 +1,6 @@
 {
   "name": "Cinder — what holds",
+  "act": 2,
   "start": [
     { "node": "dead", "requires": { "flags": { "cinder_dead": true } } },
     { "node": "with_cinder", "requires": { "recruited": "cinder" } },

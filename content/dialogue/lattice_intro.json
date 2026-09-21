@@ -1,5 +1,6 @@
 {
   "name": "Envoy Calder — the plaza",
+  "act": 2,
   "start": [
     { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "lattice" } },
     { "node": "joined_greet", "requires": { "faction": "lattice" } },
@@ -11,6 +12,7 @@
       "speaker": "lattice_envoy",
       "text": "You opened the gate road. We noticed; we notice most things. I am Calder, of the Lattice. We restore what the Sundering broke: order, indexing, machines that remember what they are for. We would like to know what the Beacon is for.",
       "choices": [
+        { "text": "[Chromed] I am half indexed already, Calder. Where does the other half go?", "requires": { "race": "chromed" }, "effects": { "flags": { "lattice_heard": true, "lattice_chromed_asked": true }, "reputation": { "lattice": 1 }, "quest": { "id": "lattice_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "Say your piece.", "effects": { "flags": { "lattice_heard": true }, "quest": { "id": "lattice_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "[Vault] The vaults were Lattice-built. They failed anyway.", "requires": { "origin_tag": "vault" }, "effects": { "flags": { "lattice_heard": true }, "reputation": { "lattice": -1 }, "quest": { "id": "lattice_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "Not now.", "end": true }
@@ -20,6 +22,7 @@
       "speaker": "lattice_envoy",
       "text": "The Weft is a leak. Every Shard you open is a leak. We can seal them, given the Loom, and given people who understand that a machine restored is a machine at peace. Your Synth companion, for instance, could be restored. It would stop hearing things.",
       "choices": [
+        { "text": "[Synth] Restored how? Ask me, Calder, not the drone.", "requires": { "race": "synth" }, "effects": { "flags": { "lattice_synth_asked": true }, "reputation": { "lattice": -1 } }, "next": "answer" },
         { "text": "Kaj-7 hears what it hears. It stays as it is.", "requires": { "recruited": "kaj7" }, "effects": { "flags": { "lattice_wants_kaj7": true }, "reputation": { "lattice": -1 }, "approval": { "kaj7": 2 } }, "next": "answer" },
         { "text": "Restored how, exactly?", "requires": { "recruited": "kaj7" }, "effects": { "flags": { "lattice_wants_kaj7": true }, "reputation": { "lattice": 1 }, "approval": { "kaj7": -2 } }, "next": "answer" },
         { "text": "Get to the offer.", "next": "answer" }
@@ -29,6 +32,7 @@
       "speaker": "lattice_envoy",
       "text": "The offer is simple. Keep the Beacon lit. Keep the road open. When the Loom is found, choose order. Until then, we would like you to think of us warmly.",
       "choices": [
+        { "text": "[Keeper] The Beacon was mine before it was anything you wanted. No.", "requires": { "origin_tag": "keeper" }, "effects": { "flags": { "lattice_answered": true, "lattice_keeper_refused": true }, "reputation": { "lattice": -1 }, "quest": { "id": "lattice_offer", "stage": "cold" } }, "end": true },
         { "text": "Join the Lattice.", "requires": { "flags": { "act2": true }, "faction": "" }, "effects": { "flags": { "lattice_answered": true }, "join_faction": "lattice", "quest": { "id": "lattice_offer", "stage": "joined" } }, "next": "joined" },
         { "text": "Keep talking to us. That's all I promise.", "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": 2 }, "quest": { "id": "lattice_offer", "stage": "warm" } }, "next": "warm" },
         { "text": "Take your clean coat and go.", "effects": { "flags": { "lattice_answered": true }, "reputation": { "lattice": -2 }, "quest": { "id": "lattice_offer", "stage": "cold" } }, "next": "cold" }

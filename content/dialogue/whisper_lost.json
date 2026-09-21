@@ -1,5 +1,6 @@
 {
   "name": "Whisper — a stripped frame",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

@@ -1,5 +1,6 @@
 {
   "name": "Speaker Oriel — the grove",
+  "act": 2,
   "start": [
     { "node": "done", "requires": { "quest": { "id": "rootched_path", "stage": "done" } } },
     { "node": "report", "requires": { "quest": { "id": "rootched_path", "stage": "report" } } },
@@ -11,6 +12,8 @@
       "speaker": "rootched_speaker",
       "text": "The seed is set; the current says so. Good. The grove remembers where it was cut from: a Key sits in the Datacore's heart, where the biogrowth learned to count.",
       "choices": [
+        { "text": "[Rootkin] The grove sang me the Datacore before you said it. I know the way.", "requires": { "race": "rootkin" }, "effects": { "flags": { "rootched_path_reported": true, "key_rootched_located": true, "rootkin_knew_the_way": true } }, "end": true },
+        { "text": "[Swarmborn] The grove would take a colony, Speaker. Would it?", "requires": { "race": "swarmborn" }, "effects": { "flags": { "rootched_path_reported": true, "key_rootched_located": true, "oriel_swarm_asked": true }, "reputation": { "rootched": 1 } }, "end": true },
         { "text": "Then the Datacore.", "effects": { "flags": { "rootched_path_reported": true, "key_rootched_located": true }, "reputation": { "rootched": 1 } }, "end": true },
         { "text": "Yev has a question about the cuttings.", "requires": { "recruited": "yev" }, "next": "yev_asks" }
       ]

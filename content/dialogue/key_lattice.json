@@ -1,11 +1,13 @@
 {
   "name": "The Key of the Ledgers",
+  "act": 2,
   "start": [ { "node": "key" } ],
   "nodes": {
     "key": {
       "speaker": "narrator",
       "text": "A ledger-stone in a stall of dead screens, singing in columns. The Choir keeps its accounts here; the Key is the thing it counts with. A cantor stands up from behind the stall.",
       "choices": [
+        { "text": "[Skyborn] The orbital ledgers used these columns. This is ours, from before. Take it whole.", "requires": { "race": "skyborn" }, "effects": { "flags": { "key_lattice_fought": true, "skyborn_knew_the_ledgers": true }, "enemies": [ { "type": "choir_cantor", "offset": [3, 0] }, { "type": "echo_wraith", "offset": [2, 2] }, { "type": "echo_wisp", "offset": [3, -2] } ], "victory_flag": ["key_lattice", "key_lattice_resolved"] }, "end": true },
         { "text": "Take it whole. Kill the keeper.", "effects": { "flags": { "key_lattice_fought": true }, "enemies": [ { "type": "choir_cantor", "offset": [3, 0] }, { "type": "echo_wraith", "offset": [2, 2] }, { "type": "echo_wisp", "offset": [3, -2] } ], "victory_flag": ["key_lattice", "key_lattice_resolved"] }, "end": true },
         { "text": "Kaj-7, what is it counting?", "requires": { "recruited": "kaj7" }, "next": "call" },
         { "text": "Break it. Let the ledger lose its sum.", "effects": { "flags": { "key_lattice_broken": true, "key_lattice_resolved": true }, "reputation": { "ashfound": 1, "lattice": -2 } }, "end": true }

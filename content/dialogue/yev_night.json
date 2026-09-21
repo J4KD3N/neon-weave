@@ -1,5 +1,6 @@
 {
   "name": "Yev — just green",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

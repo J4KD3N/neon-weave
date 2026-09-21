@@ -1,5 +1,6 @@
 {
   "name": "Sera — the empty bunk",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

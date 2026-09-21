@@ -4,6 +4,7 @@
   "names": ["body", "arcane", "tech"],
   "points": 6,
   "max_per_attribute": 4,
+  "disguise_arcane_min": 2,
   "effects": {
     "body": { "hp": 2 },
     "arcane": { "initiative": 1 },

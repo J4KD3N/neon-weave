@@ -1,5 +1,6 @@
 {
   "name": "Kaj-7 — permanently",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

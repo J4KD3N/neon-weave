@@ -1,5 +1,6 @@
 {
   "name": "Yev — the plaza",
+  "act": 1,
   "start": [
     { "node": "loyalty", "requires": { "recruited": "yev", "flags": { "act2": true, "yev_loyalty_offered": false }, "approval": { "yev": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "yev" } },

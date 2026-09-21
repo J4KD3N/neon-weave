@@ -1,16 +1,37 @@
 {
   "name": "Pell — the relay station",
+  "act": 1,
   "start": [
     { "node": "hub", "requires": { "flags": { "pell_hub": true } } },
     { "node": "crews", "requires": { "flags": { "log_recovered": true } } },
     { "node": "after", "requires": { "flags": { "pell_talked": true } } },
+    { "node": "colony", "requires": { "race": "swarmborn", "disguised": false, "flags": { "pell_saw_swarm": false } } },
+    { "node": "unnerved", "requires": { "party_race_tag": "unnerving", "flags": { "pell_unnerved": false } } },
     { "node": "greet" }
   ],
   "nodes": {
+    "colony": {
+      "speaker": "pell",
+      "text": "Your face just moved. Not the way faces move. What are you?",
+      "choices": [
+        { "text": "[Swarmborn] A colony. It does that when I am tired. Talk to me anyway.", "requires": { "race": "swarmborn" }, "effects": { "flags": { "pell_saw_swarm": true }, "reputation": { "ashfound": -1 } }, "end": true },
+        { "text": "Nothing you need to worry about.", "effects": { "flags": { "pell_saw_swarm": true } }, "end": true }
+      ]
+    },
+    "unnerved": {
+      "speaker": "pell",
+      "text": "Whatever that is behind you, it is not breathing. I have seen not-breathing things down there. Keep it where I can see it.",
+      "choices": [
+        { "text": "[Hollow] I am the one not breathing, Pell.", "requires": { "race": "hollow" }, "effects": { "flags": { "pell_unnerved": true, "pell_met_a_hollow": true } }, "end": true },
+        { "text": "It is with me. It stays with me.", "effects": { "flags": { "pell_unnerved": true } }, "end": true }
+      ]
+    },
     "greet": {
       "speaker": "pell",
       "text": "Weavers. You're Beacon-crew, I can see the burn on your boots. Halden took us down the second depth and it sang to us. Six of us went in humming. I'm the one who stopped.",
       "choices": [
+        { "text": "[Swarmborn] (Your skin holds. She sees a person with burned boots.)", "requires": { "race": "swarmborn", "disguised": true }, "effects": { "flags": { "swarm_passed_pell": true } }, "next": "crew" },
+        { "text": "[Keeper] I keep the Beacon that sent Halden down. Say what you need to say to it.", "requires": { "origin_tag": "keeper" }, "effects": { "flags": { "pell_keeper": true }, "reputation": { "ashfound": 1 } }, "next": "crew" },
         { "text": "Where is the rest of your crew?", "next": "crew" },
         { "text": "[Undercity] I know that tune. My mother hummed it before the Shard took her.", "requires": { "origin_tag": "undercity" }, "effects": { "flags": { "pell_shared_tune": true }, "approval": { "sera": 1 } }, "next": "crew" },
         { "text": "Sera, she's Ashfound-marked. Yours?", "requires": { "recruited": "sera" }, "next": "sera_marks" }
@@ -27,6 +48,7 @@
       "speaker": "pell",
       "text": "In the tower. The drones got them, or the singing did; I stopped being able to tell. Halden kept the log. If you want to know what we heard, it's still on him, past the hive.",
       "choices": [
+        { "text": "[Trueborn] Unaltered, like you. The Ashfound like that in a torch. We will get the log.", "requires": { "race": "trueborn" }, "effects": { "flags": { "pell_talked": true, "pell_trueborn_kin": true }, "reputation": { "ashfound": 1 } }, "end": true },
         { "text": "We'll get the log. Get yourself back to the road.", "effects": { "flags": { "pell_talked": true }, "reputation": { "ashfound": 1 } }, "end": true },
         { "text": "Kaj-7, is she hearing what you hear?", "requires": { "recruited": "kaj7" }, "next": "kaj_hears" },
         { "text": "You stay put until we clear it.", "effects": { "flags": { "pell_talked": true } }, "end": true }

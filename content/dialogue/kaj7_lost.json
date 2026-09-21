@@ -1,5 +1,6 @@
 {
   "name": "Kaj-7 — the cold cradle",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

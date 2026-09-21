@@ -1,11 +1,13 @@
 {
   "name": "The Burning — the shrine",
+  "act": 2,
   "start": [ { "node": "shrine" } ],
   "nodes": {
     "shrine": {
       "speaker": "narrator",
       "text": "The shrine the Marshal marked: a Choir cache humming under a cairn of drone parts, still warm. The forge charge would burn it and everything that sings within fifty paces.",
       "choices": [
+        { "text": "[Synth] Whatever sings in there was made, like me. Pull the charge. Log it burned.", "requires": { "race": "synth" }, "effects": { "flags": { "ashfound_pyre_done": true, "ashfound_pyre_lied": true, "synth_spared_the_shrine": true }, "approval": { "kaj7": 2, "cinder": 1 }, "reputation": { "ashfound": -1 } }, "end": true },
         { "text": "Burn it.", "effects": { "flags": { "ashfound_pyre_done": true, "ashfound_pyre_burned": true }, "approval": { "sera": 1, "dax": 1, "kaj7": -1, "yev": -1, "cinder": -1 }, "reputation": { "ashfound": 1 } }, "end": true },
         { "text": "Sera. You have lit one of these before.", "requires": { "recruited": "sera" }, "next": "sera_call" },
         { "text": "Pull the charge. Log it burned.", "effects": { "flags": { "ashfound_pyre_done": true, "ashfound_pyre_lied": true }, "approval": { "kaj7": 1, "cinder": 1 }, "reputation": { "ashfound": -1 } }, "end": true }

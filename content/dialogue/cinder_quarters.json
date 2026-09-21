@@ -1,5 +1,6 @@
 {
   "name": "Cinder — the Quarters",
+  "act": 1,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

@@ -1,16 +1,28 @@
 {
   "name": "Forge-master Hesk — the forge",
+  "act": 2,
   "start": [
+    { "node": "colony", "requires": { "race": "swarmborn", "disguised": false, "flags": { "hesk_saw_swarm": false } } },
     { "node": "done", "requires": { "quest": { "id": "ashfound_path", "stage": "done" } } },
     { "node": "report", "requires": { "quest": { "id": "ashfound_path", "stage": "report" } } },
     { "node": "early", "requires": { "quest": { "id": "ashfound_path", "stage": "pyre" } } },
     { "node": "idle" }
   ],
   "nodes": {
+    "colony": {
+      "speaker": "ashfound_marshal",
+      "text": "Your skin is moving. The Ashfound burn things whose skin moves. Hold still and tell me why I should not.",
+      "choices": [
+        { "text": "[Swarmborn] Because I am the one carrying your Key, Hesk. Look away.", "requires": { "race": "swarmborn" }, "effects": { "flags": { "hesk_saw_swarm": true }, "reputation": { "ashfound": -1 } }, "end": true },
+        { "text": "Look away, Hesk.", "effects": { "flags": { "hesk_saw_swarm": true } }, "end": true }
+      ]
+    },
     "report": {
       "speaker": "ashfound_marshal",
       "text": "Burned, and it stayed burned; I had a watcher. Good. The Marshal wants the next thing: a Key, the Choir's own, under the Null Cathedral's fringe where the fonts go quiet. Burn what sings around it; bring the Key out cold.",
       "choices": [
+        { "text": "[Trueborn] Unaltered, Hesk. The one kind of person your fire is for. Cold. Understood.", "requires": { "race": "trueborn" }, "effects": { "flags": { "ashfound_path_reported": true, "key_ashfound_located": true, "hesk_trueborn": true }, "reputation": { "ashfound": 1 } }, "end": true },
+        { "text": "[Swarmborn] (Your skin holds. Hesk sees a person, and a torch.) Cold. Understood.", "requires": { "race": "swarmborn", "disguised": true }, "effects": { "flags": { "ashfound_path_reported": true, "key_ashfound_located": true, "swarm_passed_hesk": true }, "reputation": { "ashfound": 1 } }, "end": true },
         { "text": "Cold. Understood.", "effects": { "flags": { "ashfound_path_reported": true, "key_ashfound_located": true }, "reputation": { "ashfound": 1 } }, "end": true },
         { "text": "Sera. The Ninth Stair was one of his.", "requires": { "recruited": "sera" }, "next": "sera_asks" }
       ]

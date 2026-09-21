@@ -1,5 +1,6 @@
 {
   "name": "Sera — a gate on a hill",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

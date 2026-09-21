@@ -1,5 +1,6 @@
 {
   "name": "Whisper — the beacon",
+  "act": 1,
   "start": [
     { "node": "dead", "requires": { "flags": { "whisper_dead": true } } },
     { "node": "with_whisper", "requires": { "recruited": "whisper" } },

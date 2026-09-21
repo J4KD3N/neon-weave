@@ -1,5 +1,6 @@
 {
   "name": "Whisper — not in the design",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

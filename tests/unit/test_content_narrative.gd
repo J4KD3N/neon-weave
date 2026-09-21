@@ -4,7 +4,7 @@ extends TestCase
 
 const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
 const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction", "romance", "dismiss", "lore", "toast", "grant", "enemies", "victory_flag", "open_doors", "dialogue", "transition", "map_edits", "sequence", "ending"]
-const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction", "romance", "not_romance", "romance_open"]
+const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction", "romance", "not_romance", "romance_open", "party_race", "party_race_tag", "attribute", "disguised"]
 
 var registry: ContentRegistry
 
@@ -250,3 +250,54 @@ func test_endings_write_every_companion() -> void:
 					assert_true(bool(c.get("romanceable", false)), "ending %s writes a %s line for %s, who has no romance" % [e["id"], k, id])
 			for need: String in ["alive", "dead", "taken"]:
 				assert_false(String(lines.get(need, "")).is_empty(), "ending %s: %s has no %s line" % [e["id"], id, need])
+
+
+## The reactivity budget (S44, D-099): every playable race has a gated
+## line in every act (by its id or one of its tags), every origin tag is
+## used more than once, the NPCs react to a Hollow in the party and to a
+## Swarmborn whose disguise slips, and a skill check exists in every act.
+func test_every_race_has_gated_lines_in_every_act() -> void:
+	var per_race: Dictionary = {}
+	var per_origin: Dictionary = {}
+	var party_reactions := 0
+	var disguise_lines := 0
+	var skill_checks: Dictionary = {1: 0, 2: 0, 3: 0}
+	var tags_of: Dictionary = {}
+	for r: Dictionary in registry.get_all("races"):
+		tags_of[r["id"]] = Dictionary(r.get("traits", {})).get("tags", [])
+		per_race[r["id"]] = {1: 0, 2: 0, 3: 0}
+	for d: Dictionary in registry.get_all("dialogue"):
+		if String(d.get("kind", "")) == "banter":
+			continue
+		var act := int(d.get("act", 0))
+		assert_true(act >= 1 and act <= 3, "dialogue %s carries its act" % d["id"])
+		var gates: Array = []
+		for s: Dictionary in d.get("start", []) if d.get("start", "") is Array else []:
+			gates.append(s.get("requires", {}))
+		for node_id: String in d.get("nodes", {}):
+			for c: Dictionary in Dictionary(d["nodes"][node_id]).get("choices", []):
+				gates.append(c.get("requires", {}))
+		for g: Dictionary in gates:
+			if g.has("party_race") or g.has("party_race_tag"):
+				party_reactions += 1
+			if g.has("disguised"):
+				disguise_lines += 1
+			if g.has("attribute"):
+				skill_checks[act] += 1
+			if g.has("origin_tag"):
+				per_origin[g["origin_tag"]] = int(per_origin.get(g["origin_tag"], 0)) + 1
+			for race_id: String in per_race:
+				if String(g.get("race", "")) == race_id or (g.has("race_tag") and Array(tags_of[race_id]).has(String(g["race_tag"]))):
+					per_race[race_id][act] = int(per_race[race_id][act]) + 1
+	for race_id: String in per_race:
+		var counts: Dictionary = per_race[race_id]
+		print("  reactivity %-10s act 1: %d  act 2: %d  act 3: %d" % [race_id, counts[1], counts[2], counts[3]])
+		for act: int in [1, 2, 3]:
+			assert_true(int(counts[act]) >= 1, "%s has no gated line in act %d" % [race_id, act])
+	for o: Dictionary in registry.get_all("origins"):
+		var tag := String(o.get("dialogue_tag", ""))
+		assert_true(int(per_origin.get(tag, 0)) >= 2, "origin tag %s is used %d times" % [tag, int(per_origin.get(tag, 0))])
+	assert_true(party_reactions >= 2, "NPCs react to who walks behind you")
+	assert_true(disguise_lines >= 3, "the Swarmborn disguise is checked")
+	for act: int in [1, 2, 3]:
+		assert_true(int(skill_checks[act]) >= 1, "a skill check in act %d" % act)
