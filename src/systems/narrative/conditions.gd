@@ -82,7 +82,7 @@ static func _walking(n: NarrativeState, id: String) -> bool:
 ## Applies an `effects` block to the narrative state. Returns the list of
 ## companions recruited by it (the world spawns them).
 ## {"approval": {companion: delta}, "flags": {name: bool}, "recruit": "id",
-## "quest": {"id": "q", "stage": "s"}, "romance": {"commit": "id"} | {"end": true}}
+## "quest": {"id": "q", "stage": "s"}, "romance": {"commit": "id"} | {"end": true}, "dismiss": "id"}
 static func apply(effects: Dictionary, n: NarrativeState) -> Array[String]:
 	var recruited: Array[String] = []
 	if effects.is_empty():
@@ -104,6 +104,8 @@ static func apply(effects: Dictionary, n: NarrativeState) -> Array[String]:
 	if effects.has("quest"):
 		var q: Dictionary = effects["quest"]
 		n.set_stage(String(q.get("id", "")), String(q.get("stage", "")))
+	if effects.has("dismiss"): # the story takes someone off the roster (S41); flags are the content's
+		n.dismiss(String(effects["dismiss"]))
 	if effects.has("romance"):
 		var r: Dictionary = effects["romance"]
 		if r.has("commit"):

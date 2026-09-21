@@ -1,0 +1,17 @@
+{
+  "name": "The Loom",
+  "main": true,
+  "companion": "",
+  "start_when": { "flags": { "key_lattice_resolved": true, "key_rootched_resolved": true, "key_ashfound_resolved": true } },
+  "start_toast": "Three Keys, whole or broken. The Beacon has begun to flicker on its own. Go home.",
+  "summary": "Three Keys are out of the ground. The Beacon is answering something, and it is answering from the plaza.",
+  "start": "catastrophe",
+  "stages": {
+    "catastrophe": {
+      "summary": "Go home. The Beacon is lighting itself.",
+      "next": "located",
+      "objectives": [ { "text": "Return to the Bastion", "done_when": { "flags": { "catastrophe_seen": true } } } ]
+    },
+    "located": { "summary": "In the silence after, the Beacon's log shows one depth it has never reached: the Loom Approach. Act 3 begins there." }
+  }
+}
