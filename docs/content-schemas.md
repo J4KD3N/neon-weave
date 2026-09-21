@@ -30,7 +30,7 @@ without a schema; keep the two in step.
 | quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?, next?, next_toast?, branches? [{when, next, toast?}]}} | companion, main, faction, auto_start. Branches (S36): the first whose `when` holds wins once the objectives are done; `next` is the fallback; a stage with branches and no objectives forks at once |
 | races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only), cyberware_slots, traits (D-085: resist {type: fraction}, regen_on_surface {surface: hp}, detect_hidden N, salvage_bonus, mend_after_combat, bonus_abilities [ids], ability_damage_bonus {id: n}, heal_immune_types [types], talent_cost_mod, tags [..]) |
 | resources | name, max | builds_on, gain_per_cast, damage_per_stack, lock_ap_at_max, vent_ability, kind "marks", mark, max_per_target, gain_on_kill, gain_on_surface, gain_on_stealth, reveal_at_max, absorb {type,fraction}, gain_per_absorbed |
-| rules | name | per-rule fields (combat incl. surface_evasion, surface_resist {surface: {type: fraction}} and surface_status {surface: {status: turns}}, attributes, progression, loot, demo) |
+| rules | name | demo: end_flag, enabled (false in the base game; `--demo` turns the boundary on) | per-rule fields (combat incl. surface_evasion, surface_resist {surface: {type: fraction}} and surface_status {surface: {status: turns}}, attributes, progression, loot, demo) |
 | shards | name, biome, tiles, rooms, enemies | corridors, surfaces, pickups, features, requires_unlock (Beacon), requires_flag (story), remix {families, templates} (pools filled by rule, D-089), grate_patch_chance, debris_density, size |
 | sprites | image or sheet, frame | see docs/art-pipeline.md |
 | subclasses | name, class, abilities | stat_mods, damage_bonus, summary |
@@ -39,8 +39,8 @@ without a schema; keep the two in step.
 | achievements | name, steam_id, when (conditions) | summary |
 | audio | name, kind (sfx or music), synth or file | volume_db, loop, summary |
 
-Trigger effect keys: approval, flags, recruit, quest, reputation, toast,
-open_doors, enemies, victory_flag, grant, dialogue, transition, join_faction,
+Effect keys (triggers, sequence steps and dialogue choices alike since S39): approval, flags, recruit, quest, reputation, toast,
+open_doors, enemies ([{type, cell} or {type, offset: [dx, dy] from the leader}, tier?]), victory_flag, grant, lore (a fragment id), dialogue, transition, join_faction,
 map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause], ending (true),
 romance ({commit: id} | {end: true}; a commitment is refused while another stands).
 Condition keys (`requires` / `when` / `done_when`): flags, origin_tag,

@@ -1,0 +1,37 @@
+{
+  "name": "The Source",
+  "summary": "A chamber under the gallery where the conduits meet in the water. The singing is not coming through the machines here. It is coming through the water.",
+  "biome": "rusted_undercity",
+  "spawn_marker": "P",
+  "legend": {
+    ".": "floor_concrete",
+    "#": "wall_rust",
+    "x": "debris",
+    "P": "floor_concrete",
+    "m": "mana_pool",
+    "c": "conduit"
+  },
+  "rows": [
+    "################",
+    "#.P.P..........#",
+    "#.P.P..mm......#",
+    "#......mm..cc..#",
+    "#..........cc..#",
+    "#.....x........#",
+    "#......mm......#",
+    "#......mm......#",
+    "################"
+  ],
+  "triggers": [
+    { "id": "source", "cells": [[10, 3], [10, 4], [10, 5]], "once": true, "effects": { "flags": { "throat_source_entered": true }, "sequence": [
+      { "camera": [11, 4], "toast": "The conduits meet in the water and the water is lit from below. The singing stops. Something in it is awake.", "pause": 2.0 },
+      { "camera": "leader", "dialogue": "choir_fragment" }
+    ] } }
+  ],
+  "transitions": [
+    { "cell": [1, 1], "to": "throat_deep", "arrive": [25, 10], "label": "Back up to the gallery" }
+  ],
+  "npcs": [],
+  "pickups": [],
+  "enemies": []
+}

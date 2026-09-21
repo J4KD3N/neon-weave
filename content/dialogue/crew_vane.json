@@ -1,0 +1,23 @@
+{
+  "name": "Crew Vane — the nest",
+  "start": [ { "node": "rig" } ],
+  "nodes": {
+    "rig": {
+      "speaker": "narrator",
+      "text": "Crew Vane's drone-rig, still powered, and built around it a nest: the drones came to the rig's signal and stayed. Something in the nest is wearing Vane's coat, and it is not Vane any more.",
+      "choices": [
+        { "text": "Burn it out.", "effects": { "flags": { "crew_vane_fought": true }, "enemies": [ { "type": "feral_drone", "offset": [2, 0] }, { "type": "feral_drone", "offset": [2, 2] } ], "victory_flag": "crew_vane_found" }, "end": true },
+        { "text": "Kaj-7, can you quiet the rig?", "requires": { "recruited": "kaj7" }, "next": "quiet" },
+        { "text": "Leave the nest. Log the rig and go.", "effects": { "flags": { "crew_vane_found": true, "crew_vane_left": true }, "reputation": { "ashfound": -1 } }, "end": true }
+      ]
+    },
+    "quiet": {
+      "speaker": "kaj7",
+      "text": "Yes. The drones will not like it. Neither will I; it is a shepherd's rig, and it is calling them the way I was called.",
+      "choices": [
+        { "text": "Quiet it.", "effects": { "flags": { "crew_vane_found": true, "crew_vane_quieted": true }, "approval": { "kaj7": 1 } }, "end": true },
+        { "text": "No. Burn it out.", "effects": { "flags": { "crew_vane_fought": true }, "approval": { "kaj7": -1 }, "enemies": [ { "type": "feral_drone", "offset": [2, 0] }, { "type": "feral_drone", "offset": [2, 2] } ], "victory_flag": "crew_vane_found" }, "end": true }
+      ]
+    }
+  }
+}

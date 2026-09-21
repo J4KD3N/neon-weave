@@ -1,6 +1,7 @@
 {
   "name": "Demo boundary",
-  "summary": "The Steam demo ends when this flag is set (the first lucid Choir fragment speaks). The end panel shows once, then the party is home.",
+  "summary": "The Steam demo ends when `end_flag` is set (first contact with the lucid Choir fragment) and the end panel shows once, then the party is home. Off in the full game since S39 (Act 1 continues into Act 2); the demo build launches with `--demo`, which turns it on.",
   "end_flag": "demo_complete",
+  "enabled": false,
   "milestone": "M2"
 }

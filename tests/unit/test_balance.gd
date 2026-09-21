@@ -21,6 +21,7 @@ const BEATS: Array[Dictionary] = [
 	{"id": "relay hive", "map": "relay_station", "cell": Vector2i(12, 5), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 15, "min_win": 0.7, "max_win": 1.0},
 	{"id": "the warlord (lvl 2)", "map": "undercity_throat", "cell": Vector2i(14, 4), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 39, "min_win": 0.3, "max_win": 0.9},
 	{"id": "the warlord (lvl 3)", "map": "undercity_throat", "cell": Vector2i(14, 4), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 60, "min_win": 0.5, "max_win": 0.95},
+	{"id": "the gallery (lvl 3)", "map": "throat_deep", "cell": Vector2i(11, 5), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 60, "min_win": 0.4, "max_win": 0.95},
 ]
 
 var world: ExploreWorld
