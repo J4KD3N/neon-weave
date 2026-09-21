@@ -242,7 +242,7 @@ func test_map_campaign_fields_are_well_formed() -> void:
 		for tr: Dictionary in m.get("triggers", []):
 			assert_false(String(tr.get("id", "")).is_empty(), "map %s trigger id" % m["id"])
 			for k: String in tr.get("effects", {}):
-				assert_true(["approval", "flags", "recruit", "quest", "reputation", "toast", "open_doors", "enemies", "victory_flag", "grant", "dialogue", "transition"].has(k), "map %s trigger effect %s" % [m["id"], k])
+				assert_true(["approval", "flags", "recruit", "quest", "reputation", "toast", "open_doors", "enemies", "victory_flag", "grant", "dialogue", "transition", "join_faction", "romance", "lore", "map_edits", "sequence", "ending"].has(k), "map %s trigger effect %s" % [m["id"], k])
 			for k: String in tr.get("when", {}):
 				assert_true(["flags", "origin_tag", "race", "class", "approval", "recruited", "not_recruited", "quest"].has(k), "map %s trigger when.%s" % [m["id"], k])
 		for b: Dictionary in m.get("buildings", []):

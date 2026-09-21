@@ -24,21 +24,34 @@
     },
     "deeper": {
       "summary": "The log says the singing starts at the second depth. Reach it and come back.",
-      "next": "throat",
-      "next_toast": "Something is singing under the yard. The throat has opened south of the plaza road.",
+      "next": "expeditions",
+      "next_toast": "Pell keeps the light on at the relay station. Three more crews went down after Halden; she has their last positions.",
       "objectives": [
         { "text": "Raise the Beacon to depth 2", "done_when": { "flags": { "building_beacon_l1": true } } },
         { "text": "Extract from a depth-2 Shard", "done_when": { "flags": { "extracted_depth_2": true } } }
       ]
     },
+    "expeditions": {
+      "summary": "Three crews went down after Halden: Ostrand, Vane, Marrow. All Beacon-crew, all humming when they left. Pell at the relay station has their last positions; the Shards have the rest.",
+      "next": "throat",
+      "next_toast": "Something is singing under the yard. The throat has opened south of the plaza road.",
+      "objectives": [
+        { "text": "Get the crews' last positions from Pell", "done_when": { "flags": { "pell_hub": true } } },
+        { "text": "Account for Crew Ostrand", "done_when": { "flags": { "crew_ostrand_found": true } } },
+        { "text": "Account for Crew Vane", "done_when": { "flags": { "crew_vane_found": true } } },
+        { "text": "Account for Crew Marrow", "done_when": { "flags": { "crew_marrow_found": true } } }
+      ]
+    },
     "throat": {
-      "summary": "Something is singing under the yard. The Undercity throat has opened south of the plaza road.",
+      "summary": "Something is singing under the yard. The Undercity throat has opened south of the plaza road, and it goes down further than the yard does.",
       "objectives": [
         { "text": "Enter the Undercity throat from the yard", "done_when": { "flags": { "throat_entered": true } } },
         { "text": "Get past whatever holds the throat", "done_when": { "flags": { "warlord_beaten": true } } },
+        { "text": "Follow the singing down into the flooded gallery", "done_when": { "flags": { "throat_deep_entered": true } } },
+        { "text": "Silence the cantor in the gallery", "done_when": { "flags": { "cantor_beaten": true } } },
         { "text": "Reach the source of the singing", "done_when": { "flags": { "choir_contact": true } } }
       ]
     },
-    "choir": { "summary": "First contact. It knew your name. The demo ends here; the Waking does not.", "complete": true }
+    "choir": { "summary": "First contact. It knew your name, and it told you the Sundering was a choice. Act 1 ends here; on the plaza, three envoys are waiting for an answer.", "complete": true }
   }
 }

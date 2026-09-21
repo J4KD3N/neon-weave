@@ -117,6 +117,7 @@ jobs:
           run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
           run_shot --screenshot="$PWD/build/screenshot-dialogue.png" --map=proto_yard --talk=sera
           run_shot --screenshot="$PWD/build/screenshot-road.png" --map=gate_road --journal
+          run_shot --screenshot="$PWD/build/screenshot-gallery.png" --map=throat_deep
           ls -la build
 
       - uses: actions/upload-artifact@v7

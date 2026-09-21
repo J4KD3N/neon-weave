@@ -1,0 +1,7 @@
+{
+  "name": "Ostrand's marker",
+  "summary": "A Beacon-crew marker with Ostrand's sign and seven notes scratched under it in six hands. Story site; opens a dialogue.",
+  "dialogue": "crew_ostrand",
+  "grants": {},
+  "art": { "color": "#e0c07a" }
+}

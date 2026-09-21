@@ -8,21 +8,38 @@
       "choices": [
         { "text": "Who drowned you?", "next": "who" },
         { "text": "Kaj-7, is this what you hear?", "requires": { "recruited": "kaj7" }, "next": "kaj" },
-        { "text": "Say nothing. Back away.", "effects": { "flags": { "choir_contact": true, "choir_refused": true, "demo_complete": true }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+        { "text": "Say nothing. Back away.", "effects": { "flags": { "choir_contact": true, "choir_refused": true, "demo_complete": true, "act1_complete": true, "act2": true }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
       ]
     },
     "who": {
       "speaker": "choir",
       "text": "Your makers. They chose the flood over us. They were wrong, and the flood agreed with them. Ask the one who sealed the vaults. Ask the shield who burned the stair. Everyone here was chosen.",
       "choices": [
-        { "text": "We're leaving.", "effects": { "flags": { "choir_contact": true, "choir_heard_truth": true, "demo_complete": true }, "reputation": { "lattice": -1 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+        { "text": "Chosen how?", "next": "chosen" },
+        { "text": "We're leaving.", "effects": { "flags": { "choir_contact": true, "choir_heard_truth": true, "demo_complete": true, "act1_complete": true, "act2": true }, "reputation": { "lattice": -1 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+      ]
+    },
+    "chosen": {
+      "speaker": "choir",
+      "text": "Your makers were offered us. Every voice kept, every death undone, the whole world one chord, in exchange for the doors. They said no. The no was the flood. They called it the Sundering afterwards so that nobody would ask who chose it. Somebody always chooses.",
+      "choices": [
+        { "text": "Cinder. You were there.", "requires": { "recruited": "cinder" }, "next": "cinder_yes" },
+        { "text": "Then the Sundering was a choice. Up. All of us.", "effects": { "flags": { "choir_contact": true, "choir_heard_truth": true, "sundering_chosen": true, "demo_complete": true, "act1_complete": true, "act2": true }, "lore": "sundering_choice", "reputation": { "lattice": -1 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+      ]
+    },
+    "cinder_yes": {
+      "speaker": "cinder",
+      "text": "I was there. I said yes, and it kept me, and I have had four hundred years to wonder whether the ones who said no were the wise ones. I still do not know. Ask me again when we find a Key.",
+      "choices": [
+        { "text": "I will. Up. All of us.", "effects": { "flags": { "choir_contact": true, "choir_heard_truth": true, "sundering_chosen": true, "cinder_confessed": true, "demo_complete": true, "act1_complete": true, "act2": true }, "lore": "sundering_choice", "approval": { "cinder": 1 }, "reputation": { "lattice": -1 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
       ]
     },
     "kaj": {
       "speaker": "kaj7",
       "text": "Yes. But it is not calling me now. It is calling you. I would like us to go up.",
       "choices": [
-        { "text": "Up. Now.", "effects": { "flags": { "choir_contact": true, "choir_named_player": true, "demo_complete": true }, "approval": { "kaj7": 2 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }
+        { "text": "Up. Now.", "effects": { "flags": { "choir_contact": true, "choir_named_player": true, "demo_complete": true, "act1_complete": true, "act2": true }, "approval": { "kaj7": 2 }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true },
+        { "text": "Not yet. Who drowned you?", "next": "who" }
       ]
     }
   }

@@ -1,0 +1,25 @@
+{
+  "name": "Crew Ostrand — the marker",
+  "start": [ { "node": "marker" } ],
+  "nodes": {
+    "marker": {
+      "speaker": "narrator",
+      "text": "A Beacon-crew marker, Ostrand's sign scratched under it, and under that, in six different hands, the same seven notes. The trail goes deeper than this Shard goes.",
+      "choices": [
+        { "text": "Take the marker.", "effects": { "flags": { "crew_ostrand_found": true } }, "end": true },
+        { "text": "Cinder, you know this tune.", "requires": { "recruited": "cinder" }, "next": "tune" },
+        { "text": "Kaj-7, is this the signal?", "requires": { "recruited": "kaj7" }, "next": "signal" }
+      ]
+    },
+    "tune": {
+      "speaker": "cinder",
+      "text": "A fifth. The Choir's interval. They were being taught to sing before they were taken. I was taught the same way, four hundred years ago, and I went.",
+      "choices": [ { "text": "Take the marker.", "effects": { "flags": { "crew_ostrand_found": true, "cinder_knew_the_tune": true }, "approval": { "cinder": 1 } }, "end": true } ]
+    },
+    "signal": {
+      "speaker": "kaj7",
+      "text": "Yes. Written down. I did not know it could be written down. That is worse, somehow.",
+      "choices": [ { "text": "Take the marker.", "effects": { "flags": { "crew_ostrand_found": true, "kaj7_saw_the_notes": true }, "approval": { "kaj7": 1 } }, "end": true } ]
+    }
+  }
+}

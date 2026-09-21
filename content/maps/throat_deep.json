@@ -1,0 +1,42 @@
+{
+  "name": "The Flooded Gallery",
+  "summary": "Below the Warlord's throat the Undercity opens into a gallery the water never left. The singing is louder here, and it has a conductor.",
+  "biome": "rusted_undercity",
+  "spawn_marker": "P",
+  "legend": {
+    ".": "floor_concrete",
+    ",": "floor_grate",
+    "#": "wall_rust",
+    "x": "debris",
+    "P": "floor_concrete",
+    "m": "mana_pool",
+    "c": "conduit",
+    "b": "biogrowth",
+    "k": "catwalk"
+  },
+  "rows": [
+    "############################",
+    "#.P.P......................#",
+    "#.P.P..mm........x.........#",
+    "#......mm....##......##....#",
+    "#............##..cc..##....#",
+    "#...kkk..........cc........#",
+    "#...kkk......##......##..bb#",
+    "#............##......##..bb#",
+    "#.....x...........,,.......#",
+    "#..........mm......x......,#",
+    "#..........mm.............,#",
+    "############################"
+  ],
+  "triggers": [
+    { "id": "enter", "cells": [[1, 1], [2, 1], [3, 1], [4, 1], [1, 2], [2, 2], [3, 2], [4, 2]], "once": true, "effects": { "flags": { "throat_deep_entered": true }, "toast": "The gallery. Water to the knee, light under it, and the singing has parts now." } },
+    { "id": "cantor", "cells": [[11, 4], [11, 5], [11, 6]], "once": true, "effects": { "toast": "A cantor stands on the conduit with its cultists in the water. It raises a hand, and the hollows stand up.", "enemies": [ { "type": "choir_cantor", "cell": [17, 3] }, { "type": "choir_cultist", "cell": [16, 7] }, { "type": "choir_cultist", "cell": [20, 4] }, { "type": "failed_hollow", "cell": [15, 5] }, { "type": "echo_wisp", "cell": [21, 8] } ], "victory_flag": "cantor_beaten" } }
+  ],
+  "transitions": [
+    { "cell": [1, 1], "to": "undercity_throat", "arrive": [25, 8], "label": "Back up to the throat" },
+    { "cell": [26, 10], "to": "throat_source", "arrive": [2, 1], "label": "Down: the source", "when": { "flags": { "cantor_beaten": true } } }
+  ],
+  "npcs": [],
+  "pickups": [ { "type": "salvage_cache", "cell": [25, 2] }, { "type": "lore_fragment", "cell": [6, 9] } ],
+  "enemies": []
+}

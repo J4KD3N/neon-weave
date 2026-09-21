@@ -1,0 +1,7 @@
+{
+  "name": "Vane's rig",
+  "summary": "Crew Vane's drone-rig, still transmitting, with a nest built around it. Story site; opens a dialogue that can start a fight.",
+  "dialogue": "crew_vane",
+  "grants": {},
+  "art": { "color": "#e0c07a" }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "The Lost Crews",
+  "main": true,
+  "companion": "",
+  "summary": "Three Beacon-crews went down after Halden and did not come back: Ostrand, Vane, Marrow. Pell has their last positions. Find them, or find what is left.",
+  "start": "ostrand",
+  "stages": {
+    "ostrand": {
+      "summary": "Crew Ostrand went in humming a fifth. Their marker should be in a Shard somewhere near the second depth.",
+      "next": "vane",
+      "objectives": [ { "text": "Find Crew Ostrand's marker in a Shard", "done_when": { "flags": { "crew_ostrand_found": true } } } ],
+      "shard_site": { "pickup": "crew_ostrand_marker" }
+    },
+    "vane": {
+      "summary": "Crew Vane took a drone-rig they should not have had. The rig is still transmitting.",
+      "next": "marrow",
+      "objectives": [ { "text": "Find Crew Vane's rig in a Shard", "done_when": { "flags": { "crew_vane_found": true } } } ],
+      "shard_site": { "pickup": "crew_vane_nest" }
+    },
+    "marrow": {
+      "summary": "Crew Marrow took the cistern route, the one the Beacon does not map.",
+      "next": "done",
+      "objectives": [ { "text": "Find Crew Marrow's cistern in a Shard", "done_when": { "flags": { "crew_marrow_found": true } } } ],
+      "shard_site": { "pickup": "crew_marrow_cistern" }
+    },
+    "done": { "summary": "Three crews accounted for. They all went the same way: singing, deeper, invited.", "complete": true }
+  }
+}

@@ -1,6 +1,8 @@
 {
   "name": "Pell — the relay station",
   "start": [
+    { "node": "hub", "requires": { "flags": { "pell_hub": true } } },
+    { "node": "crews", "requires": { "flags": { "log_recovered": true } } },
     { "node": "after", "requires": { "flags": { "pell_talked": true } } },
     { "node": "greet" }
   ],
@@ -43,6 +45,27 @@
       "choices": [
         { "text": "Go back to the road, Pell.", "effects": { "flags": { "pell_left": true } }, "end": true },
         { "text": "Hold on.", "end": true }
+      ]
+    },
+    "crews": {
+      "speaker": "pell",
+      "text": "You read Halden's slate. Then read this: three more crews went down after us. Ostrand, Vane, Marrow. Beacon-crew, all of them, all humming when they left. Their last positions are on my board. Somebody should go and look, and it is not going to be me.",
+      "choices": [
+        { "text": "Give me the positions.", "effects": { "flags": { "pell_hub": true }, "quest": { "id": "lost_crews", "stage": "ostrand" } }, "next": "positions" },
+        { "text": "Not our crews. Not our problem.", "effects": { "flags": { "pell_refused": true }, "approval": { "sera": -1 } }, "end": true }
+      ]
+    },
+    "positions": {
+      "speaker": "pell",
+      "text": "Ostrand went in humming a fifth. Vane took a drone-rig she should not have had. Marrow took the cistern route, the one the Beacon does not map. Find them or find what is left. I will keep the light on here.",
+      "choices": [ { "text": "We'll be back.", "end": true } ]
+    },
+    "hub": {
+      "speaker": "pell",
+      "text": "Light's on. Three positions, three answers; bring me what you have when you have it.",
+      "choices": [
+        { "text": "Working on it.", "end": true },
+        { "text": "Go home to the Bastion, Pell. Keep the light on from there.", "effects": { "flags": { "pell_left": true } }, "end": true }
       ]
     }
   }

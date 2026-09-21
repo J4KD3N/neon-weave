@@ -1,0 +1,7 @@
+{
+  "name": "Marrow's cistern",
+  "summary": "The cistern route: Crew Marrow, standing in Weft-lit water, singing. Story site; opens a dialogue.",
+  "dialogue": "crew_marrow",
+  "grants": {},
+  "art": { "color": "#e0c07a" }
+}

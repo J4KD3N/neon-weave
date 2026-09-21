@@ -83,6 +83,9 @@ var _settings_return_to_title: bool = false
 @export var show_title_on_start: bool = true
 ## Set by a trigger's `victory_flag`: raised when the fight it started is won.
 var pending_victory_flag: String = ""
+## `-- --demo` turns the demo boundary on regardless of `rules/demo.enabled` (S39).
+var demo_forced: bool = false
+var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the world
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
@@ -205,6 +208,8 @@ func _ready() -> void:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg.begins_with("--screenshot="):
 			_screenshot_path = arg.get_slice("=", 1)
+		if arg == "--demo":
+			demo_forced = true # the Steam demo build: the boundary panel shows even when rules/demo is off
 		elif arg == "--journal":
 			open_journal()
 		elif arg.begins_with("--shard="):
@@ -674,6 +679,7 @@ func open_dialogue(dialogue_id: String) -> bool:
 	if not runner.start(entry, dialogue_ctx()):
 		return false
 	dialogue = runner
+	_world_effects_seen = 0
 	party.stop()
 	dialogue_menu.open(runner, speaker_names())
 	return true
@@ -702,18 +708,23 @@ func choose(index: int) -> bool:
 		return false
 	if not dialogue.choose(index):
 		return false
-	if not dialogue.applied.is_empty():
-		react_to_reputation(dialogue.applied[dialogue.applied.size() - 1])
-		handle_join_effect(dialogue.applied[dialogue.applied.size() - 1])
+	var last: Dictionary = dialogue.applied[dialogue.applied.size() - 1] if not dialogue.applied.is_empty() else {}
+	var applied_count := dialogue.applied.size()
 	for id: String in dialogue.recruited:
 		add_companion(id)
 	dialogue.recruited.clear()
 	if dialogue.finished:
 		dialogue_menu.visible = false
-		autosave()
-		check_demo_end()
 	else:
 		dialogue_menu.node_changed()
+	if applied_count > _world_effects_seen:
+		_world_effects_seen = applied_count
+		_apply_world_effects(last) # the runner did the story part; the world part can start a fight or a sequence (S39)
+	if dialogue.finished:
+		autosave()
+		if mode == "explore" and not in_dialogue():
+			spawn_npcs() # placements that wait on a flag the talk just set (S39)
+		check_demo_end()
 	return true
 
 
@@ -1192,6 +1203,7 @@ func _on_combat_ended(result: String) -> void:
 		if not pending_victory_flag.is_empty():
 			narrative.set_flag(pending_victory_flag, true)
 			pending_victory_flag = ""
+		spawn_npcs() # placements that wait on a victory flag appear now, not on re-entry (S39)
 		if not pending_trigger_flag.is_empty():
 			narrative.set_flag(pending_trigger_flag, true)
 			pending_trigger_flag = ""
@@ -2459,6 +2471,8 @@ func check_demo_end() -> bool:
 		return false
 	if not narrative.flag(demo_end_flag()) or narrative.flag("demo_end_seen"):
 		return false
+	if not bool(registry.get_entry("rules", "demo").get("enabled", true)) and not demo_forced:
+		return false # the full game: Act 1 ends and the story goes on (S39)
 	narrative.set_flag("demo_end_seen", true)
 	demo_end_menu.show_text(DemoEndMenu.render(demo_stats()))
 	autosave()
@@ -3330,12 +3344,24 @@ func grant_account_unlocks() -> Array[String]:
 # --- campaign tooling v2: sequences, map edits, endings (S36, D-091) ---------
 
 ## Applies one effects block: the trigger vocabulary (approval, flags,
-## recruit, quest, reputation, join_faction, victory_flag, grant, toast,
-## open_doors, enemies, dialogue, transition) plus map_edits, sequence and
-## ending. Triggers, dialogue choices and sequence steps all come here.
+## recruit, quest, reputation, romance, join_faction, victory_flag, grant,
+## lore, toast, open_doors, enemies, dialogue, transition) plus map_edits,
+## sequence and ending. Triggers and sequence steps come here whole;
+## dialogue choices apply the story part in the runner and the world part
+## through `_apply_world_effects` (S39).
 func apply_effects(effects: Dictionary) -> void:
 	for companion: String in Conditions.apply(effects, narrative):
 		add_companion(companion)
+	_apply_world_effects(effects)
+
+
+## Everything in an effects block that touches the world rather than the
+## story: reputation reactions, joining, flags set on victory, loot, a lore
+## fragment by id, toasts, doors, a fight (`enemies` cells are map cells, or
+## `offset` from the leader so a Shard-site dialogue can spawn around the
+## party), a dialogue (never over an open one), a transition, map edits, a
+## sequence, the ending.
+func _apply_world_effects(effects: Dictionary) -> void:
 	react_to_reputation(effects)
 	handle_join_effect(effects)
 	if effects.has("victory_flag"):
@@ -3343,6 +3369,8 @@ func apply_effects(effects: Dictionary) -> void:
 	if effects.has("grant"):
 		var got := _gain(effects["grant"])
 		overlay.toast("Found: %s" % RunState.describe(got), 2.5)
+	if effects.has("lore"):
+		find_lore_by_id(String(effects["lore"]))
 	if effects.has("toast"):
 		overlay.toast(String(effects["toast"]), 3.5)
 	for raw: Array in effects.get("open_doors", []):
@@ -3351,15 +3379,31 @@ func apply_effects(effects: Dictionary) -> void:
 		apply_map_edit(edit)
 	var placed: Array = effects.get("enemies", [])
 	if not placed.is_empty():
+		var taken: Array[Vector2i] = []
+		for m: PartyMember in party.members:
+			taken.append(member_cell(m))
 		for p: Dictionary in placed:
-			var raw: Array = p.get("cell", [0, 0])
-			var cell := Vector2i(int(raw[0]), int(raw[1]))
 			var entry: Dictionary = registry.get_entry("enemies", String(p.get("type", "")))
-			if entry.is_empty() or not map_data.is_walkable(cell) or enemy_at(cell) != null:
+			if entry.is_empty():
 				continue
+			var cell := Vector2i(-1, -1)
+			if p.has("offset"):
+				var off: Array = p["offset"]
+				var want := leader_cell() + Vector2i(int(off[0]), int(off[1]))
+				if map_data.is_walkable(want) and enemy_at(want) == null and not taken.has(want):
+					cell = want
+				else:
+					var free := map_data.nearest_free_cells(want, 1, taken)
+					cell = free[0] if not free.is_empty() else Vector2i(-1, -1)
+			else:
+				var raw: Array = p.get("cell", [0, 0])
+				cell = Vector2i(int(raw[0]), int(raw[1]))
+			if cell.x < 0 or not map_data.is_walkable(cell) or enemy_at(cell) != null:
+				continue
+			taken.append(cell)
 			enemies.append(_make_enemy(String(p["type"]), entry, cell, String(p.get("tier", ""))))
 		start_combat(false)
-	if effects.has("dialogue") and mode == "explore":
+	if effects.has("dialogue") and mode == "explore" and not in_dialogue():
 		open_dialogue(String(effects["dialogue"]))
 	if effects.has("transition"):
 		var tr: Dictionary = effects["transition"]
@@ -3369,6 +3413,16 @@ func apply_effects(effects: Dictionary) -> void:
 		run_sequence(effects["sequence"])
 	if bool(effects.get("ending", false)):
 		show_ending()
+
+
+## A named lore fragment found by the story (a dialogue or trigger `lore`
+## effect): into the Archive like one from a Shard, once.
+func find_lore_by_id(id: String) -> bool:
+	if id.is_empty() or narrative.lore.has(id) or not registry.has_entry("lore", id):
+		return false
+	narrative.lore.append(id)
+	overlay.toast("Fragment: %s" % String(registry.get_entry("lore", id).get("name", id)), 3.0)
+	return true
 
 
 ## A scripted sequence: steps run in order, each an effects block plus an
