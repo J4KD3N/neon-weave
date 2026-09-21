@@ -2,10 +2,22 @@
   "name": "Order",
   "summary": "The Lattice took the Loom and closed the Weft. The lights came back on in every district at once, on schedule, and stayed on. Nothing sings any more. Nothing needs to.",
   "priority": 5,
-  "when": { "faction": "lattice" },
+  "when": { "faction": "lattice", "flags": { "loom_set_order": true } },
+  "modifiers": [
+    { "when": { "flags": { "key_lattice_broken": true } }, "text": "The Key of the Ledgers was broken when they set it. One district's lights never came back, and the Lattice does not index that district." },
+    { "when": { "flags": { "key_rootched_broken": true } }, "text": "The Key of the Heart went in cracked. Somewhere under the Datacore the biogrowth still counts, and the Lattice sends a crew every spring to make it stop." },
+    { "when": { "flags": { "key_ashfound_broken": true } }, "text": "The Key of the Quiet was broken. The fonts under the Cathedral never went quiet; the Lattice sealed the doors and called it archived." },
+    { "when": { "flags": { "choir_ended": true } }, "text": "You ended the voice before you set the Loom. The Lattice's records say it was never lucid. You know otherwise, and you do not file it." },
+    { "when": { "flags": { "choir_spared": true } }, "text": "You spared the voice. The Lattice indexed it, catalogued it and locked it. Once a year the lights flicker for a second, everywhere, at once." },
+    { "when": { "flags": { "bastion_struck": true } }, "text": "The plaza was struck the night the Beacon lit itself. The Lattice repaved it. The tune under the flagstones is filed under noise." },
+    { "when": { "flags": { "catastrophe_took_someone": true } }, "text": "Someone walked into the Beacon's light on the plaza and did not come back. The Lattice restored a record of them. It is very accurate." }
+  ],
   "epilogue": {
-    "sera": { "alive": "Sera left the Bastion the night the lights came on. She did not say where.", "dead": "Sera did not live to see the lights. The Lattice filed her under losses.", "absent": "" },
-    "kaj7": { "alive": "Kaj-7 was restored. It is very efficient now. It does not remember your name.", "dead": "Kaj-7's signal stopped with the Loom. The Lattice logged it as noise.", "absent": "" },
-    "dax": { "alive": "Dax's vault was indexed, catalogued and opened. His family is on a list now, and safe, and watched.", "dead": "Dax's vault was opened by a Lattice crew. His family thanked them.", "absent": "" }
+    "sera": { "alive": "Sera left the Bastion the night the lights came on. She did not say where.", "loyal": "Sera stayed for the lights, and hated them, and stayed anyway. Somebody has to hold a gate the Lattice does not own.", "dead": "Sera did not live to see the lights. The Lattice filed her under losses.", "taken": "Sera walked into the light on the plaza. The Lattice restored a Sera. It holds a shield correctly.", "absent": "" },
+    "kaj7": { "alive": "Kaj-7 was restored. It is very efficient now. It does not remember your name.", "loyal": "Kaj-7 refused restoration in writing, in triplicate, and the Lattice let it stand. It still checks the door. It says that is not a fault.", "dead": "Kaj-7's signal stopped with the Loom. The Lattice logged it as noise.", "taken": "Kaj-7 answered its name on the plaza. The Lattice has its image on file. Nobody has loaded it.", "absent": "" },
+    "dax": { "alive": "Dax's vault was indexed, catalogued and opened. His family is on a list now, and safe, and watched.", "loyal": "Dax's family got their choice before the Lattice got their names. He counts that as the seal holding.", "dead": "Dax's vault was opened by a Lattice crew. His family thanked them.", "taken": "Dax was never taken; the Choir did not want him. That is what the record says.", "absent": "" },
+    "whisper": { "alive": "Whisper's line was recalled the week the lights came on. She was not on the list. Nobody knows why, and she is not telling.", "loyal": "Whisper burned the numbers before the Lattice could file them. Nobody on her line answers to anyone now, including her.", "dead": "Whisper's number came up on the recall a month after she died. The Lattice marked it answered.", "taken": "Whisper walked into the light in a voice that was not hers. The Lattice has her on file. The file is empty.", "absent": "" },
+    "cinder": { "alive": "Cinder is the only thing in the district the Lattice cannot index. They have stopped trying. He tells the Sundering to anyone who asks; few do.", "loyal": "Cinder keeps the thread and the remembering. The Lattice offered to archive him. He asked what the word meant.", "dead": "Cinder's tether hangs slack in a district that no longer sings. The Lattice buried him under a catalogue number.", "taken": "Cinder said yes for the second time, on the plaza, and the Lattice logged the second yes beside the first.", "absent": "" },
+    "yev": { "alive": "Yev went back to a grove the Lattice fenced. She sits at the fence. The grove sits with her.", "loyal": "Yev's grove is the one green thing the Lattice did not close. She made them sign for it.", "dead": "Yev's grove was closed as a leak. Nobody told the grove.", "taken": "Yev reached for the current on the plaza and it took her. The Lattice closed the current a week later.", "absent": "" }
   }
 }

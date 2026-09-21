@@ -226,12 +226,13 @@ func test_endings_resolve_by_priority_and_conditions() -> void:
 	for id: String in ["lattice", "rootched", "ashfound"]:
 		var n := NarrativeState.new()
 		n.faction = id
+		n.set_flag({"lattice": "loom_set_order", "rootched": "loom_set_fusion", "ashfound": "loom_set_ash"}[id], true) # the Loom choice (S42/S43)
 		world.narrative = n
 		assert_eq(String(r.get_entry("endings", String(world.resolve_ending()["id"]))["when"]["faction"]), id, "the %s ending" % id)
 	# The Weaver's Mend needs every Key, a spared fragment and a loyal party, and beats a faction ending.
 	var m := NarrativeState.new()
 	m.faction = "lattice"
-	for k: String in ["key_lattice", "key_rootched", "key_ashfound", "choir_spared"]:
+	for k: String in ["key_lattice", "key_rootched", "key_ashfound", "choir_spared", "loom_mended", "loom_set_order"]:
 		m.set_flag(k, true)
 	m.recruit("sera")
 	m.recruit("kaj7")
@@ -258,6 +259,7 @@ func test_endings_resolve_by_priority_and_conditions() -> void:
 func test_the_ending_effect_shows_the_panel_once_and_flags_it() -> void:
 	world.narrative.faction = "ashfound"
 	world.narrative.set_flag("act2", true)
+	world.narrative.set_flag("loom_set_ash", true)
 	world.narrative.recruit("dax")
 	world.respawn_party()
 	world.apply_effects({"ending": true})

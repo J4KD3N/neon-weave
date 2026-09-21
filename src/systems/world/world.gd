@@ -3565,7 +3565,9 @@ func show_ending() -> bool:
 		return false
 	narrative.set_flag("ending_%s" % String(ending["id"]), true)
 	narrative.set_flag("ending_seen", true)
-	ending_menu.show_text(EndingMenu.render(ending, Endings.fates(registry, ending, narrative), demo_stats()))
+	var credits: Array[String] = []
+	credits.assign(registry.get_entry("rules", "credits").get("lines", []))
+	ending_menu.show_text(EndingMenu.render(ending, Endings.fates(registry, ending, narrative), demo_stats(), Endings.modifiers(ending, dialogue_ctx()), credits))
 	autosave()
 	return true
 

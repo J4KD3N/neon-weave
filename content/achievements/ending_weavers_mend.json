@@ -1,0 +1,7 @@
+{
+  "name": "The Weaver's Mend",
+  "summary": "Reweave the Loom with three whole Keys, a spared voice and a party that trusted you all the way down.",
+  "steam_id": "ACH_ENDING_MEND",
+  "when": { "flags": { "ending_weavers_mend": true } },
+  "milestone": "M3"
+}

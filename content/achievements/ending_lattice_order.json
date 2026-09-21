@@ -1,0 +1,7 @@
+{
+  "name": "Order",
+  "summary": "See the Lattice close the Weft.",
+  "steam_id": "ACH_ENDING_ORDER",
+  "when": { "flags": { "ending_lattice_order": true } },
+  "milestone": "M3"
+}

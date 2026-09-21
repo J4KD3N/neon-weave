@@ -1,0 +1,7 @@
+{
+  "name": "The Bloom",
+  "summary": "See the Rootched finish the fusion.",
+  "steam_id": "ACH_ENDING_BLOOM",
+  "when": { "flags": { "ending_rootched_bloom": true } },
+  "milestone": "M3"
+}
