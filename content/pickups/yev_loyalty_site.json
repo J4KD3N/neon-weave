@@ -1,0 +1,7 @@
+{
+  "name": "The Grove's Heart",
+  "summary": "Loyalty site for yev's story (S40); opens a dialogue instead of granting loot.",
+  "dialogue": "yev_loyalty",
+  "grants": {},
+  "art": { "color": "#7ae582" }
+}

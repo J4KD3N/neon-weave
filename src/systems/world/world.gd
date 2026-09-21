@@ -2826,6 +2826,13 @@ func check_achievements() -> Array[String]:
 ## save carries the new stage. Returns the quest ids that moved.
 func advance_quests() -> Array[String]:
 	var moved: Array[String] = []
+	# Quests with `start_when` (S40, D-095) begin at their start stage when the conditions first hold.
+	for q: Dictionary in registry.get_all("quests"):
+		if q.has("start_when") and narrative.stage_of(String(q["id"])).is_empty() and Conditions.passes(q["start_when"], dialogue_ctx()):
+			narrative.set_stage(String(q["id"]), String(q.get("start", "")))
+			moved.append(String(q["id"]))
+			if q.has("start_toast") and overlay != null:
+				overlay.toast(String(q["start_toast"]), 4.0)
 	for _pass: int in 8: # a stage may complete the next one at once
 		var moved_now := false
 		var ctx := dialogue_ctx()

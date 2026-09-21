@@ -1,0 +1,7 @@
+{
+  "name": "The Restore Point",
+  "summary": "Loyalty site for kaj7's story (S40); opens a dialogue instead of granting loot.",
+  "dialogue": "kaj7_loyalty",
+  "grants": {},
+  "art": { "color": "#8fd3ff" }
+}

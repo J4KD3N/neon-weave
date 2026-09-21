@@ -1,6 +1,7 @@
 {
   "name": "Cinder — the source",
   "start": [
+    { "node": "loyalty", "requires": { "recruited": "cinder", "flags": { "act2": true, "cinder_loyalty_offered": false }, "approval": { "cinder": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "cinder" } },
     { "node": "refused", "requires": { "flags": { "cinder_refused": true } } },
     { "node": "greet" }
@@ -39,6 +40,14 @@
       "choices": [
         { "text": "It is different. Walk with us.", "effects": { "recruit": "cinder", "flags": { "cinder_recruited": true, "cinder_refused": false }, "quest": { "id": "cinder_tether", "stage": "start" } }, "end": true },
         { "text": "Same answer.", "end": true }
+      ]
+    },
+    "loyalty": {
+      "speaker": "cinder",
+      "text": "The thread has an end. Not a Key; the place a Key was. I can feel it from here. I would like to go and stand at the end of it, and be asked something.",
+      "choices": [
+        { "text": "Yes. Let us go.", "effects": { "flags": { "cinder_loyalty_offered": true }, "quest": { "id": "cinder_loyalty", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
       ]
     },
     "recruited": {

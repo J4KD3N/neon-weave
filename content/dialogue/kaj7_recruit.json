@@ -2,6 +2,7 @@
   "name": "Kaj-7 — the road",
   "start": [
     { "node": "lattice_word", "requires": { "recruited": "kaj7", "flags": { "lattice_wants_kaj7": true, "kaj7_lattice_talked": false } } },
+    { "node": "loyalty", "requires": { "recruited": "kaj7", "flags": { "act2": true, "kaj7_loyalty_offered": false }, "approval": { "kaj7": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "kaj7" } },
     { "node": "not_yet", "requires": { "quest": { "id": "main_waking", "stage": "gate" } } },
     { "node": "refused", "requires": { "flags": { "kaj7_refused": true } } },
@@ -54,6 +55,14 @@
       "choices": [
         { "text": "Nobody restores you without your say.", "effects": { "approval": { "kaj7": 1 }, "flags": { "kaj7_lattice_talked": true } }, "end": true },
         { "text": "We will see what the Lattice can offer.", "effects": { "approval": { "kaj7": -1 }, "reputation": { "lattice": 1 }, "flags": { "kaj7_lattice_talked": true } }, "end": true }
+      ]
+    },
+    "loyalty": {
+      "speaker": "kaj7",
+      "text": "The Lattice keeps restore points. There is one with my image in it, from before I asked anything. I have located it. I would like to go and look at it, with you, and decide something.",
+      "choices": [
+        { "text": "Yes. Let us go.", "effects": { "flags": { "kaj7_loyalty_offered": true }, "quest": { "id": "kaj7_loyalty", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
       ]
     },
     "recruited": {

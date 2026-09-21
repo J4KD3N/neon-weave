@@ -1,0 +1,17 @@
+{
+  "name": "What Holds",
+  "companion": "cinder",
+  "summary": "The thread has an end: not a Key, the place a Key was, and something of Cinder wound round the absence. He wants to stand there and be asked.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "The thread has an end: not a Key, the place a Key was, and something of Cinder wound round the absence. He wants to stand there and be asked.",
+      "objectives": [ { "text": "Find the end of Cinder's tether in a Shard", "done_when": { "flags": { "cinder_loyalty_done": true } } } ],
+      "shard_site": { "pickup": "cinder_loyalty_site" },
+      "branches": [ { "when": { "flags": { "cinder_loyal": true } }, "next": "loyal" } ],
+      "next": "broken"
+    },
+    "loyal": { "summary": "Cinder keeps the thread, and the remembering. He was asked; that was the whole of what he wanted.", "complete": true },
+    "broken": { "summary": "Cinder's thread is cut at the absence. He is nobody's, which is not the same as free, and he did not ask for it.", "complete": true }
+  }
+}

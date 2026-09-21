@@ -1,0 +1,15 @@
+{
+  "name": "Stolen Voices",
+  "main": true,
+  "companion": "",
+  "start_when": { "flags": { "act2": true } },
+  "start_toast": "The singing did not stop at the source. It followed you up, and it has been listening to how your people talk.",
+  "summary": "Since the source, the Choir speaks to you in the Shards in your companions' voices, with their own words. It is courting. Three times it will ask you down.",
+  "start": "voice_1",
+  "stages": {
+    "voice_1": { "summary": "Something in the Shards is speaking in a voice you know.", "next": "voice_2", "objectives": [ { "text": "Hear the first borrowed voice", "done_when": { "flags": { "choir_voice_1_heard": true } } } ], "shard_site": { "pickup": "choir_voice_1" } },
+    "voice_2": { "summary": "It has more of their words than you thought.", "next": "voice_3", "objectives": [ { "text": "Hear the second borrowed voice", "done_when": { "flags": { "choir_voice_2_heard": true } } } ], "shard_site": { "pickup": "choir_voice_2" } },
+    "voice_3": { "summary": "The third time it will ask outright.", "next": "courted", "objectives": [ { "text": "Hear the third borrowed voice", "done_when": { "flags": { "choir_voice_3_heard": true } } } ], "shard_site": { "pickup": "choir_voice_3" } },
+    "courted": { "summary": "The Choir has spoken in three borrowed voices. It has your measure now, and you have its.", "complete": true }
+  }
+}

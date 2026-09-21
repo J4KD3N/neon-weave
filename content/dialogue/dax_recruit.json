@@ -1,6 +1,7 @@
 {
   "name": "Dax — the yard",
   "start": [
+    { "node": "loyalty", "requires": { "recruited": "dax", "flags": { "act2": true, "dax_loyalty_offered": false }, "approval": { "dax": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "dax" } },
     { "node": "refused", "requires": { "flags": { "dax_refused": true } } },
     { "node": "greet" }
@@ -39,6 +40,14 @@
       "choices": [
         { "text": "Changed it. Come with us.", "effects": { "recruit": "dax", "flags": { "dax_recruited": true, "dax_refused": false }, "quest": { "id": "dax_failing_seal", "stage": "start" } }, "end": true },
         { "text": "No.", "end": true }
+      ]
+    },
+    "loyalty": {
+      "speaker": "dax",
+      "text": "The vault door. The seal holds now; the door is still a door. Forty people, a year of air, and a decision I have been putting on you without saying so. Come and look at it with me.",
+      "choices": [
+        { "text": "Yes. Let us go.", "effects": { "flags": { "dax_loyalty_offered": true }, "quest": { "id": "dax_loyalty", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
       ]
     },
     "recruited": {

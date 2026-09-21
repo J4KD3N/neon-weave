@@ -1,0 +1,7 @@
+{
+  "name": "What Holds",
+  "summary": "Loyalty site for cinder's story (S40); opens a dialogue instead of granting loot.",
+  "dialogue": "cinder_loyalty",
+  "grants": {},
+  "art": { "color": "#9ad8ff" }
+}

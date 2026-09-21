@@ -1,0 +1,8 @@
+{
+  "name": "Archivist Tal",
+  "short_name": "Tal",
+  "summary": "The Lattice's archivist in the enclave: a filing clerk with a gene-line's recall code in his desk. Whisper's maker.",
+  "faction": "lattice",
+  "dialogue": "lattice_path_report",
+  "art": { "color": "#8fd3ff" }
+}

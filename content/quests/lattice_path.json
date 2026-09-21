@@ -1,0 +1,22 @@
+{
+  "name": "The Index",
+  "main": true,
+  "companion": "",
+  "faction": "lattice",
+  "summary": "The Lattice's first line: seal a Weft leak in the Shards and report it filed. The Index begins with one entry, and ends with a Key.",
+  "start": "leak",
+  "stages": {
+    "leak": {
+      "summary": "Archivist Tal has marked a Weft leak in the Shards. Seal it with the Lattice kit.",
+      "next": "report",
+      "objectives": [ { "text": "Seal the marked Weft leak in a Shard", "done_when": { "flags": { "lattice_leak_done": true } } } ],
+      "shard_site": { "pickup": "lattice_leak" }
+    },
+    "report": {
+      "summary": "Report the leak to Archivist Tal in the enclave.",
+      "next": "done",
+      "objectives": [ { "text": "Report to Archivist Tal in the Lattice enclave", "done_when": { "flags": { "lattice_path_reported": true } } } ]
+    },
+    "done": { "summary": "Filed. The Index has a Key's position: under the Ghost Markets, in the echo where the Choir keeps its ledgers.", "complete": true }
+  }
+}

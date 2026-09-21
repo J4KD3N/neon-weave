@@ -1,0 +1,17 @@
+{
+  "name": "Recall, Answered",
+  "companion": "whisper",
+  "summary": "Tal's terminal is in the Shards: from it Whisper could wipe her line's recall, answer it, or burn every asset's number. She has not decided, and she wants you there while she does not.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "Tal's terminal is in the Shards: from it Whisper could wipe her line's recall, answer it, or burn every asset's number. She has not decided, and she wants you there while she does not.",
+      "objectives": [ { "text": "Find Archivist Tal's terminal in a Shard", "done_when": { "flags": { "whisper_loyalty_done": true } } } ],
+      "shard_site": { "pickup": "whisper_loyalty_site" },
+      "branches": [ { "when": { "flags": { "whisper_loyal": true } }, "next": "loyal" } ],
+      "next": "broken"
+    },
+    "loyal": { "summary": "Whisper burned the numbers. Nobody is called home again, including her, especially her, and it was her call.", "complete": true },
+    "broken": { "summary": "Whisper's line was answered for her. She got the back covered anyway, and said so, and that was the whole conversation.", "complete": true }
+  }
+}

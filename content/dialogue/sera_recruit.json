@@ -1,6 +1,7 @@
 {
   "name": "Sera — the yard",
   "start": [
+    { "node": "loyalty", "requires": { "recruited": "sera", "flags": { "act2": true, "sera_loyalty_offered": false }, "approval": { "sera": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "sera" } },
     { "node": "refused", "requires": { "flags": { "sera_refused": true } } },
     { "node": "greet" }
@@ -39,6 +40,14 @@
       "choices": [
         { "text": "Both. Come with us.", "effects": { "recruit": "sera", "flags": { "sera_recruited": true, "sera_refused": false }, "quest": { "id": "sera_purge_village", "stage": "start" } }, "end": true },
         { "text": "Just checking you're still here.", "end": true }
+      ]
+    },
+    "loyalty": {
+      "speaker": "sera",
+      "text": "The Ninth Stair had a roll of names. The purge clerk kept it; it went into the Shards with the rest. I want to find it. I want you there when I do.",
+      "choices": [
+        { "text": "Yes. Let us go.", "effects": { "flags": { "sera_loyalty_offered": true }, "quest": { "id": "sera_loyalty", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
       ]
     },
     "recruited": {

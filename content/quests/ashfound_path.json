@@ -1,0 +1,22 @@
+{
+  "name": "The Burning",
+  "main": true,
+  "companion": "",
+  "faction": "ashfound",
+  "summary": "The Ashfound's first order: burn a Choir shrine in the Shards with a forge charge and report it burned. They start with the singing.",
+  "start": "pyre",
+  "stages": {
+    "pyre": {
+      "summary": "Forge-master Hesk has marked a Choir shrine in the Shards and forged the charge. Burn it.",
+      "next": "report",
+      "objectives": [ { "text": "Burn the marked Choir shrine in a Shard", "done_when": { "flags": { "ashfound_pyre_done": true } } } ],
+      "shard_site": { "pickup": "ashfound_pyre" }
+    },
+    "report": {
+      "summary": "Report the burning to Forge-master Hesk in the forge.",
+      "next": "done",
+      "objectives": [ { "text": "Report to Forge-master Hesk in the Ashfound forge", "done_when": { "flags": { "ashfound_path_reported": true } } } ]
+    },
+    "done": { "summary": "Burned, and it stayed burned. The Marshal wants a Key next: the Choir's own, under the Null Cathedral's fringe where the fonts go quiet.", "complete": true }
+  }
+}

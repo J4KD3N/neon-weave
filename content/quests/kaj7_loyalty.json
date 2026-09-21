@@ -1,0 +1,17 @@
+{
+  "name": "The Restore Point",
+  "companion": "kaj7",
+  "summary": "A Lattice restore cache holds Kaj-7's image from before it asked anything. Kaj-7 wants to look at it, with you, and decide something.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "A Lattice restore cache holds Kaj-7's image from before it asked anything. Kaj-7 wants to look at it, with you, and decide something.",
+      "objectives": [ { "text": "Find the Lattice restore cache in a Shard", "done_when": { "flags": { "kaj7_loyalty_done": true } } } ],
+      "shard_site": { "pickup": "kaj7_loyalty_site" },
+      "branches": [ { "when": { "flags": { "kaj7_loyal": true } }, "next": "loyal" } ],
+      "next": "broken"
+    },
+    "loyal": { "summary": "Kaj-7's image is wiped. There is one Kaj-7, and it asked, and you let it.", "complete": true },
+    "broken": { "summary": "Kaj-7's image is kept, in case. Kaj-7 has logged the phrase.", "complete": true }
+  }
+}

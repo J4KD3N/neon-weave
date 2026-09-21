@@ -1,0 +1,22 @@
+{
+  "name": "Sera — the roll of names",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "sera_dead": true } } },
+    { "node": "with_sera", "requires": { "recruited": "sera" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_sera": {
+      "speaker": "sera",
+      "text": "The roll. Every name on the Ninth Stair, in the purge clerk's hand. I want to read them. All of them. Out loud. Here.",
+      "choices": [
+        { "text": "Read them. We will stand here as long as it takes.", "effects": { "flags": { "sera_loyalty_done": true, "sera_loyal": true, "sera_names_read": true }, "approval": { "sera": 3 } }, "next": "read" },
+        { "text": "Give it to me. I will carry it to the Ashfound; they will answer for it.", "effects": { "flags": { "sera_loyalty_done": true, "sera_names_to_ashfound": true }, "approval": { "sera": -2 }, "reputation": { "ashfound": -1 } }, "end": true },
+        { "text": "Burn it. Names are ash already.", "effects": { "flags": { "sera_loyalty_done": true, "sera_names_burned": true }, "approval": { "sera": -3 } }, "end": true }
+      ]
+    },
+    "read": { "speaker": "sera", "text": "Two hundred and eleven. The last one was a child called Wren. I am done. Thank you for standing there.", "choices": [ { "text": "Always.", "end": true } ] },
+    "alone": { "speaker": "player", "text": "A purge roll in a clerk's hand. Two hundred and eleven names. Nobody here to read them.", "choices": [ { "text": "Take it for her.", "effects": { "flags": { "sera_loyalty_done": true, "sera_names_kept": true } }, "end": true } ] },
+    "dead": { "speaker": "player", "text": "The roll Sera wanted to read. Two hundred and eleven names, and one more now, in your hand.", "choices": [ { "text": "Read them for her.", "effects": { "flags": { "sera_loyalty_done": true, "sera_loyal": true, "sera_names_read": true } }, "end": true } ] }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "The Grove's Heart",
+  "companion": "yev",
+  "summary": "The heart-cutting, the first one taken, the one the rest grew from. Yev knows where it is and wants to decide what it is for, without you deciding for her.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "The heart-cutting, the first one taken, the one the rest grew from. Yev knows where it is and wants to decide what it is for, without you deciding for her.",
+      "objectives": [ { "text": "Find the heart-cutting in a Shard", "done_when": { "flags": { "yev_loyalty_done": true } } } ],
+      "shard_site": { "pickup": "yev_loyalty_site" },
+      "branches": [ { "when": { "flags": { "yev_loyal": true } }, "next": "loyal" } ],
+      "next": "broken"
+    },
+    "loyal": { "summary": "The heart-cutting went where Yev chose. Something is growing that is hers.", "complete": true },
+    "broken": { "summary": "The heart-cutting went to the Speaker. Yev is a good Rootched now, and quieter.", "complete": true }
+  }
+}

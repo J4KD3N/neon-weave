@@ -1,0 +1,21 @@
+{
+  "name": "Stolen voices — the first",
+  "start": [
+    { "node": "as_sera", "requires": { "recruited": "sera" } },
+    { "node": "as_kaj7", "requires": { "recruited": "kaj7" } },
+    { "node": "as_dax", "requires": { "recruited": "dax" } },
+    { "node": "as_whisper", "requires": { "recruited": "whisper" } },
+    { "node": "as_cinder", "requires": { "recruited": "cinder" } },
+    { "node": "as_yev", "requires": { "recruited": "yev" } },
+    { "node": "as_you" }
+  ],
+  "nodes": {
+    "as_sera": { "speaker": "choir", "voice": "sera", "text": "Shields up. Corridors first, rooms second. I've buried people who did it the other way round. That is what she says, and we have every word she ever said to you. Come down. She will say them all again, without the guilt.", "choices": [ { "text": "That is not her.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_refused_1": true }, "approval": { "sera": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_listened_1": true } }, "end": true } ] },
+    "as_kaj7": { "speaker": "choir", "voice": "kaj7", "text": "The signal is louder here. I am logging that as weather. That is what it says, and we kept every word. It was made to hear us. Come down and it will never have to check the door again.", "choices": [ { "text": "That is not Kaj.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_refused_1": true }, "approval": { "kaj7": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_listened_1": true } }, "end": true } ] },
+    "as_dax": { "speaker": "choir", "voice": "dax", "text": "Air's bad down here. Better than the vault's, which tells you something. That is what he says. We have his family's voices too, behind their door. Come down and hear them.", "choices": [ { "text": "That is not Dax.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_refused_1": true }, "approval": { "dax": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_listened_1": true } }, "end": true } ] },
+    "as_whisper": { "speaker": "choir", "voice": "whisper", "text": "Cameras. There are always cameras. Smile, or don't; they log both. That is what she says. We heard the recall she is hiding from. Come down; nobody is called home from here.", "choices": [ { "text": "That is not Whisper.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_refused_1": true }, "approval": { "whisper": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_listened_1": true } }, "end": true } ] },
+    "as_cinder": { "speaker": "choir", "voice": "cinder", "text": "The Weft is thin here. I can hear the floor. That is what he says. He said yes to us once, in a voice like this one. Come down and he can stop remembering alone.", "choices": [ { "text": "That is not Cinder.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_refused_1": true }, "approval": { "cinder": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_listened_1": true } }, "end": true } ] },
+    "as_yev": { "speaker": "choir", "voice": "yev", "text": "The current runs strong here. Step where it pools; it will hold you up. That is what she says. She thinks we are what she prays to. Come down and find out.", "choices": [ { "text": "That is not Yev.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_refused_1": true }, "approval": { "yev": 1 } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_listened_1": true } }, "end": true } ] },
+    "as_you": { "speaker": "choir", "voice": "player", "text": "Up. Now. That is what you said at the source. We kept it. We keep everything. Come down and hear how you sound to us.", "choices": [ { "text": "That is not me.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_refused_1": true } }, "end": true }, { "text": "Keep talking.", "effects": { "flags": { "choir_voice_1_heard": true, "choir_listened_1": true } }, "end": true } ] }
+  }
+}

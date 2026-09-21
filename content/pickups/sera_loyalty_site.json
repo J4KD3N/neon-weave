@@ -1,0 +1,7 @@
+{
+  "name": "The Roll of Names",
+  "summary": "Loyalty site for sera's story (S40); opens a dialogue instead of granting loot.",
+  "dialogue": "sera_loyalty",
+  "grants": {},
+  "art": { "color": "#ffd166" }
+}

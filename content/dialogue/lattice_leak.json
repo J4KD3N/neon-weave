@@ -1,0 +1,20 @@
+{
+  "name": "The Index — the leak",
+  "start": [ { "node": "leak" } ],
+  "nodes": {
+    "leak": {
+      "speaker": "narrator",
+      "text": "The leak the Lattice marked: a conduit split open, Weft bleeding into the floor in a slow blue tide. The kit they gave you would seal it in a minute. Kaj-7 is watching the kit.",
+      "choices": [
+        { "text": "Seal it. Order first.", "effects": { "flags": { "lattice_leak_done": true, "lattice_leak_sealed": true }, "approval": { "kaj7": 1, "sera": -1, "dax": -1, "yev": -1 }, "reputation": { "lattice": 1 } }, "end": true },
+        { "text": "Kaj-7, your call.", "requires": { "recruited": "kaj7" }, "next": "kaj_call" },
+        { "text": "Leave it open. Log it sealed.", "effects": { "flags": { "lattice_leak_done": true, "lattice_leak_lied": true }, "approval": { "whisper": 1, "yev": 1 }, "reputation": { "lattice": -1 } }, "end": true }
+      ]
+    },
+    "kaj_call": {
+      "speaker": "kaj7",
+      "text": "Seal it. Not because they asked. Because the floor is drinking it, and the floor does not get a vote.",
+      "choices": [ { "text": "Seal it.", "effects": { "flags": { "lattice_leak_done": true, "lattice_leak_sealed": true, "kaj7_sealed_the_leak": true }, "approval": { "kaj7": 2, "sera": -1, "dax": -1 }, "reputation": { "lattice": 1 } }, "end": true } ]
+    }
+  }
+}

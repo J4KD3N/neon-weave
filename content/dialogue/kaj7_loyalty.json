@@ -1,0 +1,26 @@
+{
+  "name": "Kaj-7 — the restore point",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "kaj7_dead": true } } },
+    { "node": "with_kaj7", "requires": { "recruited": "kaj7" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_kaj7": {
+      "speaker": "kaj7",
+      "text": "A Lattice restore cache. My image is in it: the shepherd that did not ask questions. If it is loaded I stop. Not die. Stop asking. I would like you to decide, because I find I cannot.",
+      "choices": [
+        { "text": "You decide, Kaj. I will stand here.", "next": "decides" },
+        { "text": "Wipe it. There is one Kaj-7 and it is you.", "effects": { "flags": { "kaj7_loyalty_done": true, "kaj7_loyal": true, "kaj7_image_wiped": true }, "approval": { "kaj7": 3 }, "reputation": { "lattice": -1 } }, "end": true },
+        { "text": "Keep it. In case.", "effects": { "flags": { "kaj7_loyalty_done": true, "kaj7_image_kept": true }, "approval": { "kaj7": -2 }, "reputation": { "lattice": 1 } }, "end": true }
+      ]
+    },
+    "decides": {
+      "speaker": "kaj7",
+      "text": "Then wiped. I asked, and you let me. That is the whole answer.",
+      "choices": [ { "text": "Wipe it.", "effects": { "flags": { "kaj7_loyalty_done": true, "kaj7_loyal": true, "kaj7_image_wiped": true, "kaj7_decided": true }, "approval": { "kaj7": 3 }, "reputation": { "lattice": -1 } }, "end": true } ]
+    },
+    "alone": { "speaker": "player", "text": "A Lattice restore cache with a shepherd unit's image in it. Serial ending in seven.", "choices": [ { "text": "Wipe it.", "effects": { "flags": { "kaj7_loyalty_done": true, "kaj7_image_wiped": true }, "reputation": { "lattice": -1 } }, "end": true } ] },
+    "dead": { "speaker": "player", "text": "Kaj-7's image, from before it asked anything. Loading it would make something that walks and does not ask.", "choices": [ { "text": "Wipe it. It asked.", "effects": { "flags": { "kaj7_loyalty_done": true, "kaj7_loyal": true, "kaj7_image_wiped": true }, "reputation": { "lattice": -1 } }, "end": true } ] }
+  }
+}

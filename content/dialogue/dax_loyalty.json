@@ -1,0 +1,22 @@
+{
+  "name": "Dax — the vault door",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "dax_dead": true } } },
+    { "node": "with_dax", "requires": { "recruited": "dax" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_dax": {
+      "speaker": "dax",
+      "text": "Vault Orun. The door. Forty people behind it and air for a year, since the seal. If I open it they come out into this. If I do not, they get a year. I never told you which I wanted.",
+      "choices": [
+        { "text": "Open it. They get to choose too.", "effects": { "flags": { "dax_loyalty_done": true, "dax_loyal": true, "dax_family_out": true }, "approval": { "dax": 3 } }, "next": "open" },
+        { "text": "Keep it sealed. A year is a year.", "effects": { "flags": { "dax_loyalty_done": true, "dax_loyal": true, "dax_family_sealed": true }, "approval": { "dax": 1 } }, "end": true },
+        { "text": "Sell the vault's position to the Ashfound. They need a fort.", "effects": { "flags": { "dax_loyalty_done": true, "dax_vault_sold": true }, "approval": { "dax": -4 }, "reputation": { "ashfound": 2 } }, "end": true }
+      ]
+    },
+    "open": { "speaker": "dax", "text": "They came out. My mother asked who you were. I said the one who opened the door. She said that was not an answer. It is the only one I have.", "choices": [ { "text": "It will do.", "end": true } ] },
+    "alone": { "speaker": "player", "text": "Vault Orun's door, sealed and holding. Forty people and a year of air on the other side.", "choices": [ { "text": "Leave it sealed.", "effects": { "flags": { "dax_loyalty_done": true, "dax_family_sealed": true } }, "end": true } ] },
+    "dead": { "speaker": "player", "text": "Vault Orun's door. Dax never said which he wanted. You open it, because he would have wanted them to choose.", "choices": [ { "text": "Open it.", "effects": { "flags": { "dax_loyalty_done": true, "dax_loyal": true, "dax_family_out": true } }, "end": true } ] }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "The Vault Door",
+  "companion": "dax",
+  "summary": "The seal holds; the door is still a door. Forty people, a year of air, and a decision Dax has been putting on you without saying so.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "The seal holds; the door is still a door. Forty people, a year of air, and a decision Dax has been putting on you without saying so.",
+      "objectives": [ { "text": "Find the door of Vault Orun in a Shard", "done_when": { "flags": { "dax_loyalty_done": true } } } ],
+      "shard_site": { "pickup": "dax_loyalty_site" },
+      "branches": [ { "when": { "flags": { "dax_loyal": true } }, "next": "loyal" } ],
+      "next": "broken"
+    },
+    "loyal": { "summary": "Vault Orun's people got their choice, whichever way it went. Dax counts that as the seal holding.", "complete": true },
+    "broken": { "summary": "Vault Orun's position is sold. Dax has not spoken to you since, and he keeps walking with you, which is worse.", "complete": true }
+  }
+}

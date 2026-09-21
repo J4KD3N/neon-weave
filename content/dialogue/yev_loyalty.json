@@ -1,0 +1,21 @@
+{
+  "name": "Yev — the grove's heart",
+  "start": [
+    { "node": "dead", "requires": { "flags": { "yev_dead": true } } },
+    { "node": "with_yev", "requires": { "recruited": "yev" } },
+    { "node": "alone" }
+  ],
+  "nodes": {
+    "with_yev": {
+      "speaker": "yev",
+      "text": "The heart-cutting. The one they took first, the one the rest grew from. I can put it back in the grove and the grove will heal, or in your Garden and the Bastion will grow roots of its own, or give it to the Speaker and be a good Rootched.",
+      "choices": [
+        { "text": "Back in the grove. It is yours.", "effects": { "flags": { "yev_loyalty_done": true, "yev_loyal": true, "yev_heart_grove": true }, "approval": { "yev": 3 }, "reputation": { "rootched": -1 } }, "end": true },
+        { "text": "The Garden. Let the Bastion grow.", "effects": { "flags": { "yev_loyalty_done": true, "yev_loyal": true, "yev_heart_garden": true }, "approval": { "yev": 2 } }, "end": true },
+        { "text": "The Speaker. Keep the faith.", "effects": { "flags": { "yev_loyalty_done": true, "yev_heart_rootched": true }, "approval": { "yev": -3 }, "reputation": { "rootched": 2 } }, "end": true }
+      ]
+    },
+    "alone": { "speaker": "player", "text": "A cutting in a frame, older than the others, the one the rest grew from. It is warm.", "choices": [ { "text": "Take it to the Garden.", "effects": { "flags": { "yev_loyalty_done": true, "yev_heart_garden": true } }, "end": true } ] },
+    "dead": { "speaker": "player", "text": "The heart-cutting Yev wanted to decide about. You put it back in the grove, because she was going to, and the grove does not know she is gone.", "choices": [ { "text": "Back in the grove.", "effects": { "flags": { "yev_loyalty_done": true, "yev_loyal": true, "yev_heart_grove": true } }, "end": true } ] }
+  }
+}

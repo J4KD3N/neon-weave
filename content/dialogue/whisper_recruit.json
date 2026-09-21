@@ -1,6 +1,7 @@
 {
   "name": "Whisper — the rafters",
   "start": [
+    { "node": "loyalty", "requires": { "recruited": "whisper", "flags": { "act2": true, "whisper_loyalty_offered": false }, "approval": { "whisper": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "whisper" } },
     { "node": "refused", "requires": { "flags": { "whisper_refused": true } } },
     { "node": "greet" }
@@ -39,6 +40,14 @@
       "choices": [
         { "text": "Changed it. Come with us.", "effects": { "recruit": "whisper", "flags": { "whisper_recruited": true, "whisper_refused": false }, "quest": { "id": "whisper_recall", "stage": "start" } }, "end": true },
         { "text": "Same answer.", "end": true }
+      ]
+    },
+    "loyalty": {
+      "speaker": "whisper",
+      "text": "Tal has a terminal in the Shards. Not Tal; a terminal with his hand on the other end. From it I could do three things to my line and I have not decided which. I would like you standing there while I do not decide.",
+      "choices": [
+        { "text": "Yes. Let us go.", "effects": { "flags": { "whisper_loyalty_offered": true }, "quest": { "id": "whisper_loyalty", "stage": "start" } }, "end": true },
+        { "text": "Not yet.", "end": true }
       ]
     },
     "recruited": {

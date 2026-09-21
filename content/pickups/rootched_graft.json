@@ -1,0 +1,7 @@
+{
+  "name": "The marked conduit",
+  "summary": "A conduit the Rootched marked for a grafting-seed. The site for The Grafting; opens a dialogue.",
+  "dialogue": "rootched_graft",
+  "grants": {},
+  "art": { "color": "#7ae582" }
+}

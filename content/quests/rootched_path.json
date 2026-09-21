@@ -1,0 +1,22 @@
+{
+  "name": "The Grafting",
+  "main": true,
+  "companion": "",
+  "faction": "rootched",
+  "summary": "The Rootched's first ask: set a grafting-seed in a marked conduit in the Shards and let it grow. The grove remembers where it was cut from.",
+  "start": "graft",
+  "stages": {
+    "graft": {
+      "summary": "Speaker Oriel has a seed and a conduit marked in the Shards. Set the seed.",
+      "next": "report",
+      "objectives": [ { "text": "Set the grafting-seed in the marked conduit in a Shard", "done_when": { "flags": { "rootched_graft_done": true } } } ],
+      "shard_site": { "pickup": "rootched_graft" }
+    },
+    "report": {
+      "summary": "Tell Speaker Oriel in the grove that the seed is set.",
+      "next": "done",
+      "objectives": [ { "text": "Report to Speaker Oriel in the Rootched grove", "done_when": { "flags": { "rootched_path_reported": true } } } ]
+    },
+    "done": { "summary": "The current carried the news. The grove remembers a Key in the Datacore's heart, where the biogrowth learned to count.", "complete": true }
+  }
+}

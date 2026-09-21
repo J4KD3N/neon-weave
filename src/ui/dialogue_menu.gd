@@ -61,6 +61,8 @@ func node_changed() -> void:
 static func render(r: DialogueRunner, names: Dictionary, p_cursor: int = 0) -> String:
 	var lines: PackedStringArray = []
 	var who := String(names.get(r.speaker(), r.speaker().capitalize()))
+	if not r.voice().is_empty():
+		who = "%s, in %s's voice" % [who, String(names.get(r.voice(), r.voice().capitalize()))]
 	lines.append("%s: %s" % [who, r.text()])
 	lines.append("")
 	var options := r.available_choices()

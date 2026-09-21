@@ -1,0 +1,7 @@
+{
+  "name": "The marked shrine",
+  "summary": "A Choir cache under a cairn of drone parts, still warm. The site for The Burning; opens a dialogue.",
+  "dialogue": "ashfound_pyre",
+  "grants": {},
+  "art": { "color": "#ff9f5a" }
+}
