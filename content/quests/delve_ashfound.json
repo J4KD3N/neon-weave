@@ -1,0 +1,18 @@
+{
+  "name": "The Key of the Quiet",
+  "main": true,
+  "companion": "",
+  "start_when": { "flags": { "key_ashfound_located": true } },
+  "start_toast": "A Key is located: under the Null Cathedral's fringe, where the fonts go quiet.",
+  "summary": "One of the three Keys to the Loom lies under the Null Cathedral's fringe, where the fonts go quiet. Take it whole, or break it; either way its keeper wakes.",
+  "start": "delve",
+  "stages": {
+    "delve": {
+      "summary": "Delve under the Null Cathedral's fringe, where the fonts go quiet. The Key's keeper will not let it go.",
+      "shard_site": { "pickup": "key_ashfound_site", "template": "null_cathedral" },
+      "branches": [ { "when": { "flags": { "key_ashfound": true } }, "next": "taken", "toast": "A Key, whole. Two more, or fewer." }, { "when": { "flags": { "key_ashfound_broken": true } }, "next": "broken", "toast": "A Key, broken. The Loom will not be mended with it." } ]
+    },
+    "taken": { "summary": "The Key is yours, whole.", "complete": true },
+    "broken": { "summary": "The Key is broken. Whatever the Loom becomes, it will not be mended.", "complete": true }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "The Key of the Heart",
+  "main": true,
+  "companion": "",
+  "start_when": { "flags": { "key_rootched_located": true } },
+  "start_toast": "A Key is located: in the Datacore's heart, where the biogrowth learned to count.",
+  "summary": "One of the three Keys to the Loom lies in the Datacore's heart, where the biogrowth learned to count. Take it whole, or break it; either way its keeper wakes.",
+  "start": "delve",
+  "stages": {
+    "delve": {
+      "summary": "Delve in the Datacore's heart, where the biogrowth learned to count. The Key's keeper will not let it go.",
+      "shard_site": { "pickup": "key_rootched_site", "template": "verdant_datacore" },
+      "branches": [ { "when": { "flags": { "key_rootched": true } }, "next": "taken", "toast": "A Key, whole. Two more, or fewer." }, { "when": { "flags": { "key_rootched_broken": true } }, "next": "broken", "toast": "A Key, broken. The Loom will not be mended with it." } ]
+    },
+    "taken": { "summary": "The Key is yours, whole.", "complete": true },
+    "broken": { "summary": "The Key is broken. Whatever the Loom becomes, it will not be mended.", "complete": true }
+  }
+}

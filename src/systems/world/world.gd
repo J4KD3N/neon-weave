@@ -83,6 +83,7 @@ var _settings_return_to_title: bool = false
 @export var show_title_on_start: bool = true
 ## Set by a trigger's `victory_flag`: raised when the fight it started is won.
 var pending_victory_flag: String = ""
+var pending_victory_flags: Array[String] = [] # every flag a victory sets (S41: one or many)
 ## `-- --demo` turns the demo boundary on regardless of `rules/demo.enabled` (S39).
 var demo_forced: bool = false
 var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the world
@@ -290,7 +291,7 @@ func enter_shard(template_id: String, seed_value: int, depth: int = 0, extras: A
 	if template.is_empty():
 		push_warning("unknown shard template %s" % template_id)
 		return {}
-	var sites := extras if not extras.is_empty() else quest_sites()
+	var sites := extras if not extras.is_empty() else quest_sites(template_id)
 	var entry := ShardGenerator.generate(template, seed_value, depth if depth > 0 else bastion.depth(), sites)
 	for err: String in ShardValidator.validate(entry, tiles_by_id()):
 		push_warning("shard %s: %s" % [entry.get("id"), err])
@@ -303,7 +304,11 @@ func enter_shard(template_id: String, seed_value: int, depth: int = 0, extras: A
 
 ## Pickup ids of quest sites that should appear in the next Shard: every
 ## quest whose current stage declares `shard_site`.
-func quest_sites() -> Array[String]:
+## Story sites for the Shard about to be generated: every started quest's
+## current stage `shard_site`, skipping sites bound to another template
+## (`shard_site.template`, S41: a Key delve belongs to its biome). An empty
+## `template_id` lists them all.
+func quest_sites(template_id: String = "") -> Array[String]:
 	var out: Array[String] = []
 	for quest_id: String in narrative.quests:
 		var quest: Dictionary = registry.get_entry("quests", quest_id)
@@ -311,6 +316,9 @@ func quest_sites() -> Array[String]:
 		var stage: Dictionary = stages.get(narrative.stage_of(quest_id), {})
 		var site: Dictionary = stage.get("shard_site", {})
 		var pickup := String(site.get("pickup", ""))
+		var bound := String(site.get("template", ""))
+		if not template_id.is_empty() and not bound.is_empty() and bound != template_id:
+			continue
 		if not pickup.is_empty() and registry.has_entry("pickups", pickup):
 			out.append(pickup)
 	return out
@@ -1200,9 +1208,10 @@ func _on_combat_ended(result: String) -> void:
 		party.active = true
 		mode = "explore"
 		refresh_music()
-		if not pending_victory_flag.is_empty():
-			narrative.set_flag(pending_victory_flag, true)
-			pending_victory_flag = ""
+		for f: String in pending_victory_flags:
+			narrative.set_flag(f, true)
+		pending_victory_flags = []
+		pending_victory_flag = ""
 		spawn_npcs() # placements that wait on a victory flag appear now, not on re-entry (S39)
 		if not pending_trigger_flag.is_empty():
 			narrative.set_flag(pending_trigger_flag, true)
@@ -1213,6 +1222,7 @@ func _on_combat_ended(result: String) -> void:
 		return
 	mode = "defeated"
 	pending_victory_flag = ""
+	pending_victory_flags = []
 	pending_trigger_flag = "" # the fight was lost: its trigger stays live
 	if run.in_shard:
 		ledger.runs_wiped += 1
@@ -3372,7 +3382,16 @@ func _apply_world_effects(effects: Dictionary) -> void:
 	react_to_reputation(effects)
 	handle_join_effect(effects)
 	if effects.has("victory_flag"):
-		pending_victory_flag = String(effects["victory_flag"])
+		var vf: Variant = effects["victory_flag"]
+		pending_victory_flags = []
+		if vf is Array:
+			for f: Variant in vf:
+				pending_victory_flags.append(String(f))
+		else:
+			pending_victory_flags.append(String(vf))
+		pending_victory_flag = pending_victory_flags[0] if not pending_victory_flags.is_empty() else ""
+	if effects.has("dismiss"):
+		_drop_member(String(effects["dismiss"])) # the story took someone (S41)
 	if effects.has("grant"):
 		var got := _gain(effects["grant"])
 		overlay.toast("Found: %s" % RunState.describe(got), 2.5)
@@ -3448,6 +3467,8 @@ func run_sequence(steps: Array) -> int:
 	var ran := 0
 	for raw: Variant in steps:
 		var step: Dictionary = raw
+		if step.has("when") and not Conditions.passes(step["when"], dialogue_ctx()):
+			continue # a conditional step (S41): the catastrophe reads prior choices
 		ran += 1
 		var record := {"step": ran, "camera": Vector2i(-1, -1)}
 		if step.has("camera"):
@@ -3464,6 +3485,7 @@ func run_sequence(steps: Array) -> int:
 		var body := step.duplicate()
 		body.erase("camera")
 		body.erase("pause")
+		body.erase("when")
 		apply_effects(body)
 		last_sequence.append(record)
 		if in_dialogue() or mode != "explore":
@@ -3592,3 +3614,14 @@ func take_companion(id: String) -> bool:
 	respawn_party()
 	overlay.toast("%s walks with you." % registry.get_entry("companions", id).get("short_name", id), 2.0)
 	return true
+
+
+## The story took a companion (S41 `dismiss` effect): off the roster in the
+## narrative already (Conditions.apply); here the party member goes too.
+## The leader can never be dropped.
+func _drop_member(id: String) -> void:
+	var m := member_by_id(id)
+	if m != null and m != party.leader():
+		party.remove_member(m)
+	if party.leader() != null:
+		party.trail.reset(party.leader().position)

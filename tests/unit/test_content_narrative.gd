@@ -3,7 +3,7 @@
 extends TestCase
 
 const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
-const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction", "romance", "lore", "toast", "grant", "enemies", "victory_flag", "open_doors", "dialogue", "transition", "map_edits", "sequence", "ending"]
+const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction", "romance", "dismiss", "lore", "toast", "grant", "enemies", "victory_flag", "open_doors", "dialogue", "transition", "map_edits", "sequence", "ending"]
 const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction", "romance", "not_romance", "romance_open"]
 
 var registry: ContentRegistry
@@ -202,3 +202,26 @@ func test_borrowed_voices_and_start_when_are_well_formed() -> void:
 			assert_true(REQUIRES_KEYS.has(k), "quest %s start_when.%s" % [q["id"], k])
 		assert_true(Dictionary(q.get("stages", {})).has(String(q.get("start", ""))), "quest %s start stage" % q["id"])
 	assert_true(started >= 1, "Stolen Voices starts itself")
+
+
+## Key delves (S41): a site bound to a template names a real Shard template,
+## and the catastrophe's conditional steps use the condition vocabulary.
+func test_bound_sites_and_sequence_steps_are_well_formed() -> void:
+	var bound := 0
+	for q: Dictionary in registry.get_all("quests"):
+		for stage_id: String in q.get("stages", {}):
+			var site: Dictionary = Dictionary(Dictionary(q["stages"])[stage_id]).get("shard_site", {})
+			if site.has("template"):
+				bound += 1
+				assert_true(registry.has_entry("shards", String(site["template"])), "quest %s stage %s site template" % [q["id"], stage_id])
+	assert_eq(bound, 3, "three Keys, one biome each")
+	var conditional := 0
+	for m: Dictionary in registry.get_all("maps"):
+		for t: Dictionary in m.get("triggers", []):
+			for step: Dictionary in Dictionary(t.get("effects", {})).get("sequence", []):
+				for k: String in step.get("when", {}):
+					conditional += 1
+					assert_true(REQUIRES_KEYS.has(k), "map %s trigger %s step when.%s" % [m["id"], t.get("id"), k])
+				if step.has("dismiss"):
+					assert_true(registry.has_entry("companions", String(step["dismiss"])), "map %s dismisses a stranger" % m["id"])
+	assert_true(conditional >= 10, "the catastrophe branches on prior choices")

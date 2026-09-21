@@ -27,7 +27,7 @@ without a schema; keep the two in step.
 | origins | name, dialogue_tag | stat_mods, traits, unlock_flag (earned for the account when a playthrough sets it), unlock_blurb |
 | parties | name, members | summary |
 | pickups | name, grants or dialogue, art | rarity (placement-side); grants.item = true drops an item of the pickup rarity; grants.lore = true finds the next fragment |
-| quests | name, start, stages {id: {summary, objectives?, shard_site?, complete?, next?, next_toast?, branches? [{when, next, toast?}]}} | companion, main, faction, auto_start. start_when (conditions; the quest starts itself when they first hold, with start_toast; S40). Branches (S36): the first whose `when` holds wins once the objectives are done; `next` is the fallback; a stage with branches and no objectives forks at once |
+| quests | name, start, stages {id: {summary, objectives?, shard_site? {pickup, template? (only placed in that Shard template, S41)}, complete?, next?, next_toast?, branches? [{when, next, toast?}]}} | companion, main, faction, auto_start. start_when (conditions; the quest starts itself when they first hold, with start_toast; S40). Branches (S36): the first whose `when` holds wins once the objectives are done; `next` is the fallback; a stage with branches and no objectives forks at once |
 | races | name, overlay {kind,color} | stat_mods, art.sheet, playable (false = companion-only), cyberware_slots, traits (D-085: resist {type: fraction}, regen_on_surface {surface: hp}, detect_hidden N, salvage_bonus, mend_after_combat, bonus_abilities [ids], ability_damage_bonus {id: n}, heal_immune_types [types], talent_cost_mod, tags [..]) |
 | resources | name, max | builds_on, gain_per_cast, damage_per_stack, lock_ap_at_max, vent_ability, kind "marks", mark, max_per_target, gain_on_kill, gain_on_surface, gain_on_stealth, reveal_at_max, absorb {type,fraction}, gain_per_absorbed |
 | rules | name | demo: end_flag, enabled (false in the base game; `--demo` turns the boundary on) | per-rule fields (combat incl. surface_evasion, surface_resist {surface: {type: fraction}} and surface_status {surface: {status: turns}}, attributes, progression, loot, demo) |
@@ -41,7 +41,7 @@ without a schema; keep the two in step.
 
 Effect keys (triggers, sequence steps and dialogue choices alike since S39): approval, flags, recruit, quest, reputation, toast,
 open_doors, enemies ([{type, cell} or {type, offset: [dx, dy] from the leader}, tier?]), victory_flag, grant, lore (a fragment id), dialogue, transition, join_faction,
-map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause], ending (true),
+map_edits [{map?, cell, tile}], sequence [steps: effects + camera + pause + when (a step skipped when its conditions fail, S41)], ending (true), dismiss (a companion id: off the roster and out of the party; flags are the content's), victory_flag (one flag or a list),
 romance ({commit: id} | {end: true}; a commitment is refused while another stands).
 Condition keys (`requires` / `when` / `done_when`): flags, origin_tag,
 race, race_tag, class, approval, reputation, recruited (walking with the party:

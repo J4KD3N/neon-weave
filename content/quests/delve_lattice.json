@@ -1,0 +1,18 @@
+{
+  "name": "The Key of the Ledgers",
+  "main": true,
+  "companion": "",
+  "start_when": { "flags": { "key_lattice_located": true } },
+  "start_toast": "A Key is located: under the Ghost Markets, in the echo where the Choir keeps its ledgers.",
+  "summary": "One of the three Keys to the Loom lies under the Ghost Markets, in the echo where the Choir keeps its ledgers. Take it whole, or break it; either way its keeper wakes.",
+  "start": "delve",
+  "stages": {
+    "delve": {
+      "summary": "Delve under the Ghost Markets, in the echo where the Choir keeps its ledgers. The Key's keeper will not let it go.",
+      "shard_site": { "pickup": "key_lattice_site", "template": "ghost_markets" },
+      "branches": [ { "when": { "flags": { "key_lattice": true } }, "next": "taken", "toast": "A Key, whole. Two more, or fewer." }, { "when": { "flags": { "key_lattice_broken": true } }, "next": "broken", "toast": "A Key, broken. The Loom will not be mended with it." } ]
+    },
+    "taken": { "summary": "The Key is yours, whole.", "complete": true },
+    "broken": { "summary": "The Key is broken. Whatever the Loom becomes, it will not be mended.", "complete": true }
+  }
+}

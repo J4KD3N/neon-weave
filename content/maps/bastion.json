@@ -52,6 +52,24 @@
     { "companion": "yev", "cell": [5, 13], "when": { "flags": { "choir_contact": true } } },
     { "npc": "pell", "cell": [14, 12], "when": { "flags": { "pell_left": true } } }
   ],
+  "triggers": [
+    { "id": "catastrophe", "cells": [[9, 5], [12, 5], [9, 6], [12, 6], [10, 5], [11, 5], [10, 6], [11, 6]], "once": true, "when": { "quest": { "id": "the_loom", "stage": "catastrophe" } }, "effects": { "sequence": [
+      { "camera": [4, 2], "toast": "The Beacon lights on its own. Every conduit on the plaza hums the same seven notes.", "pause": 2.0 },
+      { "when": { "romance": "sera", "flags": { "choir_invited": true, "sera_loyal": false } }, "toast": "Sera walks toward the Beacon with her shield down, humming. She does not turn around. The light takes her.", "flags": { "sera_taken": true, "catastrophe_took_someone": true }, "dismiss": "sera", "pause": 2.5 },
+      { "when": { "romance": "kaj7", "flags": { "choir_invited": true, "kaj7_loyal": false } }, "toast": "Kaj-7 stops scanning. It walks to the Beacon the way it walked to you the first time, and the light takes it.", "flags": { "kaj7_taken": true, "catastrophe_took_someone": true }, "dismiss": "kaj7", "pause": 2.5 },
+      { "when": { "romance": "whisper", "flags": { "choir_invited": true, "whisper_loyal": false } }, "toast": "Whisper says your name, once, in a voice that is not hers, and is gone before the light reaches the Beacon.", "flags": { "whisper_taken": true, "catastrophe_took_someone": true }, "dismiss": "whisper", "pause": 2.5 },
+      { "when": { "romance": "yev", "flags": { "choir_invited": true, "yev_loyal": false } }, "toast": "Yev reaches for the current the way she reaches for you, and it takes her hand, and the rest of her.", "flags": { "yev_taken": true, "catastrophe_took_someone": true }, "dismiss": "yev", "pause": 2.5 },
+      { "when": { "romance": "sera", "flags": { "choir_invited": true, "sera_loyal": true } }, "toast": "Sera takes three steps toward the Beacon, stops, and breaks a conduit with her bare hand. 'Not in my voice,' she says.", "flags": { "sera_resisted": true }, "approval": { "sera": 1 }, "pause": 2.5 },
+      { "when": { "romance": "kaj7", "flags": { "choir_invited": true, "kaj7_loyal": true } }, "toast": "Kaj-7 walks to the Beacon and puts its hand on the housing, and the humming stops. 'Logged,' it says. 'Refused.'", "flags": { "kaj7_resisted": true }, "approval": { "kaj7": 1 }, "pause": 2.5 },
+      { "when": { "romance": "whisper", "flags": { "choir_invited": true, "whisper_loyal": true } }, "toast": "Whisper cuts the Beacon's feed with a knife you did not know she carried. 'No handler,' she says. 'Not even that one.'", "flags": { "whisper_resisted": true }, "approval": { "whisper": 1 }, "pause": 2.5 },
+      { "when": { "romance": "yev", "flags": { "choir_invited": true, "yev_loyal": true } }, "toast": "Yev sits down in the middle of the plaza and puts both hands on the roots under it, and the plaza goes quiet from the ground up.", "flags": { "yev_resisted": true }, "approval": { "yev": 1 }, "pause": 2.5 },
+      { "when": { "romance": "", "recruited": "kaj7", "flags": { "choir_invited": true, "kaj7_loyal": false } }, "toast": "Kaj-7 hears its name in the humming, the way it did at the relay. This time it answers. The light takes it.", "flags": { "kaj7_taken": true, "catastrophe_took_someone": true }, "dismiss": "kaj7", "pause": 2.5 },
+      { "when": { "romance": "", "recruited": "cinder", "flags": { "choir_invited": true, "cinder_loyal": false, "kaj7_taken": false } }, "toast": "Cinder says yes for the second time in four hundred years, and this time you are there to see it. The light takes him.", "flags": { "cinder_taken": true, "catastrophe_took_someone": true }, "dismiss": "cinder", "pause": 2.5 },
+      { "when": { "flags": { "choir_invited": false } }, "toast": "With nobody to call, the Choir takes the plaza instead. The Garden path caves in and every conduit goes dark.", "flags": { "bastion_struck": true }, "map_edits": [ { "cell": [10, 8], "tile": "debris" }, { "cell": [11, 8], "tile": "debris" }, { "cell": [12, 8], "tile": "debris" } ], "pause": 2.5 },
+      { "when": { "flags": { "choir_invited": true, "catastrophe_took_someone": false, "sera_resisted": false, "kaj7_resisted": false, "whisper_resisted": false, "yev_resisted": false } }, "toast": "It called. Nobody went. The Beacon goes dark, and the plaza remembers the tune.", "flags": { "choir_called_nobody": true }, "pause": 2.5 },
+      { "camera": "leader", "toast": "In the silence after, the Beacon's log shows one depth it has never reached: the Loom Approach.", "flags": { "catastrophe_seen": true, "loom_located": true } }
+    ] } }
+  ],
   "pickups": [],
   "enemies": []
 }

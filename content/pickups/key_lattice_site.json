@@ -1,0 +1,7 @@
+{
+  "name": "The Key of the Ledgers",
+  "summary": "A Key to the Loom and its keeper. Delve site (S41), bound to the ghost_markets Shard; opens a dialogue that starts a fight.",
+  "dialogue": "key_lattice",
+  "grants": {},
+  "art": { "color": "#8fd3ff" }
+}
