@@ -1,0 +1,19 @@
+{
+  "name": "The Lamp Room",
+  "summary": "A side room off the plaza wall where a lamplighter keeps a lamp lit. Reach it from a transition you add to an existing map, or from a mod that overrides one.",
+  "biome": "rusted_undercity",
+  "spawn_marker": "P",
+  "legend": { ".": "floor_concrete", "#": "wall_rust", "P": "floor_concrete", "x": "debris" },
+  "rows": [
+    "############",
+    "#.PP.......#",
+    "#.PP...x...#",
+    "#..........#",
+    "#..........#",
+    "############"
+  ],
+  "transitions": [ { "cell": [1, 3], "to": "bastion", "arrive": [21, 7], "label": "Back to the plaza" } ],
+  "npcs": [ { "companion": "tamsin", "cell": [8, 3] } ],
+  "pickups": [],
+  "enemies": []
+}

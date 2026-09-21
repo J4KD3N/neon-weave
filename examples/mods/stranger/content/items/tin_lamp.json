@@ -1,0 +1,7 @@
+{
+  "name": "Tin Lamp",
+  "slot": "trinket",
+  "summary": "A lamp that has seen the Ashfound's fires from the wrong side.",
+  "mods": { "initiative": 1 },
+  "art": { "color": "#e8b04a" }
+}

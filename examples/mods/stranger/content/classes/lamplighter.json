@@ -1,0 +1,11 @@
+{
+  "name": "Lamplighter",
+  "branches": ["body"],
+  "resource": { "id": "lamp_oil", "name": "Lamp Oil", "summary": "Spent by flares." },
+  "stats": { "hp": 16, "move": 5, "evasion": 8, "initiative": 2 },
+  "growth": { "hp": 2 },
+  "unlocks": {},
+  "abilities": ["strike", "lamp_flare"],
+  "subclass_level": 3,
+  "subclasses": ["lamp_warden"]
+}

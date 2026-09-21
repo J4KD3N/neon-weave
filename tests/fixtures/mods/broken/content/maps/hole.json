@@ -1,0 +1,1 @@
+{ "name": "Hole", "biome": "nowhere", "spawn_marker": "P", "legend": { ".": "floor_concrete", "#": "wall_rust", "P": "floor_concrete" }, "rows": ["#####", "#P..#", "#####"], "transitions": [ { "cell": [1, 1], "to": "narnia", "arrive": [0, 0] } ], "enemies": [ { "type": "dragon", "cell": [0, 0] } ] }

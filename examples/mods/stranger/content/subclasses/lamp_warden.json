@@ -1,0 +1,8 @@
+{
+  "name": "Lamp Warden",
+  "class": "lamplighter",
+  "summary": "Keeps the light on the line.",
+  "abilities": ["heavy_swing"],
+  "stat_mods": { "hp": 2 },
+  "damage_bonus": 1
+}

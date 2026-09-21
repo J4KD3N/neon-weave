@@ -1,0 +1,1 @@
+{ "name": "Ghost", "race": "nope", "class": "scrap_knight", "dialogue": { "recruit": "bad_talk", "talk": "bad_talk", "banter": "missing_banter" }, "quest": "missing_quest", "scenes": [ { "id": "ghost_scene", "label": "?", "dialogue": "bad_talk", "romance": true, "requires": { "mood": "grim" } } ] }

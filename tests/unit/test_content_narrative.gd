@@ -3,8 +3,8 @@
 extends TestCase
 
 const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
-const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction", "romance", "dismiss", "lore", "toast", "grant", "enemies", "victory_flag", "open_doors", "dialogue", "transition", "map_edits", "sequence", "ending"]
-const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction", "romance", "not_romance", "romance_open", "party_race", "party_race_tag", "attribute", "disguised"]
+const EFFECT_KEYS: Array[String] = ContentValidator.EFFECT_KEYS
+const REQUIRES_KEYS: Array[String] = ContentValidator.REQUIRES_KEYS # one vocabulary (S45)
 
 var registry: ContentRegistry
 

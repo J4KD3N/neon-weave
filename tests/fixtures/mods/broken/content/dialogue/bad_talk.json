@@ -1,0 +1,1 @@
+{ "name": "Bad talk", "start": "nowhere", "nodes": { "greet": { "speaker": "ghost", "voice": "nobody", "choices": [ { "text": "Go", "next": "missing", "effects": { "recruit": "nobody", "explode": true } }, { "text": "Stay", "requires": { "race": "elf" }, "end": true } ] } } }

@@ -1,0 +1,14 @@
+{
+  "name": "A Room Lit",
+  "companion": "tamsin",
+  "summary": "Tamsin wants one room in the Shards lit that nobody has lit before.",
+  "start": "start",
+  "stages": {
+    "start": {
+      "summary": "Extract from any Shard with Tamsin along.",
+      "next": "lit",
+      "objectives": [ { "text": "Extract from a Shard with Tamsin", "done_when": { "flags": { "first_extraction": true } } } ]
+    },
+    "lit": { "summary": "One room lit. She is already looking for the next.", "complete": true }
+  }
+}
