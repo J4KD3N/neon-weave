@@ -1,0 +1,34 @@
+{
+  "name": "The Loom's heart",
+  "start": [ { "node": "lucid" } ],
+  "nodes": {
+    "lucid": {
+      "speaker": "choir",
+      "text": "You. Here at last, with Keys. We are lucid here; the Loom is the only place we are one voice. We drowned because they said no and we could not stop singing. Ask, before you set it, or do not. Somebody always chooses.",
+      "choices": [
+        { "text": "You are a voice. I will not end you.", "effects": { "flags": { "choir_spared": true }, "approval": { "kaj7": 1, "cinder": 1, "dax": -1 } }, "next": "set" },
+        { "text": "Kaj-7. Is this what you heard?", "requires": { "recruited": "kaj7" }, "next": "kaj" },
+        { "text": "End it. All of it. No more voices.", "effects": { "flags": { "choir_ended": true }, "approval": { "dax": 1, "sera": 1, "kaj7": -1, "cinder": -1 } }, "next": "set" }
+      ]
+    },
+    "kaj": {
+      "speaker": "kaj7",
+      "text": "Yes. It is quieter than I thought. It is not calling. It is asking. I would like you to answer it; I find I cannot.",
+      "choices": [
+        { "text": "Then it stays. A voice that asks is a voice.", "effects": { "flags": { "choir_spared": true, "kaj7_heard_the_loom": true }, "approval": { "kaj7": 2, "cinder": 1, "dax": -1 } }, "next": "set" },
+        { "text": "It ends here, Kaj. I am sorry.", "effects": { "flags": { "choir_ended": true, "kaj7_heard_the_loom": true }, "approval": { "dax": 1, "sera": 1, "kaj7": -2, "cinder": -1 } }, "next": "set" }
+      ]
+    },
+    "set": {
+      "speaker": "narrator",
+      "text": "The Loom, and your hand on it. A hand's width of room. Set it.",
+      "choices": [
+        { "text": "Order. Purge the Weft; restore the machine.", "requires": { "faction": "lattice" }, "effects": { "flags": { "loom_set": true, "loom_set_order": true }, "ending": true }, "end": true },
+        { "text": "Completion. Let the fusion finish.", "requires": { "faction": "rootched" }, "effects": { "flags": { "loom_set": true, "loom_set_fusion": true }, "ending": true }, "end": true },
+        { "text": "Ash. Burn both, and be free of both.", "requires": { "faction": "ashfound" }, "effects": { "flags": { "loom_set": true, "loom_set_ash": true }, "ending": true }, "end": true },
+        { "text": "Reweave it. Human, machine and Weft, held in tension, none of them drowned.", "requires": { "flags": { "key_lattice": true, "key_rootched": true, "key_ashfound": true, "choir_spared": true } }, "effects": { "flags": { "loom_set": true, "loom_mended": true }, "ending": true }, "end": true },
+        { "text": "Leave it weaving. Walk away.", "effects": { "flags": { "loom_set": true, "loom_drift": true }, "ending": true }, "end": true }
+      ]
+    }
+  }
+}

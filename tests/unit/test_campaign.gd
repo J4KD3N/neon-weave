@@ -244,6 +244,6 @@ func test_map_campaign_fields_are_well_formed() -> void:
 			for k: String in tr.get("effects", {}):
 				assert_true(["approval", "flags", "recruit", "quest", "reputation", "toast", "open_doors", "enemies", "victory_flag", "grant", "dialogue", "transition", "join_faction", "romance", "dismiss", "lore", "map_edits", "sequence", "ending"].has(k), "map %s trigger effect %s" % [m["id"], k])
 			for k: String in tr.get("when", {}):
-				assert_true(["flags", "origin_tag", "race", "class", "approval", "recruited", "not_recruited", "quest"].has(k), "map %s trigger when.%s" % [m["id"], k])
+				assert_true(["flags", "origin_tag", "race", "race_tag", "class", "approval", "reputation", "recruited", "not_recruited", "quest", "faction", "not_faction", "romance", "not_romance", "romance_open", "party_approval_min"].has(k), "map %s trigger when.%s" % [m["id"], k])
 		for b: Dictionary in m.get("buildings", []):
 			assert_true(world.bastion.has(String(b.get("id", ""))), "map %s building %s" % [m["id"], b.get("id")])

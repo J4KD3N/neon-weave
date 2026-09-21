@@ -1,0 +1,20 @@
+{
+  "name": "The Loom's door",
+  "start": [ { "node": "door" } ],
+  "nodes": {
+    "door": {
+      "speaker": "narrator",
+      "text": "A door where the cathedral's floor runs out, every surface in the world pooled at its sill. It is not locked. Whatever you carry banks at the threshold; whoever is with you comes through; there is no way back up but the ending.",
+      "choices": [
+        { "text": "Go through. All of us.", "effects": { "flags": { "loom_door_crossed": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
+        { "text": "Cinder, is this the way you remember?", "requires": { "recruited": "cinder" }, "next": "cinder" },
+        { "text": "Not yet. Extract, and come back ready.", "end": true }
+      ]
+    },
+    "cinder": {
+      "speaker": "cinder",
+      "text": "It is. It was open then too. Everyone who came down here was invited; that was the trick of it. Go through. I am with you this time.",
+      "choices": [ { "text": "Go through. All of us.", "effects": { "flags": { "loom_door_crossed": true, "cinder_at_the_door": true }, "approval": { "cinder": 1 }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true } ]
+    }
+  }
+}

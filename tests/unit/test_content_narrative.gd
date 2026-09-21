@@ -214,7 +214,7 @@ func test_bound_sites_and_sequence_steps_are_well_formed() -> void:
 			if site.has("template"):
 				bound += 1
 				assert_true(registry.has_entry("shards", String(site["template"])), "quest %s stage %s site template" % [q["id"], stage_id])
-	assert_eq(bound, 3, "three Keys, one biome each")
+	assert_eq(bound, 4, "three Keys, one biome each, and the Loom's door")
 	var conditional := 0
 	for m: Dictionary in registry.get_all("maps"):
 		for t: Dictionary in m.get("triggers", []):

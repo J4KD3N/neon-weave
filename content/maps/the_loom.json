@@ -1,0 +1,48 @@
+{
+  "name": "The Loom",
+  "summary": "The fusion's heart: every surface in the world bleeds into one hall. The rival factions got here first; the Choir's Voice keeps the last door; at the far end, the Loom itself, and a choice.",
+  "biome": "null_cathedral",
+  "spawn_marker": "P",
+  "legend": {
+    ".": "floor_flagstone",
+    "#": "wall_nave",
+    "P": "floor_flagstone",
+    "m": "mana_pool",
+    "c": "conduit",
+    "b": "biogrowth",
+    "e": "echo_static",
+    "n": "null_font",
+    "p": "pew"
+  },
+  "rows": [
+    "##############################",
+    "#.P.P........................#",
+    "#.P.P..mm....e....n....c.....#",
+    "#......mm....e....n....c.....#",
+    "#............p..........bb...#",
+    "#....bb......p....pp....bb...#",
+    "#....bb...........pp.........#",
+    "#.........e.....n.......mmm..#",
+    "#.........e.....n.......mmm..#",
+    "#..............ppp...........#",
+    "#....c.........ppp....e......#",
+    "#....c................e......#",
+    "#............................#",
+    "##############################"
+  ],
+  "triggers": [
+    { "id": "enter", "cells": [[1, 1], [2, 1], [3, 1], [4, 1], [1, 2], [2, 2], [3, 2], [4, 2]], "once": true, "effects": { "flags": { "loom_entered": true }, "toast": "The Loom. Every conduit in the world ends in this hall, and all of them are humming." } },
+    { "id": "lattice_strike", "cells": [[8, 1], [8, 2], [8, 3], [8, 4], [8, 5], [8, 6], [8, 7], [8, 8], [8, 9], [8, 10], [8, 11], [8, 12]], "once": true, "when": { "not_faction": "lattice" }, "effects": { "toast": "The Lattice got here first, with shepherds and a turret. They are not here to index you.", "enemies": [ { "type": "shepherd_drone", "cell": [11, 3] }, { "type": "shepherd_drone", "cell": [11, 9] }, { "type": "shepherd_turret", "cell": [12, 6] } ], "victory_flag": "loom_rival_lattice_beaten" } },
+    { "id": "rootched_strike", "cells": [[14, 1], [14, 2], [14, 3], [14, 4], [14, 5], [14, 6], [14, 7], [14, 8], [14, 9], [14, 10], [14, 11], [14, 12]], "once": true, "when": { "not_faction": "rootched" }, "effects": { "toast": "The Rootched are already growing into the hall: a shaman on the pews, stalkers in the moss.", "enemies": [ { "type": "root_shaman", "cell": [17, 6] }, { "type": "vine_stalker", "cell": [17, 3] }, { "type": "vine_stalker", "cell": [18, 9] } ], "victory_flag": "loom_rival_rootched_beaten" } },
+    { "id": "ashfound_strike", "cells": [[20, 1], [20, 2], [20, 3], [20, 4], [20, 5], [20, 6], [20, 7], [20, 8], [20, 9], [20, 10], [20, 11], [20, 12]], "once": true, "when": { "not_faction": "ashfound" }, "effects": { "toast": "Ashfound torches by the far pools, waiting for whoever won the other two fights.", "enemies": [ { "type": "chrome_addict", "cell": [23, 4] }, { "type": "chrome_addict", "cell": [23, 8] }, { "type": "scav", "cell": [24, 6] } ], "victory_flag": "loom_rival_ashfound_beaten" } },
+    { "id": "guard", "cells": [[25, 1], [25, 2], [25, 3], [25, 4], [25, 5], [25, 6], [25, 7], [25, 8], [25, 9], [25, 10], [25, 11], [25, 12]], "once": true, "effects": { "toast": "The Voice stands at the last door with its inner voices. It is singing your name in every voice it has.", "enemies": [ { "type": "choir_voice", "cell": [27, 6] }, { "type": "inner_voice", "cell": [27, 3] }, { "type": "inner_voice", "cell": [27, 9] }, { "type": "hollow_choirist", "cell": [26, 6] } ], "victory_flag": "loom_guard_beaten" } },
+    { "id": "heart", "cells": [[28, 5], [28, 6], [28, 7], [28, 8]], "once": true, "when": { "flags": { "loom_guard_beaten": true } }, "effects": { "flags": { "loom_heart_reached": true }, "sequence": [
+      { "camera": [28, 7], "toast": "The Loom. Not a machine, not a tree, not a song. All three, holding each other up, and a hand's width of room to change it.", "pause": 2.5 },
+      { "camera": "leader", "dialogue": "loom_heart" }
+    ] } }
+  ],
+  "transitions": [],
+  "npcs": [],
+  "pickups": [ { "type": "lore_fragment", "cell": [5, 11] } ],
+  "enemies": []
+}

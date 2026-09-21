@@ -12,6 +12,21 @@
       "next": "located",
       "objectives": [ { "text": "Return to the Bastion", "done_when": { "flags": { "catastrophe_seen": true } } } ]
     },
-    "located": { "summary": "In the silence after, the Beacon's log shows one depth it has never reached: the Loom Approach. Act 3 begins there." }
+    "located": {
+      "summary": "The Beacon's log shows one depth it has never reached: the Loom Approach. The Choir and the rival factions are already on their way down. Act 3 begins.",
+      "next": "loom",
+      "next_toast": "The door shuts behind you. There is no way back up but the ending.",
+      "objectives": [ { "text": "Delve the Loom Approach and find the Loom's door", "done_when": { "flags": { "loom_door_crossed": true } } } ],
+      "shard_site": { "pickup": "loom_door", "template": "loom_approach" }
+    },
+    "loom": {
+      "summary": "The Loom's hall. The rival factions got here first; the Choir's Voice keeps the last door; the Loom is at the far end.",
+      "next": "set",
+      "objectives": [
+        { "text": "Get past whoever got here first", "done_when": { "flags": { "loom_guard_beaten": true } } },
+        { "text": "Reach the Loom", "done_when": { "flags": { "loom_heart_reached": true } } }
+      ]
+    },
+    "set": { "summary": "Your hand on the Loom. Whatever you set, that is the world now.", "complete": true }
   }
 }
