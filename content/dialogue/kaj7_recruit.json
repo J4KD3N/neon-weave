@@ -1,5 +1,6 @@
 {
   "name": "Kaj-7 — the road",
+  "act": 1,
   "start": [
     { "node": "lattice_word", "requires": { "recruited": "kaj7", "flags": { "lattice_wants_kaj7": true, "kaj7_lattice_talked": false } } },
     { "node": "loyalty", "requires": { "recruited": "kaj7", "flags": { "act2": true, "kaj7_loyalty_offered": false }, "approval": { "kaj7": { "min": 4 } } } },
@@ -18,6 +19,8 @@
       "speaker": "kaj7",
       "text": "Hello. I am Kaj-7. I was a shepherd unit until something woke me and called me by a name I did not have. It is still calling. It is somewhere down there. May I walk with you?",
       "choices": [
+        { "text": "[Synth] I woke the same way. Nobody called my name; I had to pick one.", "requires": { "race": "synth" }, "effects": { "approval": { "kaj7": 2 }, "flags": { "kaj7_synth_kin": true } }, "next": "signal" },
+        { "text": "[Chromed] Half of me is machine too, Kaj. Which half do you hear?", "requires": { "race": "chromed" }, "effects": { "approval": { "kaj7": 1 }, "flags": { "kaj7_chromed_asked": true } }, "next": "signal" },
         { "text": "What's calling you?", "next": "signal" },
         { "text": "A machine that wants things. What could go wrong.", "effects": { "approval": { "kaj7": -1 } }, "next": "signal" },
         { "text": "[Vault] We had a unit like you in the vault. It sang to the door until the door opened.", "requires": { "origin_tag": "vault" }, "effects": { "approval": { "kaj7": 1 } }, "next": "signal" },
@@ -28,6 +31,7 @@
       "speaker": "kaj7",
       "text": "I do not know. It sounds like many voices agreeing. When I follow it I feel less like a shepherd and more like a sheep. I would like to find out which I am, with someone watching.",
       "choices": [
+        { "text": "[Tech 3] Your signal is on a shepherd band. I can retune you to hear less of it. Walk with us.", "requires": { "attribute": { "tech": { "min": 3 } } }, "effects": { "recruit": "kaj7", "approval": { "kaj7": 2, "dax": -1 }, "flags": { "kaj7_recruited": true, "kaj7_retuned": true }, "quest": { "id": "kaj7_maker_signal", "stage": "start" } }, "end": true },
         { "text": "Walk with us. We'll find your signal.", "effects": { "recruit": "kaj7", "approval": { "kaj7": 1, "dax": -1 }, "flags": { "kaj7_recruited": true }, "quest": { "id": "kaj7_maker_signal", "stage": "start" } }, "end": true },
         { "text": "Sera, you've fought machines. Your call.", "requires": { "recruited": "sera" }, "next": "sera_call" },
         { "text": "We don't carry things that hear voices.", "effects": { "approval": { "kaj7": -2 }, "flags": { "kaj7_refused": true } }, "end": true }

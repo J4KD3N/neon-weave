@@ -1,5 +1,6 @@
 {
   "name": "Whisper — the rafters",
+  "act": 1,
   "start": [
     { "node": "loyalty", "requires": { "recruited": "whisper", "flags": { "act2": true, "whisper_loyalty_offered": false }, "approval": { "whisper": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "whisper" } },
@@ -11,6 +12,7 @@
       "speaker": "whisper",
       "text": "Don't shoot. I have been in the rafters since Halden's crew came through. I watched the hive eat them, and I watched you not get eaten, and that is the first interesting thing this station has done. I am Whisper. I am nobody's, currently, and I would like to stay that way somewhere with walls.",
       "choices": [
+        { "text": "[Corporate] I know the recall band. I was on a list like it once.", "requires": { "origin_tag": "corporate" }, "effects": { "approval": { "whisper": 1 }, "flags": { "whisper_corporate_kin": true } }, "next": "why" },
         { "text": "Why were you in the rafters?", "next": "why" },
         { "text": "Nobody's? Everybody is somebody's.", "effects": { "approval": { "whisper": -1 } }, "next": "why" },
         { "text": "[Splicekin] I know a recall when I hear one. Same band?", "requires": { "race": "splicekin" }, "effects": { "approval": { "whisper": 1 }, "flags": { "whisper_shared_line": true } }, "next": "why" },

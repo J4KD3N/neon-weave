@@ -1,5 +1,6 @@
 {
   "name": "Yev — the grove's heart",
+  "act": 2,
   "start": [
     { "node": "dead", "requires": { "flags": { "yev_dead": true } } },
     { "node": "with_yev", "requires": { "recruited": "yev" } },

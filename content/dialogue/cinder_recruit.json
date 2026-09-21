@@ -1,5 +1,6 @@
 {
   "name": "Cinder — the source",
+  "act": 1,
   "start": [
     { "node": "loyalty", "requires": { "recruited": "cinder", "flags": { "act2": true, "cinder_loyalty_offered": false }, "approval": { "cinder": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "cinder" } },

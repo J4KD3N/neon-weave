@@ -1,5 +1,6 @@
 {
   "name": "Whisper — recall, answered",
+  "act": 2,
   "start": [
     { "node": "dead", "requires": { "flags": { "whisper_dead": true } } },
     { "node": "with_whisper", "requires": { "recruited": "whisper" } },
@@ -10,6 +11,7 @@
       "speaker": "whisper",
       "text": "Tal's terminal. Not Tal; a terminal with his hand on the other end. From here I can wipe my line's recall, or answer it in my own voice, or burn every asset's number so nobody can call anyone again. I would like you to not choose.",
       "choices": [
+        { "text": "[Splicekin] Burn mine too, Whisper. Every number on every line.", "requires": { "race": "splicekin" }, "effects": { "flags": { "whisper_loyalty_done": true, "whisper_loyal": true, "whisper_numbers_burned": true, "splicekin_burned_too": true }, "approval": { "whisper": 3 }, "reputation": { "lattice": -1 } }, "end": true },
         { "text": "Your line, your call.", "next": "calls" },
         { "text": "Wipe the recall. Clean and quiet.", "effects": { "flags": { "whisper_loyalty_done": true, "whisper_recall_wiped": true }, "approval": { "whisper": -1 } }, "end": true },
         { "text": "Answer it in her name. Let Tal know she is ours.", "effects": { "flags": { "whisper_loyalty_done": true, "whisper_claimed": true }, "approval": { "whisper": -3 }, "reputation": { "lattice": 1 } }, "end": true }

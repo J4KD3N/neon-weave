@@ -1,5 +1,6 @@
 {
   "name": "Kaj-7 — the relay",
+  "act": 1,
   "start": [
     { "node": "dead", "requires": { "flags": { "kaj7_dead": true } } },
     { "node": "with_kaj7", "requires": { "recruited": "kaj7" } },

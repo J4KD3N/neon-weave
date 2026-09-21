@@ -1,11 +1,14 @@
 {
   "name": "First contact",
+  "act": 1,
   "start": [ { "node": "sing" } ],
   "nodes": {
     "sing": {
       "speaker": "choir",
       "text": "You. The one with the Beacon. We drowned for a very long time and we have been practising your name. Come down. We are invited, and so are you.",
       "choices": [
+        { "text": "[Choir-touched] You have practised my name since I was born. I know the tune.", "requires": { "origin_tag": "choir" }, "effects": { "flags": { "choir_touched_known": true } }, "next": "who" },
+        { "text": "[Skyborn] The orbital archive says the Sundering was a flood. You are saying otherwise.", "requires": { "race": "skyborn" }, "effects": { "flags": { "skyborn_archive_wrong": true } }, "next": "who" },
         { "text": "Who drowned you?", "next": "who" },
         { "text": "Kaj-7, is this what you hear?", "requires": { "recruited": "kaj7" }, "next": "kaj" },
         { "text": "Say nothing. Back away.", "effects": { "flags": { "choir_contact": true, "choir_refused": true, "demo_complete": true, "act1_complete": true, "act2": true }, "quest": { "id": "main_waking", "stage": "choir" } }, "end": true }

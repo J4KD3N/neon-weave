@@ -1,16 +1,27 @@
 {
   "name": "Archivist Tal — the enclave",
+  "act": 2,
   "start": [
+    { "node": "unnerved", "requires": { "party_race_tag": "unnerving", "flags": { "tal_unnerved": false } } },
     { "node": "done", "requires": { "quest": { "id": "lattice_path", "stage": "done" } } },
     { "node": "report", "requires": { "quest": { "id": "lattice_path", "stage": "report" } } },
     { "node": "early", "requires": { "quest": { "id": "lattice_path", "stage": "leak" } } },
     { "node": "idle" }
   ],
   "nodes": {
+    "unnerved": {
+      "speaker": "lattice_archivist",
+      "text": "There is a dead thing in my enclave. It is not indexed. Is it yours?",
+      "choices": [
+        { "text": "[Hollow] Index me, then, Archivist. Start with the date I died.", "requires": { "race": "hollow" }, "effects": { "flags": { "tal_unnerved": true, "tal_indexed_a_hollow": true }, "reputation": { "lattice": 1 } }, "end": true },
+        { "text": "It is with me. That is the whole entry.", "effects": { "flags": { "tal_unnerved": true } }, "end": true }
+      ]
+    },
     "report": {
       "speaker": "lattice_archivist",
       "text": "The leak. Sealed, your log says. The Index does not take logs on trust; it takes them on file. Filed. Now: the Key. The Lattice has indexed where one sits: under the Ghost Markets, in the echo where the Choir keeps its ledgers.",
       "choices": [
+        { "text": "[Corporate] Tal. I was an asset once. Which of us is filing whom?", "requires": { "origin_tag": "corporate" }, "effects": { "flags": { "lattice_path_reported": true, "key_lattice_located": true, "tal_corporate_asked": true }, "reputation": { "lattice": -1 } }, "end": true },
         { "text": "Then that is where we go.", "effects": { "flags": { "lattice_path_reported": true, "key_lattice_located": true }, "reputation": { "lattice": 1 } }, "end": true },
         { "text": "Whisper wants a word with you, Archivist.", "requires": { "recruited": "whisper" }, "next": "tal_whisper" }
       ]

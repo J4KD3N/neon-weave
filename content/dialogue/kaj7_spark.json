@@ -1,5 +1,6 @@
 {
   "name": "Kaj-7 — a question no archive has",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

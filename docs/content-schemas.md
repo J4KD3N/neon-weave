@@ -16,7 +16,7 @@ without a schema; keep the two in step.
 | companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction ("" for none), romanceable, approval_start, scenes [{id, label, dialogue, requires, quarters (level), once (default true), romance (only on a romanceable companion; hidden while `NarrativeState.romance` names someone else), dead (offered for a companion with `<id>_dead` instead of one in the party)}] (S35, S37 D-092) |
 | lore | name, text, order | source; found ids live in the narrative state and read in the Archive |
 | endings | name, summary, when | priority (highest holding wins; 0 for the drift), epilogue {companion: {alive, dead, absent, taken?, loyal?, romanced?, lost?}} read down a ladder (lost/dead, taken, romanced, loyal, alive, absent; a missing rung falls through), modifiers [{when, text}] paragraphs added when their conditions hold (S36, D-091; S37; S43, D-098) |
-| dialogue | name, nodes (or kind "banter" + lines) | start (string or [{node, requires}]); a node may carry `voice` (a companion id or "player"): the speaker borrows that voice and the panel says so (S40) |
+| dialogue | name, nodes (or kind "banter" + lines) | act (1–3, counted by the reactivity test, S44); start (string or [{node, requires}]); a node may carry `voice` (a companion id or "player"): the speaker borrows that voice and the panel says so (S40) |
 | enemies | name, family, archetype, stats, abilities, art | tier, awareness, xp, loot (resources, cipher_chance, item_chance, item_rarity), traits (same vocabulary as races) |
 | factions | name, color, rivals, joinable_act | summary, envoy (npc id), vendor (merchant id), area (map id), join_reputation {faction: delta} applied on joining |
 | items | name, slot (weapon / armour / trinket / cyberware), art | stat_mods, damage_bonus, weight, price, min_rarity, families, craft {cost, workshop}, summary |
@@ -48,4 +48,7 @@ race, race_tag, class, approval, reputation, recruited (walking with the party:
 recruited and not waiting at the Bastion, D-093), not_recruited, quest,
 faction (the joined faction id, "" for none yet), not_faction, party_approval_min
 (every recruited companion at or above n), romance (the committed companion id,
-"" for nobody), not_romance, romance_open (nobody, or that companion).
+"" for nobody), not_romance, romance_open (nobody, or that companion),
+party_race and party_race_tag (anyone walking with the party, S44), attribute
+({name: {min, max}} on the leader's creator attributes, S44), disguised (true when
+the leader's race carries the `disguise` tag and arcane >= rules/attributes.disguise_arcane_min, S44).

@@ -1,5 +1,6 @@
 {
   "name": "Stolen voices — the first",
+  "act": 2,
   "start": [
     { "node": "as_sera", "requires": { "recruited": "sera" } },
     { "node": "as_kaj7", "requires": { "recruited": "kaj7" } },

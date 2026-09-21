@@ -1,5 +1,6 @@
 {
   "name": "Sera — the roll of names",
+  "act": 2,
   "start": [
     { "node": "dead", "requires": { "flags": { "sera_dead": true } } },
     { "node": "with_sera", "requires": { "recruited": "sera" } },

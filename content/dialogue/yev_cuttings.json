@@ -1,5 +1,6 @@
 {
   "name": "Yev — the growing-frame",
+  "act": 1,
   "start": [
     { "node": "dead", "requires": { "flags": { "yev_dead": true } } },
     { "node": "with_yev", "requires": { "recruited": "yev" } },

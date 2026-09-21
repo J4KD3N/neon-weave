@@ -1,5 +1,6 @@
 {
   "name": "Speaker Ilex — the plaza",
+  "act": 2,
   "start": [
     { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "rootched" } },
     { "node": "joined", "requires": { "faction": "rootched" } },
@@ -11,6 +12,7 @@
       "speaker": "rootched_envoy",
       "text": "You keep opening the ground and bringing things up out of it. The Rootched approve of that, mostly. I am Ilex. We think the fusion is not a wound; we think it is a seed. Would you hear how a seed ends?",
       "choices": [
+        { "text": "[Aetherborn] The Weft marked me before you were a faction. Go on.", "requires": { "race": "aetherborn" }, "effects": { "flags": { "rootched_heard": true, "rootched_aetherborn_marked": true }, "reputation": { "rootched": 1 }, "quest": { "id": "rootched_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "Go on.", "effects": { "flags": { "rootched_heard": true }, "quest": { "id": "rootched_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "[Rootkin] I already know how it ends. It ends green.", "requires": { "race": "rootkin" }, "effects": { "flags": { "rootched_heard": true }, "reputation": { "rootched": 1 }, "quest": { "id": "rootched_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "Not now.", "end": true }

@@ -1,5 +1,6 @@
 {
   "name": "Dax — the seal control",
+  "act": 1,
   "start": [
     { "node": "dead", "requires": { "flags": { "dax_dead": true } } },
     { "node": "with_dax", "requires": { "recruited": "dax" } },

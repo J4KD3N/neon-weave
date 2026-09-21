@@ -1,11 +1,14 @@
 {
   "name": "The Index — the leak",
+  "act": 2,
   "start": [ { "node": "leak" } ],
   "nodes": {
     "leak": {
       "speaker": "narrator",
       "text": "The leak the Lattice marked: a conduit split open, Weft bleeding into the floor in a slow blue tide. The kit they gave you would seal it in a minute. Kaj-7 is watching the kit.",
       "choices": [
+        { "text": "[Tech 3] I do not need their kit. Seal it my way, and it stays sealed.", "requires": { "attribute": { "tech": { "min": 3 } } }, "effects": { "flags": { "lattice_leak_done": true, "lattice_leak_sealed": true, "leak_sealed_by_hand": true }, "approval": { "kaj7": 1, "whisper": 1 }, "reputation": { "lattice": 1 } }, "end": true },
+        { "text": "[Chromed] My own conduits leak the same way. Seal it; I know the kit.", "requires": { "race": "chromed" }, "effects": { "flags": { "lattice_leak_done": true, "lattice_leak_sealed": true, "chromed_knew_the_kit": true }, "approval": { "kaj7": 1, "sera": -1, "dax": -1 }, "reputation": { "lattice": 2 } }, "end": true },
         { "text": "Seal it. Order first.", "effects": { "flags": { "lattice_leak_done": true, "lattice_leak_sealed": true }, "approval": { "kaj7": 1, "sera": -1, "dax": -1, "yev": -1 }, "reputation": { "lattice": 1 } }, "end": true },
         { "text": "Kaj-7, your call.", "requires": { "recruited": "kaj7" }, "next": "kaj_call" },
         { "text": "Leave it open. Log it sealed.", "effects": { "flags": { "lattice_leak_done": true, "lattice_leak_lied": true }, "approval": { "whisper": 1, "yev": 1 }, "reputation": { "lattice": -1 } }, "end": true }

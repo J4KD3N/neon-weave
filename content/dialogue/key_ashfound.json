@@ -1,11 +1,13 @@
 {
   "name": "The Key of the Quiet",
+  "act": 2,
   "start": [ { "node": "key" } ],
   "nodes": {
     "key": {
       "speaker": "narrator",
       "text": "A font gone dry, and in the bowl a Key that makes no sound at all; the silence around it has edges. A sacristan rises from the pews with two husks.",
       "choices": [
+        { "text": "[Hollow] The quiet is where I was, for four hundred years. Take it whole; I know its weight.", "requires": { "race": "hollow" }, "effects": { "flags": { "key_ashfound_fought": true, "hollow_knew_the_quiet": true }, "enemies": [ { "type": "sacristan", "offset": [3, 0] }, { "type": "null_husk", "offset": [2, 2] }, { "type": "echo_wisp", "offset": [3, -2] } ], "victory_flag": ["key_ashfound", "key_ashfound_resolved"] }, "end": true },
         { "text": "Take it whole. Kill the keeper.", "effects": { "flags": { "key_ashfound_fought": true }, "enemies": [ { "type": "sacristan", "offset": [3, 0] }, { "type": "null_husk", "offset": [2, 2] }, { "type": "echo_wisp", "offset": [3, -2] } ], "victory_flag": ["key_ashfound", "key_ashfound_resolved"] }, "end": true },
         { "text": "Cinder. This is the one your thread ran to.", "requires": { "recruited": "cinder" }, "next": "call" },
         { "text": "Break it. The Marshal wants it cold; cold enough is broken.", "effects": { "flags": { "key_ashfound_broken": true, "key_ashfound_resolved": true }, "reputation": { "ashfound": 2, "lattice": -1 } }, "end": true }

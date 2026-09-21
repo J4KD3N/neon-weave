@@ -663,7 +663,20 @@ func dialogue_ctx() -> Dictionary:
 	if l != null and not l.origin_id.is_empty():
 		origin_tag = String(registry.get_entry("origins", l.origin_id).get("dialogue_tag", ""))
 	var tags: Array = Dictionary(registry.get_entry("races", l.race_id).get("traits", {})).get("tags", []) if l != null else []
-	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "race_tags": tags, "class": l.class_id if l != null else ""}
+	# The walking party's races and tags (S44): NPCs react to a Hollow behind you.
+	var party_races: Array[String] = []
+	var party_tags: Array[String] = []
+	for m: PartyMember in party.members:
+		if not party_races.has(m.race_id):
+			party_races.append(m.race_id)
+		for t: Variant in Dictionary(registry.get_entry("races", m.race_id).get("traits", {})).get("tags", []):
+			if not party_tags.has(String(t)):
+				party_tags.append(String(t))
+	var attributes: Dictionary = protagonist.get("attributes", {})
+	# A disguise holds when the leader's race can reshape and their arcane control clears the bar (rules/attributes).
+	var disguise_min := int(registry.get_entry("rules", "attributes").get("disguise_arcane_min", 2))
+	var disguised := Array(tags).has("disguise") and int(attributes.get("arcane", 0)) >= disguise_min
+	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "race_tags": tags, "class": l.class_id if l != null else "", "party_races": party_races, "party_race_tags": party_tags, "attributes": attributes, "disguised": disguised}
 
 
 func speaker_names() -> Dictionary:

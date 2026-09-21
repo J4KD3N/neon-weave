@@ -1,11 +1,18 @@
 {
   "name": "The Loom's door",
+  "act": 3,
   "start": [ { "node": "door" } ],
   "nodes": {
     "door": {
       "speaker": "narrator",
       "text": "A door where the cathedral's floor runs out, every surface in the world pooled at its sill. It is not locked. Whatever you carry banks at the threshold; whoever is with you comes through; there is no way back up but the ending.",
       "choices": [
+        { "text": "[Arcane 3] I can feel the Loom through the door. It is awake, and it is waiting. Go through.", "requires": { "attribute": { "arcane": { "min": 3 } } }, "effects": { "flags": { "loom_door_crossed": true, "loom_felt": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
+        { "text": "[Vaultkin] A door with no way back is a vault. I grew up in one. Go through.", "requires": { "race": "vaultkin" }, "effects": { "flags": { "loom_door_crossed": true, "vaultkin_knew_the_door": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
+        { "text": "[Splicekin] I can smell what is on the other side. It is not a machine and not a tree. Go through.", "requires": { "race": "splicekin" }, "effects": { "flags": { "loom_door_crossed": true, "splicekin_smelled_it": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
+        { "text": "[Rootkin] The roots under the plaza run to this sill. I have walked it in my sleep. Go through.", "requires": { "race": "rootkin" }, "effects": { "flags": { "loom_door_crossed": true, "rootkin_walked_it": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
+        { "text": "[Aetherborn] The mark on me is pulling at the sill. It knows the way. Go through.", "requires": { "race": "aetherborn" }, "effects": { "flags": { "loom_door_crossed": true, "aetherborn_pulled": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
+        { "text": "[Trueborn] Everyone who came down here was invited. I was not. Good. Go through.", "requires": { "race": "trueborn" }, "effects": { "flags": { "loom_door_crossed": true, "trueborn_uninvited": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
         { "text": "Go through. All of us.", "effects": { "flags": { "loom_door_crossed": true }, "transition": { "to": "the_loom", "arrive": [2, 1], "label": "The Loom" } }, "end": true },
         { "text": "Cinder, is this the way you remember?", "requires": { "recruited": "cinder" }, "next": "cinder" },
         { "text": "Not yet. Extract, and come back ready.", "end": true }

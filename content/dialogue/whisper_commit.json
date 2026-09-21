@@ -1,5 +1,6 @@
 {
   "name": "Whisper — something to keep",
+  "act": 2,
   "start": [ { "node": "start" } ],
   "nodes": {
     "start": {

@@ -1,11 +1,13 @@
 {
   "name": "The Key of the Heart",
+  "act": 2,
   "start": [ { "node": "key" } ],
   "nodes": {
     "key": {
       "speaker": "narrator",
       "text": "A seed of the Loom grown into the Datacore's heart, biogrowth counting in rings around it. The rings stand up when you step in. Something with a matron's shape unfolds.",
       "choices": [
+        { "text": "[Aetherborn] It is counting in my blood too. Take it whole, before it finishes.", "requires": { "race": "aetherborn" }, "effects": { "flags": { "key_rootched_fought": true, "aetherborn_felt_the_count": true }, "enemies": [ { "type": "spore_construct", "offset": [3, 0] }, { "type": "vine_stalker", "offset": [2, 2] }, { "type": "spore_mite", "offset": [3, -2] } ], "victory_flag": ["key_rootched", "key_rootched_resolved"] }, "end": true },
         { "text": "Take it whole. Kill the keeper.", "effects": { "flags": { "key_rootched_fought": true }, "enemies": [ { "type": "spore_construct", "offset": [3, 0] }, { "type": "vine_stalker", "offset": [2, 2] }, { "type": "spore_mite", "offset": [3, -2] } ], "victory_flag": ["key_rootched", "key_rootched_resolved"] }, "end": true },
         { "text": "Yev, is this the Loom's or the grove's?", "requires": { "recruited": "yev" }, "next": "call" },
         { "text": "Break it. Nothing should grow round a Key.", "effects": { "flags": { "key_rootched_broken": true, "key_rootched_resolved": true }, "reputation": { "ashfound": 1, "rootched": -2 } }, "end": true }

@@ -1,5 +1,6 @@
 {
   "name": "Sera — the village",
+  "act": 1,
   "start": [
     { "node": "dead", "requires": { "flags": { "sera_dead": true } } },
     { "node": "with_sera", "requires": { "recruited": "sera" } },

@@ -1,5 +1,6 @@
 {
   "name": "Crew Vane — the nest",
+  "act": 1,
   "start": [ { "node": "rig" } ],
   "nodes": {
     "rig": {

@@ -1,5 +1,6 @@
 {
   "name": "Dax — the vault door",
+  "act": 2,
   "start": [
     { "node": "dead", "requires": { "flags": { "dax_dead": true } } },
     { "node": "with_dax", "requires": { "recruited": "dax" } },
@@ -10,6 +11,7 @@
       "speaker": "dax",
       "text": "Vault Orun. The door. Forty people behind it and air for a year, since the seal. If I open it they come out into this. If I do not, they get a year. I never told you which I wanted.",
       "choices": [
+        { "text": "[Vaultkin] Orun protocol is a year of air and a vote. Ask them. They will want to be asked.", "requires": { "race": "vaultkin" }, "effects": { "flags": { "dax_loyalty_done": true, "dax_loyal": true, "dax_family_out": true, "vaultkin_knew_protocol": true }, "approval": { "dax": 4 } }, "end": true },
         { "text": "Open it. They get to choose too.", "effects": { "flags": { "dax_loyalty_done": true, "dax_loyal": true, "dax_family_out": true }, "approval": { "dax": 3 } }, "next": "open" },
         { "text": "Keep it sealed. A year is a year.", "effects": { "flags": { "dax_loyalty_done": true, "dax_loyal": true, "dax_family_sealed": true }, "approval": { "dax": 1 } }, "end": true },
         { "text": "Sell the vault's position to the Ashfound. They need a fort.", "effects": { "flags": { "dax_loyalty_done": true, "dax_vault_sold": true }, "approval": { "dax": -4 }, "reputation": { "ashfound": 2 } }, "end": true }

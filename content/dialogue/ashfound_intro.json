@@ -1,5 +1,6 @@
 {
   "name": "Marshal Kade — the plaza",
+  "act": 2,
   "start": [
     { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "ashfound" } },
     { "node": "joined", "requires": { "faction": "ashfound" } },
@@ -11,6 +12,7 @@
       "speaker": "ashfound_envoy",
       "text": "Marshal Kade, Ashfound. I counted four machines and a mage on my way across your plaza, so I will be brief. We burn both. Magic, machine, the thing they made together. What is left is people. Will you hear the case?",
       "choices": [
+        { "text": "[Vaultkin] My vault sealed against both. Make your offer to someone who already chose.", "requires": { "race": "vaultkin" }, "effects": { "flags": { "ashfound_heard": true, "ashfound_vaultkin_chose": true }, "reputation": { "ashfound": 1 }, "quest": { "id": "ashfound_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "Make it.", "effects": { "flags": { "ashfound_heard": true }, "quest": { "id": "ashfound_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "[Trueborn] You are preaching to the unaltered, Marshal.", "requires": { "race": "trueborn" }, "effects": { "flags": { "ashfound_heard": true }, "reputation": { "ashfound": 1 }, "quest": { "id": "ashfound_offer", "stage": "offer" } }, "next": "piece" },
         { "text": "Not now.", "end": true }

@@ -1,5 +1,6 @@
 {
   "name": "Crew Ostrand — the marker",
+  "act": 1,
   "start": [ { "node": "marker" } ],
   "nodes": {
     "marker": {

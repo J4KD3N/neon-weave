@@ -1,5 +1,6 @@
 {
   "name": "Sera — the yard",
+  "act": 1,
   "start": [
     { "node": "loyalty", "requires": { "recruited": "sera", "flags": { "act2": true, "sera_loyalty_offered": false }, "approval": { "sera": { "min": 4 } } } },
     { "node": "recruited", "requires": { "recruited": "sera" } },
@@ -11,6 +12,7 @@
       "speaker": "sera",
       "text": "You're the Weavers running the Beacon. I've watched three crews go down that hole. You're the first that came back with the same faces.",
       "choices": [
+        { "text": "[Splicekin] The Ashfound purge gene-lines too. Mine, for one. Still want a shield?", "requires": { "race": "splicekin" }, "effects": { "flags": { "sera_splicekin_asked": true } }, "next": "why" },
         { "text": "We're short a shield. You look like one.", "next": "why" },
         { "text": "[Undercity] I know that Ashfound patch. You purged the Ninth Stair.", "requires": { "origin_tag": "undercity" }, "effects": { "approval": { "sera": -1 }, "flags": { "sera_knows_you_know": true } }, "next": "why" },
         { "text": "[Vault] You've got bunker shoulders. Who sealed you in?", "requires": { "origin_tag": "vault" }, "effects": { "approval": { "sera": 1 } }, "next": "why" },
