@@ -38,14 +38,14 @@ func test_saved_levels_are_restored_and_clamped() -> void:
 
 
 func test_upgrade_needs_the_cost_and_spends_it() -> void:
-	assert_eq(bastion.next_cost("beacon"), {"salvage": 15, "aether": 2})
+	assert_eq(bastion.next_cost("beacon"), {"salvage": 12, "aether": 2}, "the road pays for the first step (S49)")
 	assert_contains(bastion.can_upgrade("beacon", ledger), "cannot afford")
 	assert_false(bastion.upgrade("beacon", ledger))
 	ledger.bank({"salvage": 20, "aether": 2})
 	assert_eq(bastion.can_upgrade("beacon", ledger), "")
 	assert_true(bastion.upgrade("beacon", ledger))
 	assert_eq(bastion.level("beacon"), 1)
-	assert_eq(ledger.total("salvage"), 5)
+	assert_eq(ledger.total("salvage"), 8)
 	assert_eq(ledger.total("aether"), 0)
 	assert_eq(bastion.depth(), 2)
 
@@ -78,7 +78,7 @@ func test_menu_render_lists_buildings_costs_and_launch() -> void:
 	var text := BastionMenu.render(bastion, ledger)
 	assert_contains(text, "THE BASTION")
 	assert_contains(text, "[1] Beacon  L0/2")
-	assert_contains(text, "15 salvage, 2 aether  (cannot afford")
+	assert_contains(text, "12 salvage, 2 aether  (cannot afford")
 	assert_contains(text, "[3] Workshop  L0/2")
 	assert_contains(text, "next: Plating: +2 max HP for everyone. — 12 salvage\n")
 	assert_contains(text, "[N] Launch a Shard at depth 1")
