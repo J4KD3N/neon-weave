@@ -1,6 +1,7 @@
 ## Character creator screen: a text panel driven by [CreatorState], a name
-## field, and a paper-doll preview of the chosen race/class. Keys are
-## handled by the world; this only renders and edits the name.
+## field, a paper-doll preview of the chosen race/class/appearance and a
+## placeholder portrait on the same rig (S51). Keys are handled by the
+## world; this only renders and edits the name.
 class_name CreatorMenu
 extends CanvasLayer
 
@@ -8,6 +9,7 @@ var panel: PanelContainer
 var label: Label
 var name_edit: LineEdit
 var preview: WorldActor
+var portrait: TextureRect
 var state: CreatorState
 
 
@@ -34,6 +36,14 @@ func _ready() -> void:
 	label.add_theme_color_override("font_color", Color(0.9, 0.87, 1.0))
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(label)
+	portrait = TextureRect.new()
+	portrait.name = "Portrait"
+	portrait.position = Vector2(1420, 120)
+	portrait.custom_minimum_size = Vector2(192, 192)
+	portrait.size = Vector2(192, 192)
+	portrait.stretch_mode = TextureRect.STRETCH_SCALE
+	portrait.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(portrait)
 	visible = false
 
 
@@ -63,11 +73,15 @@ func _refresh_preview() -> void:
 	if state == null or state._registry == null:
 		return
 	var race := state._registry.get_entry("races", state.sheet.race_id)
+	var color := PartyBuilder.class_color(state._registry, state.sheet.class_id)
+	var overlay: Dictionary = race.get("overlay", {})
+	var appearance := state.appearance_colors()
 	preview = WorldActor.new()
 	preview.position = Vector2(1560, 430)
 	preview.scale = Vector2(4, 4)
-	preview.build_visuals(state.sheet.name, PartyBuilder.class_color(state._registry, state.sheet.class_id), "capsule", race.get("overlay", {}))
+	preview.build_visuals(state.sheet.name, color, "capsule", overlay, null, appearance)
 	add_child(preview)
+	portrait.texture = PlaceholderActorArt.portrait_texture(color, overlay, appearance)
 
 
 func _on_name_changed(text: String) -> void:

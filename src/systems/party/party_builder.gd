@@ -25,8 +25,10 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 	for i: int in members.size():
 		var data: Dictionary = Dictionary(members[i]).duplicate()
 		var extras: Dictionary = {}
+		var appearance: Dictionary = {}
 		if i == 0 and not protagonist.is_empty():
 			var sheet := CharacterSheet.from_dict(protagonist)
+			appearance = CharacterSheet.resolve_appearance(registry, sheet.appearance)
 			data = {"id": PROTAGONIST_ID, "name": sheet.name, "race": sheet.race_id, "class": sheet.class_id, "origin": sheet.origin_id}
 			extras = {
 				"attributes": sheet.attributes,
@@ -64,6 +66,7 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 			"data": data,
 			"color": class_color(registry, String(data.get("class", ""))),
 			"overlay": race.get("overlay", {}),
+			"appearance": appearance,
 			"sheet_id": String(Dictionary(race.get("art", {})).get("sheet", "")),
 			"position": spawn_positions[mini(i, spawn_positions.size() - 1)] if not spawn_positions.is_empty() else Vector2.ZERO,
 			"stats": stats,

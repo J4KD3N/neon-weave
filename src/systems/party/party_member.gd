@@ -7,6 +7,8 @@ var member_id: String = ""
 var class_id: String = ""
 var race_id: String = ""
 var origin_id: String = ""
+## Resolved appearance colours ({"tone", "accent"}, S51); empty for the race's default look.
+var appearance: Dictionary = {}
 ## Derived combat stats (see StatBlock): hp, move, evasion, initiative.
 var stats: Dictionary = {}
 var abilities: Array[String] = []
@@ -35,7 +37,7 @@ func set_hp_bonus(bonus: int) -> void:
 	hp = was + delta if was > 0 else 0
 
 
-func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities: Array[String] = [], p_overlay: Dictionary = {}, sheet: SpriteSheet = null) -> void:
+func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities: Array[String] = [], p_overlay: Dictionary = {}, sheet: SpriteSheet = null, p_appearance: Dictionary = {}) -> void:
 	member_id = String(data.get("id", ""))
 	class_id = String(data.get("class", ""))
 	race_id = String(data.get("race", ""))
@@ -50,4 +52,5 @@ func setup(data: Dictionary, color: Color, p_stats: Dictionary = {}, p_abilities
 	max_hp = maxi(int(stats.get("hp", 1)), 1)
 	hp = max_hp
 	origin_id = String(data.get("origin", ""))
-	build_visuals(String(data.get("name", member_id)), color, "capsule", p_overlay, sheet)
+	appearance = p_appearance.duplicate()
+	build_visuals(String(data.get("name", member_id)), color, "capsule", p_overlay, sheet, appearance)

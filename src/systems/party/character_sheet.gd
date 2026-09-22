@@ -1,4 +1,6 @@
-## The protagonist as data: name, race, origin, class, attributes. Validated
+## The protagonist as data: name, race, origin, class, appearance (S51: a
+## tone and an accent from `rules/appearance`; empty means the race's
+## default look), attributes. Validated
 ## against the registry and the `rules/attributes` entry; serialised into
 ## saves under "protagonist".
 class_name CharacterSheet
@@ -11,6 +13,7 @@ var race_id: String = "trueborn"
 var origin_id: String = "scav_runner"
 var class_id: String = "scrap_knight"
 var attributes: Dictionary = {"body": 2, "arcane": 2, "tech": 2}
+var appearance: Dictionary = {"tone": "", "accent": ""}
 
 
 static func from_dict(d: Dictionary) -> CharacterSheet:
@@ -19,6 +22,8 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 	s.race_id = String(d.get("race_id", s.race_id))
 	s.origin_id = String(d.get("origin_id", s.origin_id))
 	s.class_id = String(d.get("class_id", s.class_id))
+	var look: Dictionary = d.get("appearance", {})
+	s.appearance = {"tone": String(look.get("tone", "")), "accent": String(look.get("accent", ""))}
 	var attrs: Dictionary = d.get("attributes", {})
 	if not attrs.is_empty():
 		s.attributes = {}
@@ -28,7 +33,7 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 
 
 func to_dict() -> Dictionary:
-	return {"name": name, "race_id": race_id, "origin_id": origin_id, "class_id": class_id, "attributes": attributes.duplicate()}
+	return {"name": name, "race_id": race_id, "origin_id": origin_id, "class_id": class_id, "attributes": attributes.duplicate(), "appearance": appearance.duplicate()}
 
 
 func attribute(key: String) -> int:
@@ -55,6 +60,11 @@ func validate(registry: ContentRegistry, attr_rules: Dictionary) -> Array[String
 		errors.append("unknown origin '%s'" % origin_id)
 	if not registry.has_entry("classes", class_id):
 		errors.append("unknown class '%s'" % class_id)
+	var look: Dictionary = registry.get_entry("rules", "appearance")
+	for part: String in ["tone", "accent"]:
+		var id := String(appearance.get(part, ""))
+		if not id.is_empty() and appearance_option(look, part, id).is_empty():
+			errors.append("unknown %s '%s'" % [part, id])
 	var names: Array = attr_rules.get("names", [])
 	var points := int(attr_rules.get("points", 0))
 	var cap := int(attr_rules.get("max_per_attribute", 99))
@@ -68,3 +78,24 @@ func validate(registry: ContentRegistry, attr_rules: Dictionary) -> Array[String
 	if points_spent() != points:
 		errors.append("attributes spend %d of %d points" % [points_spent(), points])
 	return errors
+
+
+## One option of `rules/appearance` ({id, name, color}) by part ("tone" or
+## "accent") and id; empty when there is none.
+static func appearance_option(look: Dictionary, part: String, id: String) -> Dictionary:
+	for o: Variant in look.get(part + "s", []):
+		if o is Dictionary and String((o as Dictionary).get("id", "")) == id:
+			return o
+	return {}
+
+
+## The sheet's appearance as colours for the rig: {"tone": Color, "accent":
+## Color}, only the parts that are set and known.
+static func resolve_appearance(registry: ContentRegistry, appearance: Dictionary) -> Dictionary:
+	var look: Dictionary = registry.get_entry("rules", "appearance")
+	var out: Dictionary = {}
+	for part: String in ["tone", "accent"]:
+		var o := appearance_option(look, part, String(appearance.get(part, "")))
+		if not o.is_empty():
+			out[part] = Color.html(String(o.get("color", "#ffffff")))
+	return out

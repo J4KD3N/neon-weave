@@ -34,7 +34,7 @@ var facing := Vector2.DOWN
 
 ## `sheet` (optional) switches the body to an animated sprite; `overlay`
 ## only applies to the placeholder rig.
-func build_visuals(text: String, color: Color, shape: String = "capsule", overlay: Dictionary = {}, sheet: SpriteSheet = null) -> void:
+func build_visuals(text: String, color: Color, shape: String = "capsule", overlay: Dictionary = {}, sheet: SpriteSheet = null, appearance: Dictionary = {}) -> void:
 	display_name = text
 	tint = color
 
@@ -47,11 +47,13 @@ func build_visuals(text: String, color: Color, shape: String = "capsule", overla
 		sprite = ActorSprite.new()
 		sprite.name = "Body"
 		add_child(sprite)
-		sprite.setup(sheet, sheet.swap_for_tint(color))
+		var swap := sheet.swap_for_tint(color)
+		_merge_look(swap, sheet, appearance)
+		sprite.setup(sheet, swap)
 	else:
 		var body := Sprite2D.new()
 		body.name = "Body"
-		body.texture = PlaceholderActorArt.body_texture(color, shape, overlay)
+		body.texture = PlaceholderActorArt.body_texture(color, shape, overlay, appearance)
 		body.offset = Vector2(0, -PlaceholderActorArt.BODY_SIZE.y / 2.0)
 		add_child(body)
 
@@ -65,6 +67,16 @@ func build_visuals(text: String, color: Color, shape: String = "capsule", overla
 	label.add_theme_color_override("font_color", color.lightened(0.4))
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(label)
+
+
+## A sheet with `skin` or `accent` palette roles takes the appearance (S51).
+static func _merge_look(swap: Dictionary, sheet: SpriteSheet, appearance: Dictionary) -> void:
+	var roles: Dictionary = {}
+	if appearance.has("tone"):
+		roles["skin"] = appearance["tone"]
+	if appearance.has("accent"):
+		roles["accent"] = appearance["accent"]
+	swap.merge(sheet.swap_for_roles(roles), true)
 
 
 func uses_sheet() -> bool:

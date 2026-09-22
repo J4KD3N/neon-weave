@@ -28,7 +28,7 @@ func spawn_members(specs: Array[Dictionary]) -> void:
 		var member := PartyMember.new()
 		var abilities: Array[String] = []
 		abilities.assign(spec.get("abilities", []))
-		member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities, spec.get("overlay", {}), spec.get("sheet", null))
+		member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities, spec.get("overlay", {}), spec.get("sheet", null), spec.get("appearance", {}))
 		member.position = spec.get("position", Vector2.ZERO)
 		member.is_leader = i == 0
 		add_child(member)
@@ -43,7 +43,7 @@ func add_member(spec: Dictionary) -> PartyMember:
 	var member := PartyMember.new()
 	var abilities: Array[String] = []
 	abilities.assign(spec.get("abilities", []))
-	member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities, spec.get("overlay", {}), spec.get("sheet", null))
+	member.setup(spec.get("data", {}), spec.get("color", Color.WHITE), spec.get("stats", {}), abilities, spec.get("overlay", {}), spec.get("sheet", null), spec.get("appearance", {}))
 	member.position = spec.get("position", Vector2.ZERO)
 	member.is_leader = members.is_empty()
 	add_child(member)
