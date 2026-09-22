@@ -798,11 +798,11 @@ func test_system_menu_routes_every_keyboard_only_action() -> void:
 	assert_eq(ids, PackedStringArray(ExploreWorld.SYSTEM_ITEM_IDS))
 	assert_contains(world.system_menu.label.text, "▶ Resume")
 	assert_contains(world.system_menu.label.text, "Return to the yard (haul is lost)  (unavailable: already home)")
-	assert_contains(world.system_menu.label.text, "Load slot 1 — empty  (unavailable: empty)")
-	assert_contains(world.system_menu.label.text, "Save slot 3 — empty")
+	assert_contains(world.system_menu.label.text, "Load game…  (unavailable: no saves yet)")
+	assert_contains(world.system_menu.label.text, "Save game…")
 	assert_false(world.activate_system_item("go_home"), "disabled items refuse")
 	assert_true(world.system_menu.visible, "and the menu stays open")
-	assert_true(world.activate_system_item("save_1"))
+	assert_true(world.activate_system_item("save_1"), "the quick-key items still answer")
 	assert_false(world.system_menu.visible, "activating closes it")
 	assert_true(FileAccess.file_exists(world.save_path(SaveSystem.slot_name(1))))
 	assert_true(world.open_system_menu())
@@ -917,23 +917,31 @@ func test_esc_undoes_a_move_when_nothing_is_aimed() -> void:
 func test_system_menu_offers_all_three_slots() -> void:
 	assert_eq(world.save_slot(2), OK)
 	world.open_system_menu()
-	var text: String = world.system_menu.label.text
-	assert_contains(text, "Save slot 1 — empty")
-	assert_contains(text, "Save slot 2 — Proto Yard")
-	assert_contains(text, "Load slot 2 — Proto Yard")
-	assert_contains(text, "Load slot 3 — empty  (unavailable: empty)")
-	assert_contains(text, "Load the autosave")
-	assert_true(world.activate_system_item("save_3"))
+	assert_contains(world.system_menu.label.text, "Save game…")
+	assert_contains(world.system_menu.label.text, "Load game…")
+	assert_true(world.activate_system_item("save_game"), "the saves screen (S54)")
+	var text: String = world.saves_menu.label.text
+	assert_contains(text, "Slot 1 — empty")
+	assert_contains(text, "Slot 2 — Weaver · Proto Yard")
+	assert_contains(text, "Slot 3 — empty")
+	world.saves_menu.cursor = 2
+	assert_true(world.activate_saves_row())
 	assert_true(FileAccess.file_exists(world.save_path(SaveSystem.slot_name(3))))
+	world.cancel_saves()
 	world.enter_shard("rusted_undercity", 7)
-	world.open_system_menu()
-	assert_true(world.activate_system_item("load_2"))
+	assert_true(world.activate_system_item("load_game"))
+	text = world.saves_menu.label.text
+	assert_contains(text, "Slot 2 — Weaver · Proto Yard")
+	assert_contains(text, "Slot 1 — empty  (empty)")
+	assert_contains(text, "Autosave — ")
+	world.saves_menu.cursor = 1
+	assert_true(world.activate_saves_row())
 	assert_true(world.at_home(), "slot 2 was saved at home")
 	world.teleport_party(Vector2i(13, 4))
 	world.start_combat(true)
 	var blocked := false
 	for item: Dictionary in world.system_items():
-		if String(item["id"]) == "save_1":
+		if String(item["id"]) == "save_game":
 			blocked = not bool(item["enabled"])
 	assert_true(blocked, "saving is unavailable in combat")
 

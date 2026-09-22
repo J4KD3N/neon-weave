@@ -1,5 +1,6 @@
-## Player settings: fullscreen, master volume, pad glyph style, pad rumble
-## and text size (S53). Persist as
+## Player settings: fullscreen, master, music and sound volume, pad glyph
+## style, pad rumble, text size (S53) and the colour-blind palette (S54).
+## Persist as
 ## `user://settings.json`; `apply()` pushes them to the display and audio
 ## servers (guarded so headless runs stay quiet).
 class_name Settings
@@ -15,11 +16,14 @@ var volume_db: float = 0.0
 var glyphs: String = "auto"
 var rumble: bool = true
 var text_scale: float = 1.0
+var music_db: float = 0.0
+var sfx_db: float = 0.0
+var palette: String = "normal"
 var load_error: String = ""
 
 
 func to_dict() -> Dictionary:
-	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale}
+	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette}
 
 
 static func from_dict(d: Dictionary) -> Settings:
@@ -30,6 +34,10 @@ static func from_dict(d: Dictionary) -> Settings:
 	s.glyphs = g if GLYPH_STYLES.has(g) else "auto"
 	s.rumble = bool(d.get("rumble", true))
 	s.text_scale = nearest_scale(float(d.get("text_scale", 1.0)))
+	s.music_db = clampf(float(d.get("music_db", 0.0)), VOLUME_MIN_DB, 0.0)
+	s.sfx_db = clampf(float(d.get("sfx_db", 0.0)), VOLUME_MIN_DB, 0.0)
+	var p := String(d.get("palette", "normal"))
+	s.palette = p if ColorFilter.MODES.has(p) else "normal"
 	return s
 
 
@@ -64,17 +72,41 @@ func apply() -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 	if AudioServer.bus_count > 0:
 		AudioServer.set_bus_volume_db(0, volume_db)
+		for pair: Array in [[AudioDirector.BUS_MUSIC, music_db], [AudioDirector.BUS_SFX, sfx_db]]:
+			var i := AudioServer.get_bus_index(String(pair[0]))
+			if i >= 0:
+				AudioServer.set_bus_volume_db(i, float(pair[1]))
 	Glyphs.style = glyphs
 	Rumble.enabled = rumble
 	UiScale.text_scale = text_scale
 
 
 func volume_percent() -> int:
-	return int(round((volume_db - VOLUME_MIN_DB) / (0.0 - VOLUME_MIN_DB) * 100.0))
+	return percent_of(volume_db)
+
+
+static func percent_of(db: float) -> int:
+	return int(round((db - VOLUME_MIN_DB) / (0.0 - VOLUME_MIN_DB) * 100.0))
 
 
 func step_volume(direction: int) -> void:
-	volume_db = clampf(volume_db + VOLUME_STEP_DB * float(direction), VOLUME_MIN_DB, 0.0)
+	volume_db = stepped(volume_db, direction)
+
+
+static func stepped(db: float, direction: int) -> float:
+	return clampf(db + VOLUME_STEP_DB * float(direction), VOLUME_MIN_DB, 0.0)
+
+
+func step_music(direction: int) -> void:
+	music_db = stepped(music_db, direction)
+
+
+func step_sfx(direction: int) -> void:
+	sfx_db = stepped(sfx_db, direction)
+
+
+func cycle_palette(direction: int) -> void:
+	palette = ColorFilter.cycle(palette, direction)
 
 
 func cycle_glyphs(direction: int) -> void:

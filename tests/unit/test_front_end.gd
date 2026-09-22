@@ -57,6 +57,16 @@ func _drop(w: ExploreWorld) -> void:
 	w.free()
 
 
+## Puts the settings cursor on a row by id (the rows are grouped since S54).
+func _go(id: String) -> void:
+	for i: int in world.settings_menu.rows.size():
+		if String(world.settings_menu.rows[i].get("id", "")) == id:
+			world.settings_menu.cursor = i
+			world.settings_menu.refresh()
+			return
+	assert_true(false, "no settings row " + id)
+
+
 static func _pad(button: int) -> InputEventJoypadButton:
 	var e := InputEventJoypadButton.new()
 	e.button_index = button as JoyButton
@@ -218,9 +228,14 @@ func test_continue_and_load_from_the_title() -> void:
 	assert_eq(world.title_menu.selected_id(), "load")
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	assert_false(world.in_title())
-	assert_true(world.system_menu.visible, "Load opens the slot list")
-	assert_contains(world.system_menu.label.text, "Load slot 2 — The Bastion")
-	assert_true(world.activate_system_item("load_2"))
+	assert_true(world.saves_menu.visible, "Load on the title opens the saves screen (S54)")
+	assert_eq(world.saves_menu.page, SavesMenu.PAGE_LOAD)
+	assert_contains(world.saves_menu.label.text, "Slot 2 — ")
+	assert_contains(world.saves_menu.label.text, "The Bastion")
+	world.saves_menu.cursor = 1
+	assert_true(world.activate_saves_row(), "Enter loads slot 2")
+	assert_false(world.saves_menu.visible)
+	assert_false(world.in_title())
 
 
 func test_settings_from_title_and_pause_menu_and_rebind_capture() -> void:
@@ -236,29 +251,47 @@ func test_settings_from_title_and_pause_menu_and_rebind_capture() -> void:
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	assert_true(world.settings.fullscreen, "A toggles")
 	assert_contains(world.settings_menu.label.text, "▶ Fullscreen: on")
-	world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
+	_go("volume")
 	world._unhandled_input(_pad(JOY_BUTTON_DPAD_LEFT))
 	assert_eq(world.settings.volume_db, -3.0, "left lowers the volume")
 	assert_contains(world.settings_menu.label.text, "Master volume: 90%")
-	world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
+	_go("glyphs")
 	world._unhandled_input(_pad(JOY_BUTTON_DPAD_RIGHT))
 	assert_eq(world.settings.glyphs, "xbox")
-	# Pad rumble and text size (S53) sit under the glyphs.
-	world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
+	# Pad rumble and text size (S53), music, sound and the palette (S54).
+	_go("rumble")
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	assert_false(world.settings.rumble, "A toggles rumble")
 	assert_contains(world.settings_menu.label.text, "▶ Pad rumble: off")
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	assert_true(world.settings.rumble)
-	world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
+	_go("text_scale")
 	world._unhandled_input(_pad(JOY_BUTTON_DPAD_RIGHT))
 	assert_eq(world.settings.text_scale, 1.15, "right grows the text")
 	assert_contains(world.settings_menu.label.text, "▶ Text size: large")
 	world._unhandled_input(_pad(JOY_BUTTON_DPAD_LEFT))
 	assert_eq(world.settings.text_scale, 1.0)
+	_go("music")
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_LEFT))
+	assert_eq(world.settings.music_db, -3.0)
+	assert_contains(world.settings_menu.label.text, "▶ Music: 90%")
+	_go("sfx")
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_LEFT))
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_LEFT))
+	assert_eq(world.settings.sfx_db, -6.0)
+	assert_contains(world.settings_menu.label.text, "▶ Sound effects: 80%")
+	_go("palette")
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_RIGHT))
+	assert_eq(world.settings.palette, "protanopia")
+	assert_contains(world.settings_menu.label.text, "▶ Colour-blind palette: protanopia")
+	assert_true(world.color_filter.visible, "the filter is on")
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_LEFT))
+	assert_false(world.color_filter.visible, "and off for normal")
+	assert_contains(world.settings_menu.label.text, "Display\n")
+	assert_contains(world.settings_menu.label.text, "Audio\n")
+	assert_contains(world.settings_menu.label.text, "keeps reds, greens or blues apart", "the hint follows the cursor")
 	# Rebind end_turn to the Y button.
-	for _i: int in 4:
-		world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
+	_go("rebind:end_turn")
 	assert_eq(world.settings_menu.selected()["id"], "rebind:end_turn")
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	assert_eq(world.settings_menu.rebinding, "end_turn")

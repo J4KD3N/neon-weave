@@ -16,7 +16,7 @@ Tagged builds for Windows, Linux and macOS are on the [Releases page](https://gi
 
 1. Install [Godot 4.7.2](https://godotengine.org/download) (standard build; no .NET needed).
 2. Clone this repo and open `project.godot` from the Godot project manager (**Import**).
-3. Press **Play**. The title screen offers New game (choose a difficulty: Story, Balanced or Tactician; then Story-Protected, Mortal or Iron Weave, which is Mortal with one save and no reloads, remembered on the account; then the character creator, the first screen of every new game), Continue, Load and Settings (fullscreen, volume, pad glyphs, pad rumble, text size, bindings); F1 in game lists loaded content and mods; `-- --perf` puts fps and frame time on the status line.
+3. Press **Play**. The title screen offers New game (choose a difficulty: Story, Balanced or Tactician; then Story-Protected, Mortal or Iron Weave, which is Mortal with one save and no reloads, remembered on the account; then the character creator, the first screen of every new game), Continue, Load and Settings (fullscreen, text size, a colour-blind palette, master, music and sound volume, pad glyphs and rumble, bindings, grouped with a hint per row); F1 in game lists loaded content and mods; `-- --perf` puts fps and frame time on the status line.
 
 The first editor open generates `.uid` sidecar files next to scripts. Commit them.
 

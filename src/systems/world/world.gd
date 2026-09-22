@@ -73,6 +73,9 @@ var merchant_menu: MerchantMenu
 var current_merchant: String = ""
 var journal_menu: JournalMenu
 var roster_menu: RosterMenu
+var saves_menu: SavesMenu
+var color_filter: ColorFilter
+var _saves_return_to_title: bool = false
 var demo_end_menu: DemoEndMenu
 var title_menu: TitleMenu
 var settings_menu: SettingsMenu
@@ -183,6 +186,12 @@ func _ready() -> void:
 	roster_menu = RosterMenu.new()
 	roster_menu.name = "RosterMenu"
 	add_child(roster_menu)
+	saves_menu = SavesMenu.new()
+	saves_menu.name = "SavesMenu"
+	add_child(saves_menu)
+	color_filter = ColorFilter.new()
+	color_filter.name = "ColorFilter"
+	add_child(color_filter)
 	journal_menu = JournalMenu.new()
 	journal_menu.name = "JournalMenu"
 	add_child(journal_menu)
@@ -198,6 +207,7 @@ func _ready() -> void:
 	settings = Settings.load_or_default()
 	settings.apply()
 	UiScale.apply(self, [overlay])
+	color_filter.set_mode(settings.palette)
 	InputActions.load_overrides()
 	audio = AudioDirector.new()
 	audio.name = "Audio"
@@ -440,6 +450,7 @@ func save_to(save_name: String) -> Error:
 		return ERR_UNAVAILABLE
 	var err := SaveSystem.write(save_path(save_name), SaveSystem.capture(self))
 	if err == OK:
+		SaveSystem.write_thumbnail(self, save_path(save_name)) # the frame beside the file (S54)
 		platform().push_save(save_path(save_name)) # cloud copy, when the platform has one
 	return err
 
@@ -460,6 +471,8 @@ func autosave() -> Error:
 		return OK
 	advance_quests() # the save carries any stage the last beat completed
 	grant_account_unlocks()
+	if not is_iron_weave(): # one save means one; otherwise the last few autosaves stay (S54)
+		SaveSystem.rotate_autosaves(saves_dir)
 	var err := save_to(SaveSystem.AUTOSAVE)
 	if err == OK:
 		check_achievements() # every story beat autosaves, so this is where they land
@@ -1359,7 +1372,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Menu sounds: any open text menu ticks, confirms and cancels the same way.
 	var menu_open := in_title() or (settings_menu != null and settings_menu.visible) or (system_menu != null and system_menu.visible) \
 		or (weave_menu != null and weave_menu.visible) or (inventory_menu != null and inventory_menu.visible) or (archive_menu != null and archive_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
-		or (journal_menu != null and journal_menu.visible) or (roster_menu != null and roster_menu.visible) or in_dialogue()
+		or (journal_menu != null and journal_menu.visible) or (roster_menu != null and roster_menu.visible) or (saves_menu != null and saves_menu.visible) or in_dialogue()
 	if menu_open and audio != null and not (settings_menu != null and not settings_menu.rebinding.is_empty()):
 		if event.is_action_pressed("confirm"):
 			play_event("ui.confirm")
@@ -1448,6 +1461,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			track_next_quest(-1)
 		elif event.is_action_pressed("ui_right"):
 			track_next_quest(1)
+		return
+	if saves_menu != null and saves_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("menu"):
+			cancel_saves()
+		elif event.is_action_pressed("confirm"):
+			activate_saves_row()
+		elif event.is_action_pressed("ui_up"):
+			saves_menu.move(-1)
+		elif event.is_action_pressed("ui_down"):
+			saves_menu.move(1)
 		return
 	if roster_menu != null and roster_menu.visible:
 		if event.is_action_pressed("cancel") or event.is_action_pressed("menu"):
@@ -1676,7 +1699,7 @@ func _maybe_screenshot() -> void:
 
 # --- gamepad paths: system menu, interact, menu cursors, combat cursor -------
 
-const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "inventory", "journal", "roster", "save_1", "save_2", "save_3", "load_1", "load_2", "load_3", "load_autosave", "settings", "platform", "title", "registry"]
+const SYSTEM_ITEM_IDS: Array[String] = ["resume", "extract", "new_shard", "go_home", "bastion", "creator", "weave", "inventory", "journal", "roster", "save_game", "load_game", "settings", "platform", "title", "registry"]
 const CURSOR_FIRST_REPEAT := 0.28
 const CURSOR_REPEAT := 0.11
 
@@ -1703,15 +1726,12 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "inventory", "label": "The pack (%d banked item%s)" % [ledger.items.size(), "" if ledger.items.size() == 1 else "s"], "enabled": home, "why": "only at home"})
 	items.append({"id": "journal", "label": "Journal (%d quests)" % narrative.quests.size(), "enabled": true})
 	items.append({"id": "roster", "label": "Roster & Quarters (%d with you, %d waiting)" % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and roster_rows().size() > 1, "why": "only at home" if not home else "nobody recruited"})
-	var saves := SaveSystem.list_saves(saves_dir, registry)
-	for n: int in SaveSystem.SLOTS:
-		var slot: Dictionary = saves[n]
-		items.append({"id": "save_%d" % (n + 1), "label": "Save slot %d — %s" % [n + 1, slot["summary"]], "enabled": mode != "combat" and reload_allowed(), "why": "Iron Weave: one save" if not reload_allowed() else "in combat"})
-	for n: int in SaveSystem.SLOTS:
-		var slot: Dictionary = saves[n]
-		items.append({"id": "load_%d" % (n + 1), "label": "Load slot %d — %s" % [n + 1, slot["summary"]], "enabled": bool(slot["loadable"]) and reload_allowed(), "why": "Iron Weave: no reloads" if not reload_allowed() else ("needs a new game" if bool(slot["exists"]) else "empty")})
-	var auto: Dictionary = saves[SaveSystem.SLOTS]
-	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["loadable"]) and reload_allowed(), "why": "Iron Weave: no reloads" if not reload_allowed() else ("needs a new game" if bool(auto["exists"]) else "no autosave yet")})
+	items.append({"id": "save_game", "label": "Save game…", "enabled": mode != "combat" and reload_allowed(), "why": "Iron Weave: one save" if not reload_allowed() else "in combat"})
+	var any_loadable := false
+	for row: Dictionary in SaveSystem.list_saves(saves_dir, registry, true):
+		if bool(row["loadable"]):
+			any_loadable = true
+	items.append({"id": "load_game", "label": "Load game…", "enabled": any_loadable and reload_allowed(), "why": "Iron Weave: no reloads" if not reload_allowed() else "no saves yet"})
 	items.append({"id": "settings", "label": "Settings", "enabled": true})
 	items.append({"id": "platform", "label": platform().status_line(), "enabled": false, "why": "%d achievements this session" % platform().unlocked_this_session.size()})
 	items.append({"id": "title", "label": "Title screen", "enabled": mode != "combat", "why": "in combat"})
@@ -1763,6 +1783,10 @@ func activate_system_item(id: String) -> bool:
 			return open_inventory()
 		"journal":
 			return open_journal()
+		"save_game":
+			return open_saves(SavesMenu.PAGE_SAVE)
+		"load_game":
+			return open_saves(SavesMenu.PAGE_LOAD)
 		"save_1", "save_2", "save_3":
 			return save_slot(int(id.get_slice("_", 1))) == OK
 		"load_1", "load_2", "load_3":
@@ -2799,8 +2823,8 @@ func activate_title() -> bool:
 			return continue_game()
 		"load":
 			title_menu.close()
-			open_system_menu()
-			return system_menu.visible
+			_saves_return_to_title = true
+			return open_saves(SavesMenu.PAGE_LOAD)
 		"settings":
 			return open_settings()
 		"quit":
@@ -2990,10 +3014,18 @@ func adjust_setting(direction: int) -> bool:
 				Rumble.pulse("hit") # so the toggle can be felt
 		"text_scale":
 			settings.cycle_text_scale(direction)
+		"music":
+			settings.step_music(direction)
+		"sfx":
+			settings.step_sfx(direction)
+			play_event("ui.confirm") # so the level can be heard
+		"palette":
+			settings.cycle_palette(direction)
 		_:
 			return false
 	settings.apply()
 	UiScale.apply(self, [overlay])
+	color_filter.set_mode(settings.palette)
 	refresh_settings()
 	return true
 
@@ -3007,7 +3039,9 @@ func confirm_setting() -> bool:
 		settings_menu.refresh()
 		return true
 	match id:
-		"fullscreen", "glyphs", "rumble", "text_scale":
+		"fullscreen", "glyphs", "rumble", "text_scale", "palette":
+			return adjust_setting(1)
+		"music", "sfx":
 			return adjust_setting(1)
 		"volume":
 			return adjust_setting(1)
@@ -3622,6 +3656,110 @@ func play_scene(scene_id: String) -> bool:
 			continue
 		narrative.set_flag("scene_%s_seen" % scene_id, true)
 		return open_dialogue(String(s["dialogue"]))
+	return false
+
+
+# --- saves screen (S54, D-109) ----------------------------------------------
+
+## What a save is called in the lists: who leads, where, which act, what level.
+func save_title() -> String:
+	var who := party.leader().display_name if party.leader() != null else "The Weaver"
+	return "%s · %s · Act %d · level %d" % [who, map_data.name, act_number(), party_level()]
+
+
+## 1 until first contact, 2 until the catastrophe, 3 after.
+func act_number() -> int:
+	if narrative.flag("catastrophe_seen"):
+		return 3
+	if narrative.flag("act2"):
+		return 2
+	return 1
+
+
+## The rows of the saves screen: the three slots on the save page; the
+## slots, the autosave and its older copies on the load page.
+func saves_rows(page: String) -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var listing := SaveSystem.list_saves(saves_dir, registry, page == SavesMenu.PAGE_LOAD)
+	for row: Dictionary in listing:
+		var save_name := String(row["name"])
+		var is_slot := save_name.begins_with("slot_")
+		if page == SavesMenu.PAGE_SAVE and not is_slot:
+			continue
+		var exists := bool(row["exists"])
+		var what := "Slot %s" % save_name.get_slice("_", 1) if is_slot else ("Autosave" if save_name == SaveSystem.AUTOSAVE else "Older autosave %s" % save_name.get_slice("_", 1))
+		var title := String(row.get("title", ""))
+		var label := "%s — %s" % [what, title if not title.is_empty() else (String(row["summary"]) if exists else "empty")]
+		var detail := ""
+		if exists:
+			detail = "%s · %s" % [String(row.get("saved_at", "")), String(row["summary"])]
+		var enabled := true
+		var why := ""
+		if page == SavesMenu.PAGE_LOAD:
+			enabled = bool(row["loadable"]) and reload_allowed()
+			why = "Iron Weave: no reloads" if not reload_allowed() else ("needs a new game" if exists else "empty")
+		else:
+			enabled = mode != "combat" and reload_allowed()
+			why = "Iron Weave: one save" if not reload_allowed() else "in combat"
+		rows.append({"id": save_name, "label": label, "detail": detail, "enabled": enabled, "why": why, "exists": exists, "thumbnail": String(row.get("thumbnail", ""))})
+	rows.append({"id": "back", "label": "Back", "enabled": true, "exists": false})
+	return rows
+
+
+## Opens the saves screen on a page: from the pause menu, or from the
+## title's Load (which it returns to).
+func open_saves(page: String) -> bool:
+	if saves_menu == null or mode == "combat":
+		return false
+	if system_menu != null:
+		system_menu.close()
+	saves_menu.open(page, saves_rows(page))
+	return true
+
+
+## Esc: answers "no" to an overwrite, else closes (back to the title when
+## it came from there).
+func cancel_saves() -> void:
+	if saves_menu == null:
+		return
+	if not saves_menu.pending.is_empty():
+		saves_menu.pending = ""
+		saves_menu.refresh()
+		return
+	saves_menu.close()
+	if _saves_return_to_title:
+		_saves_return_to_title = false
+		show_title()
+
+
+## Enter on the saves screen: saves into the slot (asking first when it
+## holds something), or loads the row, or backs out.
+func activate_saves_row() -> bool:
+	if saves_menu == null or not saves_menu.visible:
+		return false
+	var row := saves_menu.selected()
+	var id := String(row.get("id", ""))
+	if id == "back" or id.is_empty():
+		cancel_saves()
+		return true
+	if not bool(row.get("enabled", true)):
+		return false
+	if saves_menu.page == SavesMenu.PAGE_SAVE:
+		if bool(row.get("exists", false)) and saves_menu.pending != id:
+			saves_menu.pending = id # ask first
+			saves_menu.refresh()
+			return true
+		saves_menu.pending = ""
+		var ok := save_slot(int(id.get_slice("_", 1))) == OK
+		if ok:
+			saves_menu.open(SavesMenu.PAGE_SAVE, saves_rows(SavesMenu.PAGE_SAVE), true)
+		return ok
+	var errors := load_from(id)
+	if errors.is_empty():
+		_saves_return_to_title = false
+		saves_menu.close()
+		return true
+	saves_menu.refresh()
 	return false
 
 
