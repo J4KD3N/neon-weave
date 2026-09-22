@@ -494,6 +494,8 @@ func autosave() -> Error:
 	grant_account_unlocks()
 	if not is_iron_weave(): # one save means one; otherwise the last few autosaves stay (S54)
 		SaveSystem.rotate_autosaves(saves_dir)
+		for age: int in range(1, SaveSystem.AUTOSAVE_KEEP):
+			platform().push_save(save_path(SaveSystem.autosave_name(age))) # the rotated copies ride the cloud too (S58)
 	var err := save_to(SaveSystem.AUTOSAVE)
 	if err == OK:
 		check_achievements() # every story beat autosaves, so this is where they land

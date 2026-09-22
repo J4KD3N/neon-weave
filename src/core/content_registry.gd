@@ -25,6 +25,8 @@ const SOURCE_BASE := "base"
 var load_errors: Array[String] = []
 ## Manifests of the mods that loaded, in load order.
 var loaded_mods: Array[Dictionary] = []
+## More mod folders, one per installed Workshop item (S58); the platform sets them.
+var extra_mod_roots: Array[String] = []
 
 var _entries: Dictionary = {} # kind:String -> { id:String -> Dictionary }
 var _fingerprint_cache: String = ""
@@ -44,6 +46,7 @@ func default_mod_roots() -> Array[String]:
 	var roots: Array[String] = [DEV_MODS_ROOT, "user://mods"]
 	if not OS.has_feature("editor"):
 		roots.append(OS.get_executable_path().get_base_dir().path_join("mods"))
+	roots.append_array(extra_mod_roots)
 	return roots
 
 
@@ -79,13 +82,18 @@ func discover_mods(mod_roots: Array[String]) -> Array[Dictionary]:
 	var mods: Array[Dictionary] = []
 	var seen_ids: Dictionary = {}
 	for root: String in mod_roots:
-		var dir: DirAccess = DirAccess.open(root)
-		if dir == null:
-			continue
-		for folder: String in dir.get_directories():
-			if folder.begins_with("."):
+		var candidates: Array[String] = []
+		if FileAccess.file_exists(root.path_join(MOD_MANIFEST)):
+			candidates.append(root) # the root is itself one mod: an installed Workshop item (S58)
+		else:
+			var dir: DirAccess = DirAccess.open(root)
+			if dir == null:
 				continue
-			var mod_path: String = root.path_join(folder)
+			for sub: String in dir.get_directories():
+				if not sub.begins_with("."):
+					candidates.append(root.path_join(sub))
+		for mod_path: String in candidates:
+			var folder: String = mod_path.get_file()
 			var manifest_path: String = mod_path.path_join(MOD_MANIFEST)
 			if not FileAccess.file_exists(manifest_path):
 				load_errors.append("mod folder without %s skipped: %s" % [MOD_MANIFEST, mod_path])

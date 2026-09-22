@@ -134,3 +134,47 @@ func cloud_list() -> Array[String]:
 
 func cloud_delete(file_name: String) -> bool:
 	return cloud_saves_enabled() and bool(steam.call("fileDelete", file_name.get_file()))
+
+
+# --- Workshop through the Steam UGC API (S58; the live check covers it) ---
+
+## Subscribed items that are installed: their folders.
+func workshop_items() -> Array[String]:
+	var out: Array[String] = []
+	if not is_available():
+		return out
+	var ids: Variant = steam.call("getSubscribedItems")
+	if not ids is Array:
+		return out
+	for id: Variant in (ids as Array):
+		var info: Variant = steam.call("getItemInstallInfo", int(id))
+		if info is Dictionary and bool(Dictionary(info).get("ret", false)):
+			var folder := String(Dictionary(info).get("folder", ""))
+			if not folder.is_empty() and FileAccess.file_exists(folder.path_join("mod.json")):
+				out.append(folder)
+	return out
+
+
+## Creates (item_id 0) or updates an item, waits for Steam's answer, then
+## submits the folder as the item's content.
+func workshop_publish(folder: String, title: String, description: String, item_id: int = 0) -> Dictionary:
+	if not is_available():
+		return {"ok": false, "item_id": 0, "why": "Steam is not running"}
+	if not FileAccess.file_exists(folder.path_join("mod.json")):
+		return {"ok": false, "item_id": 0, "why": "%s has no mod.json" % folder}
+	if item_id <= 0:
+		steam.call("createItem", _app_id, 0) # 0: a community file
+		var created: Variant = await Signal(steam, "item_created")
+		if created is Array and (created as Array).size() >= 2 and int((created as Array)[0]) == 1:
+			item_id = int((created as Array)[1])
+		else:
+			return {"ok": false, "item_id": 0, "why": "createItem failed: %s" % str(created)}
+	var handle: Variant = steam.call("startItemUpdate", _app_id, item_id)
+	steam.call("setItemTitle", handle, title)
+	steam.call("setItemDescription", handle, description)
+	steam.call("setItemContent", handle, ProjectSettings.globalize_path(folder))
+	steam.call("setItemVisibility", handle, 0)
+	steam.call("submitItemUpdate", handle, "Uploaded by tools/workshop_upload.gd")
+	var updated: Variant = await Signal(steam, "item_updated")
+	var ok := updated is Array and (updated as Array).size() >= 1 and int((updated as Array)[0]) == 1
+	return {"ok": ok, "item_id": item_id, "why": "" if ok else "submitItemUpdate failed: %s" % str(updated)}
