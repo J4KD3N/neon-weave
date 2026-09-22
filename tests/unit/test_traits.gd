@@ -209,7 +209,7 @@ func test_the_world_carries_traits_into_fights_banking_and_talents() -> void:
 	many.hp = 4
 	world.mode = "combat"
 	world._on_combat_ended("victory")
-	assert_eq(many.hp, 4 + int(ceil(many.max_hp * 0.25)), "a quarter mended")
+	assert_eq(many.hp, mini(many.max_hp, 4 + int(ceil(many.max_hp * 0.25)) + int(ceil(many.max_hp * world.rules.rest_after_victory))), "a quarter mended, then the breather (S48)")
 	# Talent cost: Trueborn pay one less Aether.
 	world.protagonist = {"name": "Ada", "race_id": "trueborn", "origin_id": "corp_asset", "class_id": "scrap_knight", "attributes": {"body": 2, "arcane": 2, "tech": 2}}
 	world.respawn_party()

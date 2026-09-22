@@ -35,11 +35,15 @@ var ambush_damage_mult: float = 1.5
 ## Enemy tiers (entry or placement `tier`): elite and boss multipliers.
 var elite_hp_mult: float = 1.5
 var elite_damage_bonus: int = 1
-var boss_hp_mult: float = 3.0
+var boss_hp_mult: float = 2.5
 var boss_damage_bonus: int = 2
 var boss_ap_bonus: int = 1
+## A boss spends its first `boss_telegraph_round` round(s) winding up: no ability of 3 AP or more (S48).
+var boss_telegraph_round: int = 0
+## After a victory the standing party regains this fraction of max HP (S48): a breather, not a Med-bay.
+var rest_after_victory: float = 0.0
 ## Depth scaling: HP x (1 + per_level x (depth - 1)); +1 damage every N depths past 1.
-var depth_hp_per_level: float = 0.15
+var depth_hp_per_level: float = 0.10
 var depth_damage_every: int = 2
 ## Evasion granted by standing on a surface (target side): {"spore": 10}.
 var surface_evasion: Dictionary = {}
@@ -86,6 +90,8 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.boss_hp_mult = float(entry.get("boss_hp_mult", r.boss_hp_mult))
 	r.boss_damage_bonus = int(entry.get("boss_damage_bonus", r.boss_damage_bonus))
 	r.boss_ap_bonus = int(entry.get("boss_ap_bonus", r.boss_ap_bonus))
+	r.boss_telegraph_round = int(entry.get("boss_telegraph_round", r.boss_telegraph_round))
+	r.rest_after_victory = float(entry.get("rest_after_victory", r.rest_after_victory))
 	r.depth_hp_per_level = float(entry.get("depth_hp_per_level", r.depth_hp_per_level))
 	r.depth_damage_every = int(entry.get("depth_damage_every", r.depth_damage_every))
 	r.surface_evasion = {}

@@ -39,6 +39,7 @@
     "count": [3, 6],
     "pool": [
       { "type": "salvage_cache", "weight": 6 },
+      { "type": "medkit", "weight": 2 },
       { "type": "aether_shard", "weight": 2 },
       { "type": "loot_crate", "weight": 2 },
       { "type": "lore_fragment", "weight": 1 }
@@ -47,6 +48,7 @@
   "enemies": {
     "groups": [4, 7],
     "group_size": [1, 2],
+    "extra_groups_max": 1,
     "min_spawn_distance": 10,
     "pool": [
       { "type": "scav", "weight": 5 },

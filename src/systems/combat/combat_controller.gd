@@ -69,6 +69,7 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 		var c := Combatant.make("e:%d:%s" % [i, e.enemy_id], e.display_name, Combatant.TEAM_ENEMY, e.cell, e.stats, e.abilities, world.rules.ap_per_turn + e.ap_bonus)
 		c.hp = e.hp
 		c.archetype = e.archetype
+		c.tier = e.tier
 		c.damage_bonus = e.damage_bonus
 		c.traits = e.traits.duplicate(true)
 		combatants.append(c)
@@ -491,7 +492,7 @@ func _run_enemy_turns() -> void:
 		var actor := state.current()
 		_pan_to(actor.id)
 		var action := EnemyBrain.next_action(state, actor)
-		hud.set_turn_text("Round %d — %s acts" % [state.round_number, actor.display_name])
+		hud.set_turn_text("Round %d — %s %s" % [state.round_number, actor.display_name, "winds up: the heavy blow comes next round" if actor.tier == "boss" and state.round_number <= state.rules.boss_telegraph_round else "acts"])
 		match String(action["type"]):
 			"move":
 				var node: WorldActor = actors[actor.id]
