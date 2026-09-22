@@ -6,5 +6,6 @@
   "stat_mods": { "hp": 4, "evasion": -5 },
   "faction_lean": "lattice",
   "overlay": { "kind": "plating", "color": "#9aa3ad" },
+  "art": { "placeholder": "rig" },
   "milestone": "M0"
 }

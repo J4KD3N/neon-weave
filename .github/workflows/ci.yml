@@ -52,6 +52,9 @@ jobs:
       - name: Locale template (every string the game shows, for translators, S55)
         run: godot --headless --path . -s tools/extract_strings.gd -- --out=build/locale_template.json
 
+      - name: Art status (every race and enemy has a sheet or a documented placeholder, S56)
+        run: godot --headless --path . -s tools/art_status.gd -- --out=build/art-status.md
+
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0
@@ -123,6 +126,11 @@ jobs:
           run_shot --screenshot="$PWD/build/screenshot-markets.png" --shard=7 --biome=ghost_markets
           run_shot --screenshot="$PWD/build/screenshot-cathedral.png" --shard=7 --biome=null_cathedral
           run_shot --screenshot="$PWD/build/screenshot-loom.png" --shard=7 --biome=loom_approach
+          run_shot --screenshot="$PWD/build/screenshot-road.png" --map=gate_road
+          run_shot --screenshot="$PWD/build/screenshot-dialogue.png" --map=proto_yard --talk=sera
+          run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
+          run_shot --screenshot="$PWD/build/screenshot-crt.png" --shard=7 --fx=crt
+          run_shot --screenshot="$PWD/build/screenshot-flat.png" --shard=7 --fx=off --no-lighting
           run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
           run_shot --screenshot="$PWD/build/screenshot-dialogue.png" --map=proto_yard --talk=sera
           run_shot --screenshot="$PWD/build/screenshot-road.png" --map=gate_road --journal

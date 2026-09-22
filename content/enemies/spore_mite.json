@@ -8,5 +8,5 @@
   "awareness": 4,
   "xp": 2,
   "loot": { "salvage": [0, 1] },
-  "art": { "shape": "capsule", "color": "#7a9a2a" }
+  "art": { "placeholder": "rig", "shape": "capsule", "color": "#7a9a2a" }
 }

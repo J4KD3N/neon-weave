@@ -70,10 +70,10 @@ Every kind's required and optional keys are in [content schemas](content-schemas
 
 | To add | Kind(s) | Copy | Notes |
 |---|---|---|---|
-| A race | `races` | `content/races/vaultkin.json` | `overlay` picks the rig overlay; `traits` are the S30 hooks (resist, regen_on_surface, detect_hidden, salvage_bonus, mend_after_combat, bonus_abilities, tags); `playable: false` keeps it off the creator |
+| A race | `races` | `content/races/vaultkin.json` | `art.sheet` names a sprite sidecar or `art.placeholder` is `"rig"` (the validator wants one, S56); `overlay` picks the rig overlay; `traits` are the S30 hooks (resist, regen_on_surface, detect_hidden, salvage_bonus, mend_after_combat, bonus_abilities, tags); `playable: false` keeps it off the creator |
 | A class | `classes`, `subclasses`, `resources`, `abilities` | `content/classes/scrap_knight.json` | A class needs branches that exist, a resource entry, `stats` with every StatBlock key, abilities that exist and at least one subclass whose `class` is this class |
 | An ability | `abilities` | `content/abilities/chrome_haymaker.json` | `sound` is an `audio` id; `effects` carry chain, taunt, poison, counter, aoe, summon_count |
-| An enemy | `enemies` | `content/enemies/scav.json` | `family` is a biome (or `bastion` for party-side summons); `archetype` is rusher, ranged, summoner, stealther or controller |
+| An enemy | `enemies` | `content/enemies/scav.json` | `art.sheet` or `art.placeholder: "rig"`; `family` is a biome (or `bastion` for party-side summons); `archetype` is rusher, ranged, summoner, stealther or controller |
 | An item or affix | `items`, `affixes` | `content/items/`, `content/affixes/` | Drops roll from `rules/loot`; a merchant sells one through `stock[].effect.item` |
 | A companion | `companions`, `dialogue`, `quests` | `content/companions/dax.json` | `dialogue.recruit` doubles as talk; `banter` is a dialogue of kind banter; the quest names the companion; `scenes` are Quarters scenes (romance scenes only on `romanceable`); place them on a map with `npcs: [{companion, cell, when?}]` |
 | A dialogue | `dialogue` | `content/dialogue/kaj7_recruit.json` | Nodes need a speaker and choices; every node needs an unconditional choice; `act` is 1–3; `voice` borrows a companion's voice; choices carry the full effect vocabulary |

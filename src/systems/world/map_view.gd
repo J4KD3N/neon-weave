@@ -9,9 +9,10 @@ var walls: TileMapLayer
 var map: MapData
 var nav := NavGrid.new()
 var atlas_coords: Dictionary = {}
+var lighting: LightingRig
 
 
-func build(map_data: MapData, biome: Dictionary) -> void:
+func build(map_data: MapData, biome: Dictionary, lighting_rules: Dictionary = {}) -> void:
 	map = map_data
 	_ensure_layers()
 	var built: Dictionary = PlaceholderTiles.build(map.tiles(), biome.get("palette", {}))
@@ -30,6 +31,7 @@ func build(map_data: MapData, biome: Dictionary) -> void:
 			var layer: TileMapLayer = walls if String(tile.get("layer", "ground")) == "wall" else ground
 			layer.set_cell(cell, PlaceholderTiles.SOURCE_ID, atlas_coords[map.tile_id_at(cell)])
 	nav.build(map)
+	lighting.rebuild(map, biome.get("palette", {}), lighting_rules, Callable(self, "cell_to_world")) # the lighting pass (S56)
 
 
 ## Centre of `cell` in global coordinates.
@@ -58,6 +60,9 @@ func path_to(from_world: Vector2, to_cell: Vector2i) -> Array[Vector2]:
 
 
 func _ensure_layers() -> void:
+	if lighting == null:
+		lighting = LightingRig.new()
+		add_child(lighting)
 	if ground != null:
 		return
 	ground = TileMapLayer.new()

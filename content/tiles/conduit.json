@@ -6,5 +6,5 @@
   "walkable": true,
   "blocks_sight": false,
   "surface": "conduit",
-  "art": { "shape": "floor", "fill": "grate", "edge": "neon_tech", "pattern": "grate", "pattern_color": "neon_tech" }
+  "art": { "shape": "floor", "fill": "grate", "edge": "neon_tech", "pattern": "grate", "pattern_color": "neon_tech", "glow": "neon_tech" }
 }

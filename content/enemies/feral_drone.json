@@ -8,5 +8,5 @@
   "awareness": 6,
   "xp": 6,
   "loot": { "salvage": [1, 3], "aether": [0, 1] },
-  "art": { "shape": "drone", "color": "#8fb8b0" }
+  "art": { "placeholder": "rig", "shape": "drone", "color": "#8fb8b0" }
 }

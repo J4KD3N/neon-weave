@@ -6,5 +6,5 @@
   "walkable": true,
   "blocks_sight": false,
   "waypoint": true,
-  "art": { "shape": "floor", "fill": "floor_edge", "edge": "neon_body", "pattern": "pad", "pattern_color": "neon_body" }
+  "art": { "shape": "floor", "fill": "floor_edge", "edge": "neon_body", "pattern": "pad", "pattern_color": "neon_body", "glow": "neon_body" }
 }

@@ -215,6 +215,7 @@ func _talents() -> void:
 
 func _enemies() -> void:
 	for e: Dictionary in _registry.get_all("enemies"):
+		_check_art(e)
 		var family := String(e.get("family", ""))
 		if not _has("biomes", family) and family != "bastion":
 			_flag(e, "family '%s' is not a biome (or 'bastion' for party-side summons)" % family)
@@ -238,6 +239,7 @@ func _enemies() -> void:
 
 func _races() -> void:
 	for r: Dictionary in _registry.get_all("races"):
+		_check_art(r)
 		var overlay: Dictionary = r.get("overlay", {})
 		if not overlay.has("kind"):
 			_flag(r, "overlay needs a kind")
@@ -632,7 +634,24 @@ func _difficulties() -> void:
 		_flag(_registry.get_all("difficulties")[0], "exactly one difficulty must be the default (found %d)" % defaults)
 
 
+## A race or enemy draws with a sheet that exists or says it is a placeholder (S56).
+func _check_art(e: Dictionary) -> void:
+	var art: Dictionary = e.get("art", {})
+	var sheet := String(art.get("sheet", ""))
+	if not sheet.is_empty():
+		_ref(e, "sprites", sheet, "art.sheet")
+	elif String(art.get("placeholder", "")) != "rig":
+		_flag(e, "art needs a sheet or a documented placeholder (\"placeholder\": \"rig\")")
+
+
 func _misc() -> void:
+	for t: Dictionary in _registry.get_all("tiles"):
+		var glow := String(Dictionary(t.get("art", {})).get("glow", ""))
+		if glow.is_empty():
+			continue
+		for b: Dictionary in _registry.get_all("biomes"):
+			if not Dictionary(b.get("palette", {})).has(glow):
+				_flag(t, "art.glow role '%s' is not in the %s palette" % [glow, b["id"]])
 	for b: Dictionary in _registry.get_all("biomes"):
 		var raw_palette: Variant = b.get("palette", [])
 		var palette: Array = raw_palette.values() if raw_palette is Dictionary else Array(raw_palette)

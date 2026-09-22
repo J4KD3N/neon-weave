@@ -78,6 +78,7 @@ var journal_menu: JournalMenu
 var roster_menu: RosterMenu
 var saves_menu: SavesMenu
 var color_filter: ColorFilter
+var screen_fx: ScreenFx
 var _saves_return_to_title: bool = false
 var demo_end_menu: DemoEndMenu
 var title_menu: TitleMenu
@@ -192,6 +193,9 @@ func _ready() -> void:
 	saves_menu = SavesMenu.new()
 	saves_menu.name = "SavesMenu"
 	add_child(saves_menu)
+	screen_fx = ScreenFx.new()
+	screen_fx.name = "ScreenFx"
+	add_child(screen_fx)
 	color_filter = ColorFilter.new()
 	color_filter.name = "ColorFilter"
 	add_child(color_filter)
@@ -211,7 +215,13 @@ func _ready() -> void:
 	settings = Settings.load_or_default(settings_path)
 	settings.apply()
 	UiScale.apply(self, [overlay])
-	color_filter.set_mode(settings.palette)
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--fx="): # a screenshot's screen effects (S56)
+			settings.screen_fx = arg.get_slice("=", 1)
+		elif arg == "--no-lighting":
+			settings.lighting = false
+	settings.apply()
+	apply_visual_settings()
 	InputActions.load_overrides()
 	audio = AudioDirector.new()
 	audio.name = "Audio"
@@ -313,7 +323,7 @@ func load_map_entry(entry: Dictionary) -> void:
 	map_data = MapData.parse(entry, tiles_by_id())
 	for err: String in map_data.errors:
 		push_warning(err)
-	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id))
+	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id), rules_entry("lighting"))
 
 
 ## Generates a Shard from a `shards` template and moves the party into it.
@@ -1655,6 +1665,8 @@ func _process(delta: float) -> void:
 	hovered_cell = hover_override if hover_override.x >= 0 else map_view.world_to_cell(get_global_mouse_position())
 	if mode == "combat":
 		combat.hover(hovered_cell)
+	if map_view.lighting != null and party.leader() != null:
+		map_view.lighting.follow(party.leader().position)
 	overlay.status = status_line()
 	_maybe_screenshot()
 
@@ -2189,7 +2201,7 @@ func open_door(cell: Vector2i, silent: bool = false) -> bool:
 	if kind.is_empty():
 		return false
 	map_data.set_tile(cell, _floor_tile_entry())
-	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id))
+	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id), rules_entry("lighting"))
 	if highlighter != null:
 		highlighter.map_view = map_view
 	var raw: Array = [cell.x, cell.y]
@@ -3003,6 +3015,16 @@ func close_settings() -> void:
 		show_title()
 
 
+## The palette, the screen effects and the lighting follow the settings (S54, S56).
+func apply_visual_settings() -> void:
+	if color_filter != null:
+		color_filter.set_mode(settings.palette)
+	if screen_fx != null:
+		screen_fx.set_mode(settings.screen_fx)
+	if map_view != null and map_view.lighting != null:
+		map_view.lighting.set_enabled(settings.lighting)
+
+
 ## Left / right on a settings row.
 func adjust_setting(direction: int) -> bool:
 	var row := settings_menu.selected()
@@ -3029,11 +3051,15 @@ func adjust_setting(direction: int) -> bool:
 			settings.cycle_palette(direction)
 		"language":
 			settings.cycle_locale(direction)
+		"lighting":
+			settings.lighting = not settings.lighting
+		"screen_fx":
+			settings.cycle_screen_fx(direction)
 		_:
 			return false
 	settings.apply()
 	UiScale.apply(self, [overlay])
-	color_filter.set_mode(settings.palette)
+	apply_visual_settings()
 	refresh_settings()
 	return true
 
@@ -3047,7 +3073,7 @@ func confirm_setting() -> bool:
 		settings_menu.refresh()
 		return true
 	match id:
-		"fullscreen", "glyphs", "rumble", "text_scale", "palette", "language":
+		"fullscreen", "glyphs", "rumble", "text_scale", "palette", "language", "lighting", "screen_fx":
 			return adjust_setting(1)
 		"music", "sfx":
 			return adjust_setting(1)
@@ -4177,7 +4203,7 @@ func _set_map_tile(cell: Vector2i, tile_id: String) -> void:
 	if not map_data.in_bounds(cell):
 		return
 	map_data.set_tile(cell, registry.get_entry("tiles", tile_id))
-	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id))
+	map_view.build(map_data, registry.get_entry("biomes", map_data.biome_id), rules_entry("lighting"))
 	if highlighter != null:
 		highlighter.map_view = map_view
 

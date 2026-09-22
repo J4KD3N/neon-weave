@@ -5,5 +5,5 @@
   "walkable": false,
   "blocks_sight": false,
   "door": "vault",
-  "art": { "shape": "block", "height": 20, "top": "neon_tech", "left": "wall_left", "right": "wall_right" }
+  "art": { "shape": "block", "height": 20, "top": "neon_tech", "left": "wall_left", "right": "wall_right", "glow": "neon_tech" }
 }

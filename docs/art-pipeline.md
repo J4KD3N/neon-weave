@@ -69,3 +69,27 @@ Validation failures are warnings at load and a failing test in CI (`tests/unit/t
 4. Look at the CI screenshot artifacts.
 
 To regenerate the placeholders: `node tools/gen_placeholder_sheets.js`.
+
+
+## Placeholders are documented (S56)
+
+Every race and enemy entry says what it draws with: `"art": {"sheet": "<id>"}`
+naming a sidecar that exists and validates, or `"art": {"placeholder": "rig"}`.
+The validator refuses an entry with neither and a sheet that points at
+nothing; `tools/art_status.gd` writes `docs/art-status.md` from the registry
+and CI runs it. When a sheet lands, replace the `placeholder` key with the
+`sheet` key in the same entry.
+
+## Lighting and glow (S56)
+
+Glow lives in the engine, as §5 asks. `LightingRig` (`src/systems/art/lighting_rig.gd`)
+sits under the map view: a `CanvasModulate` dims the world to the biome
+palette's `ambient` role (or `rules/lighting.ambient`), every tile whose `art`
+names a `glow` palette role gets a `PointLight2D` in that colour (additive, no
+shadows, a runtime radial gradient) up to `rules/lighting.max_lights` per map,
+and one light walks with the leader. `ScreenFx` (`src/ui/screen_fx.gd`) is a
+full-screen pass under the colour filter: glow (a bright-pass bleed) by
+default, CRT (scanlines and a vignette on top) or off. Both are settings;
+`--fx=<off|glow|crt>` and `--no-lighting` force them for a screenshot. Real
+sheets need nothing from this: keep neon out of the sprites and let the
+tile's `glow` and the palette do the lighting.

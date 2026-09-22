@@ -6,5 +6,6 @@
   "stat_mods": { "initiative": 1 },
   "faction_lean": "",
   "overlay": { "kind": "swarm", "color": "#c0c0c0" },
+  "art": { "placeholder": "rig" },
   "milestone": "M3"
 }
