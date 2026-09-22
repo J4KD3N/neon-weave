@@ -6,10 +6,12 @@ class_name NullPlatformBackend
 extends PlatformBackend
 
 const CLOUD_DIR := "user://cloud_null"
+const WORKSHOP_DIR := "user://workshop_null"
 
 ## Achievement ids unlocked this session, in order.
 var unlocked: Array[String] = []
 var cloud_dir: String = CLOUD_DIR
+var workshop_dir: String = WORKSHOP_DIR
 
 
 func backend_name() -> String:
@@ -86,3 +88,66 @@ func cloud_delete(file_name: String) -> bool:
 	if not cloud_exists(file_name):
 		return false
 	return DirAccess.remove_absolute(ProjectSettings.globalize_path(_path(file_name))) == OK
+
+
+# --- Workshop: a folder standing in for the store (S58) ----------------------
+
+## Every item folder under the workshop dir that holds a mod.json, by id.
+func workshop_items() -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(workshop_dir)
+	if dir == null:
+		return out
+	var ids: Array[String] = []
+	for d: String in dir.get_directories():
+		if FileAccess.file_exists(workshop_dir.path_join(d).path_join("mod.json")):
+			ids.append(d)
+	ids.sort_custom(func(a: String, b: String) -> bool: return int(a) < int(b))
+	for id: String in ids:
+		out.append(workshop_dir.path_join(id))
+	return out
+
+
+## Copies the folder to <workshop_dir>/<item_id>/ (the next id when 0) and
+## writes workshop.json beside it, so subscribing and updating round-trip
+## without a client.
+func workshop_publish(folder: String, title: String, description: String, item_id: int = 0) -> Dictionary:
+	if not FileAccess.file_exists(folder.path_join("mod.json")):
+		return {"ok": false, "item_id": 0, "why": "%s has no mod.json" % folder}
+	if item_id <= 0:
+		item_id = 1
+		for existing: String in workshop_items():
+			item_id = maxi(item_id, int(existing.get_file()) + 1)
+	var target := workshop_dir.path_join(str(item_id))
+	_remove_tree(target)
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(target))
+	_copy_tree(folder, target)
+	var meta := FileAccess.open(target.path_join("workshop.json"), FileAccess.WRITE)
+	if meta != null:
+		meta.store_string(JSON.stringify({"item_id": item_id, "title": title, "description": description, "source": folder, "published_at": Time.get_datetime_string_from_system(true, true)}, "  "))
+	return {"ok": true, "item_id": item_id, "why": ""}
+
+
+static func _copy_tree(from: String, to: String) -> void:
+	var dir := DirAccess.open(from)
+	if dir == null:
+		return
+	for d: String in dir.get_directories():
+		DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(to.path_join(d)))
+		_copy_tree(from.path_join(d), to.path_join(d))
+	for f: String in dir.get_files():
+		var bytes := FileAccess.get_file_as_bytes(from.path_join(f))
+		var out := FileAccess.open(to.path_join(f), FileAccess.WRITE)
+		if out != null:
+			out.store_buffer(bytes)
+
+
+static func _remove_tree(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	for d: String in dir.get_directories():
+		_remove_tree(path.path_join(d))
+	for f: String in dir.get_files():
+		dir.remove(f)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

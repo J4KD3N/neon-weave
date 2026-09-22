@@ -97,4 +97,6 @@ Run the game: the boot screen lists every kind, every entry with its source, loa
 
 ## Steam Workshop (M4)
 
+Since S58: `godot --headless --path . -s tools/workshop_upload.gd -- --mod=<folder> [--title=..] [--description=..] [--item=<id>]` validates the folder and publishes it; with GodotSteam and a running client it creates or updates the item, without them it publishes to `user://workshop_null/<id>/`, which the game loads as a mod on the next start. Installed (subscribed) items are mod roots. `steam/CHECKLIST.md` step 10 is the live check.
+
 Workshop items will be mod folders uploaded as-is: `mod.json` becomes the item's metadata, `content/` its payload, and the game will scan the Workshop download directory as a fourth root behind `mods/` beside the executable. Nothing in the format changes; the validator is what the upload tool will run first.

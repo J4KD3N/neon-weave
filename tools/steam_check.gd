@@ -1,0 +1,201 @@
+## Steam readiness (S58, D-113):
+##
+##   godot --headless --path . -s tools/steam_check.gd [-- --out=steam/READINESS.md] [--strict]
+##
+## What the Steam integration can prove here and what still needs a live
+## client and an app id: the extension, the config, the achievement names
+## for Steamworks, the cloud files and a quota, the Steam Input template
+## against every pad binding, the depot ids, the demo launch option, the
+## installed Workshop items. Writes the report as Markdown; `--strict`
+## exits 1 while a blocker stands.
+class_name SteamCheck
+extends SceneTree
+
+const INPUT_TEMPLATE := "res://steam/steam_input_template.vdf"
+const APP_BUILD := "res://steam/app_build.vdf"
+## JoyButton -> the xinput name Steam Input's template binds.
+const XINPUT: Dictionary = {
+	JOY_BUTTON_A: "A", JOY_BUTTON_B: "B", JOY_BUTTON_X: "X", JOY_BUTTON_Y: "Y",
+	JOY_BUTTON_LEFT_SHOULDER: "shoulder_left", JOY_BUTTON_RIGHT_SHOULDER: "shoulder_right",
+	JOY_BUTTON_START: "start", JOY_BUTTON_BACK: "select",
+	JOY_BUTTON_DPAD_UP: "dpad_up", JOY_BUTTON_DPAD_DOWN: "dpad_down", JOY_BUTTON_DPAD_LEFT: "dpad_left", JOY_BUTTON_DPAD_RIGHT: "dpad_right",
+}
+const XINPUT_AXES: Dictionary = {JOY_AXIS_TRIGGER_LEFT: "trigger_left", JOY_AXIS_TRIGGER_RIGHT: "trigger_right"}
+
+
+func _init() -> void:
+	var out_path := "steam/READINESS.md"
+	var strict := false
+	for arg: String in OS.get_cmdline_user_args():
+		if arg.begins_with("--out="):
+			out_path = arg.get_slice("=", 1)
+		elif arg == "--strict":
+			strict = true
+	var registry := ContentRegistry.new()
+	registry.load_from(ContentRegistry.BASE_ROOT, [])
+	var result := report(registry, NullPlatformBackend.new())
+	registry.free()
+	var file := FileAccess.open(out_path, FileAccess.WRITE)
+	if file != null:
+		file.store_string("\n".join(result["lines"]) + "\n")
+		file.close()
+	for b: String in result["blockers"]:
+		print("steam check: blocker: " + b)
+	print("steam check: %s, %d blockers, %d notes -> %s" % ["ready" if result["ready"] else "not ready", Array(result["blockers"]).size(), Array(result["notes"]).size(), out_path])
+	quit(1 if strict and not bool(result["ready"]) else 0)
+
+
+## The xinput names the template binds ("A", "dpad_up", "trigger_left", ...).
+static func template_bindings(path: String = INPUT_TEMPLATE) -> Array[String]:
+	var out: Array[String] = []
+	if not FileAccess.file_exists(path):
+		return out
+	var re := RegEx.new()
+	re.compile("xinput_button ([A-Za-z_]+)")
+	for m: RegExMatch in re.search_all(FileAccess.get_file_as_string(path)):
+		var name := m.get_string(1)
+		if not out.has(name):
+			out.append(name)
+	out.sort()
+	return out
+
+
+## Every pad binding the game has that the template does not: [{action, name}].
+static func template_gaps(path: String = INPUT_TEMPLATE) -> Array[Dictionary]:
+	var bound := template_bindings(path)
+	var gaps: Array[Dictionary] = []
+	for action: String in InputActions.BINDINGS:
+		var spec: Dictionary = InputActions.BINDINGS[action]
+		for button: int in spec.get("buttons", []):
+			var name := String(XINPUT.get(button, ""))
+			if not name.is_empty() and not bound.has(name):
+				gaps.append({"action": action, "name": name})
+		for axis_spec: Array in spec.get("axes", []):
+			var name := String(XINPUT_AXES.get(int(axis_spec[0]), ""))
+			if not name.is_empty() and not bound.has(name):
+				gaps.append({"action": action, "name": name})
+	return gaps
+
+
+## The depot and app ids app_build.vdf names, in order; zeros are unfilled.
+static func build_ids(path: String = APP_BUILD) -> Dictionary:
+	var out := {"app_id": 0, "depots": []}
+	if not FileAccess.file_exists(path):
+		return out
+	var text := FileAccess.get_file_as_string(path)
+	var app := RegEx.new()
+	app.compile("\"AppID\"\\s+\"(\\d+)\"")
+	var m := app.search(text)
+	if m != null:
+		out["app_id"] = int(m.get_string(1))
+	var depot := RegEx.new()
+	depot.compile("\"(\\d+)\"\\s*//")
+	var depots: Array = []
+	for d: RegExMatch in depot.search_all(text):
+		depots.append(int(d.get_string(1)))
+	out["depots"] = depots
+	return out
+
+
+## The files the game syncs: the slots, the autosaves, their thumbnails.
+static func cloud_files() -> Array[String]:
+	var names: Array[String] = []
+	for n: int in range(1, SaveSystem.SLOTS + 1):
+		names.append(SaveSystem.slot_name(n) + ".json")
+		names.append(SaveSystem.slot_name(n) + ".png")
+	for age: int in SaveSystem.AUTOSAVE_KEEP:
+		names.append(SaveSystem.autosave_name(age) + ".json")
+		names.append(SaveSystem.autosave_name(age) + ".png")
+	return names
+
+
+static func report(registry: ContentRegistry, backend: PlatformBackend) -> Dictionary:
+	var lines: PackedStringArray = []
+	var blockers: PackedStringArray = []
+	var notes: PackedStringArray = []
+	var config := PlatformService.load_steam_config()
+	var has_extension := Engine.has_singleton("Steam")
+	var app_id := int(config.get("app_id", 0))
+	var demo_app_id := int(config.get("demo_app_id", 0))
+	lines.append("# Steam readiness")
+	lines.append("")
+	lines.append("Generated by `tools/steam_check.gd` (S58). What the integration proves without a client, and what the live verification in `steam/CHECKLIST.md` still needs. `--strict` exits 1 while a blocker stands.")
+	lines.append("")
+	lines.append("## Client and config")
+	lines.append("")
+	lines.append("| Check | State |")
+	lines.append("|---|---|")
+	lines.append("| GodotSteam extension (`Steam` singleton) | %s |" % ("present" if has_extension else "absent: `addons/godotsteam/` is not in this checkout"))
+	if not has_extension:
+		blockers.append("GodotSteam is not installed here (addons/godotsteam/)")
+	lines.append("| steam/steam.json app_id | %s |" % (str(app_id) if app_id > 0 else "0: unset"))
+	if app_id <= 0:
+		blockers.append("steam/steam.json app_id is 0")
+	lines.append("| steam/steam.json demo_app_id | %s |" % (str(demo_app_id) if demo_app_id > 0 else "0: unset"))
+	if demo_app_id <= 0:
+		notes.append("demo_app_id is 0: the demo depot needs its own app")
+	lines.append("| demo flag | %s |" % ("true: this build is the demo" if bool(config.get("demo", false)) else "false: the full game"))
+	lines.append("| backend picked here | %s |" % backend.backend_name())
+	lines.append("")
+	lines.append("## Achievements (define these names in Steamworks)")
+	lines.append("")
+	lines.append("| Steam API name | Content id | Name |")
+	lines.append("|---|---|---|")
+	var seen: Dictionary = {}
+	for a: Dictionary in registry.get_all("achievements"):
+		var sid := String(a.get("steam_id", ""))
+		lines.append("| `%s` | %s | %s |" % [sid, a["id"], a.get("name", "?")])
+		if seen.has(sid):
+			blockers.append("steam_id %s is used twice" % sid)
+		seen[sid] = true
+	lines.append("")
+	lines.append("%d achievements. Unlocking live is the checklist's step 5; here they unlock in the null backend only." % registry.get_all("achievements").size())
+	lines.append("")
+	lines.append("## Cloud")
+	lines.append("")
+	var files := cloud_files()
+	lines.append("Files the game writes through the Remote Storage API: %s (%d). Set the quota to at least 16 MB for %d files; thumbnails are 320×180 PNGs, saves a few hundred KB." % [", ".join(files), files.size(), files.size()])
+	lines.append("")
+	lines.append("## Steam Input")
+	lines.append("")
+	var gaps := template_gaps()
+	lines.append("Template binds: %s." % ", ".join(template_bindings()))
+	if gaps.is_empty():
+		lines.append("Every pad binding in `InputActions.BINDINGS` has a binding in `steam/steam_input_template.vdf`.")
+	else:
+		for g: Dictionary in gaps:
+			lines.append("- missing: %s (%s)" % [g["name"], g["action"]])
+			blockers.append("Steam Input template lacks %s for %s" % [g["name"], g["action"]])
+	lines.append("")
+	lines.append("## Depots and launch")
+	lines.append("")
+	var ids := build_ids()
+	var depots: Array = ids["depots"]
+	var zero_depots := 0
+	for d: Variant in depots:
+		if int(d) == 0:
+			zero_depots += 1
+	lines.append("app_build.vdf: AppID %s, depots %s." % ["unset" if int(ids["app_id"]) == 0 else str(ids["app_id"]), str(depots)])
+	if int(ids["app_id"]) == 0 or zero_depots > 0:
+		blockers.append("steam/app_build.vdf still has %d unfilled ids" % (zero_depots + (1 if int(ids["app_id"]) == 0 else 0)))
+	lines.append("The demo app's launch option must pass `--demo`; the full game's passes nothing. Both take `--deck` and `--perf` for testing.")
+	lines.append("")
+	lines.append("## Workshop")
+	lines.append("")
+	var items := backend.workshop_items()
+	lines.append("Installed items on this backend: %d%s. `tools/workshop_upload.gd -- --mod=<folder>` validates and publishes; the null backend publishes to `user://workshop_null/`." % [items.size(), "" if items.is_empty() else " (" + ", ".join(items) + ")"])
+	lines.append("")
+	lines.append("## Verdict")
+	lines.append("")
+	if blockers.is_empty():
+		lines.append("Ready for the live checklist.")
+	else:
+		lines.append("Not ready. Blockers:")
+		for b: String in blockers:
+			lines.append("- " + b)
+	if not notes.is_empty():
+		lines.append("")
+		lines.append("Notes:")
+		for n: String in notes:
+			lines.append("- " + n)
+	return {"lines": lines, "blockers": blockers, "notes": notes, "ready": blockers.is_empty()}

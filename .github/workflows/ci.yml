@@ -58,6 +58,9 @@ jobs:
       - name: "Audio status (every audio entry has a file beside its sidecar or the synth placeholder, S57)"
         run: godot --headless --path . -s tools/audio_status.gd -- --out=build/audio-status.md
 
+      - name: "Steam readiness (what the live verification still needs, S58)"
+        run: godot --headless --path . -s tools/steam_check.gd -- --out=build/steam-readiness.md
+
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0

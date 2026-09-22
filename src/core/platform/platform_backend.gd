@@ -73,3 +73,16 @@ func cloud_list() -> Array[String]:
 
 func cloud_delete(_file_name: String) -> bool:
 	return false
+
+
+# --- Workshop (S58) --------------------------------------------------------
+
+## Folders of installed Workshop items (each a mod folder with mod.json).
+func workshop_items() -> Array[String]:
+	return []
+
+
+## Publishes a mod folder as a Workshop item (`item_id` 0 creates one,
+## else updates it). {"ok": bool, "item_id": int, "why": String}.
+func workshop_publish(_folder: String, _title: String, _description: String, _item_id: int = 0) -> Dictionary:
+	return {"ok": false, "item_id": 0, "why": "no workshop on this backend"}

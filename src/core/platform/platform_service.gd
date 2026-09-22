@@ -20,6 +20,14 @@ var sync_enabled: bool = false
 func _ready() -> void:
 	backend = _pick_backend()
 	sync_enabled = backend.is_available()
+	# Installed Workshop items are mod folders (S58): the registry loaded
+	# before this autoload, so it reloads once when there are any.
+	var items := backend.workshop_items()
+	if not items.is_empty():
+		var registry := get_node_or_null("/root/Content") as ContentRegistry
+		if registry != null:
+			registry.extra_mod_roots = items
+			registry.reload()
 
 
 func _pick_backend() -> PlatformBackend:
@@ -100,11 +108,26 @@ func cloud_saves_enabled() -> bool:
 	return backend.cloud_saves_enabled()
 
 
-## Copies one local save to the cloud store. False when cloud is off.
+## Copies one local save to the cloud store, with its thumbnail when one
+## sits beside it (S58). False when cloud is off.
 func push_save(path: String) -> bool:
 	if not sync_enabled or not backend.cloud_saves_enabled() or not FileAccess.file_exists(path):
 		return false
-	return backend.cloud_write(path.get_file(), FileAccess.get_file_as_bytes(path))
+	var ok := backend.cloud_write(path.get_file(), FileAccess.get_file_as_bytes(path))
+	var thumb := SaveSystem.thumbnail_path(path)
+	if ok and FileAccess.file_exists(thumb):
+		backend.cloud_write(thumb.get_file(), FileAccess.get_file_as_bytes(thumb))
+	return ok
+
+
+# --- Workshop (S58) ---------------------------------------------------------
+
+func workshop_items() -> Array[String]:
+	return backend.workshop_items()
+
+
+func workshop_publish(folder: String, title: String, description: String, item_id: int = 0) -> Dictionary:
+	return await backend.workshop_publish(folder, title, description, item_id)
 
 
 ## Pulls every cloud file that is missing locally into `dir`. Returns the
