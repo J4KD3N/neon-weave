@@ -86,6 +86,8 @@ var pending_victory_flag: String = ""
 var pending_victory_flags: Array[String] = [] # every flag a victory sets (S41: one or many)
 ## `-- --demo` turns the demo boundary on regardless of `rules/demo.enabled` (S39).
 var demo_forced: bool = false
+## The playtest log when launched with `-- --playtest` (S47, D-102); null otherwise.
+var playtest: PlaytestLog = null
 var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the world
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
@@ -211,6 +213,9 @@ func _ready() -> void:
 			_screenshot_path = arg.get_slice("=", 1)
 		if arg == "--demo":
 			demo_forced = true # the Steam demo build: the boundary panel shows even when rules/demo is off
+		elif arg == "--playtest": # the playtest log (S47): one JSON line per event under user://playtest
+			playtest = PlaytestLog.new()
+			playtest.start()
 		elif arg == "--journal":
 			open_journal()
 		elif arg.begins_with("--shard="):
@@ -297,6 +302,8 @@ func enter_shard(template_id: String, seed_value: int, depth: int = 0, extras: A
 		push_warning("shard %s: %s" % [entry.get("id"), err])
 	if _enter(entry):
 		run.begin(String(entry["id"]), seed_value)
+		if playtest != null:
+			playtest.map(self)
 		autosave()
 		banter("enter_shard")
 	return entry
@@ -335,6 +342,8 @@ func enter_map(id: String) -> bool:
 	map_id = id # before _enter: door and trigger flags are keyed by map id
 	if _enter(entry):
 		run.begin("", 0)
+		if playtest != null:
+			playtest.map(self)
 		if id == home_map:
 			heal_party(bastion.heal_fraction())
 	else:
@@ -727,6 +736,10 @@ func talk_to(companion_id: String) -> bool:
 func choose(index: int) -> bool:
 	if not in_dialogue():
 		return false
+	if playtest != null:
+		var options := dialogue.available_choices()
+		if index >= 0 and index < options.size():
+			playtest.choice(String(dialogue.dialogue.get("id", "")), dialogue.node_id, String(Dictionary(options[index]).get("text", "")))
 	if not dialogue.choose(index):
 		return false
 	var last: Dictionary = dialogue.applied[dialogue.applied.size() - 1] if not dialogue.applied.is_empty() else {}
@@ -1092,6 +1105,8 @@ func extract() -> bool:
 	var take := run.take()
 	var kills := run.kills
 	_bank(take, true)
+	if playtest != null:
+		playtest.run_end(self, "extracted", take)
 	run.clear()
 	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
 	play_event("explore.extract")
@@ -1192,6 +1207,8 @@ func start_combat(first_strike: bool) -> void:
 
 func _on_combat_ended(result: String) -> void:
 	clear_summons()
+	if playtest != null:
+		playtest.fight(self, result)
 	if result == "victory":
 		# Mortal mode: the dead stay dead. Companions leave the roster with a
 		# `<id>_dead` flag their quests can read; a dead leader is a wipe.
@@ -1237,6 +1254,8 @@ func _on_combat_ended(result: String) -> void:
 	mode = "defeated"
 	pending_victory_flag = ""
 	pending_victory_flags = []
+	if playtest != null:
+		playtest.run_end(self, "wiped", run.haul.duplicate())
 	pending_trigger_flag = "" # the fight was lost: its trigger stays live
 	if run.in_shard:
 		ledger.runs_wiped += 1
@@ -3582,6 +3601,8 @@ func show_ending() -> bool:
 		return false
 	narrative.set_flag("ending_%s" % String(ending["id"]), true)
 	narrative.set_flag("ending_seen", true)
+	if playtest != null:
+		playtest.ending(String(ending["id"]))
 	var credits: Array[String] = []
 	credits.assign(registry.get_entry("rules", "credits").get("lines", []))
 	ending_menu.show_text(EndingMenu.render(ending, Endings.fates(registry, ending, narrative), demo_stats(), Endings.modifiers(ending, dialogue_ctx()), credits))

@@ -34,3 +34,6 @@ Written at the close of M3 (S46, 2026-09-21). M3 made the game content complete:
 - **Content is complete; M4 does not add beats.** Writing lands as line replacements through the same data; the reactivity test and the validator keep the criteria met.
 - **Placeholders ship until replaced**, with the title-screen note, as in every build since `v0.2.0-demo`.
 - **The campaign test is the release gate**: no tag without it green on every path in both modes, at every difficulty once S50 lands.
+
+## Progress
+- S47 First external playtest — kit ready, playtest pending people: `-- --playtest` writes a log of what the harness measures (maps, fights, runs, choices, the ending); `tools/playtest_report.gd` turns a folder of logs into the triage table beside the harness bands; `docs/playtest.md` has the script, the questions and the triage template with owners. The harness bands move when two people have played. D-102.
