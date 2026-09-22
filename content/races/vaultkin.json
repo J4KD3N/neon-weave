@@ -6,6 +6,7 @@
   "stat_mods": { "hp": 3, "move": -1, "evasion": 0, "initiative": -1 },
   "faction_lean": "ashfound",
   "overlay": { "kind": "marks", "color": "#c9b28a" },
+  "art": { "placeholder": "rig" },
   "playable": true,
   "milestone": "M2"
 }

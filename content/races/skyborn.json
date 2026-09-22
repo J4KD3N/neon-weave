@@ -6,5 +6,6 @@
   "stat_mods": { "hp": -2, "move": 1, "evasion": 5 },
   "faction_lean": "lattice",
   "overlay": { "kind": "sky", "color": "#dfe8ff" },
+  "art": { "placeholder": "rig" },
   "milestone": "M3"
 }

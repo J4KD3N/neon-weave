@@ -6,5 +6,6 @@
   "stat_mods": { "hp": -2, "evasion": 5 },
   "faction_lean": "",
   "overlay": { "kind": "echo", "color": "#9ad8ff" },
+  "art": { "placeholder": "rig" },
   "milestone": "M3"
 }

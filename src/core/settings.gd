@@ -20,11 +20,13 @@ var music_db: float = 0.0
 var sfx_db: float = 0.0
 var palette: String = "normal"
 var locale: String = Loc.DEFAULT
+var lighting: bool = true
+var screen_fx: String = "glow"
 var load_error: String = ""
 
 
 func to_dict() -> Dictionary:
-	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette, "locale": locale}
+	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette, "locale": locale, "lighting": lighting, "screen_fx": screen_fx}
 
 
 static func from_dict(d: Dictionary) -> Settings:
@@ -40,6 +42,9 @@ static func from_dict(d: Dictionary) -> Settings:
 	var p := String(d.get("palette", "normal"))
 	s.palette = p if ColorFilter.MODES.has(p) else "normal"
 	s.locale = String(d.get("locale", Loc.DEFAULT))
+	s.lighting = bool(d.get("lighting", true))
+	var fx := String(d.get("screen_fx", "glow"))
+	s.screen_fx = fx if ScreenFx.MODES.has(fx) else "glow"
 	return s
 
 
@@ -82,6 +87,7 @@ func apply() -> void:
 	Rumble.enabled = rumble
 	UiScale.text_scale = text_scale
 	locale = Loc.set_locale(locale)
+	LightingRig.enabled = lighting
 
 
 func volume_percent() -> int:
@@ -110,6 +116,10 @@ func step_sfx(direction: int) -> void:
 
 func cycle_palette(direction: int) -> void:
 	palette = ColorFilter.cycle(palette, direction)
+
+
+func cycle_screen_fx(direction: int) -> void:
+	screen_fx = ScreenFx.cycle(screen_fx, direction)
 
 
 func cycle_locale(direction: int) -> void:

@@ -1,0 +1,9 @@
+{
+  "name": "Lighting",
+  "summary": "The lighting pass (S56): the world is dimmed to `ambient` (a biome palette may name its own `ambient` role), every tile whose art names a `glow` palette role gets a point light of that colour, up to `max_lights` per map, and one light walks with the leader.",
+  "ambient": "#8c85a3",
+  "glow_energy": 0.9,
+  "glow_radius": 96,
+  "max_lights": 48,
+  "party_light": { "energy": 0.7, "radius": 140 }
+}

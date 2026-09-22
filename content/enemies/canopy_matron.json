@@ -9,5 +9,5 @@
   "awareness": 6,
   "xp": 34,
   "loot": { "salvage": [6, 10], "aether": [3, 5], "cipher_chance": 0.5 },
-  "art": { "shape": "capsule", "color": "#ff6bd6" }
+  "art": { "placeholder": "rig", "shape": "capsule", "color": "#ff6bd6" }
 }

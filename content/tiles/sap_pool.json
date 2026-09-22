@@ -6,5 +6,5 @@
   "walkable": true,
   "blocks_sight": false,
   "surface": "mana_pool",
-  "art": { "shape": "floor", "fill": "neon_arcane", "edge": "floor_edge", "pattern": "ripple" }
+  "art": { "shape": "floor", "fill": "neon_arcane", "edge": "floor_edge", "pattern": "ripple", "glow": "neon_arcane" }
 }
