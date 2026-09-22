@@ -256,6 +256,13 @@ func _ready() -> void:
 			open_journal()
 		elif arg == "--perf": # fps and frame time on the status line, for a Deck in hand (S53)
 			perf_hud = true
+		elif arg.begins_with("--play="): # audition an audio entry in place (S57)
+			if audio != null:
+				var id := arg.get_slice("=", 1)
+				if not audio.play(id):
+					push_warning("--play: no audio entry '%s'" % id)
+				else:
+					print("--play %s: %s" % [id, String(audio.sources.get(id, "?"))])
 		elif arg.begins_with("--shard="):
 			enter_shard(selected_shard, int(arg.get_slice("=", 1)))
 		elif arg == "--creator":
@@ -3115,14 +3122,23 @@ func capture_rebind(event: InputEvent) -> bool:
 func refresh_music() -> void:
 	if audio == null:
 		return
+	var act := act_number()
 	if in_title():
-		audio.set_state("title")
+		audio.set_state("title", "", act)
 	elif mode == "combat":
-		audio.set_state("combat")
+		audio.set_state("combat", "", act, "boss" if boss_engaged() else "")
 	elif map_id == home_map and not map_entry.has("generation"):
-		audio.set_state("bastion")
+		audio.set_state("bastion", "", act)
 	else:
-		audio.set_state("explore", map_data.biome_id if map_data != null else "")
+		audio.set_state("explore", map_data.biome_id if map_data != null else "", act)
+
+
+## A boss is in the fight (the music's "boss" variant, S57).
+func boss_engaged() -> bool:
+	for e: EnemyActor in engaged_enemies():
+		if String(e.tier) == "boss":
+			return true
+	return false
 
 
 ## The footstep sound of a cell: the tile's own `sound`, else the default.
