@@ -20,10 +20,12 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 		var c := registry.get_entry("companions", id)
 		if c.is_empty():
 			continue
-		members.append({"id": id, "name": String(c.get("short_name", c.get("name", id))), "race": String(c.get("race", "")), "class": String(c.get("class", "")), "companion": true})
+		members.append({"id": id, "name": Loc.text(c, "short_name", String(c.get("name", id))), "race": String(c.get("race", "")), "class": String(c.get("class", "")), "companion": true})
 	var specs: Array[Dictionary] = []
 	for i: int in members.size():
 		var data: Dictionary = Dictionary(members[i]).duplicate()
+		if data.has("name") and not bool(data.get("companion", false)):
+			data["name"] = Loc.any(String(data["name"])) # preset members (S55)
 		var extras: Dictionary = {}
 		var appearance: Dictionary = {}
 		if i == 0 and not protagonist.is_empty():

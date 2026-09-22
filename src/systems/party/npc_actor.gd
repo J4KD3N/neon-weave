@@ -13,7 +13,7 @@ func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i, color: Color, sh
 	entry = p_entry
 	cell = p_cell
 	name = "npc_%s" % p_id
-	build_visuals(String(entry.get("short_name", entry.get("name", p_id))), color, "capsule", overlay, sheet)
+	build_visuals(Loc.text(entry, "short_name", String(entry.get("name", p_id))), color, "capsule", overlay, sheet)
 
 
 ## A Shard merchant (`merchants` content kind): talking opens the stock, not a dialogue.
@@ -25,7 +25,7 @@ func setup_merchant(p_id: String, p_entry: Dictionary, p_cell: Vector2i, color: 
 	entry = p_entry
 	cell = p_cell
 	name = "merchant_%s" % p_id
-	build_visuals(String(entry.get("name", p_id)), color, "capsule", {}, null)
+	build_visuals(Loc.text(entry, "name", p_id), color, "capsule", {}, null)
 
 
 func is_merchant() -> bool:
@@ -41,7 +41,7 @@ func setup_npc(p_id: String, p_entry: Dictionary, p_cell: Vector2i, color: Color
 	entry = p_entry
 	cell = p_cell
 	name = "npc_%s" % p_id
-	build_visuals(String(entry.get("short_name", entry.get("name", p_id))), color, "capsule", {}, null)
+	build_visuals(Loc.text(entry, "short_name", String(entry.get("name", p_id))), color, "capsule", {}, null)
 
 
 func is_story_npc() -> bool:

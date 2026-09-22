@@ -130,15 +130,15 @@ func _out_of_reach_reason(actor: Combatant, target: Combatant) -> String:
 	for id: String in actor.abilities:
 		var why := state.can_use(actor, id, target.cell)
 		if not why.is_empty():
-			reasons.append("%s %s" % [_ability_name(id), why])
+			reasons.append("%s %s" % [_ability_name(id), Loc.t(why)])
 	if reasons.is_empty():
-		return "Nothing can target %s" % target.display_name
-	return "Cannot reach %s: %s" % [target.display_name, ", ".join(reasons)]
+		return Loc.t("Nothing can target %s") % target.display_name
+	return Loc.t("Cannot reach %s: %s") % [target.display_name, ", ".join(reasons)]
 
 
 func _ability_name(id: String) -> String:
 	var ability: Dictionary = state.abilities.get(id, {})
-	return String(ability.get("name", id))
+	return Loc.text(ability, "name", id)
 
 
 ## Mouse over `cell` during the player turn: path preview for a move, hit
@@ -163,14 +163,14 @@ func hover(cell: Vector2i) -> void:
 		hud.set_hint(describe_preview(p, target), CombatHud.HINT_WARN if not String(p["why"]).is_empty() else CombatHud.HINT_PREVIEW)
 		return
 	if target != null and target != actor:
-		var swap := "click to swap" if state.switchable().has(target) else ("has acted" if state.has_acted(target) else "not in this turn group")
-		hud.set_hint("%s: %s" % [target.display_name, swap], CombatHud.HINT_PREVIEW)
+		var swap := Loc.t("click to swap") if state.switchable().has(target) else (Loc.t("has acted") if state.has_acted(target) else Loc.t("not in this turn group"))
+		hud.set_hint(Loc.t("%s: %s") % [target.display_name, swap], CombatHud.HINT_PREVIEW)
 		return
 	if selected_ability.is_empty():
 		var path := state.move_path(actor, cell)
 		if not path.is_empty():
 			highlighter.set_layer("c_path", path, COLOR_PATH)
-			hud.set_hint("Move %d → %d Move left" % [path.size(), actor.move_left - path.size()], CombatHud.HINT_PREVIEW)
+			hud.set_hint(Loc.t("Move %d → %d Move left") % [path.size(), actor.move_left - path.size()], CombatHud.HINT_PREVIEW)
 			return
 	if world.map_data.is_walkable(cell):
 		highlighter.set_layer("d_hover", [cell], COLOR_HOVER)
@@ -179,20 +179,20 @@ func hover(cell: Vector2i) -> void:
 
 ## "Strike → Scav: 85% to hit, 3–5 damage (flanked)" or the refusal.
 static func describe_preview(p: Dictionary, target: Combatant) -> String:
-	var name := String(p.get("name", p.get("ability", "?")))
+	var name := Loc.any(String(p.get("name", p.get("ability", "?"))))
 	if int(p.get("heal", 0)) > 0:
-		return "%s: vent Heat, +%d HP" % [name, int(p["heal"])]
+		return Loc.t("%s: vent Heat, +%d HP") % [name, int(p["heal"])]
 	var why := String(p.get("why", ""))
 	if not why.is_empty() and int(p.get("chance", 0)) == 0:
-		return "%s → %s: %s" % [name, target.display_name, why]
+		return Loc.t("%s → %s: %s") % [name, target.display_name, why]
 	var tags: PackedStringArray = p.get("tags", PackedStringArray())
-	var tag_text := "" if tags.is_empty() else " (%s)" % ", ".join(tags)
+	var tag_text := "" if tags.is_empty() else Loc.t(" (%s)") % ", ".join(tags)
 	var dmg := "%d" % int(p["max"]) if int(p["min"]) == int(p["max"]) else "%d–%d" % [int(p["min"]), int(p["max"])]
-	var s := "%s → %s: %d%% to hit, %s damage%s" % [name, target.display_name, int(p["chance"]), dmg, tag_text]
+	var s := Loc.t("%s → %s: %d%% to hit, %s damage%s") % [name, target.display_name, int(p["chance"]), dmg, tag_text]
 	if bool(p.get("kills", false)):
-		s += " · lethal"
+		s += Loc.t(" · lethal")
 	if not why.is_empty():
-		s += " · %s" % why
+		s += Loc.t(" · %s") % why
 	return s
 
 
@@ -205,9 +205,9 @@ func default_hint() -> String:
 		var names: PackedStringArray = []
 		for c: Combatant in others:
 			names.append(c.display_name)
-		swap = " · Tab or click swaps to %s" % ", ".join(names)
-	var undo := " · Esc undoes the move" if state.can_undo_move(state.current()) else ""
-	return "Click a teal cell to move · click an enemy to attack, or [1-4] then a target · Space ends the turn%s%s" % [swap, undo]
+		swap = Loc.t(" · Tab or click swaps to %s") % ", ".join(names)
+	var undo := Loc.t(" · Esc undoes the move") if state.can_undo_move(state.current()) else ""
+	return Loc.t("Click a teal cell to move · click an enemy to attack, or [1-4] then a target · Space ends the turn%s%s") % [swap, undo]
 
 
 func switch_to(id: String) -> bool:
@@ -511,7 +511,7 @@ func _run_enemy_turns() -> void:
 		var actor := state.current()
 		_pan_to(actor.id)
 		var action := EnemyBrain.next_action(state, actor)
-		hud.set_turn_text("Round %d — %s %s" % [state.round_number, actor.display_name, "winds up: the heavy blow comes next round" if actor.tier == "boss" and state.round_number <= state.rules.boss_telegraph_round else "acts"])
+		hud.set_turn_text(Loc.t("Round %d — %s %s") % [state.round_number, actor.display_name, Loc.t("winds up: the heavy blow comes next round") if actor.tier == "boss" and state.round_number <= state.rules.boss_telegraph_round else "acts"])
 		match String(action["type"]):
 			"move":
 				var node: WorldActor = actors[actor.id]
@@ -560,11 +560,11 @@ func _refresh_player_ui() -> void:
 	highlighter.set_layer("b_targets", targets, COLOR_TARGET)
 	var res_text := ""
 	if actor.has_resource():
-		res_text = "  %s %d/%d" % [actor.resource_def.get("name", actor.resource_id), actor.resource, actor.resource_max()]
-	hud.set_turn_text("Round %d — %s  |  AP %d/%d  Move %d/%d%s" % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max, res_text])
+		res_text = "  %s %d/%d" % [Loc.any(String(actor.resource_def.get("name", actor.resource_id))), actor.resource, actor.resource_max()]
+	hud.set_turn_text(Loc.t("Round %d — %s  |  AP %d/%d  Move %d/%d%s") % [state.round_number, actor.display_name, actor.ap, actor.ap_max, actor.move_left, actor.move_max, res_text])
 	var order: PackedStringArray = []
 	if not state.switchable().is_empty():
-		order.append("⇄ Tab / Select swaps")
+		order.append(Loc.t("⇄ Tab / Select swaps"))
 	for i: int in state.order.size():
 		var c := state.order[i]
 		var mark := "   "
@@ -574,20 +574,20 @@ func _refresh_player_ui() -> void:
 			mark = "✓ "
 		elif state.group.has(c) and c.is_active():
 			mark = "⇄ "
-		var hp := "%d/%d" % [c.hp, c.max_hp] if c.is_active() else ("down" if c.downed else "dead")
+		var hp := "%d/%d" % [c.hp, c.max_hp] if c.is_active() else (Loc.t("down") if c.downed else Loc.t("dead"))
 		var res := ""
 		if c.has_resource() and c.is_active():
-			res = " · %s %d" % [c.resource_def.get("name", c.resource_id), c.resource]
+			res = " · %s %d" % [Loc.any(String(c.resource_def.get("name", c.resource_id))), c.resource]
 		if c.hidden and c.is_active():
-			res += " · hidden"
+			res += Loc.t(" · hidden")
 		if c.is_silenced():
-			res += " · silenced %d" % int(c.statuses["silenced"])
+			res += Loc.t(" · silenced %d") % int(c.statuses["silenced"])
 		order.append("%s%s (%s)%s" % [mark, c.display_name, hp, res])
 	hud.set_order_text("\n".join(order))
 	var abilities: Array[Dictionary] = []
 	for id: String in actor.abilities:
 		var ability: Dictionary = state.abilities.get(id, {})
-		abilities.append({"id": id, "name": ability.get("name", id), "ap": int(ability.get("ap", 1)), "usable": actor.ap >= int(ability.get("ap", 1))})
+		abilities.append({"id": id, "name": Loc.text(ability, "name", id), "ap": int(ability.get("ap", 1)), "usable": actor.ap >= int(ability.get("ap", 1))})
 	hud.set_abilities(abilities, selected_ability)
 	hud.set_hint(default_hint())
 	hud.set_log(state.history)
@@ -601,10 +601,10 @@ func _finish() -> void:
 	if world.camera != null and world.party.leader() != null:
 		world.camera.target = world.party.leader()
 	if state.result == "victory":
-		hud.show_message("Victory")
+		hud.show_message(Loc.t("Victory"))
 		hud.set_hint("")
 	else:
-		hud.show_message("The party is wiped out\n[R] restart")
+		hud.show_message(Loc.t("The party is wiped out\n[R] restart"))
 		hud.set_hint("")
 	for id: String in actors:
 		var node: WorldActor = actors[id]

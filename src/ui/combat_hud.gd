@@ -47,7 +47,7 @@ func _ready() -> void:
 	bar.add_theme_constant_override("separation", 12)
 	add_child(bar)
 	end_button = Button.new()
-	end_button.text = "End Turn  [Space]"
+	end_button.text = Loc.t("End Turn  [Space]")
 	end_button.custom_minimum_size = Vector2(200, 48)
 	end_button.focus_mode = Control.FOCUS_NONE # Tab swaps members, never moves focus
 	end_button.pressed.connect(func() -> void: end_turn_pressed.emit())
@@ -74,18 +74,19 @@ func set_log(lines: Array[String], keep: int = 12) -> void:
 	var shown: PackedStringArray = []
 	for i: int in range(start, lines.size()):
 		shown.append(lines[i])
-	log_label.text = "\n".join(shown)
+	log_label.text = Loc.t("\n").join(shown)
 
 
 ## `abilities`: [{"id", "name", "ap", "usable": bool}]
 func set_abilities(abilities: Array[Dictionary], selected: String) -> void:
+	end_button.text = Loc.t("End Turn  [Space]")
 	for b: Button in _buttons:
 		b.queue_free()
 	_buttons.clear()
 	for i: int in abilities.size():
 		var a: Dictionary = abilities[i]
 		var b := Button.new()
-		b.text = "[%d] %s  %dAP" % [i + 1, a.get("name", a.get("id", "?")), int(a.get("ap", 1))]
+		b.text = Loc.t("[%d] %s  %dAP") % [i + 1, a.get("name", a.get("id", "?")), int(a.get("ap", 1))]
 		b.custom_minimum_size = Vector2(220, 48)
 		b.focus_mode = Control.FOCUS_NONE
 		b.toggle_mode = true

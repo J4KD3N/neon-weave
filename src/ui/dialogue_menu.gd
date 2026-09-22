@@ -90,19 +90,19 @@ static func render(r: DialogueRunner, names: Dictionary, p_cursor: int = 0, past
 	var lines: PackedStringArray = []
 	var start := maxi(past.size() - HISTORY_LINES, 0)
 	for i: int in range(start, past.size()):
-		lines.append("  ‹ %s: %s" % [past[i].get("who", "?"), past[i].get("text", "")])
+		lines.append(Loc.t("  ‹ %s: %s") % [past[i].get("who", "?"), past[i].get("text", "")])
 	if not past.is_empty():
 		lines.append("")
-	var who := String(names.get(r.speaker(), r.speaker().capitalize()))
+	var who := String(names.get(r.speaker(), Loc.t(r.speaker().capitalize())))
 	if not r.voice().is_empty():
-		who = "%s, in %s's voice" % [who, String(names.get(r.voice(), r.voice().capitalize()))]
-	lines.append("%s: %s" % [who, r.text()])
+		who = "%s, in %s's voice" % [who, String(names.get(r.voice(), Loc.t(r.voice().capitalize())))]
+	lines.append(Loc.t("%s: %s") % [who, r.text()])
 	lines.append("")
 	var options := r.available_choices()
 	for i: int in options.size():
 		var marker := "▶ " if i == p_cursor else "   "
-		lines.append("%s[%d] %s" % [marker, i + 1, options[i].get("text", "")])
+		lines.append(Loc.t("%s[%d] %s") % [marker, i + 1, options[i].get("text", "")])
 	if r.exit_choice() >= 0:
 		lines.append("")
-		lines.append("Esc leaves (B on a pad) · ↑↓ and Enter / A choose")
+		lines.append(Loc.t("Esc leaves (B on a pad) · ↑↓ and Enter / A choose"))
 	return "\n".join(lines)

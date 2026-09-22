@@ -10,6 +10,7 @@ const PAGE_DIFFICULTY := "difficulty"
 
 var panel: PanelContainer
 var title_label: Label
+var version_label: Label
 var label: Label
 var cursor: int = 0
 var page: String = PAGE_MAIN
@@ -25,13 +26,14 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	panel.add_child(box)
 	title_label = Label.new()
-	title_label.text = "NEON WEAVE"
+	title_label.text = Loc.t("NEON WEAVE")
 	title_label.add_theme_font_size_override("font_size", 48)
 	title_label.add_theme_color_override("font_color", Color(0.71, 0.55, 1.0))
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(title_label)
 	var version := Label.new()
-	version.text = "demo v%s · placeholder art and audio, real ones in progress" % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
+	version_label = version
+	version.text = Loc.t("demo v%s · placeholder art and audio, real ones in progress") % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
 	version.add_theme_font_size_override("font_size", 15)
 	version.add_theme_color_override("font_color", Color(0.6, 0.58, 0.72))
 	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -45,6 +47,8 @@ func _ready() -> void:
 
 
 func show_rows(p_page: String, p_rows: Array[Dictionary]) -> void:
+	title_label.text = Loc.t("NEON WEAVE")
+	version_label.text = Loc.t("demo v%s · placeholder art and audio, real ones in progress") % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
 	page = p_page
 	rows = p_rows
 	cursor = 0
@@ -94,10 +98,10 @@ static func render(p_page: String, p_rows: Array[Dictionary], p_cursor: int) -> 
 	var lines: PackedStringArray = []
 	lines.append("")
 	if p_page == PAGE_DIFFICULTY:
-		lines.append("Difficulty. How hard the Shards push back; the story is the same on every one.")
+		lines.append(Loc.t("Difficulty. How hard the Shards push back; the story is the same on every one."))
 		lines.append("")
 	elif p_page == PAGE_STAKES:
-		lines.append("Death-stakes. Choose how much the dice can take from you.")
+		lines.append(Loc.t("Death-stakes. Choose how much the dice can take from you."))
 		lines.append("")
 	for i: int in p_rows.size():
 		var row: Dictionary = p_rows[i]
@@ -105,11 +109,11 @@ static func render(p_page: String, p_rows: Array[Dictionary], p_cursor: int) -> 
 		var line := "%s%s" % [marker, row.get("label", row.get("id", "?"))]
 		if not bool(row.get("enabled", true)):
 			var why := String(row.get("why", ""))
-			line += "  (%s)" % (why if not why.is_empty() else "unavailable")
+			line += Loc.t("  (%s)") % (why if not why.is_empty() else "unavailable")
 		lines.append(line)
 		var blurb := String(row.get("blurb", ""))
 		if not blurb.is_empty():
-			lines.append("      %s" % blurb)
+			lines.append(Loc.t("      %s") % blurb)
 	lines.append("")
-	lines.append("↑↓ choose · %s confirm%s" % [Glyphs.key_and_pad("Enter", Glyphs.confirm()), "" if p_page == PAGE_MAIN else " · %s back" % Glyphs.key_and_pad("Esc", Glyphs.cancel())])
+	lines.append(Loc.t("↑↓ choose · %s confirm%s") % [Glyphs.key_and_pad("Enter", Glyphs.confirm()), "" if p_page == PAGE_MAIN else Loc.t(" · %s back") % Glyphs.key_and_pad("Esc", Glyphs.cancel())])
 	return "\n".join(lines)

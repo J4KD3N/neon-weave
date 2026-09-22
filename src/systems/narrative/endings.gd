@@ -62,7 +62,7 @@ static func fates(registry: ContentRegistry, ending: Dictionary, narrative: Narr
 		var lines: Dictionary = epilogue.get(id, {})
 		var text := String(lines.get(fate_key(id, lines, narrative), ""))
 		if not text.is_empty():
-			out.append("%s: %s" % [c.get("short_name", c.get("name", id)), text])
+			out.append("%s: %s" % [Loc.text(c, "short_name", String(c.get("name", id))), Loc.any(text)])
 	return out
 
 
@@ -71,7 +71,7 @@ static func modifiers(ending: Dictionary, ctx: Dictionary) -> Array[String]:
 	var out: Array[String] = []
 	for m: Dictionary in ending.get("modifiers", []):
 		if Conditions.passes(m.get("when", {}), ctx):
-			var text := String(m.get("text", ""))
+			var text := Loc.any(String(m.get("text", "")))
 			if not text.is_empty():
 				out.append(text)
 	return out

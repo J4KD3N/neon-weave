@@ -63,7 +63,7 @@ func refresh() -> void:
 
 static func render(p_items: Array[Dictionary], p_cursor: int) -> String:
 	var lines: PackedStringArray = []
-	lines.append("SYSTEM")
+	lines.append(Loc.t("SYSTEM"))
 	lines.append("")
 	for i: int in p_items.size():
 		var item: Dictionary = p_items[i]
@@ -71,8 +71,8 @@ static func render(p_items: Array[Dictionary], p_cursor: int) -> String:
 		var line := "%s%s" % [marker, item.get("label", item.get("id", "?"))]
 		if not bool(item.get("enabled", true)):
 			var why := String(item.get("why", ""))
-			line += "  (unavailable%s)" % ("" if why.is_empty() else ": " + why)
+			line += Loc.t("  (unavailable%s)") % ("" if why.is_empty() else ": " + why)
 		lines.append(line)
 	lines.append("")
-	lines.append("↑↓ or D-pad choose · Enter or A confirm · Esc, B or Start close")
+	lines.append(Loc.t("↑↓ or D-pad choose · Enter or A confirm · Esc, B or Start close"))
 	return "\n".join(lines)

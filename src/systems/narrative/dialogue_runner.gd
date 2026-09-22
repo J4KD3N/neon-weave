@@ -48,7 +48,7 @@ func speaker() -> String:
 
 
 func text() -> String:
-	return String(current_node().get("text", ""))
+	return Loc.content("dialogue", String(dialogue.get("id", "")), "nodes.%s.text" % node_id, String(current_node().get("text", "")))
 
 
 ## A borrowed voice (S40): the companion (or "player") whose voice the
@@ -66,6 +66,7 @@ func available_choices() -> Array[Dictionary]:
 		if Conditions.passes(c.get("requires", {}), ctx):
 			var copy := c.duplicate()
 			copy["index"] = i
+			copy["text"] = Loc.content("dialogue", String(dialogue.get("id", "")), "nodes.%s.choices.%d.text" % [node_id, i], String(c.get("text", "")))
 			out.append(copy)
 	return out
 

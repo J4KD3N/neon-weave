@@ -38,7 +38,7 @@ func setup(p_id: String, p_entry: Dictionary, p_cell: Vector2i, p_stats: Diction
 	var color := Color.html(String(art.get("color", "#c94b3a")))
 	if tint_override.a > 0.0:
 		color = tint_override
-	var label := String(entry.get("name", enemy_id))
+	var label := Loc.text(entry, "name", enemy_id)
 	if tier == "elite":
 		label = "Elite " + label
 	build_visuals(label, color, String(art.get("shape", "capsule")), {}, sheet)

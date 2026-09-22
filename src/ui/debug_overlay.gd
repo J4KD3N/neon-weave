@@ -65,12 +65,12 @@ static func registry_summary(reg: ContentRegistry) -> String:
 		var ids: PackedStringArray = []
 		for entry: Dictionary in reg.get_all(kind):
 			ids.append("%s (%s)" % [entry["id"], entry["_source"]])
-		lines.append("%s [%d]: %s" % [kind, reg.count(kind), ", ".join(ids)])
-	lines.append("mods loaded: %d" % reg.loaded_mods.size())
+		lines.append(Loc.t("%s [%d]: %s") % [kind, reg.count(kind), ", ".join(ids)])
+	lines.append(Loc.t("mods loaded: %d") % reg.loaded_mods.size())
 	for mod: Dictionary in reg.loaded_mods:
-		lines.append("  %s %s (priority %d)" % [mod["id"], mod["version"], mod["priority"]])
+		lines.append(Loc.t("  %s %s (priority %d)") % [mod["id"], mod["version"], mod["priority"]])
 	if not reg.load_errors.is_empty():
-		lines.append("LOAD ERRORS:")
+		lines.append(Loc.t("LOAD ERRORS:"))
 		for err: String in reg.load_errors:
 			lines.append("  " + err)
 	return "\n".join(lines)

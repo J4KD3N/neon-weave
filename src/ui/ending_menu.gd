@@ -37,25 +37,25 @@ func close() -> void:
 ## lines from `rules/credits`.
 static func render(ending: Dictionary, fates: Array[String], stats: Dictionary, modifiers: Array[String] = [], credits: Array[String] = []) -> String:
 	var lines: PackedStringArray = []
-	lines.append(String(ending.get("name", "THE END")).to_upper())
+	lines.append(Loc.text(ending, "name", Loc.t("THE END")).to_upper())
 	lines.append("")
-	lines.append(String(ending.get("summary", "")))
+	lines.append(Loc.text(ending, "summary"))
 	for m: String in modifiers:
 		lines.append("")
 		lines.append(m)
 	lines.append("")
 	if not fates.is_empty():
-		lines.append("Afterwards:")
+		lines.append(Loc.t("Afterwards:"))
 		for f: String in fates:
-			lines.append("  %s" % f)
+			lines.append(Loc.t("  %s") % f)
 		lines.append("")
-	lines.append("Your run: party level %d · %d extractions · %d wipes · %d kills" % [int(stats.get("level", 1)), int(stats.get("runs", 0)), int(stats.get("wipes", 0)), int(stats.get("kills", 0))])
+	lines.append(Loc.t("Your run: party level %d · %d extractions · %d wipes · %d kills") % [int(stats.get("level", 1)), int(stats.get("runs", 0)), int(stats.get("wipes", 0)), int(stats.get("kills", 0))])
 	lines.append(String(stats.get("standing", "")))
 	if not credits.is_empty():
 		lines.append("")
-		lines.append("NEON WEAVE")
+		lines.append(Loc.t("NEON WEAVE"))
 		for c: String in credits:
 			lines.append(c)
 	lines.append("")
-	lines.append("Enter / A / Esc: the title")
+	lines.append(Loc.t("Enter / A / Esc: the title"))
 	return "\n".join(lines)

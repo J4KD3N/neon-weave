@@ -117,14 +117,14 @@ static func build_effects(registry: ContentRegistry, class_entry: Dictionary, pa
 ## Why a subclass cannot be chosen now; empty when it can.
 static func can_choose_subclass(registry: ContentRegistry, class_entry: Dictionary, level: int, build: Dictionary, sub_id: String, rules: Dictionary, respec: bool) -> String:
 	if not Array(class_entry.get("subclasses", [])).has(sub_id) or not registry.has_entry("subclasses", sub_id):
-		return "not a subclass of this class"
+		return Loc.t("not a subclass of this class")
 	if level < subclass_level(class_entry, rules):
-		return "needs level %d" % subclass_level(class_entry, rules)
+		return Loc.t("needs level %d") % subclass_level(class_entry, rules)
 	var current := String(build.get("subclass", ""))
 	if current == sub_id:
-		return "already chosen"
+		return Loc.t("already chosen")
 	if not current.is_empty() and not respec:
-		return "needs the Arcanum to change"
+		return Loc.t("needs the Arcanum to change")
 	return ""
 
 
@@ -137,18 +137,18 @@ static func talent_cost(registry: ContentRegistry, talent_id: String, cost_mod: 
 static func can_buy_talent(registry: ContentRegistry, level: int, build: Dictionary, talent_id: String, rules: Dictionary, aether: int, cost_mod: int = 0) -> String:
 	var talent := registry.get_entry("talents", talent_id)
 	if talent.is_empty():
-		return "unknown talent"
+		return Loc.t("unknown talent")
 	var owned: Array = build.get("talents", [])
 	if owned.has(talent_id):
-		return "already learned"
+		return Loc.t("already learned")
 	if int(talent.get("tier", 1)) > talent_tier_at(level, rules):
-		return "tier %d opens later" % int(talent.get("tier", 1))
+		return Loc.t("tier %d opens later") % int(talent.get("tier", 1))
 	for req: String in talent.get("requires", []):
 		if not owned.has(req):
 			return "needs %s" % String(registry.get_entry("talents", req).get("name", req))
 	var cost := talent_cost(registry, talent_id, cost_mod)
 	if aether < cost:
-		return "needs %d Aether" % cost
+		return Loc.t("needs %d Aether") % cost
 	return ""
 
 
@@ -182,16 +182,16 @@ static func _unlock(class_entry: Dictionary, level: int, abilities: Array[String
 ## Why a second class cannot be taken now; empty when it can (D-086).
 static func can_multiclass(registry: ContentRegistry, class_entry: Dictionary, level: int, build: Dictionary, class_id: String, rules: Dictionary, respec: bool) -> String:
 	if class_id == String(class_entry.get("id", "")):
-		return "that is the main class"
+		return Loc.t("that is the main class")
 	if not registry.has_entry("classes", class_id):
-		return "unknown class"
+		return Loc.t("unknown class")
 	if level < multiclass_level(rules):
-		return "needs level %d" % multiclass_level(rules)
+		return Loc.t("needs level %d") % multiclass_level(rules)
 	var current := String(Dictionary(build.get("multiclass", {})).get("class", ""))
 	if current == class_id:
-		return "already chosen"
+		return Loc.t("already chosen")
 	if not current.is_empty() and not respec:
-		return "needs the Arcanum to change"
+		return Loc.t("needs the Arcanum to change")
 	return ""
 
 
@@ -199,7 +199,7 @@ static func can_multiclass(registry: ContentRegistry, class_entry: Dictionary, l
 static func can_add_multiclass_level(level: int, build: Dictionary, rules: Dictionary) -> String:
 	var mc: Dictionary = build.get("multiclass", {})
 	if String(mc.get("class", "")).is_empty():
-		return "no second class yet"
+		return Loc.t("no second class yet")
 	if int(mc.get("levels", 0)) >= level - multiclass_level(rules):
-		return "every level past %d is already placed" % multiclass_level(rules)
+		return Loc.t("every level past %d is already placed") % multiclass_level(rules)
 	return ""

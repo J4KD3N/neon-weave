@@ -49,6 +49,9 @@ jobs:
       - name: Performance budget (counts of every map and the largest Shard of every biome, S53)
         run: godot --headless --path . -s tools/perf_budget.gd -- --frames=30
 
+      - name: Locale template (every string the game shows, for translators, S55)
+        run: godot --headless --path . -s tools/extract_strings.gd -- --out=build/locale_template.json
+
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0

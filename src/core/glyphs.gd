@@ -28,26 +28,26 @@ static func _names() -> Dictionary:
 
 
 static func confirm() -> String:
-	return String(_names()["confirm"])
+	return Loc.t(String(_names()["confirm"]))
 
 
 static func cancel() -> String:
-	return String(_names()["cancel"])
+	return Loc.t(String(_names()["cancel"]))
 
 
 static func menu() -> String:
-	return String(_names()["menu"])
+	return Loc.t(String(_names()["menu"]))
 
 
 static func swap() -> String:
-	return String(_names()["swap"])
+	return Loc.t(String(_names()["swap"]))
 
 
 static func ability(index: int) -> String:
 	var list: Array = _names()["ability"]
-	return String(list[clampi(index, 0, list.size() - 1)])
+	return Loc.t(String(list[clampi(index, 0, list.size() - 1)]))
 
 
 ## "Enter / A" style pair for footers.
 static func key_and_pad(key_label: String, pad_label: String) -> String:
-	return "%s / %s" % [key_label, pad_label]
+	return "%s / %s" % [Loc.t(key_label), pad_label]

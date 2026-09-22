@@ -256,8 +256,12 @@ func test_music_and_sfx_buses_and_the_colour_palette_are_settings() -> void:
 			sections.append(section)
 		assert_false(String(r.get("hint", "")).is_empty() , "%s has a hint" % r["id"])
 	assert_eq(sections, ["Display", "Audio", "Pad", "Bindings"])
-	var text := SettingsMenu.render(rows, 4, "")
+	var music_row := 0
+	for i: int in rows.size():
+		if String(rows[i]["id"]) == "music":
+			music_row = i
+	var text := SettingsMenu.render(rows, music_row, "")
 	assert_contains(text, "Display\n")
 	assert_contains(text, "▶ Music: 100%")
 	assert_contains(text, "The music on its own.")
-	assert_false(SettingsMenu.render(rows, 4, "confirm").contains("The music on its own."), "no hint while rebinding")
+	assert_false(SettingsMenu.render(rows, music_row, "confirm").contains("The music on its own."), "no hint while rebinding")

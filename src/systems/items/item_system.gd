@@ -129,9 +129,9 @@ static func display_name(registry: ContentRegistry, inst: Dictionary) -> String:
 		if affix.is_empty():
 			continue
 		if bool(affix.get("prefix", true)):
-			prefixes.append(String(affix.get("name", id)))
+			prefixes.append(Loc.text(affix, "name", id))
 		else:
-			suffixes.append(String(affix.get("name", id)))
+			suffixes.append(Loc.text(affix, "name", id))
 	var parts: PackedStringArray = []
 	parts.append_array(prefixes)
 	parts.append(String(item.get("name", inst.get("item", "?"))))
@@ -171,7 +171,7 @@ static func equipment_mods(registry: ContentRegistry, equipment: Dictionary) -> 
 ## "+3 HP, +1 damage" or "no effect".
 static func describe_mods(m: Dictionary) -> String:
 	var parts: PackedStringArray = []
-	var labels := {"hp": "HP", "move": "move", "evasion": "evasion", "initiative": "initiative"}
+	var labels := {"hp": Loc.t("HP"), "move": Loc.t("move"), "evasion": Loc.t("evasion"), "initiative": Loc.t("initiative")}
 	var stats: Dictionary = m.get("stats", {})
 	for key: String in STAT_KEYS:
 		var v := int(stats.get(key, 0))
@@ -179,8 +179,8 @@ static func describe_mods(m: Dictionary) -> String:
 			parts.append("%+d %s" % [v, labels[key]])
 	var dmg := int(m.get("damage_bonus", 0))
 	if dmg != 0:
-		parts.append("%+d damage" % dmg)
-	return ", ".join(parts) if not parts.is_empty() else "no effect"
+		parts.append(Loc.t("%+d damage") % dmg)
+	return ", ".join(parts) if not parts.is_empty() else Loc.t("no effect")
 
 
 ## One line for menus: "Keen Strut blade (weapon, rare): +2 damage".

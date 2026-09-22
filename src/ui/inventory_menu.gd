@@ -52,7 +52,7 @@ func selected() -> Dictionary:
 
 static func render(header: String, p_rows: Array[Dictionary], p_cursor: int) -> String:
 	var lines: PackedStringArray = []
-	lines.append("THE PACK")
+	lines.append(Loc.t("THE PACK"))
 	lines.append(header)
 	lines.append("")
 	var last_kind := ""
@@ -60,14 +60,14 @@ static func render(header: String, p_rows: Array[Dictionary], p_cursor: int) -> 
 		var row: Dictionary = p_rows[i]
 		var kind := String(row.get("kind", ""))
 		if kind != last_kind:
-			lines.append({"slot": "Equipped (Enter unequips)", "item": "Pack (Enter equips)", "craft": "Workshop (Salvage)"}.get(kind, kind.capitalize()))
+			lines.append({"slot": Loc.t("Equipped (Enter unequips)"), "item": Loc.t("Pack (Enter equips)"), "craft": Loc.t("Workshop (Salvage)")}.get(kind, Loc.t(kind.capitalize())))
 			last_kind = kind
 		var marker := "▶ " if i == p_cursor else "   "
 		var line := "%s%s" % [marker, row.get("label", row.get("id", "?"))]
 		if not bool(row.get("enabled", true)):
 			var why := String(row.get("why", ""))
-			line += "  (%s)" % (why if not why.is_empty() else "unavailable")
+			line += Loc.t("  (%s)") % (why if not why.is_empty() else "unavailable")
 		lines.append(line)
 	lines.append("")
-	lines.append("←→ / D-pad member · ↑↓ choose · Enter / A confirm · Esc / B / I close")
+	lines.append(Loc.t("←→ / D-pad member · ↑↓ choose · Enter / A confirm · Esc / B / I close"))
 	return "\n".join(lines)

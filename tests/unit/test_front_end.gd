@@ -47,6 +47,8 @@ func _fresh() -> ExploreWorld:
 	w.combat_seed = 1234
 	w.ledger_path = LEDGER
 	w.saves_dir = SAVES
+	w.settings_path = SETTINGS_PATH
+	w.input_path = INPUT_PATH
 	_root().add_child(w)
 	w.combat.animate = false
 	return w
@@ -311,9 +313,9 @@ func test_settings_from_title_and_pause_menu_and_rebind_capture() -> void:
 	world._unhandled_input(_pad(JOY_BUTTON_B))
 	assert_false(world.settings_menu.visible)
 	assert_true(world.in_title(), "settings opened from the title return to it")
-	assert_true(FileAccess.file_exists(Settings.PATH))
-	assert_true(FileAccess.file_exists(InputActions.OVERRIDES_PATH))
-	assert_true(Settings.load_or_default().fullscreen, "settings persisted")
+	assert_true(FileAccess.file_exists(SETTINGS_PATH))
+	assert_true(FileAccess.file_exists(INPUT_PATH))
+	assert_true(Settings.load_or_default(SETTINGS_PATH).fullscreen, "settings persisted")
 	world.title_menu.close()
 	# From the pause menu, settings return to the game.
 	assert_true(world.open_system_menu())

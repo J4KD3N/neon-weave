@@ -19,11 +19,12 @@ var text_scale: float = 1.0
 var music_db: float = 0.0
 var sfx_db: float = 0.0
 var palette: String = "normal"
+var locale: String = Loc.DEFAULT
 var load_error: String = ""
 
 
 func to_dict() -> Dictionary:
-	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette}
+	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette, "locale": locale}
 
 
 static func from_dict(d: Dictionary) -> Settings:
@@ -38,6 +39,7 @@ static func from_dict(d: Dictionary) -> Settings:
 	s.sfx_db = clampf(float(d.get("sfx_db", 0.0)), VOLUME_MIN_DB, 0.0)
 	var p := String(d.get("palette", "normal"))
 	s.palette = p if ColorFilter.MODES.has(p) else "normal"
+	s.locale = String(d.get("locale", Loc.DEFAULT))
 	return s
 
 
@@ -79,6 +81,7 @@ func apply() -> void:
 	Glyphs.style = glyphs
 	Rumble.enabled = rumble
 	UiScale.text_scale = text_scale
+	locale = Loc.set_locale(locale)
 
 
 func volume_percent() -> int:
@@ -107,6 +110,14 @@ func step_sfx(direction: int) -> void:
 
 func cycle_palette(direction: int) -> void:
 	palette = ColorFilter.cycle(palette, direction)
+
+
+func cycle_locale(direction: int) -> void:
+	var ids := Loc.available()
+	if ids.is_empty():
+		return
+	var i := ids.find(locale)
+	locale = ids[posmod(i + direction, ids.size())]
 
 
 func cycle_glyphs(direction: int) -> void:
