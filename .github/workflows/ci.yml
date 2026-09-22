@@ -61,6 +61,9 @@ jobs:
       - name: "Steam readiness (what the live verification still needs, S58)"
         run: godot --headless --path . -s tools/steam_check.gd -- --out=build/steam-readiness.md
 
+      - name: "Apple readiness (the macOS preset, entitlements and the release workflow's sign step, S59)"
+        run: godot --headless --path . -s tools/apple_check.gd -- --out=build/apple-readiness.md --strict
+
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0

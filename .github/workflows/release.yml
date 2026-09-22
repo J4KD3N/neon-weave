@@ -35,6 +35,50 @@ jobs:
       - name: Import project
         run: godot --headless --path . --import
 
+      # macOS signing and notarization (S59, D-114): only when the five APPLE_*
+      # secrets exist. rcodesign does both on Linux; Godot is told where it is,
+      # the preset is flipped to rcodesign for this run, and the credentials go
+      # in through Godot's GODOT_MACOS_* environment overrides. Without the
+      # secrets the export is the ad-hoc build it always was.
+      - name: Sign and notarize macOS (when the Apple secrets exist)
+        env:
+          APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          RCODESIGN_VERSION: "0.29.0"
+        run: |
+          set -euo pipefail
+          missing=""
+          for s in APPLE_CERTIFICATE_P12 APPLE_CERTIFICATE_PASSWORD APPLE_API_KEY_P8 APPLE_API_KEY_ID APPLE_API_ISSUER; do
+            if [ -z "${!s:-}" ]; then missing="$missing $s"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "macOS: ad-hoc build (secrets not set:$missing)"
+            exit 0
+          fi
+          echo "macOS: signing and notarizing with rcodesign $RCODESIGN_VERSION"
+          curl -sSL -o rcodesign.tar.gz "https://github.com/indygreg/apple-platform-rs/releases/download/apple-codesign/${RCODESIGN_VERSION}/apple-codesign-${RCODESIGN_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+          tar -xzf rcodesign.tar.gz
+          sudo install -m 0755 apple-codesign-*/rcodesign /usr/local/bin/rcodesign
+          rcodesign --version
+          mkdir -p "$HOME/apple"
+          echo "$APPLE_CERTIFICATE_P12" | base64 -d > "$HOME/apple/cert.p12"
+          echo "$APPLE_API_KEY_P8" | base64 -d > "$HOME/apple/key.p8"
+          rcodesign encode-app-store-connect-api-key -o "$HOME/apple/api-key.json" "$APPLE_API_ISSUER" "$APPLE_API_KEY_ID" "$HOME/apple/key.p8"
+          mkdir -p "$HOME/.config/godot"
+          printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/macos/rcodesign = "/usr/local/bin/rcodesign"\n' > "$HOME/.config/godot/editor_settings-4.7.tres"
+          sed -i 's|^codesign/codesign=0|codesign/codesign=2|; s|^notarization/notarization=0|notarization/notarization=2|' export_presets.cfg
+          {
+            echo "GODOT_MACOS_CODESIGN_CERTIFICATE_FILE=$HOME/apple/cert.p12"
+            echo "GODOT_MACOS_CODESIGN_CERTIFICATE_PASSWORD=$APPLE_CERTIFICATE_PASSWORD"
+            echo "GODOT_MACOS_NOTARIZATION_API_UUID=$APPLE_API_ISSUER"
+            echo "GODOT_MACOS_NOTARIZATION_API_KEY=$HOME/apple/api-key.json"
+            echo "GODOT_MACOS_NOTARIZATION_API_KEY_ID=$APPLE_API_KEY_ID"
+          } >> "$GITHUB_ENV"
+
+
       - name: Unit tests
         run: |
           set -o pipefail
@@ -49,6 +93,15 @@ jobs:
           godot --headless --path . --export-release "Linux" build/linux/neon-weave.x86_64
           godot --headless --path . --export-release "macOS" build/macos/neon-weave.zip
           ls -la build/*
+
+      - name: Verify the macOS signature (when signed)
+        run: |
+          set -euo pipefail
+          if [ -z "${GODOT_MACOS_CODESIGN_CERTIFICATE_FILE:-}" ]; then echo "ad-hoc build: nothing to verify"; exit 0; fi
+          mkdir -p build/macos-check && (cd build/macos-check && unzip -qo ../macos/neon-weave.zip)
+          app=$(find build/macos-check -maxdepth 1 -name "*.app" | head -n 1)
+          rcodesign verify "$app" || true
+          rcodesign print-signature-info "$app" | head -n 40
 
       - name: Smoke test the Linux build (boots to the title and renders a frame)
         run: |
@@ -70,7 +123,7 @@ jobs:
       - name: Package
         run: |
           set -euo pipefail
-          v="${GITHUB_REF_NAME}"
+          v="${GITHUB_REF_NAME//\//-}" # a branch name on a manual run has slashes; a tag does not
           (cd build/windows && zip -qr "../neon-weave-${v}-windows.zip" .)
           (cd build/linux && tar -czf "../neon-weave-${v}-linux.tar.gz" .)
           mv build/macos/neon-weave.zip "build/neon-weave-${v}-macos.zip"
