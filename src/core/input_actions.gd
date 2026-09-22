@@ -55,9 +55,9 @@ const PAD_ROUTES: Dictionary = {
 	"creator": "menu:creator",
 	"weave": "menu:weave",
 	"journal": "menu:journal",
-	"quick_save": "menu:save_1",
-	"quick_load": "menu:load_1",
-	"load_autosave": "menu:load_autosave",
+	"quick_save": "menu:save_game",
+	"quick_load": "menu:load_game",
+	"load_autosave": "menu:load_game",
 }
 
 

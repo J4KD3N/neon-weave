@@ -16,6 +16,9 @@ extends RefCounted
 const VERSION := 2
 const SLOTS := 3
 const AUTOSAVE := "autosave"
+## Older autosaves kept beside the newest (S54): autosave_1 is the one before, autosave_2 the one before that.
+const AUTOSAVE_KEEP := 3
+const THUMBNAIL_SIZE := Vector2i(320, 180)
 
 
 static func slot_name(n: int) -> String:
@@ -24,6 +27,16 @@ static func slot_name(n: int) -> String:
 
 static func path_for(dir: String, save_name: String) -> String:
 	return dir.path_join(save_name + ".json")
+
+
+## The older autosaves' names: autosave_1, autosave_2, ... (S54).
+static func autosave_name(age: int) -> String:
+	return AUTOSAVE if age <= 0 else "%s_%d" % [AUTOSAVE, age]
+
+
+## The PNG beside a save file.
+static func thumbnail_path(save_path: String) -> String:
+	return save_path.get_basename() + ".png"
 
 
 # --- capture ---------------------------------------------------------------
@@ -53,6 +66,7 @@ static func capture(world: ExploreWorld) -> Dictionary:
 	return {
 		"version": VERSION,
 		"saved_at": Time.get_datetime_string_from_system(true, true),
+		"title": world.save_title(),
 		"map_name": world.map_data.name,
 		"content": {
 			"game_version": String(ProjectSettings.get_setting("application/config/version", "0.0.0")),
@@ -246,6 +260,44 @@ static func write(path: String, data: Dictionary) -> Error:
 	return OK
 
 
+## The frame as a thumbnail beside the save (S54): nothing headless, where
+## the viewport has no image. Returns true when one was written.
+static func write_thumbnail(world: Node, save_path: String) -> bool:
+	var viewport := world.get_viewport()
+	if viewport == null or DisplayServer.get_name() == "headless":
+		return false
+	var tex := viewport.get_texture()
+	if tex == null:
+		return false
+	var img := tex.get_image()
+	if img == null or img.is_empty():
+		return false
+	img.resize(THUMBNAIL_SIZE.x, THUMBNAIL_SIZE.y, Image.INTERPOLATE_BILINEAR)
+	return img.save_png(thumbnail_path(save_path)) == OK
+
+
+## Removes a save and its thumbnail.
+static func remove(save_path: String) -> void:
+	for p: String in [save_path, thumbnail_path(save_path)]:
+		if FileAccess.file_exists(p):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(p))
+
+
+## Moves a save and its thumbnail to another name.
+static func move(from_path: String, to_path: String) -> void:
+	remove(to_path)
+	for pair: Array in [[from_path, to_path], [thumbnail_path(from_path), thumbnail_path(to_path)]]:
+		if FileAccess.file_exists(String(pair[0])):
+			DirAccess.rename_absolute(ProjectSettings.globalize_path(String(pair[0])), ProjectSettings.globalize_path(String(pair[1])))
+
+
+## Before a new autosave: the newest becomes autosave_1, that one
+## autosave_2, and the oldest past AUTOSAVE_KEEP is dropped (S54).
+static func rotate_autosaves(dir: String) -> void:
+	for age: int in range(AUTOSAVE_KEEP - 1, 0, -1):
+		move(path_for(dir, autosave_name(age - 1)), path_for(dir, autosave_name(age)))
+
+
 ## Reads a save. On failure the result is {"_error": "<reason>"}.
 static func read(path: String) -> Dictionary:
 	if not FileAccess.file_exists(path):
@@ -297,16 +349,18 @@ static func summarize(data: Dictionary, registry: ContentRegistry = null) -> Str
 
 
 ## One line per slot plus the autosave: {"name", "path", "exists", "summary", "loadable"}.
-static func list_saves(dir: String, registry: ContentRegistry = null) -> Array[Dictionary]:
+static func list_saves(dir: String, registry: ContentRegistry = null, older_autosaves: bool = false) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var names: Array[String] = []
 	for n: int in range(1, SLOTS + 1):
 		names.append(slot_name(n))
 	names.append(AUTOSAVE)
+	for age: int in range(1, AUTOSAVE_KEEP if older_autosaves else 1):
+		names.append(autosave_name(age))
 	for save_name: String in names:
 		var path := path_for(dir, save_name)
 		var exists := FileAccess.file_exists(path)
 		var data := read(path) if exists else {}
 		var loadable := exists and not data.has("_error") and (registry == null or content_check(migrate(data), registry).is_empty())
-		out.append({"name": save_name, "path": path, "exists": exists, "summary": summarize(data, registry) if exists else "empty", "loadable": loadable})
+		out.append({"name": save_name, "path": path, "exists": exists, "summary": summarize(data, registry) if exists else "empty", "loadable": loadable, "title": String(data.get("title", "")) if exists else "", "saved_at": String(data.get("saved_at", "")) if exists else "", "thumbnail": thumbnail_path(path) if exists and FileAccess.file_exists(thumbnail_path(path)) else ""})
 	return out

@@ -7,6 +7,9 @@ class_name AudioDirector
 extends Node
 
 const POOL_SIZE := 8
+## Sub-buses of Master (S54): the settings screen turns each down on its own.
+const BUS_MUSIC := "Music"
+const BUS_SFX := "SFX"
 
 var registry: ContentRegistry
 var rules: Dictionary = {}
@@ -26,18 +29,30 @@ func setup(p_registry: ContentRegistry) -> void:
 	registry = p_registry
 	rules = registry.get_entry("rules", "audio")
 	crossfade_seconds = float(rules.get("crossfade_seconds", 1.5))
+	ensure_buses()
 	for _i: int in POOL_SIZE:
 		var p := AudioStreamPlayer.new()
-		p.bus = "Master"
+		p.bus = BUS_SFX
 		add_child(p)
 		_pool.append(p)
 	_music_a = AudioStreamPlayer.new()
 	_music_b = AudioStreamPlayer.new()
 	for m: AudioStreamPlayer in [_music_a, _music_b]:
-		m.bus = "Master"
+		m.bus = BUS_MUSIC
 		m.volume_db = -80.0
 		add_child(m)
 	_music_front = _music_a
+
+
+## Creates the Music and SFX buses under Master when the project has none.
+static func ensure_buses() -> void:
+	for name: String in [BUS_MUSIC, BUS_SFX]:
+		if AudioServer.get_bus_index(name) >= 0:
+			continue
+		var i := AudioServer.bus_count
+		AudioServer.add_bus(i)
+		AudioServer.set_bus_name(i, name)
+		AudioServer.set_bus_send(i, "Master")
 
 
 ## The stream for an audio entry, built on first use and cached.
