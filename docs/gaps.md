@@ -20,7 +20,7 @@ planned in `docs/m4-plan.md`.
 - **Depth 3 after balance pass 1** (S48, D-103): the Undercity extracts 45% of depth-3 runs naive, the Cathedral 40%, the Loom Approach 30%, the Ghost Markets 30% (their long cantor fights kite a naive party; a person focuses the cultists), the Datacore 40% at depth 2; floors sit just under those. The medkit, the breather and the wind-up were chosen on the naive policy and have not met a person.
 - **The Key keepers are unmeasured** (S41): they fight inside Shards, so the harness cannot row them, and the Quiet Key's keeper under the Cathedral wipes naive play at level 9; the campaign test lets every fight fall by fiat for that reason.
 - **The Loom** (S42, S48): the Voice sits at 35% naive wins at level 11 with a 20% floor, the hardest fight by design; the Ashfound strike team is a walkover.
-- **Economy and approval are first-guess**: the road nets 10–18 salvage and 1–3 Aether against a 15/2 Beacon upgrade; approval reaches 4 for loyalty and 5 for romance about as slowly as Act 1 banks it, so the campaign test sets Sera's approval to 4 before her loyalty; building costs, loot ranges and XP have been checked only by the harness.
+- **Economy and approval are measured, not played** (S49, D-104): the road banks 14 salvage and 3 Aether against a 12/2 Beacon step; a depth-1 extraction ~20 salvage, 4 Aether, 52 XP, a depth-3 one ~41/10/97; Sera and Kaj-7 clear loyalty (4) and romance (5) by the Keys on every path with the kinder choices, and the campaign test asserts it; Dax on the two paths that wound him and any companion left at the Bastion do not, by design. All of it under the naive policy; a person may spend and choose differently.
 
 ## Content (wired, not dense)
 

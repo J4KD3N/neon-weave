@@ -103,23 +103,25 @@ static func build(dir: String) -> String:
 		if String(r.get("event", "")) != "run":
 			continue
 		var key := "%s d%d" % [r.get("template", "?"), int(r.get("depth", 1))]
-		var agg: Dictionary = runs.get(key, {"n": 0, "extracted": 0, "salvage": 0, "aether": 0})
+		var agg: Dictionary = runs.get(key, {"n": 0, "extracted": 0, "salvage": 0, "aether": 0, "xp": 0, "kills": 0})
 		agg["n"] = int(agg["n"]) + 1
 		if String(r.get("outcome", "")) == "extracted":
 			agg["extracted"] = int(agg["extracted"]) + 1
 			var haul: Dictionary = r.get("haul", {})
 			agg["salvage"] = int(agg["salvage"]) + int(haul.get("salvage", 0))
 			agg["aether"] = int(agg["aether"]) + int(haul.get("aether", 0))
+			agg["xp"] = int(agg["xp"]) + int(haul.get("xp", 0))
+			agg["kills"] = int(agg["kills"]) + int(r.get("kills", 0))
 		runs[key] = agg
 	lines.append("")
-	lines.append("RUNS  (extraction %, average haul of an extraction)")
+	lines.append("RUNS  (extraction %, average haul, XP and kills of an extraction)")
 	var run_keys: Array = runs.keys()
 	run_keys.sort()
 	for key: String in run_keys:
 		var a: Dictionary = runs[key]
 		var n := int(a["n"])
 		var ex := int(a["extracted"])
-		lines.append("  %-24s n %2d  extracted %3d%%  salvage %4.1f  aether %3.1f" % [key, n, int(round(100.0 * ex / n)), float(a["salvage"]) / maxi(ex, 1), float(a["aether"]) / maxi(ex, 1)])
+		lines.append("  %-24s n %2d  extracted %3d%%  salvage %4.1f  aether %3.1f  xp %4.1f  kills %3.1f" % [key, n, int(round(100.0 * ex / n)), float(a["salvage"]) / maxi(ex, 1), float(a["aether"]) / maxi(ex, 1), float(a["xp"]) / maxi(ex, 1), float(a["kills"]) / maxi(ex, 1)])
 	# Time to each story map, per session (first entry).
 	lines.append("")
 	lines.append("TIME  (minutes from launch to first entering each map, per session)")

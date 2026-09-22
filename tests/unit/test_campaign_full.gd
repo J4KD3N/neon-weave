@@ -313,8 +313,8 @@ func _play_act2(faction: String, mortal: bool) -> void:
 			world.choose(0)
 		assert_true(world.narrative.flag("key_%s_located" % faction), "%s: its Key located" % faction)
 		assert_true(world.enter_map("bastion"))
-	# A loyalty: Sera's roll of names (approval is banked slowly by Act 1; set for the walk).
-	world.narrative.approval["sera"] = 4
+	# A loyalty: Sera's roll of names. Her approval is what the walk banked: Act 1, the courting, the oath and the path (S49: nothing is set).
+	assert_true(world.narrative.approval_of("sera") >= 4, "%s: Sera reaches loyalty (4) by the path on her own, at %d" % [faction, world.narrative.approval_of("sera")])
 	assert_true(world.talk_to("sera"))
 	assert_eq(world.dialogue.node_id, "loyalty", "Sera asks at approval 4 in Act 2")
 	_choose("Yes")
@@ -356,6 +356,7 @@ func _play_act2(faction: String, mortal: bool) -> void:
 		assert_true(world.narrative.flag("key_%s_resolved" % f), "%s resolved" % f)
 		_extract()
 	assert_eq(world.narrative.stage_of("the_loom"), "catastrophe", "three Keys: the Loom wakes")
+	assert_true(world.narrative.approval_of("sera") >= 5, "%s: Sera reaches romance (5) by the Keys without being set, at %d" % [faction, world.narrative.approval_of("sera")])
 	# The catastrophe on the plaza.
 	assert_true(world.enter_map("bastion"))
 	_stand_on(Vector2i(10, 5))
