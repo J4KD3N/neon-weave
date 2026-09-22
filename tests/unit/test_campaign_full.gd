@@ -401,14 +401,16 @@ func _play_act3(faction: String) -> void:
 	assert_contains(world.ending_menu.label.text, "NEON WEAVE")
 
 
-## The eight endings, each death-stakes mode on its own difficulty (S50):
-## Story-Protected on Story, Mortal on Balanced. Then Iron Weave on
-## Tactician (S50): one path straight through with no slot save and no
-## reload, the autosave the only way back in, the account keeping the run.
+## Every path on every difficulty in both death-stakes modes (S60: the 1.0
+## gate): Act 1 six times, four endings each, twenty-four endings. Then
+## Iron Weave on Tactician (S50): one path straight through with no slot
+## save and no reload, the autosave the only way back in, the account
+## keeping the run.
 func test_three_acts_on_every_path_in_both_death_stakes_modes() -> void:
 	var started := Time.get_ticks_msec()
 	seed(20260921)
-	for mode: Dictionary in [{"mortal": false, "difficulty": "story"}, {"mortal": true, "difficulty": "balanced"}]:
+	var endings := 0
+	for mode: Dictionary in [{"mortal": false, "difficulty": "story"}, {"mortal": true, "difficulty": "story"}, {"mortal": false, "difficulty": "balanced"}, {"mortal": true, "difficulty": "balanced"}, {"mortal": false, "difficulty": "tactician"}, {"mortal": true, "difficulty": "tactician"}]:
 		var mortal: bool = mode["mortal"]
 		var difficulty: String = mode["difficulty"]
 		_play_act1(mortal, difficulty)
@@ -429,6 +431,7 @@ func test_three_acts_on_every_path_in_both_death_stakes_modes() -> void:
 				assert_true(fates.contains("Dax's family") or fates.contains("Dax's"), "a dead man's line")
 			assert_contains(fates, "Sera: ")
 			world.close_ending()
+			endings += 1
 			print("  campaign: %s path (%s) to %s in %.0f s" % ["unsworn" if faction.is_empty() else faction, "mortal" if mortal else "story-protected", ENDING[faction], (Time.get_ticks_msec() - run_started) / 1000.0])
 		_drop(world)
 		_cleanup()
@@ -452,7 +455,9 @@ func test_three_acts_on_every_path_in_both_death_stakes_modes() -> void:
 	assert_true(world.account.has("iron_weave:lattice_order"), "and kept as a key")
 	assert_true(world.narrative.flag("iron_weave_complete"))
 	world.close_ending()
+	endings += 1
 	print("  campaign: iron weave (tactician) lattice path to %s in %.0f s" % [ENDING["lattice"], (Time.get_ticks_msec() - iron_started) / 1000.0])
 	var total := (Time.get_ticks_msec() - started) / 1000.0
-	print("  campaign: nine endings in %.0f s" % total)
+	assert_eq(endings, 25, "six Act 1s times four paths, plus Iron Weave")
+	print("  campaign: %d endings in %.0f s" % [endings, total])
 	assert_true(total < BUDGET_SECONDS, "the campaign test runs under %.0f s (took %.0f s)" % [BUDGET_SECONDS, total])

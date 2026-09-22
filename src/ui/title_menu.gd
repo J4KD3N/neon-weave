@@ -33,7 +33,7 @@ func _ready() -> void:
 	box.add_child(title_label)
 	var version := Label.new()
 	version_label = version
-	version.text = Loc.t("demo v%s · placeholder art and audio, real ones in progress") % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
+	version.text = Loc.t("v%s · placeholder art and audio, real ones in progress") % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
 	version.add_theme_font_size_override("font_size", 15)
 	version.add_theme_color_override("font_color", Color(0.6, 0.58, 0.72))
 	version.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -48,7 +48,7 @@ func _ready() -> void:
 
 func show_rows(p_page: String, p_rows: Array[Dictionary]) -> void:
 	title_label.text = Loc.t("NEON WEAVE")
-	version_label.text = Loc.t("demo v%s · placeholder art and audio, real ones in progress") % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
+	version_label.text = Loc.t("v%s · placeholder art and audio, real ones in progress") % String(ProjectSettings.get_setting("application/config/version", "0.0.0"))
 	page = p_page
 	rows = p_rows
 	cursor = 0
