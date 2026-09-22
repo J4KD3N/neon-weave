@@ -390,7 +390,7 @@ func _place_enemies(spec: Dictionary, spawns: Array[Vector2i], dist: PackedInt32
 	var pool: Array = spec.get("pool", [])
 	if pool.is_empty() or rooms.size() < 2:
 		return out
-	var extra_groups := maxi(depth, 1) - 1
+	var extra_groups := mini(maxi(depth, 1) - 1, int(spec.get("extra_groups_max", 99))) # S48: a template may cap what depth adds
 	var groups := _pick(spec.get("groups", [4, 7])) + extra_groups
 	var size_range: Array = spec.get("group_size", [1, 3])
 	var base_elite_chance := minf(float(spec.get("elite_chance_per_depth", 0.0)) * float(extra_groups), float(spec.get("elite_chance_max", 0.0)))

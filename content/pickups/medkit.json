@@ -1,0 +1,6 @@
+{
+  "name": "Field medkit",
+  "summary": "A sealed trauma kit from before the Sundering. Heals everyone standing by two fifths of their wounds. Placed by the Shard pools from the second depth on (S48).",
+  "grants": { "heal": 0.4 },
+  "art": { "color": "#6bff9a" }
+}

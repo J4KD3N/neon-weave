@@ -10,6 +10,8 @@ var id: String = ""
 var display_name: String = ""
 var team: String = TEAM_ENEMY
 var archetype: String = "rusher"
+## "", "elite" or "boss" (S48: the boss telegraph reads it).
+var tier: String = ""
 var cell: Vector2i = Vector2i.ZERO
 
 var max_hp: int = 1

@@ -247,7 +247,7 @@ func test_story_protected_mode_keeps_a_downed_partner() -> void:
 	world.mode = "combat"
 	world._on_combat_ended("victory")
 	assert_true(world.narrative.is_recruited("kaj7"))
-	assert_eq(kaj.hp, 1)
+	assert_true(kaj.hp >= 1, "downed stands at 1 HP, then the breather (S48)")
 	assert_eq(world.narrative.romance, "kaj7", "downed is not dead")
 	assert_false(world.narrative.flag("romance_kaj7_lost"))
 	assert_eq(_offered(), ["kaj7_night"], "the story keeps its people")

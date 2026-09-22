@@ -48,7 +48,7 @@ const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag",
 ## The effect vocabulary (dialogue choices, triggers, sequence steps).
 const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction", "romance", "dismiss", "lore", "toast", "grant", "enemies", "victory_flag", "open_doors", "dialogue", "transition", "map_edits", "sequence", "ending"]
 const BANTER_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
-const GRANT_KEYS: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp", "item", "lore"]
+const GRANT_KEYS: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp", "item", "lore", "heal"]
 const ARCHETYPES: Array[String] = ["rusher", "ranged", "summoner", "stealther", "controller"]
 const BUILDING_EFFECTS: Array[String] = ["depth", "heal_fraction", "hp_bonus", "damage_bonus", "respec", "respec_refund", "archive", "aether_per_fragment", "garden", "aether_on_return", "quarters"]
 const EPILOGUE_KEYS: Array[String] = ["alive", "dead", "absent", "taken", "loyal", "romanced", "lost"]

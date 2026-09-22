@@ -66,6 +66,8 @@ static func usable_ability(state: CombatState, actor: Combatant, target: Combata
 		var ability: Dictionary = state.abilities.get(id, {})
 		if _is_control(ability) and not _control_is_fresh(ability, target):
 			continue
+		if actor.tier == "boss" and state.round_number <= state.rules.boss_telegraph_round and int(ability.get("ap", 1)) >= 3:
+			continue # winding up (S48): the heavy blow lands from the next round
 		var span: Array = ability.get("damage", [1, 1])
 		var avg := (float(span[0]) + float(span[span.size() - 1])) / 2.0
 		if avg > best_avg:

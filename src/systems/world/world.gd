@@ -1037,7 +1037,14 @@ func check_pickups() -> Array[Dictionary]:
 			break # one site at a time: anything else underfoot waits for the next check (S38)
 		run.pickups += 1
 		play_event("explore.pickup")
-		var got := _gain(scale_grants(p.grants(), rarity_multiplier(p.rarity)))
+		var grants := p.grants().duplicate()
+		var heal := float(grants.get("heal", 0.0)) # a medkit (S48): heals the party by a fraction of max HP, never a haul
+		grants.erase("heal")
+		if heal > 0.0:
+			heal_party(heal)
+		var got := _gain(scale_grants(grants, rarity_multiplier(p.rarity)))
+		if heal > 0.0:
+			got["heal"] = heal
 		if p.grants().has("item"):
 			var inst := drop_item(p.rarity)
 			if not inst.is_empty():
@@ -1235,6 +1242,10 @@ func _on_combat_ended(result: String) -> void:
 			var mend := float(m.traits.get("mend_after_combat", 0.0))
 			if mend > 0.0 and m.hp > 0 and m.hp < m.max_hp:
 				m.hp = mini(m.max_hp, m.hp + int(ceil(m.max_hp * mend)))
+		if rules.rest_after_victory > 0.0: # the breather (S48)
+			for m: PartyMember in party.members:
+				if m.hp > 0 and m.hp < m.max_hp:
+					m.hp = mini(m.max_hp, m.hp + int(ceil(m.max_hp * rules.rest_after_victory)))
 		party.trail.reset(party.leader().position)
 		party.active = true
 		mode = "explore"
