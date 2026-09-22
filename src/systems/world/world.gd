@@ -72,6 +72,7 @@ var account: Account
 var merchant_menu: MerchantMenu
 var current_merchant: String = ""
 var journal_menu: JournalMenu
+var roster_menu: RosterMenu
 var demo_end_menu: DemoEndMenu
 var title_menu: TitleMenu
 var settings_menu: SettingsMenu
@@ -89,6 +90,8 @@ var demo_forced: bool = false
 ## The playtest log when launched with `-- --playtest` (S47, D-102); null otherwise.
 var playtest: PlaytestLog = null
 var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the world
+var _talk_log_start: int = 0 # where this talk's lines begin in the history (S52)
+var _portraits: Dictionary = {} # speaker id -> ImageTexture, built once per world (S52)
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
@@ -176,6 +179,9 @@ func _ready() -> void:
 	merchant_menu = MerchantMenu.new()
 	merchant_menu.name = "MerchantMenu"
 	add_child(merchant_menu)
+	roster_menu = RosterMenu.new()
+	roster_menu.name = "RosterMenu"
+	add_child(roster_menu)
 	journal_menu = JournalMenu.new()
 	journal_menu.name = "JournalMenu"
 	add_child(journal_menu)
@@ -723,7 +729,11 @@ func open_dialogue(dialogue_id: String) -> bool:
 	dialogue = runner
 	_world_effects_seen = 0
 	party.stop()
-	dialogue_menu.open(runner, speaker_names())
+	if roster_menu != null:
+		roster_menu.close()
+	_talk_log_start = narrative.log.size()
+	log_node()
+	dialogue_menu.open(runner, speaker_names(), Callable(self, "face_for"), Callable(self, "talk_history"))
 	return true
 
 
@@ -752,8 +762,13 @@ func choose(index: int) -> bool:
 		var options := dialogue.available_choices()
 		if index >= 0 and index < options.size():
 			playtest.choice(String(dialogue.dialogue.get("id", "")), dialogue.node_id, String(Dictionary(options[index]).get("text", "")))
+	var picked := ""
+	var choices := dialogue.available_choices()
+	if index >= 0 and index < choices.size():
+		picked = String(Dictionary(choices[index]).get("text", ""))
 	if not dialogue.choose(index):
 		return false
+	narrative.log_line(party.leader().display_name if party.leader() != null else "You", "→ " + picked)
 	var last: Dictionary = dialogue.applied[dialogue.applied.size() - 1] if not dialogue.applied.is_empty() else {}
 	var applied_count := dialogue.applied.size()
 	var finished := dialogue.finished
@@ -763,6 +778,7 @@ func choose(index: int) -> bool:
 	if finished:
 		dialogue_menu.visible = false
 	else:
+		log_node()
 		dialogue_menu.node_changed()
 	if applied_count > _world_effects_seen:
 		_world_effects_seen = applied_count
@@ -1194,7 +1210,8 @@ func status_line() -> String:
 		line3 = "▶ The Iron Weave run is over · Enter: title screen ◀"
 	elif mode == "defeated":
 		line3 = "▶ R: return to the yard · Esc: reload the combat checkpoint ◀"
-	return "%s\n%s\n%s" % [line1, line2, line3]
+	var line4 := tracking_line()
+	return "%s\n%s\n%s" % [line1, line2, line3] if line4.is_empty() else "%s\n%s\n%s\n%s" % [line1, line2, line3, line4]
 
 
 # --- encounters ------------------------------------------------------------
@@ -1333,7 +1350,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	# Menu sounds: any open text menu ticks, confirms and cancels the same way.
 	var menu_open := in_title() or (settings_menu != null and settings_menu.visible) or (system_menu != null and system_menu.visible) \
 		or (weave_menu != null and weave_menu.visible) or (inventory_menu != null and inventory_menu.visible) or (archive_menu != null and archive_menu.visible) or (bastion_menu != null and bastion_menu.visible) or (merchant_menu != null and merchant_menu.visible) \
-		or (journal_menu != null and journal_menu.visible) or in_dialogue()
+		or (journal_menu != null and journal_menu.visible) or (roster_menu != null and roster_menu.visible) or in_dialogue()
 	if menu_open and audio != null and not (settings_menu != null and not settings_menu.rebinding.is_empty()):
 		if event.is_action_pressed("confirm"):
 			play_event("ui.confirm")
@@ -1418,6 +1435,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	if journal_menu != null and journal_menu.visible:
 		if event.is_action_pressed("cancel") or event.is_action_pressed("journal"):
 			close_journal()
+		elif event.is_action_pressed("ui_left"):
+			track_next_quest(-1)
+		elif event.is_action_pressed("ui_right"):
+			track_next_quest(1)
+		return
+	if roster_menu != null and roster_menu.visible:
+		if event.is_action_pressed("cancel") or event.is_action_pressed("menu"):
+			close_roster()
+		elif event.is_action_pressed("confirm"):
+			activate_roster_row()
+		elif event.is_action_pressed("ui_left") or event.is_action_pressed("ui_right"):
+			roster_toggle()
+		elif event.is_action_pressed("ui_up"):
+			roster_menu.move(-1)
+		elif event.is_action_pressed("ui_down"):
+			roster_menu.move(1)
 		return
 	if merchant_menu != null and merchant_menu.visible:
 		if event.is_action_pressed("cancel"):
@@ -1660,7 +1693,7 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "weave", "label": "The Weave (level %d · %s)" % [party_level(), xp_line()], "enabled": home, "why": "only at home"})
 	items.append({"id": "inventory", "label": "The pack (%d banked item%s)" % [ledger.items.size(), "" if ledger.items.size() == 1 else "s"], "enabled": home, "why": "only at home"})
 	items.append({"id": "journal", "label": "Journal (%d quests)" % narrative.quests.size(), "enabled": true})
-	items.append({"id": "roster", "label": "Roster (%d with you, %d waiting)" % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and not narrative.recruited.is_empty(), "why": "only at home" if not home else "nobody recruited"})
+	items.append({"id": "roster", "label": "Roster & Quarters (%d with you, %d waiting)" % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and roster_rows().size() > 1, "why": "only at home" if not home else "nobody recruited"})
 	var saves := SaveSystem.list_saves(saves_dir, registry)
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
@@ -2495,7 +2528,7 @@ func journal_entries() -> Array[Dictionary]:
 
 
 func journal_text() -> String:
-	return JournalMenu.render(journal_entries()) + "\n" + standing_text()
+	return JournalMenu.render(journal_entries(), tracked_quest_id(), narrative.log) + "\n" + standing_text()
 
 
 ## "Standing: The Lattice +2 · The Ashfound -1" for every faction with a score.
@@ -3066,6 +3099,7 @@ func advance_quests() -> Array[String]:
 		if q.has("start_when") and narrative.stage_of(String(q["id"])).is_empty() and Conditions.passes(q["start_when"], dialogue_ctx()):
 			narrative.set_stage(String(q["id"]), String(q.get("start", "")))
 			moved.append(String(q["id"]))
+			log_quest(String(q["id"]), String(q.get("start_toast", "")))
 			if q.has("start_toast") and overlay != null:
 				overlay.toast(String(q["start_toast"]), 4.0)
 	for _pass: int in 8: # a stage may complete the next one at once
@@ -3106,6 +3140,7 @@ func advance_quests() -> Array[String]:
 			narrative.set_stage(quest_id, target)
 			moved.append(quest_id)
 			moved_now = true
+			log_quest(quest_id, toast)
 			if not toast.is_empty() and overlay != null:
 				overlay.toast(toast, 4.0)
 		if not moved_now:
@@ -3544,21 +3579,17 @@ func quarters_scenes() -> Array[Dictionary]:
 	return out
 
 
+## The Quarters from the Bastion screen: the same Roster screen (S52),
+## once the Quarters stand.
 func open_quarters() -> bool:
-	if system_menu == null or mode != "explore" or not at_home():
+	if mode != "explore" or not at_home():
 		return false
 	if bastion.level("quarters") <= 0:
 		overlay.toast("Bunks in a container. Raise the Quarters at the Workshop.", 2.5)
 		return false
-	var items: Array[Dictionary] = []
-	for s: Dictionary in quarters_scenes():
-		items.append({"id": "scene_%s" % s["scene"], "label": s["label"], "enabled": true})
-	if items.is_empty():
-		items.append({"id": "resume", "label": "Nobody has anything to say tonight.", "enabled": true})
-	else:
-		items.append({"id": "resume", "label": "Leave them to it", "enabled": true})
-	system_menu.open(items)
-	return true
+	if bastion_menu != null:
+		bastion_menu.visible = false
+	return open_roster()
 
 
 ## Plays a Quarters scene by id; it is marked seen when it opens.
@@ -3569,6 +3600,227 @@ func play_scene(scene_id: String) -> bool:
 		narrative.set_flag("scene_%s_seen" % scene_id, true)
 		return open_dialogue(String(s["dialogue"]))
 	return false
+
+
+# --- surfaces: faces, the history, quest tracking, the Roster screen (S52, D-107) ---
+
+## A face for a speaker id: the leader for "player", a companion by race
+## and class, an NPC by its art colour; null for the narrator, the Choir
+## and anyone else without a body. Built once per world.
+func portrait_for(speaker: String) -> ImageTexture:
+	if speaker.is_empty() or speaker == "narrator":
+		return null
+	if speaker == "player":
+		var l := party.leader()
+		if l == null:
+			return null
+		var race: Dictionary = registry.get_entry("races", l.race_id)
+		return PlaceholderActorArt.portrait_texture(PartyBuilder.class_color(registry, l.class_id), race.get("overlay", {}), l.appearance)
+	if _portraits.has(speaker):
+		return _portraits[speaker]
+	var tex: ImageTexture = null
+	var c: Dictionary = registry.get_entry("companions", speaker)
+	if not c.is_empty():
+		var race: Dictionary = registry.get_entry("races", String(c.get("race", "")))
+		tex = PlaceholderActorArt.portrait_texture(PartyBuilder.class_color(registry, String(c.get("class", ""))), race.get("overlay", {}))
+	else:
+		var n: Dictionary = registry.get_entry("npcs", speaker)
+		if not n.is_empty():
+			var art: Dictionary = n.get("art", {})
+			var race: Dictionary = registry.get_entry("races", String(n.get("race", "")))
+			tex = PlaceholderActorArt.portrait_texture(Color.html(String(art.get("color", "#9a9a9a"))), race.get("overlay", {}))
+	_portraits[speaker] = tex
+	return tex
+
+
+## The face the panel shows: the speaker's, else the voice's (the Choir in
+## Sera's voice wears Sera's face).
+func face_for(speaker: String, voice: String = "") -> ImageTexture:
+	var face := portrait_for(speaker)
+	if face == null and not voice.is_empty():
+		face = portrait_for(voice)
+	return face
+
+
+## The lines of the open talk so far, without the one on screen.
+func talk_history() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var stop := narrative.log.size() - 1
+	for i: int in range(_talk_log_start, stop):
+		out.append(narrative.log[i])
+	return out
+
+
+## Writes the open dialogue's current line into the history.
+func log_node() -> void:
+	if not in_dialogue():
+		return
+	var names := speaker_names()
+	var who := String(names.get(dialogue.speaker(), dialogue.speaker().capitalize()))
+	if not dialogue.voice().is_empty():
+		who = "%s, in %s's voice" % [who, String(names.get(dialogue.voice(), dialogue.voice().capitalize()))]
+	narrative.log_line(who, dialogue.text())
+
+
+## Writes a quest start or stage change into the history: the toast when
+## the content wrote one, else the stage's summary.
+func log_quest(quest_id: String, toast: String) -> void:
+	var quest: Dictionary = registry.get_entry("quests", quest_id)
+	var stage: Dictionary = Dictionary(quest.get("stages", {})).get(narrative.stage_of(quest_id), {})
+	var text := toast if not toast.is_empty() else String(stage.get("summary", ""))
+	if text.is_empty():
+		return
+	narrative.log_line("Journal", "%s — %s" % [String(quest.get("name", quest_id)), text])
+
+
+## The quest the HUD tracks: the one chosen in the journal while it is
+## still active, else the first active main quest, else the first active.
+## The fallback sticks (it is written to the narrative), so a quest that
+## starts later does not steal the line until the player moves the mark.
+func tracked_quest_id() -> String:
+	var entries := journal_entries()
+	for e: Dictionary in entries:
+		if String(e["id"]) == narrative.tracked_quest and not bool(e["complete"]):
+			return narrative.tracked_quest
+	var pick := ""
+	for e: Dictionary in entries:
+		if bool(e["main"]) and not bool(e["complete"]):
+			pick = String(e["id"])
+			break
+	if pick.is_empty():
+		for e: Dictionary in entries:
+			if not bool(e["complete"]):
+				pick = String(e["id"])
+				break
+	narrative.tracked_quest = pick
+	return pick
+
+
+## The HUD's fourth line: "★ Waking — the stage · the next thing to do".
+func tracking_line() -> String:
+	var id := tracked_quest_id()
+	if id.is_empty():
+		return ""
+	for e: Dictionary in journal_entries():
+		if String(e["id"]) != id:
+			continue
+		var next := ""
+		for o: Dictionary in e["objectives"]:
+			if not bool(o["done"]):
+				next = String(o["text"])
+				break
+		var line := "%s %s — %s" % ["★" if bool(e["main"]) else "•", e["name"], e["stage_summary"]]
+		return line if next.is_empty() else "%s · %s" % [line, next]
+	return ""
+
+
+## ←→ in the journal: the next active quest becomes the tracked one (saved).
+func track_next_quest(delta: int) -> String:
+	var active: Array[String] = []
+	for e: Dictionary in journal_entries():
+		if not bool(e["complete"]):
+			active.append(String(e["id"]))
+	if active.is_empty():
+		return ""
+	var i := active.find(tracked_quest_id())
+	narrative.tracked_quest = active[posmod(i + delta, active.size())]
+	if journal_menu != null and journal_menu.visible:
+		journal_menu.show_text(journal_text())
+	return narrative.tracked_quest
+
+
+## The Roster screen's rows: one per companion the story has given you
+## (walking, waiting, or fallen), then that companion's Quarters scenes
+## while the Quarters stand; a note when they do not.
+func roster_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	var room := narrative.active_companions().size() < rules.party_max - 1
+	var scenes: Array[Dictionary] = []
+	if bastion.level("quarters") > 0:
+		scenes = quarters_scenes()
+	var ids: Array[String] = []
+	for c: Dictionary in registry.get_all("companions"):
+		var id := String(c["id"])
+		if narrative.is_recruited(id) or narrative.flag("%s_dead" % id):
+			ids.append(id)
+	for id: String in ids:
+		var c: Dictionary = registry.get_entry("companions", id)
+		var name := String(c.get("short_name", id))
+		var dead := narrative.flag("%s_dead" % id)
+		var tags: PackedStringArray = []
+		if narrative.romance == id:
+			tags.append("your partner")
+		elif narrative.flag("romance_%s_lost" % id):
+			tags.append("what was")
+		if narrative.flag("%s_loyal" % id):
+			tags.append("loyal")
+		var status := "fallen" if dead else ("waits at the Bastion" if narrative.is_benched(id) else "walks with you")
+		var label := "%s — %s · ♥%+d%s" % [name, status, narrative.approval_of(id), "" if tags.is_empty() else " · " + " · ".join(tags)]
+		var row: Dictionary = {"id": "companion:%s" % id, "kind": "companion", "companion": id, "label": label, "enabled": true, "portrait": portrait_for(id), "dead": dead}
+		if dead:
+			row["toggle"] = ""
+		elif narrative.is_benched(id):
+			row["toggle"] = "take"
+			row["enabled"] = true
+			row["can_toggle"] = room
+			row["why"] = "the party is full"
+		else:
+			row["toggle"] = "bench"
+			row["can_toggle"] = true
+		rows.append(row)
+		for s: Dictionary in scenes:
+			if String(s["companion"]) == id:
+				rows.append({"id": "scene:%s" % s["scene"], "kind": "scene", "companion": id, "scene": String(s["scene"]), "label": "    ↳ %s" % String(s["label"]).get_slice(" — ", 1), "enabled": true})
+	if not ids.is_empty() and bastion.level("quarters") <= 0:
+		rows.append({"id": "note", "kind": "note", "label": "Bunks in a container: raise the Quarters at the Workshop for their scenes.", "enabled": false, "why": "no Quarters yet"})
+	rows.append({"id": "close", "kind": "note", "label": "Done", "enabled": true})
+	return rows
+
+
+func close_roster() -> void:
+	if roster_menu != null:
+		roster_menu.close()
+
+
+## Enter on the Roster: a companion row swaps walking and waiting, a scene
+## row plays the scene, Done closes.
+func activate_roster_row() -> bool:
+	if roster_menu == null or not roster_menu.visible:
+		return false
+	var row := roster_menu.selected()
+	match String(row.get("kind", "")):
+		"companion":
+			return roster_toggle()
+		"scene":
+			close_roster()
+			return play_scene(String(row.get("scene", "")))
+		_:
+			if String(row.get("id", "")) == "close":
+				close_roster()
+				return true
+	return false
+
+
+## ←→ on the Roster: the companion under the cursor walks or waits.
+func roster_toggle() -> bool:
+	if roster_menu == null or not roster_menu.visible:
+		return false
+	var row := roster_menu.selected()
+	var id := roster_menu.selected_companion()
+	if id.is_empty() or bool(row.get("dead", false)):
+		return false
+	var ok := false
+	match String(row.get("toggle", "")):
+		"bench":
+			ok = bench_companion(id)
+		"take":
+			if not bool(row.get("can_toggle", true)):
+				overlay.toast("The party is full: leave someone at the Bastion first.", 2.5)
+				return false
+			ok = take_companion(id)
+	if ok:
+		roster_menu.open(roster_rows(), true)
+	return ok
 
 
 ## Keys this playthrough has earned for the account (origins by flag).
@@ -3824,9 +4076,14 @@ func roster_items() -> Array[Dictionary]:
 
 
 func open_roster() -> bool:
-	if system_menu == null or mode != "explore" or not at_home() or narrative.recruited.is_empty():
+	if roster_menu == null or mode != "explore" or not at_home():
 		return false
-	system_menu.open(roster_items())
+	var rows := roster_rows()
+	if rows.size() <= 1:
+		return false # nobody recruited and nobody fallen
+	if system_menu != null:
+		system_menu.close()
+	roster_menu.open(rows)
 	return true
 
 

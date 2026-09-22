@@ -1,8 +1,12 @@
 ## The journal (J, or the system menu): every quest the party has started,
 ## its current stage, and the stage's objectives ticked off against the
-## narrative state. Read-only; Esc / B closes.
+## narrative state; the tracked quest (the one on the HUD) marked, ←→
+## moving the mark; and the history, the last lines said and done (S52).
+## Read-only; Esc / B closes.
 class_name JournalMenu
 extends CanvasLayer
+
+const HISTORY_LINES := 12
 
 var panel: PanelContainer
 var label: Label
@@ -31,9 +35,10 @@ func close() -> void:
 	visible = false
 
 
-## Pure render. `entries`: [{"name", "main": bool, "stage_summary",
-## "complete": bool, "objectives": [{"text", "done": bool}]}]
-static func render(entries: Array[Dictionary]) -> String:
+## Pure render. `entries`: [{"id", "name", "main": bool, "stage_summary",
+## "complete": bool, "objectives": [{"text", "done": bool}]}]; `tracked`
+## the id of the quest on the HUD; `history` [{"who", "text"}], oldest first.
+static func render(entries: Array[Dictionary], tracked: String = "", history: Array[Dictionary] = []) -> String:
 	var lines: PackedStringArray = []
 	lines.append("JOURNAL")
 	lines.append("")
@@ -47,15 +52,22 @@ static func render(entries: Array[Dictionary]) -> String:
 		else:
 			active.append(e)
 	for e: Dictionary in active:
-		lines.append("%s%s" % ["★ " if bool(e.get("main", false)) else "• ", e.get("name", "?")])
-		lines.append("   %s" % e.get("stage_summary", ""))
+		var mark := "▶ " if String(e.get("id", "")) == tracked and not tracked.is_empty() else "  "
+		lines.append("%s%s%s%s" % [mark, "★ " if bool(e.get("main", false)) else "• ", e.get("name", "?"), "  (tracked)" if mark == "▶ " else ""])
+		lines.append("     %s" % e.get("stage_summary", ""))
 		for o: Dictionary in e.get("objectives", []):
-			lines.append("   %s %s" % ["✓" if bool(o.get("done", false)) else "·", o.get("text", "")])
+			lines.append("     %s %s" % ["✓" if bool(o.get("done", false)) else "·", o.get("text", "")])
 		lines.append("")
 	if not finished.is_empty():
 		lines.append("Done")
 		for e: Dictionary in finished:
-			lines.append("   ✓ %s — %s" % [e.get("name", "?"), e.get("stage_summary", "")])
+			lines.append("     ✓ %s — %s" % [e.get("name", "?"), e.get("stage_summary", "")])
 		lines.append("")
-	lines.append("Esc / B / J close")
+	if not history.is_empty():
+		lines.append("History")
+		var start := maxi(history.size() - HISTORY_LINES, 0)
+		for i: int in range(start, history.size()):
+			lines.append("     %s: %s" % [history[i].get("who", "?"), history[i].get("text", "")])
+		lines.append("")
+	lines.append("←→ track a quest on the HUD · Esc / B / J close")
 	return "\n".join(lines)
