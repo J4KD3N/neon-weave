@@ -92,6 +92,7 @@ var playtest: PlaytestLog = null
 var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the world
 var _talk_log_start: int = 0 # where this talk's lines begin in the history (S52)
 var _portraits: Dictionary = {} # speaker id -> ImageTexture, built once per world (S52)
+var perf_hud: bool = false # `--perf`: fps and frame time on the status line (S53)
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
@@ -196,6 +197,7 @@ func _ready() -> void:
 	add_child(settings_menu)
 	settings = Settings.load_or_default()
 	settings.apply()
+	UiScale.apply(self, [overlay])
 	InputActions.load_overrides()
 	audio = AudioDirector.new()
 	audio.name = "Audio"
@@ -228,6 +230,8 @@ func _ready() -> void:
 			playtest.start()
 		elif arg == "--journal":
 			open_journal()
+		elif arg == "--perf": # fps and frame time on the status line, for a Deck in hand (S53)
+			perf_hud = true
 		elif arg.begins_with("--shard="):
 			enter_shard(selected_shard, int(arg.get_slice("=", 1)))
 		elif arg == "--creator":
@@ -1178,6 +1182,7 @@ func extract() -> bool:
 		ledger.bank({"aether": sap})
 		ledger.save()
 	enter_map(home_map)
+	Rumble.pulse("extract")
 	banter("extract")
 	autosave()
 	return true
@@ -1191,6 +1196,8 @@ func status_line() -> String:
 	var line1 := "%s  |  %s  |  leader %s  hover %s%s  |  enemies %d  pickups %d" % [
 		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
 	]
+	if perf_hud:
+		line1 = "fps %d · %.1f ms  |  %s" % [Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, line1]
 	var line2 := "%s  |  %s" % [run.summary() if run.in_shard else "at home: loot banks on pickup", ledger.summary()]
 	for id: String in narrative.recruited:
 		var c: Dictionary = registry.get_entry("companions", id)
@@ -1318,9 +1325,11 @@ func _on_combat_ended(result: String) -> void:
 			pending_trigger_flag = ""
 		autosave()
 		banter("victory")
+		Rumble.pulse("victory")
 		check_demo_end()
 		return
 	mode = "defeated"
+	Rumble.pulse("wipe")
 	pending_victory_flag = ""
 	pending_victory_flags = []
 	if playtest != null:
@@ -1837,18 +1846,24 @@ func confirm_bastion() -> bool:
 
 
 ## Held stick / D-pad / WASD steps the combat cursor with key-repeat pacing.
+## The combat cursor under a stick: a first step, a pause, then a glide
+## whose pace follows the tilt (S53): a nudge creeps, a full tilt races.
 func _tick_cursor(dir: Vector2, delta: float) -> void:
 	if dir == Vector2.ZERO:
 		_cursor_hold = 0.0
 		return
 	if _cursor_hold <= 0.0:
 		combat.move_cursor(dir)
-		_cursor_hold = CURSOR_FIRST_REPEAT if _cursor_hold == 0.0 else CURSOR_REPEAT
+		_cursor_hold = CURSOR_FIRST_REPEAT if _cursor_hold == 0.0 else glide_repeat(dir)
 	else:
 		_cursor_hold -= delta
 		if _cursor_hold <= 0.0:
 			combat.move_cursor(dir)
-			_cursor_hold = CURSOR_REPEAT
+			_cursor_hold = glide_repeat(dir)
+
+
+static func glide_repeat(dir: Vector2) -> float:
+	return CURSOR_REPEAT / clampf(dir.length(), 0.35, 1.0)
 
 
 # --- progression: party level, builds, the Weave menu -----------------------
@@ -2968,9 +2983,17 @@ func adjust_setting(direction: int) -> bool:
 			settings.step_volume(direction)
 		"glyphs":
 			settings.cycle_glyphs(direction)
+		"rumble":
+			settings.rumble = not settings.rumble
+			if settings.rumble:
+				Rumble.enabled = true
+				Rumble.pulse("hit") # so the toggle can be felt
+		"text_scale":
+			settings.cycle_text_scale(direction)
 		_:
 			return false
 	settings.apply()
+	UiScale.apply(self, [overlay])
 	refresh_settings()
 	return true
 
@@ -2984,7 +3007,7 @@ func confirm_setting() -> bool:
 		settings_menu.refresh()
 		return true
 	match id:
-		"fullscreen", "glyphs":
+		"fullscreen", "glyphs", "rumble", "text_scale":
 			return adjust_setting(1)
 		"volume":
 			return adjust_setting(1)

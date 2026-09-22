@@ -1,0 +1,10 @@
+{
+  "name": "Performance budget",
+  "summary": "What a map or the largest Shard of any biome may cost (S53). tools/perf_budget.gd measures every template at its largest size and every handcrafted map against these; the unit test holds the counts and prints the times. logic_ms is the game's own per-frame work headless (no rendering); frame_ms is what a Deck-class target must hold with rendering, read from the --perf counter in a build.",
+  "max_cells": 3200,
+  "max_nodes": 400,
+  "max_enemies": 32,
+  "max_pickups": 24,
+  "logic_ms": 2.0,
+  "frame_ms": 16.6
+}

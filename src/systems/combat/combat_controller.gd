@@ -423,6 +423,7 @@ func _sync_actor(id: String) -> void:
 func _on_event(e: Dictionary) -> void:
 	hud.set_log(state.history)
 	_sound_for_event(e)
+	_rumble_for_event(e)
 	match String(e["type"]):
 		"summon":
 			var minion := world.spawn_summoned(String(e["kind"]), e["cell"], String(e.get("team", Combatant.TEAM_ENEMY)))
@@ -439,6 +440,24 @@ func _on_event(e: Dictionary) -> void:
 		"chain", "surface", "overload", "vent":
 			if not animate:
 				_sync_actor(String(e.get("target", e.get("actor", ""))))
+
+
+## Rumble for combat events (S53): a party member hit, downed or killed; a
+## boss winding up on its first turn.
+func _rumble_for_event(e: Dictionary) -> void:
+	match String(e["type"]):
+		"ability", "chain", "surface", "overload", "counter", "arc":
+			var target := String(e.get("target", ""))
+			if not target.begins_with("p:"):
+				return
+			if bool(e.get("killed", false)) or bool(e.get("downed", false)):
+				Rumble.pulse("downed")
+			elif bool(e.get("hit", true)) and int(e.get("damage", 0)) > 0:
+				Rumble.pulse("heavy" if int(e.get("damage", 0)) >= 6 else "hit")
+		"turn_begin":
+			var actor := state.by_id(String(e.get("actor", "")))
+			if actor != null and actor.tier == "boss" and int(e.get("round", 1)) <= state.rules.boss_telegraph_round:
+				Rumble.pulse("boss")
 
 
 ## Sounds for combat events: the ability's own `sound`, then the hit or

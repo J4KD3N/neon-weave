@@ -88,7 +88,7 @@ func steer_leader(direction: Vector2, delta: float, can_stand: Callable) -> void
 	var l := leader()
 	if l == null or direction == Vector2.ZERO:
 		return
-	var step := direction.normalized() * speed * delta
+	var step := direction.limit_length(1.0) * speed * delta # a half-tilted stick walks at half speed (S53)
 	var candidates: Array[Vector2] = [
 		l.position + step,
 		l.position + Vector2(step.x, 0.0),

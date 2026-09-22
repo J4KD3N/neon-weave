@@ -18,6 +18,7 @@ var errors: Array[String] = []
 
 var _cells: Array[String] = [] # row-major tile id per cell ("" when invalid)
 var _tiles: Dictionary = {} # tile id -> tile entry, only ids the map uses
+var _doors: Dictionary = {} # door kind -> Array[Vector2i], rebuilt after a tile changes (S53)
 var _spawns: Array[Vector2i] = []
 
 
@@ -181,14 +182,19 @@ func set_tile(cell: Vector2i, tile_entry: Dictionary) -> void:
 		return
 	_tiles[id] = tile_entry
 	_cells[cell.y * width + cell.x] = id
+	_doors.clear()
 
 
-## Every closed door cell of the given kind ("" for any).
+## Every closed door cell of the given kind ("" for any). Cached per kind
+## until a tile changes: the world asks every frame (S53).
 func door_cells(kind: String = "") -> Array[Vector2i]:
+	if _doors.has(kind):
+		return _doors[kind]
 	var out: Array[Vector2i] = []
 	for y: int in height:
 		for x: int in width:
 			var k := door_kind(Vector2i(x, y))
 			if not k.is_empty() and (kind.is_empty() or k == kind):
 				out.append(Vector2i(x, y))
+	_doors[kind] = out
 	return out
