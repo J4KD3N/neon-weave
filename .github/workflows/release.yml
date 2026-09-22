@@ -123,7 +123,7 @@ jobs:
       - name: Package
         run: |
           set -euo pipefail
-          v="${GITHUB_REF_NAME}"
+          v="${GITHUB_REF_NAME//\//-}" # a branch name on a manual run has slashes; a tag does not
           (cd build/windows && zip -qr "../neon-weave-${v}-windows.zip" .)
           (cd build/linux && tar -czf "../neon-weave-${v}-linux.tar.gz" .)
           mv build/macos/neon-weave.zip "build/neon-weave-${v}-macos.zip"
