@@ -1334,6 +1334,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("confirm"):
 			activate_title()
 		elif event.is_action_pressed("cancel") and title_menu.page == TitleMenu.PAGE_STAKES:
+			show_difficulty_page()
+		elif event.is_action_pressed("cancel") and title_menu.page == TitleMenu.PAGE_DIFFICULTY:
 			title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
 		elif event.is_action_pressed("ui_up"):
 			title_menu.move(-1)
@@ -2649,6 +2651,12 @@ func title_rows() -> Array[Dictionary]:
 	return rows
 
 
+## The difficulty page with the cursor on the pending choice (the default on a fresh New game).
+func show_difficulty_page() -> void:
+	title_menu.show_rows(TitleMenu.PAGE_DIFFICULTY, difficulty_rows())
+	title_menu.select_id("diff_" + pending_difficulty)
+
+
 func difficulty_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for d: Dictionary in difficulties():
@@ -2703,13 +2711,13 @@ func activate_title() -> bool:
 			"iron":
 				return new_game(true, pending_difficulty, true)
 			"back":
-				title_menu.show_rows(TitleMenu.PAGE_DIFFICULTY, difficulty_rows())
+				show_difficulty_page()
 				return true
 		return false
 	match id:
 		"new":
 			pending_difficulty = default_difficulty()
-			title_menu.show_rows(TitleMenu.PAGE_DIFFICULTY, difficulty_rows())
+			show_difficulty_page()
 			return true
 		"continue":
 			return continue_game()

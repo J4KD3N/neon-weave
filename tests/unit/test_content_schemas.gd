@@ -13,6 +13,7 @@ const SCHEMAS: Dictionary = {
 	"classes": ["name", "branches", "resource", "stats", "abilities", "subclasses"],
 	"companions": ["name", "race", "class", "dialogue", "quest"],
 	"dialogue": ["name", "nodes|lines"],
+	"difficulties": ["name", "rules"],
 	"enemies": ["name", "family", "archetype", "stats", "abilities", "art"],
 	"factions": ["name", "color", "rivals", "joinable_act"],
 	"items": ["name", "slot", "art"],

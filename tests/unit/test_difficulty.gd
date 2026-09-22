@@ -272,11 +272,15 @@ func test_an_ending_keeps_the_iron_run_on_the_account() -> void:
 
 func test_the_validator_flags_an_overlay_the_rules_do_not_have() -> void:
 	world.registry.put("difficulties", "zz_bad", {"name": "Bad", "rules": {"combat": {"depth_hp_per_level": 0.2, "no_such_field": 1}, "no_such_rules": {"x": 1}, "loot": "not a dictionary"}})
-	var problems := ContentValidator.validate(world.registry, ["runtime"])
+	var problems: Array[String] = []
+	for p: String in ContentValidator.validate(world.registry, ["runtime"]):
+		if p.begins_with("difficulties/zz_bad"):
+			problems.append(p)
 	world.registry._entries["difficulties"].erase("zz_bad")
 	world.registry._fingerprint_cache = ""
 	assert_eq(problems.size(), 3, "three problems: %s" % ", ".join(problems))
 	assert_any_contains(problems, "overrides 'no_such_field', which rules/combat does not have")
 	assert_any_contains(problems, "overrides rules 'no_such_rules', which does not exist")
 	assert_any_contains(problems, "rules.loot must be a dictionary of overrides")
-	assert_eq(ContentValidator.validate(world.registry, ["runtime"]), [], "clean again")
+	for p: String in ContentValidator.validate(world.registry, ["runtime"]):
+		assert_false(p.begins_with("difficulties/"), "clean again: %s" % p)

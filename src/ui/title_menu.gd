@@ -71,6 +71,15 @@ func move(delta: int) -> int:
 	return cursor
 
 
+## Puts the cursor on a row by id when it exists and is enabled.
+func select_id(id: String) -> void:
+	for i: int in rows.size():
+		if String(rows[i].get("id", "")) == id and bool(rows[i].get("enabled", true)):
+			cursor = i
+			refresh()
+			return
+
+
 func selected_id() -> String:
 	if rows.is_empty() or cursor < 0 or cursor >= rows.size():
 		return ""

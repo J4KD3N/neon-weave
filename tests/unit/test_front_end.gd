@@ -140,7 +140,10 @@ func test_pad_alone_starts_a_mortal_game_from_the_title() -> void:
 	world.narrative.set_flag("some_old_flag", true)
 	world.ledger.bank({"salvage": 40})
 	world.show_title()
-	# A on New game -> the stakes page; down to Mortal; A.
+	# A on New game -> the difficulty page, cursor on the default; A -> the stakes page; down to Mortal; A.
+	world._unhandled_input(_pad(JOY_BUTTON_A))
+	assert_eq(world.title_menu.page, TitleMenu.PAGE_DIFFICULTY)
+	assert_contains(world.title_menu.label.text, "▶ Balanced")
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	assert_eq(world.title_menu.page, TitleMenu.PAGE_STAKES)
 	assert_contains(world.title_menu.label.text, "▶ Story-Protected")
@@ -168,12 +171,19 @@ func test_pad_alone_starts_a_mortal_game_from_the_title() -> void:
 func test_back_from_stakes_and_story_protected_default() -> void:
 	world.show_title()
 	world._unhandled_input(_key(KEY_ENTER))
+	assert_eq(world.title_menu.page, TitleMenu.PAGE_DIFFICULTY)
+	world._unhandled_input(_pad(JOY_BUTTON_B))
+	assert_eq(world.title_menu.page, TitleMenu.PAGE_MAIN, "B backs out of the difficulty page")
+	world._unhandled_input(_key(KEY_ENTER))
+	world._unhandled_input(_key(KEY_ENTER))
 	assert_eq(world.title_menu.page, TitleMenu.PAGE_STAKES)
 	world._unhandled_input(_pad(JOY_BUTTON_B))
-	assert_eq(world.title_menu.page, TitleMenu.PAGE_MAIN, "B backs out of the stakes page")
+	assert_eq(world.title_menu.page, TitleMenu.PAGE_DIFFICULTY, "B backs out of the stakes page to the difficulty")
+	assert_eq(world.title_menu.selected_id(), "diff_balanced", "the cursor keeps the choice")
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	world._unhandled_input(_pad(JOY_BUTTON_A))
 	assert_false(world.in_title())
+	assert_eq(world.narrative.difficulty, "balanced", "the default difficulty")
 	assert_true(world.rules.story_protected)
 	assert_false(world.is_mortal_mode())
 
