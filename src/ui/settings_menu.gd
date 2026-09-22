@@ -1,4 +1,5 @@
-## Settings: fullscreen, master volume, pad glyphs, and rebinding of every
+## Settings: fullscreen, master volume, pad glyphs, pad rumble, text size
+## (S53), and rebinding of every
 ## rebindable action (press the new key or button; Esc keeps the old one).
 ## Left / right adjust values; Enter / A toggles or starts a rebind.
 class_name SettingsMenu
@@ -63,6 +64,8 @@ static func build_rows(settings: Settings) -> Array[Dictionary]:
 	out.append({"id": "fullscreen", "kind": "toggle", "label": "Fullscreen: %s" % ("on" if settings.fullscreen else "off")})
 	out.append({"id": "volume", "kind": "value", "label": "Master volume: %d%%" % settings.volume_percent()})
 	out.append({"id": "glyphs", "kind": "value", "label": "Pad glyphs: %s%s" % [settings.glyphs, "" if settings.glyphs != "auto" else " (%s)" % Glyphs.resolved_style()]})
+	out.append({"id": "rumble", "kind": "toggle", "label": "Pad rumble: %s" % ("on" if settings.rumble else "off")})
+	out.append({"id": "text_scale", "kind": "value", "label": "Text size: %s" % settings.text_scale_name()})
 	for action: String in REBINDABLE:
 		out.append({"id": "rebind:" + action, "kind": "rebind", "label": "%s: %s" % [action.replace("_", " "), InputActions.describe(action)]})
 	out.append({"id": "reset", "kind": "action", "label": "Reset all bindings to default"})

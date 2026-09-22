@@ -46,6 +46,9 @@ jobs:
       - name: Validate the example mod (the modders' tool, S45)
         run: godot --headless --path . -s tools/validate_mods.gd -- --mods=examples/mods
 
+      - name: Performance budget (counts of every map and the largest Shard of every biome, S53)
+        run: godot --headless --path . -s tools/perf_budget.gd -- --frames=30
+
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0

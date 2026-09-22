@@ -243,6 +243,19 @@ func test_settings_from_title_and_pause_menu_and_rebind_capture() -> void:
 	world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
 	world._unhandled_input(_pad(JOY_BUTTON_DPAD_RIGHT))
 	assert_eq(world.settings.glyphs, "xbox")
+	# Pad rumble and text size (S53) sit under the glyphs.
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
+	world._unhandled_input(_pad(JOY_BUTTON_A))
+	assert_false(world.settings.rumble, "A toggles rumble")
+	assert_contains(world.settings_menu.label.text, "▶ Pad rumble: off")
+	world._unhandled_input(_pad(JOY_BUTTON_A))
+	assert_true(world.settings.rumble)
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_RIGHT))
+	assert_eq(world.settings.text_scale, 1.15, "right grows the text")
+	assert_contains(world.settings_menu.label.text, "▶ Text size: large")
+	world._unhandled_input(_pad(JOY_BUTTON_DPAD_LEFT))
+	assert_eq(world.settings.text_scale, 1.0)
 	# Rebind end_turn to the Y button.
 	for _i: int in 4:
 		world._unhandled_input(_pad(JOY_BUTTON_DPAD_DOWN))
