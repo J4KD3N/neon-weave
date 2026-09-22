@@ -94,6 +94,8 @@ var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the
 var pending_trigger_flag: String = ""
 ## The difficulty picked on the title screen, carried to the death-stakes page (S50).
 var pending_difficulty: String = ""
+## The new game waiting on the creator (S51): {"mortal", "iron", "difficulty"} while the creator is its first screen.
+var pending_new_game: Dictionary = {}
 ## Bastion buildings standing on the home map (`buildings` sites).
 var buildings: Array[BuildingActor] = []
 ## Set by travel(): where the party arrives on the next map instead of its spawns.
@@ -824,6 +826,22 @@ func set_protagonist(sheet: Dictionary, save: bool = true) -> Array[String]:
 	return errors
 
 
+## The creator as the first screen of a new game (S51): the title closes,
+## the sheet starts fresh, and confirming starts the game with it; Esc
+## returns to the death-stakes page with nothing begun.
+func open_new_game_creator(mortal: bool, iron: bool) -> bool:
+	if creator_menu == null:
+		return new_game(mortal, pending_difficulty, iron)
+	if title_menu != null:
+		title_menu.close()
+	pending_new_game = {"mortal": mortal, "iron": iron, "difficulty": pending_difficulty}
+	creator_state = CreatorState.new()
+	creator_state.setup(registry, rules, {}, account.unlocked if account != null else [])
+	creator_state.for_new_game = true
+	creator_menu.open(creator_state)
+	return true
+
+
 ## Opens the creator; only at home while exploring.
 func open_creator() -> bool:
 	if creator_menu == null or mode != "explore" or not at_home():
@@ -839,12 +857,22 @@ func open_creator() -> bool:
 func close_creator() -> void:
 	if creator_menu != null:
 		creator_menu.visible = false
+	if not pending_new_game.is_empty(): # backing out of a new game: nothing has begun
+		pending_new_game = {}
+		if title_menu != null:
+			title_menu.show_rows(TitleMenu.PAGE_STAKES, stakes_rows())
 
 
 ## Confirms the creator's sheet as the protagonist. False when invalid.
+## As the first screen of a new game, this is where the game begins.
 func confirm_creator() -> bool:
 	if creator_state == null or not creator_state.is_valid():
 		return false
+	if not pending_new_game.is_empty():
+		var pending := pending_new_game
+		pending_new_game = {}
+		close_creator()
+		return new_game(bool(pending["mortal"]), String(pending["difficulty"]), bool(pending["iron"]), creator_state.sheet.to_dict())
 	var errors := set_protagonist(creator_state.sheet.to_dict())
 	if not errors.is_empty():
 		return false
@@ -1440,9 +1468,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			weave_member(1)
 		return
 	if creator_menu != null and creator_menu.visible:
-		if event.is_action_pressed("creator") or event.is_action_pressed("ui_cancel"):
+		if event.is_action_pressed("creator") or event.is_action_pressed("ui_cancel") or event.is_action_pressed("cancel"):
 			close_creator()
-		elif event.is_action_pressed("ui_accept"):
+		elif event.is_action_pressed("ui_accept") or event.is_action_pressed("confirm"):
 			confirm_creator()
 		elif event.is_action_pressed("ui_up"):
 			creator_state.move_row(-1)
@@ -2705,11 +2733,11 @@ func activate_title() -> bool:
 	if title_menu.page == TitleMenu.PAGE_STAKES:
 		match id:
 			"story":
-				return new_game(false, pending_difficulty)
+				return open_new_game_creator(false, false)
 			"mortal":
-				return new_game(true, pending_difficulty)
+				return open_new_game_creator(true, false)
 			"iron":
-				return new_game(true, pending_difficulty, true)
+				return open_new_game_creator(true, true)
 			"back":
 				show_difficulty_page()
 				return true
@@ -2737,7 +2765,7 @@ func activate_title() -> bool:
 ## the difficulty and death-stakes chosen. The old autosave is overwritten
 ## by the first one. Iron Weave (S50) is Mortal with one save and no
 ## reloads, recorded on the account; any new game gives up a run underway.
-func new_game(mortal: bool, difficulty: String = "", iron: bool = false) -> bool:
+func new_game(mortal: bool, difficulty: String = "", iron: bool = false, sheet: Dictionary = {}) -> bool:
 	if title_menu != null:
 		title_menu.close()
 	if account != null and account.iron_active:
@@ -2747,6 +2775,8 @@ func new_game(mortal: bool, difficulty: String = "", iron: bool = false) -> bool
 	narrative.set_flag("mortal_mode", mortal or iron)
 	narrative.set_flag("iron_weave", iron)
 	protagonist = {}
+	if not sheet.is_empty() and CharacterSheet.from_dict(sheet).validate(registry, registry.get_entry("rules", "attributes")).is_empty():
+		protagonist = sheet.duplicate(true) # the creator's sheet leads from the first step (S51)
 	ledger = Ledger.new()
 	ledger.path = ledger_path
 	ledger.save()

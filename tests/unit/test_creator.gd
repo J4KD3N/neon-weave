@@ -49,7 +49,7 @@ func test_creator_state_lists_options_and_cycles() -> void:
 	assert_eq(st.races.size(), 10, "all ten GDD races are playable (S30)")
 	assert_eq(st.origins.size(), 4)
 	assert_eq(st.classes.size(), 6)
-	assert_eq(st.rows, ["name", "race", "origin", "class", "body", "arcane", "tech"])
+	assert_eq(st.rows, ["name", "race", "origin", "class", "tone", "accent", "body", "arcane", "tech"], "appearance rows since S51")
 	assert_eq(st.current_row(), "race")
 	var first := st.sheet.race_id
 	assert_true(st.adjust(1))
@@ -60,7 +60,7 @@ func test_creator_state_lists_options_and_cycles() -> void:
 	st.move_row(-2)
 	assert_eq(st.current_row(), "tech", "wraps upward past the name row")
 	st.move_row(-10)
-	assert_eq(st.current_row(), "class")
+	assert_eq(st.current_row(), "arcane")
 
 
 func test_creator_points_budget() -> void:
@@ -107,6 +107,115 @@ func test_creator_render_and_preview() -> void:
 	assert_contains(st.render(), "Cannot confirm: name is empty")
 
 
+func test_appearance_rows_cycle_validate_and_resolve() -> void:
+	var st := CreatorState.new()
+	st.setup(registry, rules)
+	assert_eq(st.tones.size(), 7, "race default plus six tones")
+	assert_eq(st.accents.size(), 7)
+	assert_eq(st.appearance_name("tone"), "race default")
+	assert_eq(st.appearance_colors(), {}, "the default look resolves to no colours")
+	st.row = st.rows.find("tone")
+	assert_true(st.adjust(1))
+	assert_eq(st.sheet.appearance["tone"], "pale")
+	assert_eq(st.appearance_name("tone"), "Pale")
+	assert_true(st.adjust(-1))
+	assert_true(st.adjust(-1))
+	assert_eq(st.sheet.appearance["tone"], "verdigris", "wraps to the last tone")
+	st.row = st.rows.find("accent")
+	st.adjust(1)
+	st.adjust(1)
+	st.adjust(1)
+	st.adjust(1)
+	assert_eq(st.sheet.appearance["accent"], "neon_violet")
+	var colors := st.appearance_colors()
+	assert_eq(colors["tone"], Color.html("#7fb59a"))
+	assert_eq(colors["accent"], Color.html("#b58cff"))
+	assert_true(st.is_valid())
+	assert_contains(st.render(), "Tone: Verdigris")
+	assert_contains(st.render(), "▶ Accent: Neon violet")
+	var round := CharacterSheet.from_dict(st.sheet.to_dict())
+	assert_eq(round.appearance, {"tone": "verdigris", "accent": "neon_violet"}, "the appearance rides the sheet")
+	round.appearance["tone"] = "octarine"
+	assert_any_contains(round.validate(registry, attr_rules), "unknown tone 'octarine'")
+	assert_eq(CharacterSheet.resolve_appearance(registry, round.appearance).keys(), ["accent"], "an unknown tone resolves to nothing")
+	var old := CharacterSheet.from_dict(VEX)
+	assert_eq(old.appearance, {"tone": "", "accent": ""}, "a sheet from before S51 has the default look")
+	assert_eq(old.validate(registry, attr_rules), [])
+	# The creator drops a look that no longer loads.
+	var st2 := CreatorState.new()
+	st2.setup(registry, rules, {"name": "Vex", "appearance": {"tone": "octarine", "accent": "ink"}})
+	assert_eq(st2.sheet.appearance, {"tone": "", "accent": "ink"})
+
+
+func test_next_point_preview_and_locked_origins() -> void:
+	var st := CreatorState.new()
+	st.setup(registry, rules, VEX)
+	assert_eq(st.next_point_text("body"), "no points left")
+	st.row = st.rows.find("tech")
+	assert_true(st.adjust(-1))
+	assert_eq(st.next_point_text("body"), "next point: HP 17 → 19")
+	assert_eq(st.next_point_text("tech"), "next point: Evasion 19 → 21")
+	assert_eq(st.next_point_text("arcane"), "next point: Initiative 5 → 6")
+	assert_contains(st.render(), "Body: ●○○○  (+2 hp per point · next point: HP 17 → 19)")
+	st.sheet.attributes["arcane"] = 4
+	assert_eq(st.next_point_text("arcane"), "at the cap")
+	# Origins still locked on the account are listed with their blurb, not offered.
+	assert_false(st.origins.has("beacon_keeper"))
+	assert_eq(st.locked_origins.size(), 1)
+	assert_eq(st.locked_origins[0]["name"], "Beacon Keeper")
+	assert_contains(st.render(), "locked: Beacon Keeper — Unlocked by reaching first contact")
+	var st2 := CreatorState.new()
+	st2.setup(registry, rules, {}, ["origin:beacon_keeper"])
+	assert_true(st2.origins.has("beacon_keeper"))
+	assert_eq(st2.locked_origins, [])
+	assert_false(st2.render().contains("locked:"))
+	assert_contains(st.render(), "Esc cancel")
+	st.for_new_game = true
+	assert_contains(st.render(), "Esc back to the death-stakes")
+
+
+func test_placeholder_rig_paints_tone_and_accent_and_a_portrait() -> void:
+	var base := PlaceholderActorArt.body_image(Color.RED)
+	var tone := Color.html("#7fb59a")
+	var accent := Color.html("#b58cff")
+	var img := PlaceholderActorArt.body_image(Color.RED, "capsule", {"kind": "none"}, {"tone": tone, "accent": accent})
+	var toned := 0
+	var accented := 0
+	for y: int in img.get_height():
+		for x: int in img.get_width():
+			var p := img.get_pixel(x, y)
+			assert_eq(p.a == 0.0, base.get_pixel(x, y).a == 0.0, "the silhouette is the rig's at %d,%d" % [x, y])
+			if p.is_equal_approx(tone):
+				toned += 1
+				assert_true(y < 18, "the tone is the head, not the torso (%d,%d)" % [x, y])
+			elif p.is_equal_approx(accent):
+				accented += 1
+				assert_true(y < 10, "the accent is the hair cap (%d,%d)" % [x, y])
+	assert_true(toned > 20, "toned %d pixels" % toned)
+	assert_true(accented > 10, "accented %d pixels" % accented)
+	var portrait := PlaceholderActorArt.portrait_image(Color.RED, {"kind": "chrome", "color": "#00ff00"}, {"tone": tone, "accent": accent})
+	assert_eq(portrait.get_size(), PlaceholderActorArt.PORTRAIT_SIZE)
+	var counts := {"tone": 0, "accent": 0, "overlay": 0, "eye": 0}
+	for y: int in portrait.get_height():
+		for x: int in portrait.get_width():
+			var p := portrait.get_pixel(x, y)
+			if p.is_equal_approx(tone):
+				counts["tone"] += 1
+			elif p.is_equal_approx(accent):
+				counts["accent"] += 1
+			elif p.g > 0.9 and p.r < 0.1:
+				counts["overlay"] += 1
+	assert_true(counts["tone"] > 300, "a face: %d" % counts["tone"])
+	assert_true(counts["accent"] > 100, "hair: %d" % counts["accent"])
+	assert_true(counts["overlay"] > 0, "the race overlay on the shoulders")
+	assert_true(portrait.get_pixel(26, 32).r < 0.3, "an eye")
+	assert_eq(portrait.get_pixel(0, 0).a, 0.0, "transparent corners")
+	var plain := PlaceholderActorArt.portrait_image(Color.RED)
+	assert_eq(plain.get_size(), PlaceholderActorArt.PORTRAIT_SIZE)
+	var head := plain.get_pixel(32, 30)
+	assert_true(head.r > 0.99 and absf(head.g - 0.15) < 0.01 and absf(head.b - 0.15) < 0.01, "the default head is the tint, lightened: %s" % head)
+
+
 func test_party_builder_default_and_with_protagonist() -> void:
 	var preset := registry.get_entry("parties", "prototype")
 	var positions: Array[Vector2] = [Vector2(0, 0), Vector2(10, 0), Vector2(20, 0), Vector2(30, 0)]
@@ -124,6 +233,13 @@ func test_party_builder_default_and_with_protagonist() -> void:
 	assert_eq(Dictionary(lead["data"])["resource_id"], "hexes")
 	assert_eq(Dictionary(lead["stats"])["hp"], 17)
 	assert_eq(Dictionary(lead["overlay"])["kind"], "chrome")
+	assert_eq(lead["appearance"], {}, "no look chosen: the race default")
+	var looked := VEX.duplicate(true)
+	looked["appearance"] = {"tone": "umber", "accent": "ember"}
+	var dressed := PartyBuilder.member_specs(registry, preset, looked, rules, positions)
+	assert_eq(Dictionary(dressed[0]["appearance"])["tone"], Color.html("#8a5a3a"))
+	assert_eq(Dictionary(dressed[0]["appearance"])["accent"], Color.html("#ff8a5b"))
+	assert_eq(dressed[1]["appearance"], {}, "only the protagonist has a look")
 	assert_eq(lead["color"], Color.html("#b58cff"))
 	assert_eq(lead["position"], Vector2(0, 0))
 	assert_eq(Dictionary(with[1]["data"])["id"], "ash", "the rest of the preset is untouched")

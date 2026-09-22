@@ -1,0 +1,20 @@
+{
+  "name": "Appearance",
+  "summary": "Creator appearance choices (S51): a tone for the head (skin, shell, bark or plating) and an accent (hair, visor, glow). Each is an id list; the placeholder rig paints them and a sprite sheet swaps its `skin` and `accent` palette roles when it has them. Empty means the race's default look.",
+  "tones": [
+    { "id": "pale", "name": "Pale", "color": "#f1d9c6" },
+    { "id": "warm", "name": "Warm", "color": "#d9a679" },
+    { "id": "umber", "name": "Umber", "color": "#8a5a3a" },
+    { "id": "deep", "name": "Deep", "color": "#4a3126" },
+    { "id": "ashen", "name": "Ashen", "color": "#b9b6c4" },
+    { "id": "verdigris", "name": "Verdigris", "color": "#7fb59a" }
+  ],
+  "accents": [
+    { "id": "ink", "name": "Ink", "color": "#1c1a2b" },
+    { "id": "bleach", "name": "Bleach", "color": "#f4f0e6" },
+    { "id": "rust", "name": "Rust", "color": "#c2542c" },
+    { "id": "neon_violet", "name": "Neon violet", "color": "#b58cff" },
+    { "id": "neon_teal", "name": "Neon teal", "color": "#4fe3d2" },
+    { "id": "ember", "name": "Ember", "color": "#ff8a5b" }
+  ]
+}

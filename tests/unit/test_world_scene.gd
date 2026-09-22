@@ -600,7 +600,7 @@ func test_protagonist_replaces_the_leader_and_persists_through_saves() -> void:
 	assert_eq(again.load_slot(1), [])
 	assert_eq(again.party.leader().display_name, "Vex")
 	assert_eq(again.party.leader().max_hp, 17)
-	assert_eq(CharacterSheet.from_dict(again.protagonist).to_dict(), VEX, "ints survive the JSON float round trip")
+	assert_eq(CharacterSheet.from_dict(again.protagonist).to_dict(), CharacterSheet.from_dict(VEX).to_dict(), "ints survive the JSON float round trip")
 	_drop(again)
 
 
