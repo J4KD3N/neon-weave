@@ -1,0 +1,7 @@
+{
+  "name": "Iron Weave",
+  "summary": "Reach an ending with one save and no reloads.",
+  "steam_id": "ACH_IRON_WEAVE",
+  "when": { "flags": { "iron_weave_complete": true } },
+  "milestone": "M4"
+}

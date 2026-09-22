@@ -10,6 +10,7 @@ extends TestCase
 
 const LEDGER := "user://test_ledger_full.json"
 const SAVES := "user://test_saves_full"
+const ACCOUNT := "user://test_account_full.json"
 const KEYS: Dictionary = {"lattice": "ghost_markets", "rootched": "verdant_datacore", "ashfound": "null_cathedral"}
 const ENVOYS: Dictionary = {"lattice": "lattice_envoy", "rootched": "rootched_envoy", "ashfound": "ashfound_envoy"}
 const OPENERS: Dictionary = {"lattice": ["Say your piece", "Get to the offer"], "rootched": ["Go on", "Get to the offer"], "ashfound": ["Make it", "Get to the offer"]}
@@ -42,8 +43,9 @@ static func _root() -> Window:
 
 
 static func _cleanup() -> void:
-	if FileAccess.file_exists(LEDGER):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(LEDGER))
+	for f: String in [LEDGER, ACCOUNT]:
+		if FileAccess.file_exists(f):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(f))
 	var d := DirAccess.open(SAVES)
 	if d != null:
 		for f: String in d.get_files():
@@ -57,6 +59,7 @@ func _fresh() -> ExploreWorld:
 	w.combat_seed = 1234
 	w.ledger_path = LEDGER
 	w.saves_dir = SAVES
+	w.account_path = ACCOUNT
 	_root().add_child(w)
 	w.combat.animate = false
 	return w
@@ -167,10 +170,15 @@ func _extract() -> void:
 
 ## The plaza to the source, through the same calls the keys use; ends on the
 ## plaza with Act 2 open, Whisper and Cinder on the bench.
-func _play_act1(mortal: bool) -> void:
-	world.narrative.set_flag("mortal_mode", mortal)
+func _play_act1(mortal: bool, difficulty: String = "", iron: bool = false) -> void:
+	world.narrative.set_flag("mortal_mode", mortal or iron)
+	world.narrative.set_flag("iron_weave", iron)
+	world.narrative.difficulty = difficulty
+	if iron:
+		world.account.begin_iron(difficulty)
 	world.apply_death_stakes()
-	assert_eq(world.is_mortal_mode(), mortal)
+	assert_eq(world.is_mortal_mode(), mortal or iron)
+	assert_eq(world.difficulty_id(), difficulty if not difficulty.is_empty() else "balanced")
 	_step_on(Vector2i(22, 7))
 	assert_eq(world.map_id, "proto_yard")
 	_stand_on(Vector2i(5, 4))
@@ -393,19 +401,26 @@ func _play_act3(faction: String) -> void:
 	assert_contains(world.ending_menu.label.text, "NEON WEAVE")
 
 
+## The eight endings, each death-stakes mode on its own difficulty (S50):
+## Story-Protected on Story, Mortal on Balanced. Then Iron Weave on
+## Tactician (S50): one path straight through with no slot save and no
+## reload, the autosave the only way back in, the account keeping the run.
 func test_three_acts_on_every_path_in_both_death_stakes_modes() -> void:
 	var started := Time.get_ticks_msec()
 	seed(20260921)
-	for mortal: bool in [false, true]:
-		_play_act1(mortal)
+	for mode: Dictionary in [{"mortal": false, "difficulty": "story"}, {"mortal": true, "difficulty": "balanced"}]:
+		var mortal: bool = mode["mortal"]
+		var difficulty: String = mode["difficulty"]
+		_play_act1(mortal, difficulty)
 		assert_eq(world.save_slot(1), OK, "Act 1 saved")
 		var act1_ms := Time.get_ticks_msec() - started
-		print("  campaign: act 1 (%s) in %.0f s" % ["mortal" if mortal else "story-protected", act1_ms / 1000.0])
+		print("  campaign: act 1 (%s, %s) in %.0f s" % ["mortal" if mortal else "story-protected", difficulty, act1_ms / 1000.0])
 		for faction: String in ["lattice", "rootched", "ashfound", ""]:
 			var run_started := Time.get_ticks_msec()
 			assert_eq(world.load_slot(1), [], "%s: back to the end of Act 1" % faction)
 			assert_eq(world.narrative.faction, "", "unsworn at the start of Act 2")
 			assert_eq(world.is_mortal_mode(), mortal, "the mode rides with the save")
+			assert_eq(world.difficulty_id(), difficulty, "the difficulty rides with the save")
 			_play_act2(faction, mortal)
 			_play_act3(faction)
 			var fates := world.ending_menu.label.text
@@ -418,6 +433,26 @@ func test_three_acts_on_every_path_in_both_death_stakes_modes() -> void:
 		_drop(world)
 		_cleanup()
 		world = _fresh()
+	# Iron Weave: Tactician, the Lattice path, no slot and no reload.
+	var iron_started := Time.get_ticks_msec()
+	_play_act1(true, "tactician", true)
+	assert_true(world.is_iron_weave())
+	assert_true(world.account.iron_active, "the account carries the run")
+	assert_eq(world.rules.depth_hp_per_level, 0.15, "Tactician's depth curve")
+	assert_eq(world.save_slot(1), ERR_UNAVAILABLE, "Iron Weave: no slot save")
+	assert_eq(world.load_slot(1), ["Iron Weave: no reloads"], "Iron Weave: no reload")
+	assert_eq(world.autosave(), OK)
+	assert_true(world.continue_game(), "the autosave is the one way back in")
+	assert_true(world.is_iron_weave(), "and it is still Iron Weave")
+	assert_eq(world.difficulty_id(), "tactician")
+	_play_act2("lattice", true)
+	_play_act3("lattice")
+	assert_contains(world.ending_menu.label.text, "Dax: ", "Dax has a fate in death")
+	assert_false(world.account.iron_active, "the run is over on the account")
+	assert_true(world.account.has("iron_weave:lattice_order"), "and kept as a key")
+	assert_true(world.narrative.flag("iron_weave_complete"))
+	world.close_ending()
+	print("  campaign: iron weave (tactician) lattice path to %s in %.0f s" % [ENDING["lattice"], (Time.get_ticks_msec() - iron_started) / 1000.0])
 	var total := (Time.get_ticks_msec() - started) / 1000.0
-	print("  campaign: eight endings in %.0f s" % total)
+	print("  campaign: nine endings in %.0f s" % total)
 	assert_true(total < BUDGET_SECONDS, "the campaign test runs under %.0f s (took %.0f s)" % [BUDGET_SECONDS, total])

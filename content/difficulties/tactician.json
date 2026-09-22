@@ -1,0 +1,18 @@
+{
+  "name": "Tactician",
+  "summary": "Enemies scale hard with depth, elites and bosses hit like they mean it, no wind-up round, and a win is barely a breather. Cover, flanks and focus fire are not optional.",
+  "order": 2,
+  "rules": {
+    "combat": {
+      "depth_hp_per_level": 0.15,
+      "depth_damage_every": 1,
+      "elite_hp_mult": 1.75,
+      "elite_damage_bonus": 2,
+      "boss_hp_mult": 3.0,
+      "boss_damage_bonus": 3,
+      "boss_telegraph_round": 0,
+      "rest_after_victory": 0.1,
+      "ai_retreat_hp_fraction": 0.2
+    }
+  }
+}

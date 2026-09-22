@@ -19,6 +19,7 @@ const SCHEMAS: Dictionary = {
 	"buildings": ["name", "order", "levels"],
 	"classes": ["name", "branches", "resource", "stats", "abilities", "subclasses"],
 	"companions": ["name", "race", "class", "dialogue", "quest"],
+	"difficulties": ["name", "rules"],
 	"dialogue": ["name", "nodes|lines"],
 	"enemies": ["name", "family", "archetype", "stats", "abilities", "art"],
 	"factions": ["name", "color", "rivals", "joinable_act"],
@@ -138,6 +139,7 @@ func _run() -> void:
 	_items()
 	_endings()
 	_achievements()
+	_difficulties()
 	_misc()
 
 
@@ -599,6 +601,34 @@ func _achievements() -> void:
 			_flag(a, "steam_id '%s' is also used by %s" % [sid, seen[sid]])
 		seen[sid] = a["id"]
 		_check_requires(a, a.get("when", {}), "when")
+
+
+## A difficulty is a rules overlay (S50): every block names a rules entry and
+## every key in it a field that entry already has, so a typo cannot silently
+## do nothing. Exactly one base-game difficulty is the default.
+func _difficulties() -> void:
+	var defaults := 0
+	for d: Dictionary in _registry.get_all("difficulties"):
+		if bool(d.get("default", false)):
+			defaults += 1
+		var overlays: Variant = d.get("rules", {})
+		if not overlays is Dictionary:
+			_flag(d, "rules must be a dictionary of {rules entry id: {field: value}}")
+			continue
+		for rule_id: String in overlays:
+			if not _has("rules", rule_id):
+				_flag(d, "rules.%s overrides rules '%s', which does not exist" % [rule_id, rule_id])
+				continue
+			var base: Dictionary = _registry.get_entry("rules", rule_id)
+			var block: Variant = overlays[rule_id]
+			if not block is Dictionary:
+				_flag(d, "rules.%s must be a dictionary of overrides" % rule_id)
+				continue
+			for key: String in block:
+				if not base.has(key):
+					_flag(d, "rules.%s overrides '%s', which rules/%s does not have" % [rule_id, key, rule_id])
+	if defaults != 1 and _sources.is_empty() and not _registry.get_all("difficulties").is_empty():
+		_flag(_registry.get_all("difficulties")[0], "exactly one difficulty must be the default (found %d)" % defaults)
 
 
 func _misc() -> void:

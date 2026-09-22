@@ -1,4 +1,4 @@
-## The title screen: New game (then the death-stakes choice), Continue,
+## The title screen: New game (then the difficulty, then the death-stakes choice), Continue,
 ## Load, Settings, Quit. A cursor list like every other menu; the world
 ## runs the actions. Shown on a cold start, hidden for tests and CI.
 class_name TitleMenu
@@ -6,6 +6,7 @@ extends CanvasLayer
 
 const PAGE_MAIN := "main"
 const PAGE_STAKES := "stakes"
+const PAGE_DIFFICULTY := "difficulty"
 
 var panel: PanelContainer
 var title_label: Label
@@ -83,7 +84,10 @@ func refresh() -> void:
 static func render(p_page: String, p_rows: Array[Dictionary], p_cursor: int) -> String:
 	var lines: PackedStringArray = []
 	lines.append("")
-	if p_page == PAGE_STAKES:
+	if p_page == PAGE_DIFFICULTY:
+		lines.append("Difficulty. How hard the Shards push back; the story is the same on every one.")
+		lines.append("")
+	elif p_page == PAGE_STAKES:
 		lines.append("Death-stakes. Choose how much the dice can take from you.")
 		lines.append("")
 	for i: int in p_rows.size():
