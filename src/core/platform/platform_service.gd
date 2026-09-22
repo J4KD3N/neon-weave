@@ -60,8 +60,8 @@ func user_name() -> String:
 ## "Steam: <name>" or "Steam-free build (null backend)".
 func status_line() -> String:
 	if backend.is_available():
-		return "%s: %s%s" % [backend.backend_name().capitalize(), backend.user_name(), " (demo)" if backend.is_demo() else ""]
-	return "Steam-free build (%s backend)" % backend.backend_name()
+		return "%s: %s%s" % [Loc.t(backend.backend_name().capitalize()), backend.user_name(), Loc.t(" (demo)") if backend.is_demo() else ""]
+	return Loc.t("Steam-free build (%s backend)") % Loc.t(backend.backend_name())
 
 
 # --- achievements -----------------------------------------------------------

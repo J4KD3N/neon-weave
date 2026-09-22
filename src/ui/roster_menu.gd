@@ -92,7 +92,7 @@ func refresh() -> void:
 
 static func render(p_rows: Array[Dictionary], p_cursor: int) -> String:
 	var lines: PackedStringArray = []
-	lines.append("ROSTER & QUARTERS")
+	lines.append(Loc.t("ROSTER & QUARTERS"))
 	lines.append("")
 	for i: int in p_rows.size():
 		var row: Dictionary = p_rows[i]
@@ -100,8 +100,8 @@ static func render(p_rows: Array[Dictionary], p_cursor: int) -> String:
 		var line := "%s%s" % [marker, row.get("label", row.get("id", "?"))]
 		if not bool(row.get("enabled", true)):
 			var why := String(row.get("why", ""))
-			line += "  (%s)" % (why if not why.is_empty() else "unavailable")
+			line += Loc.t("  (%s)") % (why if not why.is_empty() else "unavailable")
 		lines.append(line)
 	lines.append("")
-	lines.append("↑↓ choose · ←→ or Enter: walk with you / wait at the Bastion · Enter on a scene plays it · Esc / B close")
+	lines.append(Loc.t("↑↓ choose · ←→ or Enter: walk with you / wait at the Bastion · Enter on a scene plays it · Esc / B close"))
 	return "\n".join(lines)

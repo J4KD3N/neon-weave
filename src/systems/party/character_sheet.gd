@@ -51,32 +51,32 @@ func validate(registry: ContentRegistry, attr_rules: Dictionary) -> Array[String
 	var errors: Array[String] = []
 	var trimmed := name.strip_edges()
 	if trimmed.is_empty():
-		errors.append("name is empty")
+		errors.append(Loc.t("name is empty"))
 	elif trimmed.length() > MAX_NAME:
-		errors.append("name is longer than %d characters" % MAX_NAME)
+		errors.append(Loc.t("name is longer than %d characters") % MAX_NAME)
 	if not registry.has_entry("races", race_id):
-		errors.append("unknown race '%s'" % race_id)
+		errors.append(Loc.t("unknown race '%s'") % race_id)
 	if not registry.has_entry("origins", origin_id):
-		errors.append("unknown origin '%s'" % origin_id)
+		errors.append(Loc.t("unknown origin '%s'") % origin_id)
 	if not registry.has_entry("classes", class_id):
-		errors.append("unknown class '%s'" % class_id)
+		errors.append(Loc.t("unknown class '%s'") % class_id)
 	var look: Dictionary = registry.get_entry("rules", "appearance")
 	for part: String in ["tone", "accent"]:
 		var id := String(appearance.get(part, ""))
 		if not id.is_empty() and appearance_option(look, part, id).is_empty():
-			errors.append("unknown %s '%s'" % [part, id])
+			errors.append(Loc.t("unknown %s '%s'") % [part, id])
 	var names: Array = attr_rules.get("names", [])
 	var points := int(attr_rules.get("points", 0))
 	var cap := int(attr_rules.get("max_per_attribute", 99))
 	for key: String in attributes:
 		if not names.has(key):
-			errors.append("unknown attribute '%s'" % key)
+			errors.append(Loc.t("unknown attribute '%s'") % key)
 	for key: String in names:
 		var v := attribute(key)
 		if v < 0 or v > cap:
-			errors.append("%s must be between 0 and %d" % [key, cap])
+			errors.append(Loc.t("%s must be between 0 and %d") % [key, cap])
 	if points_spent() != points:
-		errors.append("attributes spend %d of %d points" % [points_spent(), points])
+		errors.append(Loc.t("attributes spend %d of %d points") % [points_spent(), points])
 	return errors
 
 

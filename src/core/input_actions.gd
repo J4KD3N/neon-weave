@@ -112,17 +112,17 @@ static var overrides: Dictionary = {} # action -> {"keys": [Key], "buttons": [Jo
 ## Human-readable current binding: "Enter, KP Enter / A".
 static func describe(action: String) -> String:
 	if not InputMap.has_action(action):
-		return "unbound"
+		return Loc.t("unbound")
 	var keys: PackedStringArray = []
 	var pads: PackedStringArray = []
 	for e: InputEvent in InputMap.action_get_events(action):
 		if e is InputEventKey:
-			keys.append(OS.get_keycode_string((e as InputEventKey).physical_keycode))
+			keys.append(Loc.t(OS.get_keycode_string((e as InputEventKey).physical_keycode)))
 		elif e is InputEventJoypadButton:
-			pads.append(_button_name((e as InputEventJoypadButton).button_index))
+			pads.append(Loc.t(_button_name((e as InputEventJoypadButton).button_index)))
 		elif e is InputEventJoypadMotion:
-			pads.append("axis %d" % (e as InputEventJoypadMotion).axis)
-	var out := ", ".join(keys) if not keys.is_empty() else "no key"
+			pads.append(Loc.t("axis %d") % (e as InputEventJoypadMotion).axis)
+	var out := ", ".join(keys) if not keys.is_empty() else Loc.t("no key")
 	if not pads.is_empty():
 		out += " / " + ", ".join(pads)
 	return out

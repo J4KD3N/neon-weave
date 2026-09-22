@@ -63,27 +63,28 @@ func refresh() -> void:
 ## says what the row under the cursor does.
 static func build_rows(settings: Settings) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
-	out.append({"id": "fullscreen", "kind": "toggle", "section": "Display", "label": "Fullscreen: %s" % ("on" if settings.fullscreen else "off"), "hint": "Enter or A switches between a window and the whole screen."})
-	out.append({"id": "text_scale", "kind": "value", "section": "Display", "label": "Text size: %s" % settings.text_scale_name(), "hint": "Left and right grow or shrink every menu's text. Deck is for a 1280×800 screen."})
-	out.append({"id": "palette", "kind": "value", "section": "Display", "label": "Colour-blind palette: %s" % settings.palette, "hint": "Left and right pick a filter that keeps reds, greens or blues apart for protanopia, deuteranopia or tritanopia."})
-	out.append({"id": "volume", "kind": "value", "section": "Audio", "label": "Master volume: %d%%" % settings.volume_percent(), "hint": "Left and right, in steps. Everything the game plays."})
-	out.append({"id": "music", "kind": "value", "section": "Audio", "label": "Music: %d%%" % Settings.percent_of(settings.music_db), "hint": "The music on its own."})
-	out.append({"id": "sfx", "kind": "value", "section": "Audio", "label": "Sound effects: %d%%" % Settings.percent_of(settings.sfx_db), "hint": "Hits, steps, pickups and the menus on their own."})
-	out.append({"id": "glyphs", "kind": "value", "section": "Pad", "label": "Pad glyphs: %s%s" % [settings.glyphs, "" if settings.glyphs != "auto" else " (%s)" % Glyphs.resolved_style()], "hint": "Which button names the hints use. Auto follows the pad plugged in."})
-	out.append({"id": "rumble", "kind": "toggle", "section": "Pad", "label": "Pad rumble: %s" % ("on" if settings.rumble else "off"), "hint": "Hits, downs, wins and wipes in the pad. Enter or A switches it and gives one pulse."})
+	out.append({"id": "fullscreen", "kind": "toggle", "section": "Display", "label": Loc.t("Fullscreen: %s") % (Loc.t("on") if settings.fullscreen else Loc.t("off")), "hint": Loc.t("Enter or A switches between a window and the whole screen.")})
+	out.append({"id": "text_scale", "kind": "value", "section": "Display", "label": Loc.t("Text size: %s") % Loc.t(settings.text_scale_name()), "hint": Loc.t("Left and right grow or shrink every menu's text. Deck is for a 1280×800 screen.")})
+	out.append({"id": "palette", "kind": "value", "section": "Display", "label": Loc.t("Colour-blind palette: %s") % Loc.t(settings.palette), "hint": Loc.t("Left and right pick a filter that keeps reds, greens or blues apart for protanopia, deuteranopia or tritanopia.")})
+	out.append({"id": "language", "kind": "value", "section": "Display", "label": Loc.t("Language: %s") % Loc.t(Loc.name_of(settings.locale)), "hint": Loc.t("Left and right pick a language the game has a table for. Pseudo is for testing that every string comes through.")})
+	out.append({"id": "volume", "kind": "value", "section": "Audio", "label": Loc.t("Master volume: %d%%") % settings.volume_percent(), "hint": Loc.t("Left and right, in steps. Everything the game plays.")})
+	out.append({"id": "music", "kind": "value", "section": "Audio", "label": Loc.t("Music: %d%%") % Settings.percent_of(settings.music_db), "hint": Loc.t("The music on its own.")})
+	out.append({"id": "sfx", "kind": "value", "section": "Audio", "label": Loc.t("Sound effects: %d%%") % Settings.percent_of(settings.sfx_db), "hint": Loc.t("Hits, steps, pickups and the menus on their own.")})
+	out.append({"id": "glyphs", "kind": "value", "section": "Pad", "label": Loc.t("Pad glyphs: %s%s") % [Loc.t(settings.glyphs), "" if settings.glyphs != "auto" else Loc.t(" (%s)") % Loc.t(Glyphs.resolved_style())], "hint": Loc.t("Which button names the hints use. Auto follows the pad plugged in.")})
+	out.append({"id": "rumble", "kind": "toggle", "section": "Pad", "label": Loc.t("Pad rumble: %s") % (Loc.t("on") if settings.rumble else Loc.t("off")), "hint": Loc.t("Hits, downs, wins and wipes in the pad. Enter or A switches it and gives one pulse.")})
 	for action: String in REBINDABLE:
-		out.append({"id": "rebind:" + action, "kind": "rebind", "section": "Bindings", "label": "%s: %s" % [action.replace("_", " "), InputActions.describe(action)], "hint": "Enter or A, then press the new key or button. Esc keeps the old one."})
-	out.append({"id": "reset", "kind": "action", "section": "Bindings", "label": "Reset all bindings to default", "hint": "Every binding back to how the game shipped."})
-	out.append({"id": "back", "kind": "action", "section": "", "label": "Back", "hint": "Settings are saved when you leave."})
+		out.append({"id": "rebind:" + action, "kind": "rebind", "section": "Bindings", "label": Loc.t("%s: %s") % [Loc.t(action.replace("_", " ")), InputActions.describe(action)], "hint": Loc.t("Enter or A, then press the new key or button. Esc keeps the old one.")})
+	out.append({"id": "reset", "kind": "action", "section": "Bindings", "label": Loc.t("Reset all bindings to default"), "hint": Loc.t("Every binding back to how the game shipped.")})
+	out.append({"id": "back", "kind": "action", "section": "", "label": Loc.t("Back"), "hint": Loc.t("Settings are saved when you leave.")})
 	return out
 
 
 static func render(p_rows: Array[Dictionary], p_cursor: int, p_rebinding: String) -> String:
 	var lines: PackedStringArray = []
-	lines.append("SETTINGS")
+	lines.append(Loc.t("SETTINGS"))
 	lines.append("")
 	if not p_rebinding.is_empty():
-		lines.append("Press the new key or pad button for %s (Esc keeps the current one)" % p_rebinding.replace("_", " "))
+		lines.append(Loc.t("Press the new key or pad button for %s (Esc keeps the current one)") % Loc.t(p_rebinding.replace("_", " ")))
 		lines.append("")
 	var last_section := ""
 	for i: int in p_rows.size():
@@ -91,15 +92,15 @@ static func render(p_rows: Array[Dictionary], p_cursor: int, p_rebinding: String
 		var section := String(row.get("section", ""))
 		if section != last_section:
 			if not section.is_empty():
-				lines.append(section)
+				lines.append(Loc.t(section))
 			last_section = section
 		var marker := "▶ " if i == p_cursor else "   "
-		lines.append("%s%s" % [marker, row.get("label", row.get("id", "?"))])
+		lines.append(Loc.t("%s%s") % [marker, row.get("label", row.get("id", "?"))])
 	lines.append("")
 	if p_cursor >= 0 and p_cursor < p_rows.size() and p_rebinding.is_empty():
 		var hint := String(p_rows[p_cursor].get("hint", ""))
 		if not hint.is_empty():
 			lines.append(hint)
 			lines.append("")
-	lines.append("↑↓ choose · ←→ adjust · %s toggle or rebind · %s back" % [Glyphs.key_and_pad("Enter", Glyphs.confirm()), Glyphs.key_and_pad("Esc", Glyphs.cancel())])
+	lines.append(Loc.t("↑↓ choose · ←→ adjust · %s toggle or rebind · %s back") % [Glyphs.key_and_pad("Enter", Glyphs.confirm()), Glyphs.key_and_pad("Esc", Glyphs.cancel())])
 	return "\n".join(lines)

@@ -141,4 +141,4 @@ func total(key: String) -> int:
 
 
 func summary() -> String:
-	return "banked S%d A%d C%d · XP %d · runs %d · wipes %d" % [total("salvage"), total("aether"), total("ciphers"), xp, runs_completed, runs_wiped]
+	return Loc.t("banked S%d A%d C%d · XP %d · runs %d · wipes %d") % [total("salvage"), total("aether"), total("ciphers"), xp, runs_completed, runs_wiped]

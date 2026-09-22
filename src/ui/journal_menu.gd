@@ -40,10 +40,10 @@ func close() -> void:
 ## the id of the quest on the HUD; `history` [{"who", "text"}], oldest first.
 static func render(entries: Array[Dictionary], tracked: String = "", history: Array[Dictionary] = []) -> String:
 	var lines: PackedStringArray = []
-	lines.append("JOURNAL")
+	lines.append(Loc.t("JOURNAL"))
 	lines.append("")
 	if entries.is_empty():
-		lines.append("Nothing yet. Talk to people; walk east.")
+		lines.append(Loc.t("Nothing yet. Talk to people; walk east."))
 	var active: Array[Dictionary] = []
 	var finished: Array[Dictionary] = []
 	for e: Dictionary in entries:
@@ -53,21 +53,21 @@ static func render(entries: Array[Dictionary], tracked: String = "", history: Ar
 			active.append(e)
 	for e: Dictionary in active:
 		var mark := "▶ " if String(e.get("id", "")) == tracked and not tracked.is_empty() else "  "
-		lines.append("%s%s%s%s" % [mark, "★ " if bool(e.get("main", false)) else "• ", e.get("name", "?"), "  (tracked)" if mark == "▶ " else ""])
-		lines.append("     %s" % e.get("stage_summary", ""))
+		lines.append(Loc.t("%s%s%s%s") % [mark, "★ " if bool(e.get("main", false)) else "• ", e.get("name", "?"), Loc.t("  (tracked)") if mark == "▶ " else ""])
+		lines.append(Loc.t("     %s") % e.get("stage_summary", ""))
 		for o: Dictionary in e.get("objectives", []):
-			lines.append("     %s %s" % ["✓" if bool(o.get("done", false)) else "·", o.get("text", "")])
+			lines.append(Loc.t("     %s %s") % ["✓" if bool(o.get("done", false)) else "·", o.get("text", "")])
 		lines.append("")
 	if not finished.is_empty():
-		lines.append("Done")
+		lines.append(Loc.t("Done"))
 		for e: Dictionary in finished:
-			lines.append("     ✓ %s — %s" % [e.get("name", "?"), e.get("stage_summary", "")])
+			lines.append(Loc.t("     ✓ %s — %s") % [e.get("name", "?"), e.get("stage_summary", "")])
 		lines.append("")
 	if not history.is_empty():
-		lines.append("History")
+		lines.append(Loc.t("History"))
 		var start := maxi(history.size() - HISTORY_LINES, 0)
 		for i: int in range(start, history.size()):
-			lines.append("     %s: %s" % [history[i].get("who", "?"), history[i].get("text", "")])
+			lines.append(Loc.t("     %s: %s") % [history[i].get("who", "?"), history[i].get("text", "")])
 		lines.append("")
-	lines.append("←→ track a quest on the HUD · Esc / B / J close")
+	lines.append(Loc.t("←→ track a quest on the HUD · Esc / B / J close"))
 	return "\n".join(lines)

@@ -1,0 +1,6 @@
+{
+  "name": "English",
+  "summary": "The source language (S55): every UI string's key is its English text and every content string's key is kind.id.path, so this table is empty and the game reads its sources. Copy it to <code>.json, fill `ui` and `content` (tools/extract_strings.gd writes the full template), and the settings screen lists the language.",
+  "ui": {},
+  "content": {}
+}

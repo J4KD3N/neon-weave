@@ -45,7 +45,7 @@ func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary =
 	locked_origins.clear()
 	for o: Dictionary in registry.get_all("origins"):
 		if o.has("unlock_flag") and not unlocked.has("origin:%s" % String(o["id"])):
-			locked_origins.append({"name": String(o.get("name", o["id"])), "blurb": String(o.get("unlock_blurb", "Earned by an earlier playthrough."))})
+			locked_origins.append({"name": Loc.text(o, "name", String(o["id"])), "blurb": Loc.text(o, "unlock_blurb", Loc.t("Earned by an earlier playthrough."))})
 			continue # earned on the account by an earlier playthrough (S35)
 		origins.append(o["id"])
 	classes.clear()
@@ -66,6 +66,8 @@ func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary =
 	rows = [ROW_NAME, "race", "origin", "class", ROW_TONE, ROW_ACCENT]
 	rows.append_array(attr_names)
 	sheet = CharacterSheet.from_dict(existing) if not existing.is_empty() else CharacterSheet.new()
+	if existing.is_empty():
+		sheet.name = Loc.t(sheet.name)
 	if not races.has(sheet.race_id) and not races.is_empty():
 		sheet.race_id = races[0]
 	if not origins.has(sheet.origin_id) and not origins.is_empty():
@@ -150,16 +152,16 @@ func preview_stats(attribute: String = "", delta: int = 0) -> Dictionary:
 func next_point_text(attribute: String) -> String:
 	var cap := int(attr_rules.get("max_per_attribute", 4))
 	if sheet.attribute(attribute) >= cap:
-		return "at the cap"
+		return Loc.t("at the cap")
 	if points_left() <= 0:
-		return "no points left"
+		return Loc.t("no points left")
 	var now := preview_stats()
 	var then := preview_stats(attribute, 1)
 	var parts: PackedStringArray = []
 	for key: String in ["hp", "move", "evasion", "initiative"]:
 		if int(then.get(key, 0)) != int(now.get(key, 0)):
 			parts.append("%s %d → %d" % [_stat_label(key), int(now[key]), int(then[key])])
-	return "next point: %s" % ", ".join(parts) if not parts.is_empty() else "next point changes nothing"
+	return Loc.t("next point: %s") % ", ".join(parts) if not parts.is_empty() else Loc.t("next point changes nothing")
 
 
 ## The sheet's appearance as rig colours (see CharacterSheet.resolve_appearance).
@@ -170,68 +172,71 @@ func appearance_colors() -> Dictionary:
 func appearance_name(part: String) -> String:
 	var id := String(sheet.appearance.get(part, ""))
 	if id.is_empty():
-		return "race default"
-	return String(CharacterSheet.appearance_option(look, part, id).get("name", id))
+		return Loc.t("race default")
+	return Loc.any(String(CharacterSheet.appearance_option(look, part, id).get("name", id)))
 
 
 func render() -> String:
 	var lines: PackedStringArray = []
-	lines.append("NEW WEAVER")
-	lines.append("↑↓ row · ←→ change · Enter confirm · %s" % ("Esc back to the death-stakes" if for_new_game else "Esc cancel"))
+	lines.append(Loc.t("NEW WEAVER"))
+	lines.append(Loc.t("↑↓ row · ←→ change · Enter confirm · %s") % (Loc.t("Esc back to the death-stakes") if for_new_game else Loc.t("Esc cancel")))
 	lines.append("")
 	for i: int in rows.size():
 		var key := rows[i]
 		var marker := "▶ " if i == row else "   "
 		match key:
 			ROW_NAME:
-				lines.append("%sName: %s" % [marker, sheet.name])
+				lines.append(Loc.t("%sName: %s") % [marker, sheet.name])
 			"race":
 				var r := _registry.get_entry("races", sheet.race_id)
-				lines.append("%sRace: %s — %s" % [marker, r.get("name", sheet.race_id), r.get("identity", "")])
-				lines.append("      lean: %s · %s" % [r.get("faction_lean", "none"), _mods_text(r.get("stat_mods", {}))])
+				lines.append(Loc.t("%sRace: %s — %s") % [marker, Loc.text(r, "name", sheet.race_id), Loc.text(r, "identity")])
+				lines.append(Loc.t("      lean: %s · %s") % [Loc.t(String(r.get("faction_lean", "none"))), _mods_text(r.get("stat_mods", {}))])
 			"origin":
 				var o := _registry.get_entry("origins", sheet.origin_id)
-				lines.append("%sOrigin: %s — %s" % [marker, o.get("name", sheet.origin_id), o.get("summary", "")])
-				lines.append("      %s" % _mods_text(o.get("stat_mods", {})))
+				lines.append(Loc.t("%sOrigin: %s — %s") % [marker, Loc.text(o, "name", sheet.origin_id), Loc.text(o, "summary")])
+				lines.append(Loc.t("      %s") % _mods_text(o.get("stat_mods", {})))
 				for locked: Dictionary in locked_origins:
-					lines.append("      locked: %s — %s" % [locked["name"], locked["blurb"]])
+					lines.append(Loc.t("      locked: %s — %s") % [locked["name"], locked["blurb"]])
 			"class":
 				var c := _registry.get_entry("classes", sheet.class_id)
 				var res: Dictionary = c.get("resource", {})
-				lines.append("%sClass: %s — %s: %s" % [marker, c.get("name", sheet.class_id), res.get("name", "?"), res.get("summary", "")])
-				lines.append("      abilities: %s" % ", ".join(PackedStringArray(c.get("abilities", []))))
+				lines.append(Loc.t("%sClass: %s — %s: %s") % [marker, Loc.text(c, "name", sheet.class_id), Loc.content("classes", sheet.class_id, "resource.name", String(res.get("name", "?"))), Loc.content("classes", sheet.class_id, "resource.summary", String(res.get("summary", "")))])
+				var ability_names: PackedStringArray = []
+				for ability_id: String in c.get("abilities", []):
+					ability_names.append(Loc.text(_registry.get_entry("abilities", ability_id), "name", ability_id))
+				lines.append(Loc.t("      abilities: %s") % ", ".join(ability_names))
 			ROW_TONE:
-				lines.append("%sTone: %s" % [marker, appearance_name("tone")])
+				lines.append(Loc.t("%sTone: %s") % [marker, appearance_name("tone")])
 			ROW_ACCENT:
-				lines.append("%sAccent: %s" % [marker, appearance_name("accent")])
+				lines.append(Loc.t("%sAccent: %s") % [marker, appearance_name("accent")])
 			_:
 				var fx: Dictionary = Dictionary(attr_rules.get("effects", {})).get(key, {})
-				lines.append("%s%s: %s%s  (%s per point · %s)" % [marker, key.capitalize(), "●".repeat(sheet.attribute(key)), "○".repeat(maxi(int(attr_rules.get("max_per_attribute", 4)) - sheet.attribute(key), 0)), _mods_text(fx), next_point_text(key)])
+				lines.append(Loc.t("%s%s: %s%s  (%s per point · %s)") % [marker, Loc.t(key.capitalize()), "●".repeat(sheet.attribute(key)), "○".repeat(maxi(int(attr_rules.get("max_per_attribute", 4)) - sheet.attribute(key), 0)), _mods_text(fx), next_point_text(key)])
 	lines.append("")
-	lines.append("Points left: %d" % points_left())
+	lines.append(Loc.t("Points left: %d") % points_left())
 	var s := preview_stats()
-	lines.append("Derived: HP %d · Move %d · Evasion %d · Initiative %d" % [s["hp"], s["move"], s["evasion"], s["initiative"]])
+	lines.append(Loc.t("Derived: HP %d · Move %d · Evasion %d · Initiative %d") % [s["hp"], s["move"], s["evasion"], s["initiative"]])
 	var errs := errors()
 	if not errs.is_empty():
 		lines.append("")
-		lines.append("Cannot confirm: " + "; ".join(PackedStringArray(errs)))
+		lines.append(Loc.t("Cannot confirm: ") + "; ".join(PackedStringArray(errs)))
 	return "\n".join(lines)
 
 
 static func _stat_label(key: String) -> String:
 	match key:
 		"hp":
-			return "HP"
+			return Loc.t("HP")
 		_:
-			return key.capitalize()
+			return Loc.t(key.capitalize())
 
 
 static func _mods_text(mods: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	for key: String in mods:
 		var v := int(mods[key])
-		parts.append("%s%d %s" % ["+" if v >= 0 else "", v, key])
-	return ", ".join(parts) if not parts.is_empty() else "no modifiers"
+		parts.append("%s%d %s" % ["+" if v >= 0 else "", v, Loc.t(key)])
+	return ", ".join(parts) if not parts.is_empty() else Loc.t("no modifiers")
 
 
 static func _cycle(options: Array[String], current: String, delta: int) -> String:

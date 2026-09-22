@@ -1,0 +1,7 @@
+{
+  "name": "Pseudo-locale (test)",
+  "summary": "Not a language: every string that comes through the tables is wrapped in ⟦ ⟧ with accented letters, so a screen with plain letters on it is showing a string that did not (S55). The localization test runs every screen in it.",
+  "pseudo": true,
+  "ui": {},
+  "content": {}
+}

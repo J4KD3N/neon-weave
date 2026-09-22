@@ -55,8 +55,8 @@ static func render(header: String, p_rows: Array[Dictionary], p_cursor: int) -> 
 		var marker := "▶ " if i == p_cursor else "   "
 		var line := "%s%s" % [marker, row.get("label", row.get("id", "?"))]
 		if not bool(row.get("enabled", true)):
-			line += "  (%s)" % String(row.get("why", "unavailable"))
+			line += Loc.t("  (%s)") % String(row.get("why", "unavailable"))
 		lines.append(line)
 	lines.append("")
-	lines.append("↑↓ choose · Enter / A buy · Esc / B leave")
+	lines.append(Loc.t("↑↓ choose · Enter / A buy · Esc / B leave"))
 	return "\n".join(lines)

@@ -64,11 +64,11 @@ func next_cost(id: String) -> Dictionary:
 
 func can_upgrade(id: String, ledger: Ledger) -> String:
 	if not has(id):
-		return "unknown building"
+		return Loc.t("unknown building")
 	if level(id) >= max_level(id):
-		return "already at max level"
+		return Loc.t("already at max level")
 	if not ledger.can_afford(next_cost(id)):
-		return "cannot afford %s" % describe_cost(next_cost(id))
+		return Loc.t("cannot afford %s") % describe_cost(next_cost(id))
 	return ""
 
 
@@ -133,21 +133,21 @@ func to_dict() -> Dictionary:
 
 
 func blurb(id: String) -> String:
-	return String(_level_entry(id, level(id)).get("blurb", ""))
+	return Loc.any(String(_level_entry(id, level(id)).get("blurb", "")))
 
 
 func next_blurb(id: String) -> String:
-	return String(_level_entry(id, level(id) + 1).get("blurb", ""))
+	return Loc.any(String(_level_entry(id, level(id) + 1).get("blurb", "")))
 
 
 func name_of(id: String) -> String:
 	var entry: Dictionary = buildings.get(id, {})
-	return String(entry.get("name", id))
+	return Loc.text(entry, "name", id)
 
 
 static func describe_cost(cost: Dictionary) -> String:
 	var parts: PackedStringArray = []
 	for key: String in Ledger.RESOURCES:
 		if int(cost.get(key, 0)) > 0:
-			parts.append("%d %s" % [int(cost[key]), key])
+			parts.append("%d %s" % [int(cost[key]), Loc.t(key)])
 	return ", ".join(parts) if not parts.is_empty() else "free"

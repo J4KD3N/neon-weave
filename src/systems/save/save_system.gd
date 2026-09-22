@@ -345,7 +345,7 @@ static func summarize(data: Dictionary, registry: ContentRegistry = null) -> Str
 			note += " · ✗ content changed, needs a new game"
 		elif content_changed(data, registry):
 			note += " · content changed"
-	return "%s — %s — %s%s" % [data.get("map_name", "?"), data.get("saved_at", "?"), ledger.summary(), note]
+	return "%s — %s — %s%s" % [Loc.any(String(data.get("map_name", "?"))), data.get("saved_at", "?"), ledger.summary(), note]
 
 
 ## One line per slot plus the autosave: {"name", "path", "exists", "summary", "loadable"}.
@@ -362,5 +362,5 @@ static func list_saves(dir: String, registry: ContentRegistry = null, older_auto
 		var exists := FileAccess.file_exists(path)
 		var data := read(path) if exists else {}
 		var loadable := exists and not data.has("_error") and (registry == null or content_check(migrate(data), registry).is_empty())
-		out.append({"name": save_name, "path": path, "exists": exists, "summary": summarize(data, registry) if exists else "empty", "loadable": loadable, "title": String(data.get("title", "")) if exists else "", "saved_at": String(data.get("saved_at", "")) if exists else "", "thumbnail": thumbnail_path(path) if exists and FileAccess.file_exists(thumbnail_path(path)) else ""})
+		out.append({"name": save_name, "path": path, "exists": exists, "summary": summarize(data, registry) if exists else Loc.t("empty"), "loadable": loadable, "title": String(data.get("title", "")) if exists else "", "saved_at": String(data.get("saved_at", "")) if exists else "", "thumbnail": thumbnail_path(path) if exists and FileAccess.file_exists(thumbnail_path(path)) else ""})
 	return out

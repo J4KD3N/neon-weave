@@ -88,7 +88,7 @@ func take() -> Dictionary:
 
 
 func summary() -> String:
-	return "haul S%d A%d C%d · XP %d · kills %d" % [haul["salvage"], haul["aether"], haul["ciphers"], xp, kills]
+	return Loc.t("haul S%d A%d C%d · XP %d · kills %d") % [haul["salvage"], haul["aether"], haul["ciphers"], xp, kills]
 
 
 static func describe(gained: Dictionary) -> String:

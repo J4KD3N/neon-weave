@@ -93,7 +93,7 @@ func refresh() -> void:
 
 static func render(p_page: String, p_rows: Array[Dictionary], p_cursor: int, p_pending: String = "") -> String:
 	var lines: PackedStringArray = []
-	lines.append("SAVE GAME" if p_page == PAGE_SAVE else "LOAD GAME")
+	lines.append(Loc.t("SAVE GAME") if p_page == PAGE_SAVE else Loc.t("LOAD GAME"))
 	lines.append("")
 	for i: int in p_rows.size():
 		var row: Dictionary = p_rows[i]
@@ -101,20 +101,20 @@ static func render(p_page: String, p_rows: Array[Dictionary], p_cursor: int, p_p
 		var line := "%s%s" % [marker, row.get("label", row.get("id", "?"))]
 		if not bool(row.get("enabled", true)):
 			var why := String(row.get("why", ""))
-			line += "  (%s)" % (why if not why.is_empty() else "unavailable")
+			line += Loc.t("  (%s)") % (why if not why.is_empty() else "unavailable")
 		lines.append(line)
 		var detail := String(row.get("detail", ""))
 		if not detail.is_empty():
-			lines.append("      %s" % detail)
+			lines.append(Loc.t("      %s") % detail)
 	lines.append("")
 	if not p_pending.is_empty():
 		var target := ""
 		for row: Dictionary in p_rows:
 			if String(row.get("id", "")) == p_pending:
 				target = String(row.get("label", p_pending))
-		lines.append("Overwrite %s? Enter / A overwrites · Esc / B keeps it" % target)
+		lines.append(Loc.t("Overwrite %s? Enter / A overwrites · Esc / B keeps it") % target)
 	elif p_page == PAGE_SAVE:
-		lines.append("↑↓ choose · Enter / A saves here · Esc / B back")
+		lines.append(Loc.t("↑↓ choose · Enter / A saves here · Esc / B back"))
 	else:
-		lines.append("↑↓ choose · Enter / A loads · Esc / B back")
+		lines.append(Loc.t("↑↓ choose · Enter / A loads · Esc / B back"))
 	return "\n".join(lines)

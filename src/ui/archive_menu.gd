@@ -38,18 +38,18 @@ static func render(entries: Array[Dictionary], level: int) -> String:
 	for e: Dictionary in entries:
 		if bool(e.get("found", false)):
 			found += 1
-	lines.append("THE ARCHIVE — %d of %d fragments" % [found, entries.size()])
+	lines.append(Loc.t("THE ARCHIVE — %d of %d fragments") % [found, entries.size()])
 	if level <= 0:
-		lines.append("The reading room is sealed. Raise the Archive and the Archivist will read what you bring back.")
+		lines.append(Loc.t("The reading room is sealed. Raise the Archive and the Archivist will read what you bring back."))
 	elif found == 0:
-		lines.append("Nothing on the shelves yet. Fragments turn up in the Shards.")
+		lines.append(Loc.t("Nothing on the shelves yet. Fragments turn up in the Shards."))
 	lines.append("")
 	for e: Dictionary in entries:
 		if bool(e.get("found", false)) and level > 0:
-			lines.append("%d. %s  (%s)" % [int(e.get("order", 0)), e.get("name", "?"), e.get("source", "")])
-			lines.append("   %s" % String(e.get("text", "")))
+			lines.append(Loc.t("%d. %s  (%s)") % [int(e.get("order", 0)), e.get("name", "?"), e.get("source", "")])
+			lines.append(Loc.t("   %s") % String(e.get("text", "")))
 		else:
-			lines.append("%d. — a gap in the record —" % int(e.get("order", 0)))
+			lines.append(Loc.t("%d. — a gap in the record —") % int(e.get("order", 0)))
 		lines.append("")
-	lines.append("Esc / B close")
+	lines.append(Loc.t("Esc / B close"))
 	return "\n".join(lines)

@@ -40,7 +40,7 @@ func move(delta: int) -> int:
 ## Pure text for the screen, so tests can check it without nodes.
 static func render(bastion: BastionState, ledger: Ledger, p_cursor: int = 0) -> String:
 	var lines: PackedStringArray = []
-	lines.append("THE BASTION")
+	lines.append(Loc.t("THE BASTION"))
 	lines.append(ledger.summary())
 	lines.append("")
 	for i: int in bastion.order.size():
@@ -48,15 +48,15 @@ static func render(bastion: BastionState, ledger: Ledger, p_cursor: int = 0) -> 
 		var lv := bastion.level(id)
 		var max_lv := bastion.max_level(id)
 		var marker := "▶ " if i == p_cursor else "   "
-		var line := "%s[%d] %s  L%d/%d — %s" % [marker, i + 1, bastion.name_of(id), lv, max_lv, bastion.blurb(id)]
+		var line := Loc.t("%s[%d] %s  L%d/%d — %s") % [marker, i + 1, bastion.name_of(id), lv, max_lv, bastion.blurb(id)]
 		if lv < max_lv:
 			var why := bastion.can_upgrade(id, ledger)
 			var cost := BastionState.describe_cost(bastion.next_cost(id))
-			line += "\n         next: %s — %s%s" % [bastion.next_blurb(id), cost, "" if why.is_empty() else "  (%s)" % why]
+			line += Loc.t("\n         next: %s — %s%s") % [bastion.next_blurb(id), cost, "" if why.is_empty() else Loc.t("  (%s)") % why]
 		else:
-			line += "\n         (max)"
+			line += Loc.t("\n         (max)")
 		lines.append(line)
 		lines.append("")
-	lines.append("[N] Launch a Shard at depth %d" % bastion.depth())
-	lines.append("[B] Close  ·  ↑↓ / D-pad choose, Enter / A upgrade, Esc / B close")
+	lines.append(Loc.t("[N] Launch a Shard at depth %d") % bastion.depth())
+	lines.append(Loc.t("[B] Close  ·  ↑↓ / D-pad choose, Enter / A upgrade, Esc / B close"))
 	return "\n".join(lines)

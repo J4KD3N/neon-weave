@@ -24,6 +24,7 @@ const SCHEMAS: Dictionary = {
 	"enemies": ["name", "family", "archetype", "stats", "abilities", "art"],
 	"factions": ["name", "color", "rivals", "joinable_act"],
 	"items": ["name", "slot", "art"],
+	"locales": ["name"],
 	"lore": ["name", "text", "order"],
 	"endings": ["name", "summary", "when"],
 	"affixes": ["name", "slots", "weight"],

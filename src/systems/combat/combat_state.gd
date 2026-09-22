@@ -94,14 +94,14 @@ func has_acted(c: Combatant) -> bool:
 ## success, else the reason. The member keeps whatever AP/Move it has left.
 func switch_to(id: String) -> String:
 	if finished:
-		return "combat over"
+		return Loc.t("combat over")
 	var c := by_id(id)
 	if c == null or not group.has(c):
-		return "not in this turn group"
+		return Loc.t("not in this turn group")
 	if not c.is_active():
 		return "down"
 	if _done.has(c.id):
-		return "already acted"
+		return Loc.t("already acted")
 	if c == current():
 		return ""
 	turn_index = order.find(c)
@@ -157,13 +157,13 @@ func move_path(actor: Combatant, to: Vector2i) -> Array[Vector2i]:
 
 func can_move(actor: Combatant, to: Vector2i) -> String:
 	if actor != current():
-		return "not your turn"
+		return Loc.t("not your turn")
 	if actor.is_rooted():
 		return "rooted"
 	if actor.move_left <= 0:
-		return "no movement left"
+		return Loc.t("no movement left")
 	if not reachable_cells(actor).has(to):
-		return "out of reach"
+		return Loc.t("out of reach")
 	return ""
 
 
@@ -205,54 +205,54 @@ func undo_move() -> bool:
 ## Empty string when the ability may be used on `target_cell`, else the reason.
 func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> String:
 	if actor != current():
-		return "not your turn"
+		return Loc.t("not your turn")
 	if not actor.abilities.has(ability_id) or not abilities.has(ability_id):
-		return "unknown ability"
+		return Loc.t("unknown ability")
 	var ability: Dictionary = abilities[ability_id]
 	var cost := int(ability.get("ap", 1))
 	if actor.ap < cost:
-		return "needs %d AP" % cost
+		return Loc.t("needs %d AP") % cost
 	var lock_ap := int(actor.resource_def.get("lock_ap_at_max", 0))
 	if lock_ap > 0 and actor.resource >= actor.resource_max() and cost >= lock_ap:
-		return "overheated: vent first"
+		return Loc.t("overheated: vent first")
 	var resource_cost := int(ability.get("resource_cost", 0))
 	if resource_cost > 0 and actor.resource < resource_cost:
-		return "needs %d %s" % [resource_cost, actor.resource_def.get("name", "charge")]
+		return Loc.t("needs %d %s") % [resource_cost, Loc.any(String(actor.resource_def.get("name", "charge")))]
 	if actor.is_silenced() and String(ability.get("damage_type", "")) == "arcane":
-		return "silenced"
+		return Loc.t("silenced")
 	if actor.statuses.has("cd:" + ability_id):
-		return "cooling down (%d)" % int(actor.statuses["cd:" + ability_id])
+		return Loc.t("cooling down (%d)") % int(actor.statuses["cd:" + ability_id])
 	var target := occupant(target_cell)
 	if target == null:
-		return "no target"
+		return Loc.t("no target")
 	var self_only := String(ability.get("targets", "other")) == "self"
 	if self_only:
 		if target != actor:
-			return "self only"
+			return Loc.t("self only")
 		if String(ability.get("effect", "")) == "stealth":
 			if actor.hidden:
-				return "already hidden"
+				return Loc.t("already hidden")
 			if bool(actor.resource_def.get("reveal_at_max", false)) and actor.resource >= actor.resource_max() and actor.resource_max() > 0:
-				return "overheated: cool down first"
+				return Loc.t("overheated: cool down first")
 		if String(ability.get("effect", "")) == "summon":
 			if not enemy_entries.has(String(ability.get("summon", ""))):
-				return "nothing to summon"
+				return Loc.t("nothing to summon")
 			if summons_of(actor).size() >= int(ability.get("summon_max", 1)):
-				return "swarm at its limit"
+				return Loc.t("swarm at its limit")
 			if free_adjacent(actor.cell) == Vector2i(-1, -1):
-				return "no room"
+				return Loc.t("no room")
 		return ""
 	if target == actor:
-		return "cannot target self"
+		return Loc.t("cannot target self")
 	if not actor.is_hostile_to(target) and not rules.friendly_fire:
-		return "friendly fire is off"
+		return Loc.t("friendly fire is off")
 	if target.hidden and actor.is_hostile_to(target):
-		return "target is hidden"
+		return Loc.t("target is hidden")
 	var range_cells := int(ability.get("range", 1))
 	if LineOfSight.distance(actor.cell, target_cell) > range_cells:
-		return "out of range"
+		return Loc.t("out of range")
 	if bool(ability.get("requires_los", range_cells > 1)) and not LineOfSight.clear(map, actor.cell, target_cell):
-		return "no line of sight"
+		return Loc.t("no line of sight")
 	return ""
 
 
@@ -892,32 +892,39 @@ func _emit(e: Dictionary) -> void:
 
 
 ## Human-readable line for an event, for logs and the HUD.
+func _names(ids: Array) -> String:
+	var out: PackedStringArray = []
+	for id: String in ids:
+		out.append(_name(id))
+	return ", ".join(out)
+
+
 func describe(e: Dictionary) -> String:
 	match String(e.get("type", "")):
 		"start":
-			return "Combat begins. Order: %s" % ", ".join(PackedStringArray(e["order"]))
+			return Loc.t("Combat begins. Order: %s") % _names(e["order"])
 		"round":
-			return "— Round %d —" % int(e["round"])
+			return Loc.t("— Round %d —") % int(e["round"])
 		"regen":
-			return "%s mends %d in the %s." % [_name(e["actor"]), int(e["heal"]), e["surface"]]
+			return Loc.t("%s mends %d in the %s.") % [_name(e["actor"]), int(e["heal"]), Loc.t(String(e["surface"]))]
 		"arc":
-			return "Lightning arcs from %s to %s for %d.%s" % [_name(e["from"]), _name(e["target"]), int(e["damage"]), (" %s dies." % _name(e["target"])) if bool(e["killed"]) else ""]
+			return Loc.t("Lightning arcs from %s to %s for %d.%s") % [_name(e["from"]), _name(e["target"]), int(e["damage"]), (" %s dies." % _name(e["target"])) if bool(e["killed"]) else ""]
 		"counter":
-			return "%s counters %s for %d.%s" % [_name(e["actor"]), _name(e["target"]), int(e["damage"]), (" %s dies." % _name(e["target"])) if bool(e["killed"]) else ""]
+			return Loc.t("%s counters %s for %d.%s") % [_name(e["actor"]), _name(e["target"]), int(e["damage"]), (" %s dies." % _name(e["target"])) if bool(e["killed"]) else ""]
 		"poison":
-			return "%s takes %d from poison (%d left).%s" % [_name(e["actor"]), int(e["damage"]), int(e["turns"]) - 1, (" %s dies." % _name(e["actor"])) if bool(e["killed"]) else ""]
+			return Loc.t("%s takes %d from poison (%d left).%s") % [_name(e["actor"]), int(e["damage"]), int(e["turns"]) - 1, (" %s dies." % _name(e["actor"])) if bool(e["killed"]) else ""]
 		"spread":
-			return "The poison spreads from %s to %s." % [_name(e["actor"]), _name(e["target"])]
+			return Loc.t("The poison spreads from %s to %s.") % [_name(e["actor"]), _name(e["target"])]
 		"surface_status":
-			return "%s: the %s font takes the voice (%s %d)." % [_name(e["actor"]), e["surface"], e["status"], int(e["turns"])]
+			return Loc.t("%s: the %s font takes the voice (%s %d).") % [_name(e["actor"]), Loc.t(String(e["surface"])), Loc.t(String(e["status"])), int(e["turns"])]
 		"stance":
-			return "%s takes a %s stance (%d)." % [_name(e["actor"]), e["stance"], int(e["turns"])]
+			return Loc.t("%s takes a %s stance (%d).") % [_name(e["actor"]), Loc.t(String(e["stance"])), int(e["turns"])]
 		"detect":
-			return "%s senses %s hiding." % [_name(e["actor"]), _name(e["target"])]
+			return Loc.t("%s senses %s hiding.") % [_name(e["actor"]), _name(e["target"])]
 		"turn_begin":
-			return "%s's turn." % _name(e["actor"])
+			return Loc.t("%s's turn.") % _name(e["actor"])
 		"move":
-			return "%s moves to %s." % [_name(e["actor"]), e["to"]]
+			return Loc.t("%s moves to %s.") % [_name(e["actor"]), e["to"]]
 		"ability":
 			var who := _name(e["actor"])
 			var whom := _name(e["target"])
@@ -950,52 +957,52 @@ func describe(e: Dictionary) -> String:
 				tags.append("detonated %d" % int(e["detonated"]))
 			if int(e.get("marked", 0)) > 0:
 				tags.append("hex ×%d" % int(e["marked"]))
-			var tag_text := "" if tags.is_empty() else " (%s)" % ", ".join(tags)
+			var tag_text := "" if tags.is_empty() else Loc.t(" (%s)") % ", ".join(tags)
 			if not bool(e["hit"]):
-				return "%s: %s on %s — miss (%d vs %d%%)%s." % [who, ab_name, whom, e["roll"], e["chance"], tag_text]
-			var s := "%s: %s hits %s for %d%s." % [who, ab_name, whom, e["damage"], tag_text]
+				return Loc.t("%s: %s on %s — miss (%d vs %d%%)%s.") % [who, ab_name, whom, e["roll"], e["chance"], tag_text]
+			var s := Loc.t("%s: %s hits %s for %d%s.") % [who, ab_name, whom, e["damage"], tag_text]
 			if bool(e["killed"]):
-				s += " %s dies." % whom
+				s += Loc.t(" %s dies.") % whom
 			elif bool(e["downed"]):
-				s += " %s is down." % whom
+				s += Loc.t(" %s is down.") % whom
 			return s
 		"vent":
-			return "%s vents (+%d HP)." % [_name(e["actor"]), int(e["heal"])]
+			return Loc.t("%s vents (+%d HP).") % [_name(e["actor"]), int(e["heal"])]
 		"summon":
-			return "%s calls in %s." % [_name(e["actor"]), _name(e["summoned"])]
+			return Loc.t("%s calls in %s.") % [_name(e["actor"]), _name(e["summoned"])]
 		"stealth":
 			if bool(e.get("revealed", false)):
-				return "%s tries to hide but overheats, lit up." % _name(e["actor"])
-			return "%s vanishes." % _name(e["actor"])
+				return Loc.t("%s tries to hide but overheats, lit up.") % _name(e["actor"])
+			return Loc.t("%s vanishes.") % _name(e["actor"])
 		"harvest":
-			return "%s harvests %d from the %s." % [_name(e["actor"]), int(e["gain"]), String(e["surface"]).replace("_", " ")]
+			return Loc.t("%s harvests %d from the %s.") % [_name(e["actor"]), int(e["gain"]), String(e["surface"]).replace("_", " ")]
 		"overload":
-			var s := "%s overloads! %d damage to self." % [_name(e["actor"]), int(e["damage"])]
+			var s := Loc.t("%s overloads! %d damage to self.") % [_name(e["actor"]), int(e["damage"])]
 			if bool(e["killed"]):
-				s += " %s dies." % _name(e["actor"])
+				s += Loc.t(" %s dies.") % _name(e["actor"])
 			elif bool(e["downed"]):
-				s += " %s is down." % _name(e["actor"])
+				s += Loc.t(" %s is down.") % _name(e["actor"])
 			return s
 		"chain":
-			var s := "The conduit arcs: %s takes %d." % [_name(e["target"]), int(e["damage"])]
+			var s := Loc.t("The conduit arcs: %s takes %d.") % [_name(e["target"]), int(e["damage"])]
 			if bool(e["killed"]):
-				s += " %s dies." % _name(e["target"])
+				s += Loc.t(" %s dies.") % _name(e["target"])
 			elif bool(e["downed"]):
-				s += " %s is down." % _name(e["target"])
+				s += Loc.t(" %s is down.") % _name(e["target"])
 			return s
 		"surface":
-			var s := "%s burns in the biogrowth for %d." % [_name(e["actor"]), int(e["damage"])]
+			var s := Loc.t("%s burns in the biogrowth for %d.") % [_name(e["actor"]), int(e["damage"])]
 			if bool(e["killed"]):
-				s += " %s dies." % _name(e["actor"])
+				s += Loc.t(" %s dies.") % _name(e["actor"])
 			elif bool(e["downed"]):
-				s += " %s is down." % _name(e["actor"])
+				s += Loc.t(" %s is down.") % _name(e["actor"])
 			return s
 		"turn_end", "switch":
 			return ""
 		"undo":
-			return "%s steps back to %s." % [_name(e["actor"]), e["to"]]
+			return Loc.t("%s steps back to %s.") % [_name(e["actor"]), e["to"]]
 		"end":
-			return "Victory." if e["result"] == "victory" else "The party is wiped out."
+			return "Victory." if e["result"] == "victory" else Loc.t("The party is wiped out.")
 	return str(e)
 
 

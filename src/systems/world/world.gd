@@ -27,6 +27,9 @@ var selected_shard: String = DEFAULT_SHARD
 @export var saves_dir: String = "user://saves"
 ## Account-level unlocks across playthroughs (S35): outside every save.
 @export var account_path: String = Account.DEFAULT_PATH
+## Where the settings and the bindings live; tests point these at their own files (S55).
+@export var settings_path: String = Settings.PATH
+@export var input_path: String = InputActions.OVERRIDES_PATH
 
 @onready var map_view: MapView = $Scene/MapView
 @onready var party: Party = $Scene/Party
@@ -204,7 +207,8 @@ func _ready() -> void:
 	settings_menu = SettingsMenu.new()
 	settings_menu.name = "SettingsMenu"
 	add_child(settings_menu)
-	settings = Settings.load_or_default()
+	Loc.load_from(registry)
+	settings = Settings.load_or_default(settings_path)
 	settings.apply()
 	UiScale.apply(self, [overlay])
 	color_filter.set_mode(settings.palette)
@@ -458,11 +462,11 @@ func save_to(save_name: String) -> Error:
 func save_slot(n: int) -> Error:
 	if is_iron_weave():
 		if overlay != null:
-			overlay.toast("Iron Weave: one save. The autosave is the save.", 2.5)
+			overlay.toast(Loc.t("Iron Weave: one save. The autosave is the save."), 2.5)
 		return ERR_UNAVAILABLE
 	var err := save_to(SaveSystem.slot_name(n))
 	if overlay != null:
-		overlay.toast("Saved to slot %d" % n if err == OK else "Save failed: %s" % ("in combat" if err == ERR_UNAVAILABLE else error_string(err)), 2.0)
+		overlay.toast(Loc.t("Saved to slot %d") % n if err == OK else Loc.t("Save failed: %s") % (Loc.t("in combat") if err == ERR_UNAVAILABLE else error_string(err)), 2.0)
 	return err
 
 
@@ -486,18 +490,18 @@ func load_from(save_name: String) -> Array[String]:
 	if data.has("_error"):
 		var one: Array[String] = [String(data["_error"])]
 		if overlay != null:
-			overlay.toast("Load failed: %s" % one[0], 2.5)
+			overlay.toast(Loc.t("Load failed: %s") % one[0], 2.5)
 		return one
 	var why := SaveSystem.content_check(SaveSystem.migrate(data), registry)
 	if not why.is_empty():
 		var refused: Array[String] = [why]
 		if overlay != null:
-			overlay.toast("Load refused: %s" % why, 4.0)
+			overlay.toast(Loc.t("Load refused: %s") % why, 4.0)
 		push_warning("load %s refused: %s" % [save_name, why])
 		return refused
 	var errors := SaveSystem.restore(self, data)
 	if overlay != null:
-		overlay.toast("Loaded %s" % save_name if errors.is_empty() else "Loaded %s with %d problem(s)" % [save_name, errors.size()], 2.5)
+		overlay.toast(Loc.t("Loaded %s") % save_name if errors.is_empty() else Loc.t("Loaded %s with %d problem(s)") % [save_name, errors.size()], 2.5)
 	for e: String in errors:
 		push_warning("load %s: %s" % [save_name, e])
 	return errors
@@ -506,7 +510,7 @@ func load_from(save_name: String) -> Array[String]:
 func load_slot(n: int) -> Array[String]:
 	if is_iron_weave():
 		if overlay != null:
-			overlay.toast("Iron Weave: no reloads.", 2.5)
+			overlay.toast(Loc.t("Iron Weave: no reloads."), 2.5)
 		return ["Iron Weave: no reloads"]
 	return load_from(SaveSystem.slot_name(n))
 
@@ -545,7 +549,7 @@ func at_home() -> bool:
 func upgrade_building(id: String) -> bool:
 	var why := bastion.can_upgrade(id, ledger)
 	if not why.is_empty():
-		overlay.toast("%s: %s" % [bastion.name_of(id), why], 2.0)
+		overlay.toast(Loc.t("%s: %s") % [bastion.name_of(id), why], 2.0)
 		return false
 	if not bastion.upgrade(id, ledger):
 		return false
@@ -555,7 +559,7 @@ func upgrade_building(id: String) -> bool:
 		push_warning("ledger save failed: %s" % error_string(err))
 	apply_bastion_bonuses()
 	narrative.set_flag("building_%s_l%d" % [id, bastion.level(id)], true) # quests read these
-	overlay.toast("%s upgraded to L%d — %s" % [bastion.name_of(id), bastion.level(id), bastion.blurb(id)], 3.0)
+	overlay.toast(Loc.t("%s upgraded to L%d — %s") % [bastion.name_of(id), bastion.level(id), bastion.blurb(id)], 3.0)
 	refresh_buildings()
 	if bastion_menu != null and bastion_menu.visible:
 		bastion_menu.refresh(bastion, ledger)
@@ -667,7 +671,7 @@ func add_companion(id: String) -> bool:
 		narrative.bench(id)
 		_remove_stand_in(id)
 		var c: Dictionary = registry.get_entry("companions", id)
-		overlay.toast("The party is full. %s will wait at the Bastion; swap from the Roster at home." % c.get("short_name", id), 3.5)
+		overlay.toast(Loc.t("The party is full. %s will wait at the Bastion; swap from the Roster at home.") % c.get("short_name", id), 3.5)
 		return false
 	var preset := {"members": []}
 	var specs := PartyBuilder.member_specs(registry, preset, {}, rules, [], [id])
@@ -726,9 +730,9 @@ func dialogue_ctx() -> Dictionary:
 func speaker_names() -> Dictionary:
 	var names: Dictionary = {"narrator": "—", "player": party.leader().display_name if party.leader() != null else "You"}
 	for c: Dictionary in registry.get_all("companions"):
-		names[c["id"]] = String(c.get("short_name", c.get("name", c["id"])))
+		names[c["id"]] = Loc.text(c, "short_name", String(c.get("name", c["id"])))
 	for n: Dictionary in registry.get_all("npcs"):
-		names[n["id"]] = String(n.get("short_name", n.get("name", n["id"])))
+		names[n["id"]] = Loc.text(n, "short_name", String(n.get("name", n["id"])))
 	return names
 
 
@@ -830,7 +834,7 @@ func banter(trigger: String) -> Array[Dictionary]:
 		var line := DialogueRunner.pick_banter(banter_entry, trigger, dialogue_ctx())
 		if line.is_empty():
 			continue
-		overlay.toast("%s: %s" % [c.get("short_name", id), line.get("text", "")], 3.5)
+		overlay.toast(Loc.t("%s: %s") % [Loc.text(c, "short_name", id), Loc.any(String(line.get("text", "")))], 3.5)
 		shown.append(line)
 	return shown
 
@@ -855,7 +859,7 @@ func set_protagonist(sheet: Dictionary, save: bool = true) -> Array[String]:
 		camera.snap()
 	if save:
 		autosave()
-	overlay.toast("%s leads the party." % sheet.get("name", "The Weaver"), 2.5)
+	overlay.toast(Loc.t("%s leads the party.") % sheet.get("name", "The Weaver"), 2.5)
 	return errors
 
 
@@ -1127,8 +1131,8 @@ func check_pickups() -> Array[Dictionary]:
 		got["pickup"] = p.pickup_id
 		got["rarity"] = p.rarity
 		gained.append(got)
-		var tag := "" if p.rarity == "common" else " (%s)" % p.rarity
-		overlay.toast("%s%s: %s" % [p.entry.get("name", p.pickup_id), tag, RunState.describe(got)], 2.0)
+		var tag := "" if p.rarity == "common" else Loc.t(" (%s)") % p.rarity
+		overlay.toast(Loc.t("%s%s: %s") % [p.entry.get("name", p.pickup_id), tag, RunState.describe(got)], 2.0)
 	return gained
 
 
@@ -1141,7 +1145,7 @@ func on_enemy_killed(enemy: EnemyActor) -> Dictionary:
 	var inst := roll_enemy_drop(enemy)
 	if not inst.is_empty():
 		got["item"] = inst
-		overlay.toast("%s dropped %s" % [enemy.display_name, ItemSystem.display_name(registry, inst)], 2.5)
+		overlay.toast(Loc.t("%s dropped %s") % [enemy.display_name, ItemSystem.display_name(registry, inst)], 2.5)
 	return got
 
 
@@ -1186,7 +1190,7 @@ func extract() -> bool:
 	if playtest != null:
 		playtest.run_end(self, "extracted", take)
 	run.clear()
-	overlay.toast("Extracted — %s · %d kills" % [RunState.describe(take), kills], 4.0)
+	overlay.toast(Loc.t("Extracted — %s · %d kills") % [RunState.describe(take), kills], 4.0)
 	play_event("explore.extract")
 	narrative.set_flag("first_extraction", true)
 	narrative.set_flag("extracted_depth_%d" % map_depth(), true) # quests read these
@@ -1205,19 +1209,19 @@ func status_line() -> String:
 	var exit_note := ""
 	var exit_cell := extraction_cell()
 	if exit_cell.x >= 0:
-		exit_note = "  extraction %s (%d away)" % [exit_cell, LineOfSight.distance(leader_cell(), exit_cell)]
-	var line1 := "%s  |  %s  |  leader %s  hover %s%s  |  enemies %d  pickups %d" % [
-		map_data.name, mode, leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
+		exit_note = Loc.t("  extraction %s (%d away)") % [exit_cell, LineOfSight.distance(leader_cell(), exit_cell)]
+	var line1 := Loc.t("%s  |  %s  |  leader %s  hover %s%s  |  enemies %d  pickups %d") % [
+		Loc.any(map_data.name), Loc.t(mode), leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
 	]
 	if perf_hud:
 		line1 = "fps %d · %.1f ms  |  %s" % [Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, line1]
-	var line2 := "%s  |  %s" % [run.summary() if run.in_shard else "at home: loot banks on pickup", ledger.summary()]
+	var line2 := Loc.t("%s  |  %s") % [run.summary() if run.in_shard else Loc.t("at home: loot banks on pickup"), ledger.summary()]
 	for id: String in narrative.recruited:
 		var c: Dictionary = registry.get_entry("companions", id)
-		line2 += "  |  %s ♥%+d" % [c.get("short_name", id), narrative.approval_of(id)]
-	var line3 := "LMB move/attack · WASD steer · wheel zoom · N new shard (depth %d) · H home · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
+		line2 += Loc.t("  |  %s ♥%+d") % [Loc.text(c, "short_name", id), narrative.approval_of(id)]
+	var line3 := Loc.t("LMB move/attack · WASD steer · wheel zoom · N new shard (depth %d) · H home · F5/F9 save/load · F10 autosave · F1 registry") % bastion.depth()
 	if at_home():
-		line3 = "LMB move/attack · WASD steer · wheel zoom · B bastion · C creator · N new shard (depth %d) · F5/F9 save/load · F10 autosave · F1 registry" % bastion.depth()
+		line3 = Loc.t("LMB move/attack · WASD steer · wheel zoom · B bastion · C creator · N new shard (depth %d) · F5/F9 save/load · F10 autosave · F1 registry") % bastion.depth()
 	if can_extract():
 		line3 = "▶ ON THE EXTRACTION PAD — press E to extract ◀"
 	elif mode == "explore" and on_waypoint().x >= 0:
@@ -1303,14 +1307,14 @@ func _on_combat_ended(result: String) -> void:
 		for m: PartyMember in fallen:
 			if m == party.leader():
 				mode = "defeated"
-				overlay.toast("%s is dead. The expedition ends here." % m.display_name, 4.0)
+				overlay.toast(Loc.t("%s is dead. The expedition ends here.") % m.display_name, 4.0)
 				iron_run_lost()
 				return
 			if narrative.is_recruited(m.member_id):
 				narrative.dismiss(m.member_id)
 				narrative.set_flag("%s_dead" % m.member_id, true)
 				narrative.lose_romance(m.member_id) # a dead partner ends the romance (D-092)
-				overlay.toast("%s is dead." % m.display_name, 4.0)
+				overlay.toast(Loc.t("%s is dead.") % m.display_name, 4.0)
 			party.remove_member(m)
 		for m: PartyMember in party.members:
 			if m.downed:
@@ -1357,7 +1361,7 @@ func _on_combat_ended(result: String) -> void:
 		var err := ledger.save()
 		if err != OK:
 			push_warning("ledger save failed: %s" % error_string(err))
-		overlay.toast("Wiped — the haul is lost (%s)" % RunState.describe(lost), 4.0)
+		overlay.toast(Loc.t("Wiped — the haul is lost (%s)") % RunState.describe(lost), 4.0)
 
 
 # --- input & frame ---------------------------------------------------------
@@ -1710,32 +1714,32 @@ var _cursor_hold := 0.0
 func system_items() -> Array[Dictionary]:
 	var home := at_home()
 	var items: Array[Dictionary] = []
-	items.append({"id": "resume", "label": "Resume", "enabled": true})
-	items.append({"id": "extract", "label": "Extract (bank the haul)", "enabled": can_extract(), "why": "not on the extraction pad"})
-	items.append({"id": "new_shard", "label": "Launch a new Shard: %s (depth %d)" % [shard_name(selected_shard), bastion.depth()], "enabled": true})
+	items.append({"id": "resume", "label": Loc.t("Resume"), "enabled": true})
+	items.append({"id": "extract", "label": Loc.t("Extract (bank the haul)"), "enabled": can_extract(), "why": Loc.t("not on the extraction pad")})
+	items.append({"id": "new_shard", "label": Loc.t("Launch a new Shard: %s (depth %d)") % [shard_name(selected_shard), bastion.depth()], "enabled": true})
 	for t: Dictionary in registry.get_all("shards"):
 		var id := String(t["id"])
 		if id == selected_shard:
 			continue
 		var locked := shard_locked_reason(id)
-		items.append({"id": "shard_" + id, "label": "Launch instead: %s" % t.get("name", id), "enabled": locked.is_empty(), "why": locked})
-	items.append({"id": "go_home", "label": "Return to the yard (haul is lost)", "enabled": not home, "why": "already home"})
-	items.append({"id": "bastion", "label": "The Bastion", "enabled": home, "why": "only at home"})
-	items.append({"id": "creator", "label": "Character creator", "enabled": home, "why": "only at home"})
-	items.append({"id": "weave", "label": "The Weave (level %d · %s)" % [party_level(), xp_line()], "enabled": home, "why": "only at home"})
-	items.append({"id": "inventory", "label": "The pack (%d banked item%s)" % [ledger.items.size(), "" if ledger.items.size() == 1 else "s"], "enabled": home, "why": "only at home"})
-	items.append({"id": "journal", "label": "Journal (%d quests)" % narrative.quests.size(), "enabled": true})
-	items.append({"id": "roster", "label": "Roster & Quarters (%d with you, %d waiting)" % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and roster_rows().size() > 1, "why": "only at home" if not home else "nobody recruited"})
-	items.append({"id": "save_game", "label": "Save game…", "enabled": mode != "combat" and reload_allowed(), "why": "Iron Weave: one save" if not reload_allowed() else "in combat"})
+		items.append({"id": "shard_" + id, "label": Loc.t("Launch instead: %s") % Loc.text(t, "name", id), "enabled": locked.is_empty(), "why": locked})
+	items.append({"id": "go_home", "label": Loc.t("Return to the yard (haul is lost)"), "enabled": not home, "why": Loc.t("already home")})
+	items.append({"id": "bastion", "label": Loc.t("The Bastion"), "enabled": home, "why": Loc.t("only at home")})
+	items.append({"id": "creator", "label": Loc.t("Character creator"), "enabled": home, "why": Loc.t("only at home")})
+	items.append({"id": "weave", "label": Loc.t("The Weave (level %d · %s)") % [party_level(), xp_line()], "enabled": home, "why": Loc.t("only at home")})
+	items.append({"id": "inventory", "label": Loc.t("The pack (%d banked item%s)") % [ledger.items.size(), "" if ledger.items.size() == 1 else Loc.t("s")], "enabled": home, "why": Loc.t("only at home")})
+	items.append({"id": "journal", "label": Loc.t("Journal (%d quests)") % narrative.quests.size(), "enabled": true})
+	items.append({"id": "roster", "label": Loc.t("Roster & Quarters (%d with you, %d waiting)") % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and roster_rows().size() > 1, "why": Loc.t("only at home") if not home else Loc.t("nobody recruited")})
+	items.append({"id": "save_game", "label": Loc.t("Save game…"), "enabled": mode != "combat" and reload_allowed(), "why": Loc.t("Iron Weave: one save") if not reload_allowed() else Loc.t("in combat")})
 	var any_loadable := false
 	for row: Dictionary in SaveSystem.list_saves(saves_dir, registry, true):
 		if bool(row["loadable"]):
 			any_loadable = true
-	items.append({"id": "load_game", "label": "Load game…", "enabled": any_loadable and reload_allowed(), "why": "Iron Weave: no reloads" if not reload_allowed() else "no saves yet"})
-	items.append({"id": "settings", "label": "Settings", "enabled": true})
-	items.append({"id": "platform", "label": platform().status_line(), "enabled": false, "why": "%d achievements this session" % platform().unlocked_this_session.size()})
-	items.append({"id": "title", "label": "Title screen", "enabled": mode != "combat", "why": "in combat"})
-	items.append({"id": "registry", "label": "Content registry dump (debug)", "enabled": true})
+	items.append({"id": "load_game", "label": Loc.t("Load game…"), "enabled": any_loadable and reload_allowed(), "why": Loc.t("Iron Weave: no reloads") if not reload_allowed() else Loc.t("no saves yet")})
+	items.append({"id": "settings", "label": Loc.t("Settings"), "enabled": true})
+	items.append({"id": "platform", "label": platform().status_line(), "enabled": false, "why": Loc.t("%d achievements this session") % platform().unlocked_this_session.size()})
+	items.append({"id": "title", "label": Loc.t("Title screen"), "enabled": mode != "combat", "why": Loc.t("in combat")})
+	items.append({"id": "registry", "label": Loc.t("Content registry dump (debug)"), "enabled": true})
 	return items
 
 
@@ -1761,7 +1765,7 @@ func activate_system_item(id: String) -> bool:
 		return false
 	for item: Dictionary in system_items():
 		if String(item["id"]) == id and not bool(item.get("enabled", true)):
-			overlay.toast("%s: %s" % [item["label"], item.get("why", "unavailable")], 1.5)
+			overlay.toast(Loc.t("%s: %s") % [item["label"], item.get("why", "unavailable")], 1.5)
 			return false
 	system_menu.close()
 	match id:
@@ -1828,12 +1832,12 @@ func interact() -> bool:
 	if door.x >= 0 and map_data.door_kind(door) == "vault":
 		var why := open_vault(door)
 		if not why.is_empty():
-			overlay.toast("Vault: %s" % why, 2.0)
+			overlay.toast(Loc.t("Vault: %s") % why, 2.0)
 		return why.is_empty()
 	if door.x >= 0 and map_data.door_kind(door) == "locked":
 		var why := open_locked(door)
 		if not why.is_empty():
-			overlay.toast("Gate: %s" % why, 2.5)
+			overlay.toast(Loc.t("Gate: %s") % why, 2.5)
 		return why.is_empty()
 	var building := adjacent_building()
 	if building != null:
@@ -1851,7 +1855,7 @@ func interact() -> bool:
 			best = npc
 	if best != null:
 		return talk_to(best.npc_id if best.is_story_npc() else best.companion_id)
-	overlay.toast("Nothing to interact with here", 1.2)
+	overlay.toast(Loc.t("Nothing to interact with here"), 1.2)
 	return false
 
 
@@ -1902,7 +1906,7 @@ func party_level() -> int:
 
 func xp_line() -> String:
 	var next := Progression.xp_to_next(ledger.xp, progression_rules())
-	return "XP %d, cap reached" % ledger.xp if next < 0 else "XP %d, %d to next" % [ledger.xp, next]
+	return Loc.t("XP %d, cap reached") % ledger.xp if next < 0 else Loc.t("XP %d, %d to next") % [ledger.xp, next]
 
 
 func build_for(member_id: String) -> Dictionary:
@@ -1937,10 +1941,10 @@ func refresh_progression() -> void:
 
 func _on_level_up(from_level: int, to_level: int) -> void:
 	refresh_progression()
-	var note := "Level %d!" % to_level
+	var note := Loc.t("Level %d!") % to_level
 	var sub_lv := int(progression_rules().get("subclass_level", 3))
 	if from_level < sub_lv and to_level >= sub_lv:
-		note += " Subclasses open in the Weave (T at home)."
+		note += Loc.t(" Subclasses open in the Weave (T at home).")
 	overlay.toast(note, 4.0)
 	play_event("explore.level_up")
 
@@ -1950,7 +1954,7 @@ func _on_level_up(from_level: int, to_level: int) -> void:
 func choose_subclass(member_id: String, sub_id: String) -> String:
 	var m := member_by_id(member_id)
 	if m == null:
-		return "no such member"
+		return Loc.t("no such member")
 	var cls: Dictionary = registry.get_entry("classes", m.class_id)
 	var why := Progression.can_choose_subclass(registry, cls, party_level(), build_for(member_id), sub_id, progression_rules(), can_respec())
 	if not why.is_empty():
@@ -1965,14 +1969,14 @@ func choose_subclass(member_id: String, sub_id: String) -> String:
 
 func buy_talent(member_id: String, talent_id: String) -> String:
 	if member_by_id(member_id) == null:
-		return "no such member"
+		return Loc.t("no such member")
 	var cost_mod := int(member_by_id(member_id).traits.get("talent_cost_mod", 0))
 	var why := Progression.can_buy_talent(registry, party_level(), build_for(member_id), talent_id, progression_rules(), ledger.total("aether"), cost_mod)
 	if not why.is_empty():
 		return why
 	var cost := Progression.talent_cost(registry, talent_id, cost_mod)
 	if not ledger.spend({"aether": cost}):
-		return "needs %d Aether" % cost
+		return Loc.t("needs %d Aether") % cost
 	var b := build_for(member_id)
 	b["talents"].append(talent_id)
 	ledger.builds[member_id] = b
@@ -1984,18 +1988,18 @@ func buy_talent(member_id: String, talent_id: String) -> String:
 ## Drops the subclass and every talent; refunds Aether at the Arcanum rate.
 func respec(member_id: String) -> String:
 	if member_by_id(member_id) == null:
-		return "no such member"
+		return Loc.t("no such member")
 	if not can_respec():
-		return "needs the Arcanum"
+		return Loc.t("needs the Arcanum")
 	var b := build_for(member_id)
 	if String(b["subclass"]).is_empty() and Array(b["talents"]).is_empty() and Dictionary(b.get("multiclass", {})).is_empty():
-		return "nothing to reset"
+		return Loc.t("nothing to reset")
 	var refund := Progression.refund_for(registry, b, bastion.effect("respec_refund", 0.0), int(member_by_id(member_id).traits.get("talent_cost_mod", 0)))
 	ledger.resources["aether"] = ledger.total("aether") + refund
 	ledger.builds[member_id] = {"subclass": "", "talents": [], "equipment": Dictionary(b.get("equipment", {})).duplicate(true), "multiclass": {}} # gear stays on; the multiclass resets too
 	ledger.save()
 	refresh_progression()
-	overlay.toast("%s reset; %d Aether returned" % [member_by_id(member_id).display_name, refund], 2.5)
+	overlay.toast(Loc.t("%s reset; %d Aether returned") % [member_by_id(member_id).display_name, refund], 2.5)
 	return ""
 
 
@@ -2019,7 +2023,7 @@ func weave_rows(member_id: String) -> Array[Dictionary]:
 	for sub_id: String in cls.get("subclasses", []):
 		var sub := registry.get_entry("subclasses", sub_id)
 		var why := Progression.can_choose_subclass(registry, cls, level, build, sub_id, prules, can_respec())
-		var label := "%s — %s" % [sub.get("name", sub_id), sub.get("summary", "")]
+		var label := Loc.t("%s — %s") % [Loc.text(sub, "name", sub_id), Loc.text(sub, "summary")]
 		if String(build["subclass"]) == sub_id:
 			label = "✓ " + label
 		rows.append({"kind": "subclass", "id": sub_id, "label": label, "enabled": why.is_empty(), "why": why})
@@ -2033,13 +2037,13 @@ func weave_rows(member_id: String) -> Array[Dictionary]:
 		var id := String(t["id"])
 		var why := Progression.can_buy_talent(registry, level, build, id, prules, ledger.total("aether"))
 		var cost := int(Dictionary(t.get("cost", {})).get("aether", 0))
-		var label := "T%d %s — %s (%d Aether)" % [int(t.get("tier", 1)), t.get("name", id), t.get("summary", ""), cost]
+		var label := Loc.t("T%d %s — %s (%d Aether)") % [int(t.get("tier", 1)), Loc.text(t, "name", id), Loc.text(t, "summary"), cost]
 		if Array(build["talents"]).has(id):
 			label = "✓ " + label
 		rows.append({"kind": "talent", "id": id, "label": label, "enabled": why.is_empty(), "why": why})
-	var respec_why := "" if can_respec() else "needs the Arcanum"
+	var respec_why := "" if can_respec() else Loc.t("needs the Arcanum")
 	var refund_pct := int(round(bastion.effect("respec_refund", 0.0) * 100.0))
-	rows.append({"kind": "respec", "id": member_id, "label": "Reset subclass and talents (%d%% Aether back)" % refund_pct, "enabled": respec_why.is_empty(), "why": respec_why})
+	rows.append({"kind": "respec", "id": member_id, "label": Loc.t("Reset subclass and talents (%d%% Aether back)") % refund_pct, "enabled": respec_why.is_empty(), "why": respec_why})
 	return rows
 
 
@@ -2073,10 +2077,10 @@ func refresh_weave() -> void:
 		return
 	var m := party.members[clampi(weave_menu.member_index, 0, party.members.size() - 1)]
 	var sub := String(build_for(m.member_id)["subclass"])
-	var sub_name := "no subclass" if sub.is_empty() else String(registry.get_entry("subclasses", sub).get("name", sub))
-	var header := "Party level %d · %s · Aether %d\n%s — %s %s (%s) · HP %d/%d · abilities: %s" % [
-		party_level(), xp_line(), ledger.total("aether"), m.display_name, String(registry.get_entry("races", m.race_id).get("name", m.race_id)),
-		String(registry.get_entry("classes", m.class_id).get("name", m.class_id)), sub_name, m.hp, m.max_hp, ", ".join(PackedStringArray(m.abilities))]
+	var sub_name := Loc.t("no subclass") if sub.is_empty() else Loc.text(registry.get_entry("subclasses", sub), "name", sub)
+	var header := Loc.t("Party level %d · %s · Aether %d\n%s — %s %s (%s) · HP %d/%d · abilities: %s") % [
+		party_level(), xp_line(), ledger.total("aether"), m.display_name, Loc.text(registry.get_entry("races", m.race_id), "name", m.race_id),
+		Loc.text(registry.get_entry("classes", m.class_id), "name", m.class_id), sub_name, m.hp, m.max_hp, ability_names(m.abilities)]
 	weave_menu.show_rows(header, weave_rows(m.member_id))
 
 
@@ -2101,7 +2105,7 @@ func confirm_weave() -> bool:
 		"respec":
 			why = respec(m.member_id)
 	if not why.is_empty():
-		overlay.toast("%s: %s" % [row.get("label", row.get("id", "")), why], 2.0)
+		overlay.toast(Loc.t("%s: %s") % [row.get("label", row.get("id", "")), why], 2.0)
 	refresh_weave()
 	return why.is_empty()
 
@@ -2109,19 +2113,19 @@ func confirm_weave() -> bool:
 # --- shard selection --------------------------------------------------------
 
 func shard_name(template_id: String) -> String:
-	return String(registry.get_entry("shards", template_id).get("name", template_id))
+	return Loc.text(registry.get_entry("shards", template_id), "name", template_id)
 
 
 ## Why a template cannot be launched now; empty when it can.
 func shard_locked_reason(template_id: String) -> String:
 	var t: Dictionary = registry.get_entry("shards", template_id)
 	if t.is_empty():
-		return "unknown Shard"
+		return Loc.t("unknown Shard")
 	if not bastion.has_unlocked(String(t.get("requires_unlock", ""))):
-		return "the Beacon has not found it yet"
+		return Loc.t("the Beacon has not found it yet")
 	var flag := String(t.get("requires_flag", ""))
 	if not flag.is_empty() and not narrative.flag(flag):
-		return "the story has not opened it yet"
+		return Loc.t("the story has not opened it yet")
 	return ""
 
 
@@ -2129,7 +2133,7 @@ func shard_locked_reason(template_id: String) -> String:
 func launch_shard(template_id: String) -> bool:
 	var why := shard_locked_reason(template_id)
 	if not why.is_empty():
-		overlay.toast("%s: %s" % [shard_name(template_id), why], 2.0)
+		overlay.toast(Loc.t("%s: %s") % [shard_name(template_id), why], 2.0)
 		return false
 	selected_shard = template_id
 	return not enter_shard(selected_shard, int(randi() % 1000000)).is_empty()
@@ -2195,7 +2199,7 @@ func open_door(cell: Vector2i, silent: bool = false) -> bool:
 	else:
 		narrative.set_flag(door_flag(map_id, cell), true) # handcrafted maps remember for good
 	if not silent:
-		var line := "A hidden passage opens."
+		var line := Loc.t("A hidden passage opens.")
 		if kind == "vault":
 			line = "The vault door grinds open."
 		elif kind == "locked":
@@ -2235,11 +2239,11 @@ func vault_at(cell: Vector2i) -> Dictionary:
 ## string on success, else the reason.
 func open_vault(cell: Vector2i) -> String:
 	if map_data.door_kind(cell) != "vault":
-		return "not a vault door"
+		return Loc.t("not a vault door")
 	var vault := vault_at(cell)
 	var cost: Dictionary = vault.get("cost", {"ciphers": 1})
 	if not ledger.can_afford(cost):
-		return "needs %s" % BastionState.describe_cost(cost)
+		return Loc.t("needs %s") % BastionState.describe_cost(cost)
 	ledger.spend(cost)
 	ledger.save()
 	open_door(cell)
@@ -2273,7 +2277,7 @@ func bank_at_waypoint() -> bool:
 	_bank(take, false)
 	run.clear_haul()
 	run.waypoints_used.append([here.x, here.y])
-	overlay.toast("Relay: banked %s" % RunState.describe(take), 3.0)
+	overlay.toast(Loc.t("Relay: banked %s") % RunState.describe(take), 3.0)
 	autosave()
 	return true
 
@@ -2294,8 +2298,8 @@ func merchant_rows(merchant: Dictionary) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for item: Dictionary in merchant.get("stock", []):
 		var cost: Dictionary = item.get("cost", {})
-		var why := "" if ledger.can_afford(cost) else "needs %s" % BastionState.describe_cost(cost)
-		rows.append({"id": String(item.get("id", "")), "label": "%s — %s" % [item.get("label", item.get("id", "?")), BastionState.describe_cost(cost)], "enabled": why.is_empty(), "why": why})
+		var why := "" if ledger.can_afford(cost) else Loc.t("needs %s") % BastionState.describe_cost(cost)
+		rows.append({"id": String(item.get("id", "")), "label": Loc.t("%s — %s") % [Loc.any(String(item.get("label", item.get("id", "?")))), BastionState.describe_cost(cost)], "enabled": why.is_empty(), "why": why})
 	return rows
 
 
@@ -2318,7 +2322,7 @@ func refresh_merchant() -> void:
 	if merchant.is_empty():
 		close_merchant()
 		return
-	var header := "%s\n%s\n%s" % [merchant.get("name", current_merchant), merchant.get("summary", ""), ledger.summary()]
+	var header := "%s\n%s\n%s" % [Loc.text(merchant, "name", current_merchant), Loc.text(merchant, "summary"), ledger.summary()]
 	merchant_menu.show_rows(header, merchant_rows(merchant))
 
 
@@ -2331,7 +2335,7 @@ func buy(item_id: String) -> String:
 			continue
 		var cost: Dictionary = item.get("cost", {})
 		if not ledger.can_afford(cost):
-			return "needs %s" % BastionState.describe_cost(cost)
+			return Loc.t("needs %s") % BastionState.describe_cost(cost)
 		ledger.spend(cost)
 		var effect: Dictionary = item.get("effect", {})
 		var heal := float(effect.get("heal_fraction", 0.0))
@@ -2346,9 +2350,9 @@ func buy(item_id: String) -> String:
 		if not bought.is_empty() and registry.has_entry("items", bought):
 			ledger.items.append(ItemSystem.make(bought, [], "common", int(randi())))
 		ledger.save()
-		overlay.toast("Bought: %s" % item.get("label", item_id), 2.0)
+		overlay.toast(Loc.t("Bought: %s") % item.get("label", item_id), 2.0)
 		return ""
-	return "no such item"
+	return Loc.t("no such item")
 
 
 func confirm_merchant() -> bool:
@@ -2359,7 +2363,7 @@ func confirm_merchant() -> bool:
 		return false
 	var why := buy(String(row["id"]))
 	if not why.is_empty():
-		overlay.toast("%s: %s" % [row.get("label", row["id"]), why], 2.0)
+		overlay.toast(Loc.t("%s: %s") % [row.get("label", row["id"]), why], 2.0)
 	refresh_merchant()
 	return why.is_empty()
 
@@ -2449,11 +2453,11 @@ func locked_door_at(cell: Vector2i) -> Dictionary:
 ## Opens a locked gate when its key flag is set. Empty string on success.
 func open_locked(cell: Vector2i) -> String:
 	if map_data.door_kind(cell) != "locked":
-		return "not a locked door"
+		return Loc.t("not a locked door")
 	var entry := locked_door_at(cell)
 	var key := String(entry.get("key_flag", ""))
 	if not key.is_empty() and not narrative.flag(key):
-		return "locked: %s" % String(entry.get("hint", "something on this map opens it"))
+		return Loc.t("locked: %s") % String(entry.get("hint", "something on this map opens it"))
 	open_door(cell)
 	var opens := String(entry.get("opens_flag", ""))
 	if not opens.is_empty():
@@ -2487,7 +2491,7 @@ func travel(to: String, arrive: Vector2i, label: String = "") -> bool:
 		var take := run.take()
 		_bank(take, true)
 		run.clear()
-		overlay.toast("Banked at the threshold: %s" % RunState.describe(take), 3.0)
+		overlay.toast(Loc.t("Banked at the threshold: %s") % RunState.describe(take), 3.0)
 	_arrive_cell = arrive
 	var ok := enter_map(to)
 	_arrive_cell = Vector2i(-1, -1)
@@ -2556,9 +2560,11 @@ func journal_entries() -> Array[Dictionary]:
 		var stage_id := narrative.stage_of(quest_id)
 		var stage: Dictionary = Dictionary(quest.get("stages", {})).get(stage_id, {})
 		var objectives: Array[Dictionary] = []
-		for o: Dictionary in stage.get("objectives", []):
-			objectives.append({"text": String(o.get("text", "")), "done": Conditions.passes(o.get("done_when", {}), ctx)})
-		out.append({"id": quest_id, "name": String(quest.get("name", quest_id)), "main": bool(quest.get("main", false)), "stage": stage_id, "stage_summary": String(stage.get("summary", "")), "complete": bool(stage.get("complete", false)), "objectives": objectives})
+		var raw_objectives: Array = stage.get("objectives", [])
+		for i: int in raw_objectives.size():
+			var o: Dictionary = raw_objectives[i]
+			objectives.append({"text": Loc.content("quests", quest_id, "stages.%s.objectives.%d.text" % [stage_id, i], String(o.get("text", ""))), "done": Conditions.passes(o.get("done_when", {}), ctx)})
+		out.append({"id": quest_id, "name": Loc.text(quest, "name", quest_id), "main": bool(quest.get("main", false)), "stage": stage_id, "stage_summary": Loc.content("quests", quest_id, "stages.%s.summary" % stage_id, String(stage.get("summary", ""))), "complete": bool(stage.get("complete", false)), "objectives": objectives})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if bool(a["main"]) != bool(b["main"]):
 			return bool(a["main"])
@@ -2576,11 +2582,11 @@ func standing_text() -> String:
 	for f: Dictionary in registry.get_all("factions"):
 		var rep := narrative.reputation_of(String(f["id"]))
 		if rep != 0:
-			parts.append("%s %+d" % [f.get("name", f["id"]), rep])
-	var sworn := "" if not narrative.has_joined() else "Sworn to %s. " % faction_name(narrative.faction)
+			parts.append("%s %+d" % [Loc.text(f, "name", String(f["id"])), rep])
+	var sworn := "" if not narrative.has_joined() else Loc.t("Sworn to %s. ") % faction_name(narrative.faction)
 	if parts.is_empty():
-		return sworn + "Standing: no faction has an opinion of you yet."
-	return sworn + "Standing: " + " · ".join(parts)
+		return sworn + Loc.t("Standing: no faction has an opinion of you yet.")
+	return sworn + Loc.t("Standing: ") + " · ".join(parts)
 
 
 func open_journal() -> bool:
@@ -2603,7 +2609,7 @@ func close_journal() -> void:
 # --- factions ---------------------------------------------------------------
 
 func faction_name(id: String) -> String:
-	return String(registry.get_entry("factions", id).get("name", id))
+	return Loc.text(registry.get_entry("factions", id), "name", id)
 
 
 ## The casting rule as a mechanic: when an effect block moves a faction's
@@ -2663,14 +2669,14 @@ func check_demo_end() -> bool:
 func demo_stats() -> Dictionary:
 	var names: Array = []
 	for id: String in narrative.recruited:
-		names.append(String(registry.get_entry("companions", id).get("short_name", id)))
+		names.append(Loc.text(registry.get_entry("companions", id), "short_name", id))
 	var choice := ""
 	if narrative.flag("choir_refused"):
-		choice = "You backed away from the Choir without a word. It will remember the silence."
+		choice = Loc.t("You backed away from the Choir without a word. It will remember the silence.")
 	elif narrative.flag("choir_heard_truth"):
-		choice = "You made the Choir say who drowned it. That answer is going to cost someone."
+		choice = Loc.t("You made the Choir say who drowned it. That answer is going to cost someone.")
 	elif narrative.flag("choir_named_player"):
-		choice = "Kaj-7 asked to go up, and you went. The Choir was calling you, not it."
+		choice = Loc.t("Kaj-7 asked to go up, and you went. The Choir was calling you, not it.")
 	return {"level": party_level(), "runs": ledger.runs_completed, "wipes": ledger.runs_wiped, "kills": ledger.kills, "companions": names, "standing": standing_text(), "choice": choice}
 
 
@@ -2704,7 +2710,7 @@ func interact_building(b: BuildingActor) -> bool:
 			return open_weave()
 		"medbay":
 			heal_party(maxf(bastion.heal_fraction(), 0.25))
-			overlay.toast("The Med-bay patches the party up.", 2.0)
+			overlay.toast(Loc.t("The Med-bay patches the party up."), 2.0)
 			return true
 		"archive":
 			return open_archive()
@@ -2720,13 +2726,13 @@ func open_beacon_menu() -> bool:
 	if system_menu == null or mode != "explore":
 		return false
 	var items: Array[Dictionary] = []
-	items.append({"id": "new_shard", "label": "Launch: %s (depth %d)" % [shard_name(selected_shard), bastion.depth()], "enabled": true})
+	items.append({"id": "new_shard", "label": Loc.t("Launch: %s (depth %d)") % [shard_name(selected_shard), bastion.depth()], "enabled": true})
 	for t: Dictionary in registry.get_all("shards"):
 		var id := String(t["id"])
 		if id == selected_shard:
 			continue
-		items.append({"id": "shard_" + id, "label": "Launch instead: %s" % t.get("name", id), "enabled": shard_locked_reason(id).is_empty(), "why": "the Beacon has not found it yet"})
-	items.append({"id": "resume", "label": "Step back", "enabled": true})
+		items.append({"id": "shard_" + id, "label": Loc.t("Launch instead: %s") % t.get("name", id), "enabled": shard_locked_reason(id).is_empty(), "why": Loc.t("the Beacon has not found it yet")})
+	items.append({"id": "resume", "label": Loc.t("Step back"), "enabled": true})
 	system_menu.open(items)
 	return true
 
@@ -2742,12 +2748,12 @@ func title_rows() -> Array[Dictionary]:
 		if bool(saves[n]["loadable"]):
 			any_slot = true
 	var rows: Array[Dictionary] = []
-	rows.append({"id": "new", "label": "New game", "enabled": true})
-	rows.append({"id": "continue", "label": "Continue", "enabled": has_auto, "why": "no autosave yet"})
+	rows.append({"id": "new", "label": Loc.t("New game"), "enabled": true})
+	rows.append({"id": "continue", "label": Loc.t("Continue"), "enabled": has_auto, "why": Loc.t("no autosave yet")})
 	var iron_underway := account != null and account.iron_active
-	rows.append({"id": "load", "label": "Load", "enabled": any_slot and not iron_underway, "why": "Iron Weave: no reloads while the run stands" if iron_underway else "no saves yet"})
-	rows.append({"id": "settings", "label": "Settings", "enabled": true})
-	rows.append({"id": "quit", "label": "Quit", "enabled": true})
+	rows.append({"id": "load", "label": Loc.t("Load"), "enabled": any_slot and not iron_underway, "why": Loc.t("Iron Weave: no reloads while the run stands") if iron_underway else Loc.t("no saves yet")})
+	rows.append({"id": "settings", "label": Loc.t("Settings"), "enabled": true})
+	rows.append({"id": "quit", "label": Loc.t("Quit"), "enabled": true})
 	return rows
 
 
@@ -2760,18 +2766,18 @@ func show_difficulty_page() -> void:
 func difficulty_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	for d: Dictionary in difficulties():
-		rows.append({"id": "diff_" + String(d["id"]), "label": String(d.get("name", d["id"])), "enabled": true, "blurb": String(d.get("summary", ""))})
-	rows.append({"id": "back", "label": "Back", "enabled": true})
+		rows.append({"id": "diff_" + String(d["id"]), "label": Loc.text(d, "name", String(d["id"])), "enabled": true, "blurb": Loc.text(d, "summary")})
+	rows.append({"id": "back", "label": Loc.t("Back"), "enabled": true})
 	return rows
 
 
 func stakes_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
-	rows.append({"id": "story", "label": "Story-Protected", "enabled": true, "blurb": "Companions fall and get back up. The story never loses anyone it did not mean to."})
-	rows.append({"id": "mortal", "label": "Mortal", "enabled": true, "blurb": "The dead stay dead. Companion quests carry on without them. A dead leader ends the expedition."})
+	rows.append({"id": "story", "label": Loc.t("Story-Protected"), "enabled": true, "blurb": Loc.t("Companions fall and get back up. The story never loses anyone it did not mean to.")})
+	rows.append({"id": "mortal", "label": Loc.t("Mortal"), "enabled": true, "blurb": Loc.t("The dead stay dead. Companion quests carry on without them. A dead leader ends the expedition.")})
 	var iron_underway := account != null and account.iron_active
-	rows.append({"id": "iron", "label": "Iron Weave", "enabled": not iron_underway, "why": "a run is underway: Continue it, or start another game to give it up", "blurb": "Mortal, with one save and no reloads. A wipe ends the run and its save with it. Starting any other game gives it up. The account remembers every attempt."})
-	rows.append({"id": "back", "label": "Back", "enabled": true})
+	rows.append({"id": "iron", "label": Loc.t("Iron Weave"), "enabled": not iron_underway, "why": Loc.t("a run is underway: Continue it, or start another game to give it up"), "blurb": Loc.t("Mortal, with one save and no reloads. A wipe ends the run and its save with it. Starting any other game gives it up. The account remembers every attempt.")})
+	rows.append({"id": "back", "label": Loc.t("Back"), "enabled": true})
 	return rows
 
 
@@ -2862,8 +2868,8 @@ func new_game(mortal: bool, difficulty: String = "", iron: bool = false, sheet: 
 	autosave()
 	if iron and account != null:
 		account.begin_iron(narrative.difficulty)
-	var stakes := "Iron Weave: one save, no reloads, the dead stay dead." if iron else ("Mortal mode: the dead stay dead." if mortal else "Story-Protected: the story keeps its people.")
-	overlay.toast("%s · %s" % [String(difficulty_entry().get("name", "Balanced")), stakes], 3.0)
+	var stakes := Loc.t("Iron Weave: one save, no reloads, the dead stay dead.") if iron else (Loc.t("Mortal mode: the dead stay dead.") if mortal else Loc.t("Story-Protected: the story keeps its people."))
+	overlay.toast(Loc.t("%s · %s") % [String(difficulty_entry().get("name", "Balanced")), stakes], 3.0)
 	return true
 
 
@@ -2957,7 +2963,7 @@ func iron_run_lost() -> void:
 	if account != null:
 		account.end_iron()
 	if overlay != null:
-		overlay.toast("The Iron Weave run is over. There is no save to return to.", 5.0)
+		overlay.toast(Loc.t("The Iron Weave run is over. There is no save to return to."), 5.0)
 
 
 ## An Iron Weave run reached an ending: the account keeps it as a key.
@@ -2991,8 +2997,8 @@ func close_settings() -> void:
 	if settings_menu == null:
 		return
 	settings_menu.close()
-	settings.save()
-	InputActions.save_overrides()
+	settings.save(settings_path)
+	InputActions.save_overrides(input_path)
 	if _settings_return_to_title:
 		show_title()
 
@@ -3021,6 +3027,8 @@ func adjust_setting(direction: int) -> bool:
 			play_event("ui.confirm") # so the level can be heard
 		"palette":
 			settings.cycle_palette(direction)
+		"language":
+			settings.cycle_locale(direction)
 		_:
 			return false
 	settings.apply()
@@ -3039,7 +3047,7 @@ func confirm_setting() -> bool:
 		settings_menu.refresh()
 		return true
 	match id:
-		"fullscreen", "glyphs", "rumble", "text_scale", "palette":
+		"fullscreen", "glyphs", "rumble", "text_scale", "palette", "language":
 			return adjust_setting(1)
 		"music", "sfx":
 			return adjust_setting(1)
@@ -3048,7 +3056,7 @@ func confirm_setting() -> bool:
 		"reset":
 			InputActions.reset_overrides()
 			refresh_settings()
-			overlay.toast("Bindings reset to default.", 2.0)
+			overlay.toast(Loc.t("Bindings reset to default."), 2.0)
 			return true
 		"back":
 			close_settings()
@@ -3069,7 +3077,7 @@ func capture_rebind(event: InputEvent) -> bool:
 	var action := settings_menu.rebinding
 	if InputActions.rebind(action, event):
 		InputActions.save_overrides()
-		overlay.toast("%s is now %s" % [action.replace("_", " "), InputActions.describe(action)], 2.5)
+		overlay.toast(Loc.t("%s is now %s") % [action.replace("_", " "), InputActions.describe(action)], 2.5)
 	settings_menu.rebinding = ""
 	refresh_settings()
 	return true
@@ -3138,7 +3146,7 @@ func check_achievements() -> Array[String]:
 	for id: String in due:
 		if service.unlock_achievement(id):
 			got.append(id)
-			overlay.toast("Achievement: %s" % registry.get_entry("achievements", id).get("name", id), 3.0)
+			overlay.toast(Loc.t("Achievement: %s") % registry.get_entry("achievements", id).get("name", id), 3.0)
 	return got
 
 
@@ -3158,7 +3166,7 @@ func advance_quests() -> Array[String]:
 			moved.append(String(q["id"]))
 			log_quest(String(q["id"]), String(q.get("start_toast", "")))
 			if q.has("start_toast") and overlay != null:
-				overlay.toast(String(q["start_toast"]), 4.0)
+				overlay.toast(Loc.any(String(q["start_toast"])), 4.0)
 	for _pass: int in 8: # a stage may complete the next one at once
 		var moved_now := false
 		var ctx := dialogue_ctx()
@@ -3199,7 +3207,7 @@ func advance_quests() -> Array[String]:
 			moved_now = true
 			log_quest(quest_id, toast)
 			if not toast.is_empty() and overlay != null:
-				overlay.toast(toast, 4.0)
+				overlay.toast(Loc.any(toast), 4.0)
 		if not moved_now:
 			break
 	return moved
@@ -3221,15 +3229,15 @@ func equipment_of(member_id: String) -> Dictionary:
 func equip(member_id: String, slot_key: String, uid: int) -> String:
 	var m := member_by_id(member_id)
 	if m == null:
-		return "no such member"
+		return Loc.t("no such member")
 	if not inventory_slots(m).has(slot_key):
-		return "no such slot"
+		return Loc.t("no such slot")
 	var i := ItemSystem.find_uid(ledger.items, uid)
 	if i < 0:
-		return "not in the pack"
+		return Loc.t("not in the pack")
 	var inst: Dictionary = ledger.items[i]
 	if not ItemSystem.fits(registry, inst, slot_key):
-		return "does not fit the %s slot" % ItemSystem.slot_base(slot_key)
+		return Loc.t("does not fit the %s slot") % ItemSystem.slot_base(slot_key)
 	var b := build_for(member_id)
 	var equipment: Dictionary = Dictionary(b.get("equipment", {})).duplicate(true)
 	if equipment.has(slot_key):
@@ -3247,7 +3255,7 @@ func unequip(member_id: String, slot_key: String) -> String:
 	var b := build_for(member_id)
 	var equipment: Dictionary = Dictionary(b.get("equipment", {})).duplicate(true)
 	if not equipment.has(slot_key):
-		return "nothing there"
+		return Loc.t("nothing there")
 	ledger.items.append(equipment[slot_key])
 	equipment.erase(slot_key)
 	b["equipment"] = equipment
@@ -3262,14 +3270,14 @@ func craft_reason(item_id: String) -> String:
 	var item := registry.get_entry("items", item_id)
 	var recipe: Dictionary = item.get("craft", {})
 	if item.is_empty() or recipe.is_empty():
-		return "not craftable"
+		return Loc.t("not craftable")
 	if not at_home():
-		return "only at home"
+		return Loc.t("only at home")
 	var need := int(recipe.get("workshop", 1))
 	if bastion.level("workshop") < need:
-		return "needs Workshop level %d" % need
+		return Loc.t("needs Workshop level %d") % need
 	if not ledger.can_afford(recipe.get("cost", {})):
-		return "needs %s" % BastionState.describe_cost(recipe.get("cost", {}))
+		return Loc.t("needs %s") % BastionState.describe_cost(recipe.get("cost", {}))
 	return ""
 
 
@@ -3339,9 +3347,9 @@ func refresh_inventory() -> void:
 		return
 	var m := party.members[clampi(inventory_menu.member_index, 0, party.members.size() - 1)]
 	var eq := ItemSystem.equipment_mods(registry, equipment_of(m.member_id))
-	var header := "%s · pack %d\n%s — %s %s · HP %d/%d · move %d · evasion %d · initiative %d · from gear: %s" % [
-		ledger.summary(), ledger.items.size(), m.display_name, String(registry.get_entry("races", m.race_id).get("name", m.race_id)),
-		String(registry.get_entry("classes", m.class_id).get("name", m.class_id)), m.hp, m.max_hp, int(m.stats.get("move", 0)), int(m.stats.get("evasion", 0)), int(m.stats.get("initiative", 0)), ItemSystem.describe_mods(eq)]
+	var header := Loc.t("%s · pack %d\n%s — %s %s · HP %d/%d · move %d · evasion %d · initiative %d · from gear: %s") % [
+		ledger.summary(), ledger.items.size(), m.display_name, Loc.text(registry.get_entry("races", m.race_id), "name", m.race_id),
+		Loc.text(registry.get_entry("classes", m.class_id), "name", m.class_id), m.hp, m.max_hp, int(m.stats.get("move", 0)), int(m.stats.get("evasion", 0)), int(m.stats.get("initiative", 0)), ItemSystem.describe_mods(eq)]
 	inventory_menu.show_rows(header, inventory_rows(m.member_id))
 
 
@@ -3354,21 +3362,21 @@ func inventory_rows(member_id: String) -> Array[Dictionary]:
 	var slots := inventory_slots(m)
 	for slot_key: String in slots:
 		var held: Dictionary = equipment.get(slot_key, {})
-		var label := "%s: %s" % [slot_key.capitalize(), ItemSystem.describe(registry, held) if not held.is_empty() else "empty"]
-		rows.append({"kind": "slot", "id": slot_key, "label": label, "enabled": not held.is_empty(), "why": "empty"})
+		var label := Loc.t("%s: %s") % [Loc.t(slot_key.capitalize()), ItemSystem.describe(registry, held) if not held.is_empty() else Loc.t("empty")]
+		rows.append({"kind": "slot", "id": slot_key, "label": label, "enabled": not held.is_empty(), "why": Loc.t("empty")})
 	for inst: Dictionary in ledger.items:
 		var fits := false
 		for slot_key: String in slots:
 			if ItemSystem.fits(registry, inst, slot_key):
 				fits = true
 		var slot_name := String(registry.get_entry("items", String(inst.get("item", ""))).get("slot", "?"))
-		rows.append({"kind": "item", "id": int(inst.get("uid", 0)), "label": ItemSystem.describe(registry, inst), "enabled": fits, "why": "no %s slot" % slot_name})
+		rows.append({"kind": "item", "id": int(inst.get("uid", 0)), "label": ItemSystem.describe(registry, inst), "enabled": fits, "why": Loc.t("no %s slot") % slot_name})
 	for item: Dictionary in registry.get_all("items"):
 		if not item.has("craft"):
 			continue
 		var why := craft_reason(String(item["id"]))
 		var recipe: Dictionary = item["craft"]
-		rows.append({"kind": "craft", "id": String(item["id"]), "label": "%s (%s): %s — %s" % [item.get("name", item["id"]), item.get("slot", "?"), ItemSystem.describe_mods(ItemSystem.mods(registry, ItemSystem.make(String(item["id"])))), BastionState.describe_cost(recipe.get("cost", {}))], "enabled": why.is_empty(), "why": why})
+		rows.append({"kind": "craft", "id": String(item["id"]), "label": Loc.t("%s (%s): %s — %s") % [Loc.text(item, "name", String(item["id"])), Loc.t(String(item.get("slot", "?"))), ItemSystem.describe_mods(ItemSystem.mods(registry, ItemSystem.make(String(item["id"])))), BastionState.describe_cost(recipe.get("cost", {}))], "enabled": why.is_empty(), "why": why})
 	return rows
 
 
@@ -3398,11 +3406,11 @@ func confirm_inventory() -> bool:
 						continue
 					if target.is_empty() or (equipment.has(target) and not equipment.has(slot_key)):
 						target = slot_key
-				why = equip(m.member_id, target, uid) if not target.is_empty() else "no slot fits"
+				why = equip(m.member_id, target, uid) if not target.is_empty() else Loc.t("no slot fits")
 		"craft":
 			why = craft(String(row["id"]))
 	if not why.is_empty():
-		overlay.toast("%s: %s" % [row.get("label", row.get("id", "")), why], 2.0)
+		overlay.toast(Loc.t("%s: %s") % [row.get("label", row.get("id", "")), why], 2.0)
 	refresh_inventory()
 	return why.is_empty()
 
@@ -3425,7 +3433,7 @@ func party_trait_total(key: String) -> float:
 func choose_multiclass(member_id: String, class_id: String) -> String:
 	var m := member_by_id(member_id)
 	if m == null:
-		return "no such member"
+		return Loc.t("no such member")
 	var cls: Dictionary = registry.get_entry("classes", m.class_id)
 	var why := Progression.can_multiclass(registry, cls, party_level(), build_for(member_id), class_id, progression_rules(), can_respec())
 	if not why.is_empty():
@@ -3440,7 +3448,7 @@ func choose_multiclass(member_id: String, class_id: String) -> String:
 
 func add_multiclass_level(member_id: String) -> String:
 	if member_by_id(member_id) == null:
-		return "no such member"
+		return Loc.t("no such member")
 	var b := build_for(member_id)
 	var why := Progression.can_add_multiclass_level(party_level(), b, progression_rules())
 	if not why.is_empty():
@@ -3460,9 +3468,9 @@ func class_levels_text(member_id: String) -> String:
 	if m == null:
 		return ""
 	var split := Progression.class_levels(party_level(), build_for(member_id), progression_rules())
-	var text := "%s %d" % [registry.get_entry("classes", m.class_id).get("name", m.class_id), int(split["main"])]
+	var text := Loc.t("%s %d") % [registry.get_entry("classes", m.class_id).get("name", m.class_id), int(split["main"])]
 	if int(split["second"]) > 0:
-		text += " / %s %d" % [registry.get_entry("classes", String(split["class"])).get("name", split["class"]), int(split["second"])]
+		text += Loc.t(" / %s %d") % [registry.get_entry("classes", String(split["class"])).get("name", split["class"]), int(split["second"])]
 	return text
 
 
@@ -3482,14 +3490,14 @@ func multiclass_rows(member_id: String) -> Array[Dictionary]:
 		if id == m.class_id:
 			continue
 		var why := Progression.can_multiclass(registry, cls, level, build, id, prules, can_respec())
-		var label := "Second class: %s" % other.get("name", id)
+		var label := Loc.t("Second class: %s") % Loc.text(other, "name", id)
 		if current == id:
 			label = "✓ " + label
 		rows.append({"kind": "multiclass", "id": id, "label": label, "enabled": why.is_empty(), "why": why})
 	if not current.is_empty():
 		var why := Progression.can_add_multiclass_level(level, build, prules)
 		var split := Progression.class_levels(level, build, prules)
-		rows.append({"kind": "multiclass_level", "id": member_id, "label": "Put a level into %s (%d there, %d in %s)" % [registry.get_entry("classes", current).get("name", current), int(split["second"]), int(split["main"]), cls.get("name", m.class_id)], "enabled": why.is_empty(), "why": why})
+		rows.append({"kind": "multiclass_level", "id": member_id, "label": Loc.t("Put a level into %s (%d there, %d in %s)") % [Loc.text(registry.get_entry("classes", current), "name", current), int(split["second"]), int(split["main"]), cls.get("name", m.class_id)], "enabled": why.is_empty(), "why": why})
 	return rows
 
 
@@ -3503,17 +3511,17 @@ func multiclass_rows(member_id: String) -> Array[Dictionary]:
 func join_faction(id: String) -> String:
 	var f: Dictionary = registry.get_entry("factions", id)
 	if f.is_empty():
-		return "no such faction"
+		return Loc.t("no such faction")
 	if narrative.has_joined():
-		return "already sworn to %s" % faction_name(narrative.faction)
+		return Loc.t("already sworn to %s") % faction_name(narrative.faction)
 	var act_flag := "act%d" % int(f.get("joinable_act", 2))
 	if not narrative.flag(act_flag):
-		return "not before %s" % act_flag
+		return Loc.t("not before %s") % act_flag
 	narrative.join_faction(id)
 	var deltas: Dictionary = f.get("join_reputation", {id: 3})
 	Conditions.apply({"reputation": deltas}, narrative)
 	react_to_reputation({"reputation": deltas})
-	overlay.toast("You have joined %s." % faction_name(id), 4.0)
+	overlay.toast(Loc.t("You have joined %s.") % faction_name(id), 4.0)
 	autosave()
 	return ""
 
@@ -3525,7 +3533,7 @@ func handle_join_effect(effects: Dictionary) -> void:
 		return
 	var why := join_faction(id)
 	if not why.is_empty():
-		overlay.toast("Cannot join %s: %s" % [faction_name(id), why], 3.0)
+		overlay.toast(Loc.t("Cannot join %s: %s") % [faction_name(id), why], 3.0)
 
 
 
@@ -3535,7 +3543,7 @@ func handle_join_effect(effects: Dictionary) -> void:
 func archive_entries() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	for f: Dictionary in registry.get_all("lore"):
-		out.append({"id": String(f["id"]), "name": String(f.get("name", f["id"])), "order": int(f.get("order", 0)), "source": String(f.get("source", "")), "text": String(f.get("text", "")), "found": narrative.lore.has(String(f["id"]))})
+		out.append({"id": String(f["id"]), "name": Loc.text(f, "name", String(f["id"])), "order": int(f.get("order", 0)), "source": Loc.text(f, "source"), "text": Loc.text(f, "text"), "found": narrative.lore.has(String(f["id"]))})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a["order"]) != int(b["order"]):
 			return int(a["order"]) < int(b["order"])
@@ -3567,7 +3575,7 @@ func find_lore() -> String:
 	if insight > 0:
 		ledger.bank({"aether": insight})
 		ledger.save()
-	overlay.toast("Fragment: %s" % String(registry.get_entry("lore", id).get("name", id)), 3.0)
+	overlay.toast(Loc.t("Fragment: %s") % Loc.text(registry.get_entry("lore", id), "name", id), 3.0)
 	return id
 
 
@@ -3589,7 +3597,7 @@ func close_archive() -> void:
 ## (regen_on_surface is their trait; the Garden is overgrowth by design).
 func tend_garden() -> bool:
 	if bastion.level("garden") <= 0:
-		overlay.toast("The Garden is one stubborn vine. Raise it at the Workshop.", 2.5)
+		overlay.toast(Loc.t("The Garden is one stubborn vine. Raise it at the Workshop."), 2.5)
 		return false
 	var garden: Dictionary = Dictionary(bastion.buildings.get("garden", {})).get("levels", [])[bastion.level("garden")].get("effects", {})
 	var fraction := float(garden.get("heal_fraction", 0.0))
@@ -3597,7 +3605,7 @@ func tend_garden() -> bool:
 		var f := fraction * (2.0 if m.traits.has("regen_on_surface") else 1.0)
 		if not m.downed and m.hp < m.max_hp:
 			m.hp = mini(m.max_hp, m.hp + int(ceil(m.max_hp * f)))
-	overlay.toast("The Garden closes what it can.", 2.0)
+	overlay.toast(Loc.t("The Garden closes what it can."), 2.0)
 	return true
 
 
@@ -3632,7 +3640,7 @@ func quarters_scenes() -> Array[Dictionary]:
 				continue
 			if not Conditions.passes(scene.get("requires", {}), ctx):
 				continue
-			out.append({"companion": id, "scene": scene_id, "dialogue": String(scene.get("dialogue", "")), "label": "%s — %s" % [c.get("short_name", id), scene.get("label", scene_id)]})
+			out.append({"companion": id, "scene": scene_id, "dialogue": String(scene.get("dialogue", "")), "label": Loc.t("%s — %s") % [Loc.text(c, "short_name", id), Loc.any(String(scene.get("label", scene_id)))]})
 	return out
 
 
@@ -3642,7 +3650,7 @@ func open_quarters() -> bool:
 	if mode != "explore" or not at_home():
 		return false
 	if bastion.level("quarters") <= 0:
-		overlay.toast("Bunks in a container. Raise the Quarters at the Workshop.", 2.5)
+		overlay.toast(Loc.t("Bunks in a container. Raise the Quarters at the Workshop."), 2.5)
 		return false
 	if bastion_menu != null:
 		bastion_menu.visible = false
@@ -3663,8 +3671,8 @@ func play_scene(scene_id: String) -> bool:
 
 ## What a save is called in the lists: who leads, where, which act, what level.
 func save_title() -> String:
-	var who := party.leader().display_name if party.leader() != null else "The Weaver"
-	return "%s · %s · Act %d · level %d" % [who, map_data.name, act_number(), party_level()]
+	var who := party.leader().display_name if party.leader() != null else Loc.t("The Weaver")
+	return Loc.t("%s · %s · Act %d · level %d") % [who, Loc.any(map_data.name), act_number(), party_level()]
 
 
 ## 1 until first contact, 2 until the catastrophe, 3 after.
@@ -3687,9 +3695,9 @@ func saves_rows(page: String) -> Array[Dictionary]:
 		if page == SavesMenu.PAGE_SAVE and not is_slot:
 			continue
 		var exists := bool(row["exists"])
-		var what := "Slot %s" % save_name.get_slice("_", 1) if is_slot else ("Autosave" if save_name == SaveSystem.AUTOSAVE else "Older autosave %s" % save_name.get_slice("_", 1))
+		var what := Loc.t("Slot %s") % save_name.get_slice("_", 1) if is_slot else (Loc.t("Autosave") if save_name == SaveSystem.AUTOSAVE else Loc.t("Older autosave %s") % save_name.get_slice("_", 1))
 		var title := String(row.get("title", ""))
-		var label := "%s — %s" % [what, title if not title.is_empty() else (String(row["summary"]) if exists else "empty")]
+		var label := Loc.t("%s — %s") % [what, title if not title.is_empty() else (String(row["summary"]) if exists else Loc.t("empty"))]
 		var detail := ""
 		if exists:
 			detail = "%s · %s" % [String(row.get("saved_at", "")), String(row["summary"])]
@@ -3697,12 +3705,12 @@ func saves_rows(page: String) -> Array[Dictionary]:
 		var why := ""
 		if page == SavesMenu.PAGE_LOAD:
 			enabled = bool(row["loadable"]) and reload_allowed()
-			why = "Iron Weave: no reloads" if not reload_allowed() else ("needs a new game" if exists else "empty")
+			why = Loc.t("Iron Weave: no reloads") if not reload_allowed() else (Loc.t("needs a new game") if exists else Loc.t("empty"))
 		else:
 			enabled = mode != "combat" and reload_allowed()
-			why = "Iron Weave: one save" if not reload_allowed() else "in combat"
+			why = Loc.t("Iron Weave: one save") if not reload_allowed() else Loc.t("in combat")
 		rows.append({"id": save_name, "label": label, "detail": detail, "enabled": enabled, "why": why, "exists": exists, "thumbnail": String(row.get("thumbnail", ""))})
-	rows.append({"id": "back", "label": "Back", "enabled": true, "exists": false})
+	rows.append({"id": "back", "label": Loc.t("Back"), "enabled": true, "exists": false})
 	return rows
 
 
@@ -3828,10 +3836,10 @@ func log_node() -> void:
 func log_quest(quest_id: String, toast: String) -> void:
 	var quest: Dictionary = registry.get_entry("quests", quest_id)
 	var stage: Dictionary = Dictionary(quest.get("stages", {})).get(narrative.stage_of(quest_id), {})
-	var text := toast if not toast.is_empty() else String(stage.get("summary", ""))
+	var text := Loc.any(toast) if not toast.is_empty() else Loc.content("quests", quest_id, "stages.%s.summary" % narrative.stage_of(quest_id), String(stage.get("summary", "")))
 	if text.is_empty():
 		return
-	narrative.log_line("Journal", "%s — %s" % [String(quest.get("name", quest_id)), text])
+	narrative.log_line(Loc.t("Journal"), "%s — %s" % [Loc.text(quest, "name", quest_id), text])
 
 
 ## The quest the HUD tracks: the one chosen in the journal while it is
@@ -3870,8 +3878,8 @@ func tracking_line() -> String:
 			if not bool(o["done"]):
 				next = String(o["text"])
 				break
-		var line := "%s %s — %s" % ["★" if bool(e["main"]) else "•", e["name"], e["stage_summary"]]
-		return line if next.is_empty() else "%s · %s" % [line, next]
+		var line := Loc.t("%s %s — %s") % ["★" if bool(e["main"]) else "•", e["name"], e["stage_summary"]]
+		return line if next.is_empty() else Loc.t("%s · %s") % [line, next]
 	return ""
 
 
@@ -3906,7 +3914,7 @@ func roster_rows() -> Array[Dictionary]:
 			ids.append(id)
 	for id: String in ids:
 		var c: Dictionary = registry.get_entry("companions", id)
-		var name := String(c.get("short_name", id))
+		var name := Loc.text(c, "short_name", id)
 		var dead := narrative.flag("%s_dead" % id)
 		var tags: PackedStringArray = []
 		if narrative.romance == id:
@@ -3915,8 +3923,8 @@ func roster_rows() -> Array[Dictionary]:
 			tags.append("what was")
 		if narrative.flag("%s_loyal" % id):
 			tags.append("loyal")
-		var status := "fallen" if dead else ("waits at the Bastion" if narrative.is_benched(id) else "walks with you")
-		var label := "%s — %s · ♥%+d%s" % [name, status, narrative.approval_of(id), "" if tags.is_empty() else " · " + " · ".join(tags)]
+		var status := "fallen" if dead else (Loc.t("waits at the Bastion") if narrative.is_benched(id) else Loc.t("walks with you"))
+		var label := Loc.t("%s — %s · ♥%+d%s") % [name, status, narrative.approval_of(id), "" if tags.is_empty() else " · " + " · ".join(tags)]
 		var row: Dictionary = {"id": "companion:%s" % id, "kind": "companion", "companion": id, "label": label, "enabled": true, "portrait": portrait_for(id), "dead": dead}
 		if dead:
 			row["toggle"] = ""
@@ -3931,10 +3939,10 @@ func roster_rows() -> Array[Dictionary]:
 		rows.append(row)
 		for s: Dictionary in scenes:
 			if String(s["companion"]) == id:
-				rows.append({"id": "scene:%s" % s["scene"], "kind": "scene", "companion": id, "scene": String(s["scene"]), "label": "    ↳ %s" % String(s["label"]).get_slice(" — ", 1), "enabled": true})
+				rows.append({"id": "scene:%s" % s["scene"], "kind": "scene", "companion": id, "scene": String(s["scene"]), "label": Loc.t("    ↳ %s") % String(s["label"]).get_slice(" — ", 1), "enabled": true})
 	if not ids.is_empty() and bastion.level("quarters") <= 0:
-		rows.append({"id": "note", "kind": "note", "label": "Bunks in a container: raise the Quarters at the Workshop for their scenes.", "enabled": false, "why": "no Quarters yet"})
-	rows.append({"id": "close", "kind": "note", "label": "Done", "enabled": true})
+		rows.append({"id": "note", "kind": "note", "label": Loc.t("Bunks in a container: raise the Quarters at the Workshop for their scenes."), "enabled": false, "why": Loc.t("no Quarters yet")})
+	rows.append({"id": "close", "kind": "note", "label": Loc.t("Done"), "enabled": true})
 	return rows
 
 
@@ -3976,7 +3984,7 @@ func roster_toggle() -> bool:
 			ok = bench_companion(id)
 		"take":
 			if not bool(row.get("can_toggle", true)):
-				overlay.toast("The party is full: leave someone at the Bastion first.", 2.5)
+				overlay.toast(Loc.t("The party is full: leave someone at the Bastion first."), 2.5)
 				return false
 			ok = take_companion(id)
 	if ok:
@@ -3991,7 +3999,7 @@ func grant_account_unlocks() -> Array[String]:
 	var fresh := account.grant_from(narrative, registry)
 	for key: String in fresh:
 		var origin := registry.get_entry("origins", key.get_slice(":", 1))
-		overlay.toast("Unlocked for every playthrough: %s" % origin.get("name", key), 4.0)
+		overlay.toast(Loc.t("Unlocked for every playthrough: %s") % origin.get("name", key), 4.0)
 	return fresh
 
 
@@ -4032,11 +4040,11 @@ func _apply_world_effects(effects: Dictionary) -> void:
 		_drop_member(String(effects["dismiss"])) # the story took someone (S41)
 	if effects.has("grant"):
 		var got := _gain(effects["grant"])
-		overlay.toast("Found: %s" % RunState.describe(got), 2.5)
+		overlay.toast(Loc.t("Found: %s") % RunState.describe(got), 2.5)
 	if effects.has("lore"):
 		find_lore_by_id(String(effects["lore"]))
 	if effects.has("toast"):
-		overlay.toast(String(effects["toast"]), 3.5)
+		overlay.toast(Loc.any(String(effects["toast"])), 3.5)
 	for raw: Array in effects.get("open_doors", []):
 		open_door(Vector2i(int(raw[0]), int(raw[1])))
 	for edit: Dictionary in effects.get("map_edits", []):
@@ -4087,7 +4095,7 @@ func find_lore_by_id(id: String) -> bool:
 	if id.is_empty() or narrative.lore.has(id) or not registry.has_entry("lore", id):
 		return false
 	narrative.lore.append(id)
-	overlay.toast("Fragment: %s" % String(registry.get_entry("lore", id).get("name", id)), 3.0)
+	overlay.toast(Loc.t("Fragment: %s") % String(registry.get_entry("lore", id).get("name", id)), 3.0)
 	return true
 
 
@@ -4203,10 +4211,27 @@ func show_ending() -> bool:
 	if playtest != null:
 		playtest.ending(String(ending["id"]))
 	var credits: Array[String] = []
-	credits.assign(registry.get_entry("rules", "credits").get("lines", []))
+	credits.assign(credit_lines())
 	ending_menu.show_text(EndingMenu.render(ending, Endings.fates(registry, ending, narrative), demo_stats(), Endings.modifiers(ending, dialogue_ctx()), credits))
 	autosave()
 	return true
+
+
+## The credits, each line through the table.
+## Ability names for a header, each through the table.
+func ability_names(ids: Array) -> String:
+	var names: PackedStringArray = []
+	for id: String in ids:
+		names.append(Loc.text(registry.get_entry("abilities", id), "name", id))
+	return ", ".join(names)
+
+
+func credit_lines() -> Array[String]:
+	var out: Array[String] = []
+	var raw: Array = registry.get_entry("rules", "credits").get("lines", [])
+	for i: int in raw.size():
+		out.append(Loc.content("rules", "credits", "lines.%d" % i, String(raw[i])))
+	return out
 
 
 func close_ending() -> void:
@@ -4229,10 +4254,10 @@ func roster_items() -> Array[Dictionary]:
 		var c: Dictionary = registry.get_entry("companions", id)
 		var name := String(c.get("short_name", id))
 		if narrative.is_benched(id):
-			items.append({"id": "take_%s" % id, "label": "%s waits at the Bastion: take along" % name, "enabled": room, "why": "the party is full"})
+			items.append({"id": "take_%s" % id, "label": Loc.t("%s waits at the Bastion: take along") % name, "enabled": room, "why": Loc.t("the party is full")})
 		else:
-			items.append({"id": "bench_%s" % id, "label": "%s walks with you: leave at the Bastion" % name, "enabled": true})
-	items.append({"id": "resume", "label": "Done", "enabled": true})
+			items.append({"id": "bench_%s" % id, "label": Loc.t("%s walks with you: leave at the Bastion") % name, "enabled": true})
+	items.append({"id": "resume", "label": Loc.t("Done"), "enabled": true})
 	return items
 
 
@@ -4253,7 +4278,7 @@ func bench_companion(id: String) -> bool:
 		return false
 	narrative.bench(id)
 	respawn_party()
-	overlay.toast("%s waits at the Bastion." % registry.get_entry("companions", id).get("short_name", id), 2.0)
+	overlay.toast(Loc.t("%s waits at the Bastion.") % registry.get_entry("companions", id).get("short_name", id), 2.0)
 	return true
 
 
@@ -4262,7 +4287,7 @@ func take_companion(id: String) -> bool:
 		return false
 	narrative.unbench(id)
 	respawn_party()
-	overlay.toast("%s walks with you." % registry.get_entry("companions", id).get("short_name", id), 2.0)
+	overlay.toast(Loc.t("%s walks with you.") % registry.get_entry("companions", id).get("short_name", id), 2.0)
 	return true
 
 
