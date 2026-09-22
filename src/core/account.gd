@@ -12,6 +12,11 @@ const DEFAULT_PATH := "user://account.json"
 var path: String = DEFAULT_PATH
 var unlocked: Array[String] = []
 var playthroughs: int = 0
+## Iron Weave (S50): one save, Mortal, no reloads. The account, not the save,
+## remembers a run is underway, so a deleted or swapped save cannot restart it.
+var iron_active: bool = false
+var iron_difficulty: String = ""
+var iron_runs: int = 0
 
 
 static func load_or_new(p_path: String = DEFAULT_PATH) -> Account:
@@ -28,6 +33,9 @@ static func load_or_new(p_path: String = DEFAULT_PATH) -> Account:
 	var d: Dictionary = json.data
 	a.unlocked.assign(d.get("unlocked", []))
 	a.playthroughs = int(d.get("playthroughs", 0))
+	a.iron_active = bool(d.get("iron_active", false))
+	a.iron_difficulty = String(d.get("iron_difficulty", ""))
+	a.iron_runs = int(d.get("iron_runs", 0))
 	return a
 
 
@@ -38,7 +46,7 @@ func save() -> Error:
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify({"version": VERSION, "unlocked": unlocked.duplicate(), "playthroughs": playthroughs}, "  "))
+	file.store_string(JSON.stringify({"version": VERSION, "unlocked": unlocked.duplicate(), "playthroughs": playthroughs, "iron_active": iron_active, "iron_difficulty": iron_difficulty, "iron_runs": iron_runs}, "  "))
 	return OK
 
 
@@ -66,4 +74,25 @@ func grant_from(narrative: NarrativeState, registry: ContentRegistry) -> Array[S
 			fresh.append("origin:%s" % String(o["id"]))
 	if not fresh.is_empty():
 		save()
+	return fresh
+
+
+## An Iron Weave run begins: counted and marked underway (saved).
+func begin_iron(difficulty: String) -> void:
+	iron_active = true
+	iron_difficulty = difficulty
+	iron_runs += 1
+	save()
+
+
+## An Iron Weave run ends, by an ending (`ending` set: the key
+## "iron_weave:<ending>" is unlocked) or by death (empty). Saved.
+## Returns true when the ending key was new.
+func end_iron(ending: String = "") -> bool:
+	iron_active = false
+	iron_difficulty = ""
+	var fresh := false
+	if not ending.is_empty():
+		fresh = unlock("iron_weave:%s" % ending)
+	save()
 	return fresh

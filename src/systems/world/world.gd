@@ -92,6 +92,8 @@ var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
+## The difficulty picked on the title screen, carried to the death-stakes page (S50).
+var pending_difficulty: String = ""
 ## Bastion buildings standing on the home map (`buildings` sites).
 var buildings: Array[BuildingActor] = []
 ## Set by travel(): where the party arrives on the next map instead of its spawns.
@@ -431,6 +433,10 @@ func save_to(save_name: String) -> Error:
 
 
 func save_slot(n: int) -> Error:
+	if is_iron_weave():
+		if overlay != null:
+			overlay.toast("Iron Weave: one save. The autosave is the save.", 2.5)
+		return ERR_UNAVAILABLE
 	var err := save_to(SaveSystem.slot_name(n))
 	if overlay != null:
 		overlay.toast("Saved to slot %d" % n if err == OK else "Save failed: %s" % ("in combat" if err == ERR_UNAVAILABLE else error_string(err)), 2.0)
@@ -473,6 +479,10 @@ func load_from(save_name: String) -> Array[String]:
 
 
 func load_slot(n: int) -> Array[String]:
+	if is_iron_weave():
+		if overlay != null:
+			overlay.toast("Iron Weave: no reloads.", 2.5)
+		return ["Iron Weave: no reloads"]
 	return load_from(SaveSystem.slot_name(n))
 
 
@@ -1152,6 +1162,8 @@ func status_line() -> String:
 		line3 = "▶ VAULT DOOR — Enter / A opens it for %s ◀" % BastionState.describe_cost(vault_at(adjacent_door()).get("cost", {"ciphers": 1}))
 	elif mode == "explore" and merchant_near() != null:
 		line3 = "▶ %s — Enter / A to trade ◀" % merchant_near().display_name
+	elif mode == "defeated" and is_iron_weave():
+		line3 = "▶ The Iron Weave run is over · Enter: title screen ◀"
 	elif mode == "defeated":
 		line3 = "▶ R: return to the yard · Esc: reload the combat checkpoint ◀"
 	return "%s\n%s\n%s" % [line1, line2, line3]
@@ -1227,6 +1239,7 @@ func _on_combat_ended(result: String) -> void:
 			if m == party.leader():
 				mode = "defeated"
 				overlay.toast("%s is dead. The expedition ends here." % m.display_name, 4.0)
+				iron_run_lost()
 				return
 			if narrative.is_recruited(m.member_id):
 				narrative.dismiss(m.member_id)
@@ -1267,6 +1280,7 @@ func _on_combat_ended(result: String) -> void:
 	pending_victory_flags = []
 	if playtest != null:
 		playtest.run_end(self, "wiped", run.haul.duplicate())
+	iron_run_lost()
 	pending_trigger_flag = "" # the fight was lost: its trigger stays live
 	if run.in_shard:
 		ledger.runs_wiped += 1
@@ -1320,6 +1334,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("confirm"):
 			activate_title()
 		elif event.is_action_pressed("cancel") and title_menu.page == TitleMenu.PAGE_STAKES:
+			show_difficulty_page()
+		elif event.is_action_pressed("cancel") and title_menu.page == TitleMenu.PAGE_DIFFICULTY:
 			title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
 		elif event.is_action_pressed("ui_up"):
 			title_menu.move(-1)
@@ -1336,7 +1352,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		load_slot(1)
 		return
 	if event.is_action_pressed("load_autosave"):
-		load_from(SaveSystem.AUTOSAVE)
+		if reload_allowed():
+			load_from(SaveSystem.AUTOSAVE)
 		return
 	if event is InputEventMouseMotion and hover_override.x >= 0:
 		combat.release_cursor() # the mouse moved: it is the pointer again
@@ -1512,7 +1529,10 @@ func _unhandled_input(event: InputEvent) -> void:
 					if event.is_action_pressed("ability_%d" % (i + 1)):
 						combat.select_ability(i)
 		"defeated":
-			if event.is_action_pressed("restart") or event.is_action_pressed("confirm"):
+			if is_iron_weave():
+				if event.is_action_pressed("restart") or event.is_action_pressed("confirm"):
+					show_title()
+			elif event.is_action_pressed("restart") or event.is_action_pressed("confirm"):
 				return_home()
 			elif event.is_action_pressed("cancel"):
 				load_from(SaveSystem.AUTOSAVE)
@@ -1616,12 +1636,12 @@ func system_items() -> Array[Dictionary]:
 	var saves := SaveSystem.list_saves(saves_dir, registry)
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
-		items.append({"id": "save_%d" % (n + 1), "label": "Save slot %d — %s" % [n + 1, slot["summary"]], "enabled": mode != "combat", "why": "in combat"})
+		items.append({"id": "save_%d" % (n + 1), "label": "Save slot %d — %s" % [n + 1, slot["summary"]], "enabled": mode != "combat" and reload_allowed(), "why": "Iron Weave: one save" if not reload_allowed() else "in combat"})
 	for n: int in SaveSystem.SLOTS:
 		var slot: Dictionary = saves[n]
-		items.append({"id": "load_%d" % (n + 1), "label": "Load slot %d — %s" % [n + 1, slot["summary"]], "enabled": bool(slot["loadable"]), "why": "needs a new game" if bool(slot["exists"]) else "empty"})
+		items.append({"id": "load_%d" % (n + 1), "label": "Load slot %d — %s" % [n + 1, slot["summary"]], "enabled": bool(slot["loadable"]) and reload_allowed(), "why": "Iron Weave: no reloads" if not reload_allowed() else ("needs a new game" if bool(slot["exists"]) else "empty")})
 	var auto: Dictionary = saves[SaveSystem.SLOTS]
-	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["loadable"]), "why": "needs a new game" if bool(auto["exists"]) else "no autosave yet"})
+	items.append({"id": "load_autosave", "label": "Load the autosave — %s" % auto["summary"], "enabled": bool(auto["loadable"]) and reload_allowed(), "why": "Iron Weave: no reloads" if not reload_allowed() else ("needs a new game" if bool(auto["exists"]) else "no autosave yet")})
 	items.append({"id": "settings", "label": "Settings", "enabled": true})
 	items.append({"id": "platform", "label": platform().status_line(), "enabled": false, "why": "%d achievements this session" % platform().unlocked_this_session.size()})
 	items.append({"id": "title", "label": "Title screen", "enabled": mode != "combat", "why": "in combat"})
@@ -1678,7 +1698,7 @@ func activate_system_item(id: String) -> bool:
 		"load_1", "load_2", "load_3":
 			return load_slot(int(id.get_slice("_", 1))).is_empty()
 		"load_autosave":
-			return load_from(SaveSystem.AUTOSAVE).is_empty()
+			return reload_allowed() and load_from(SaveSystem.AUTOSAVE).is_empty()
 		"registry":
 			overlay.toggle_registry()
 			return true
@@ -1773,7 +1793,7 @@ func _tick_cursor(dir: Vector2, delta: float) -> void:
 # --- progression: party level, builds, the Weave menu -----------------------
 
 func progression_rules() -> Dictionary:
-	return registry.get_entry("rules", "progression")
+	return rules_entry("progression")
 
 
 func party_level() -> int:
@@ -2019,7 +2039,7 @@ func launch_shard(template_id: String) -> bool:
 # --- shard features: doors, vaults, waypoints, merchant, rarity -------------
 
 func loot_rules() -> Dictionary:
-	return registry.get_entry("rules", "loot")
+	return rules_entry("loot")
 
 
 func rarity_multiplier(rarity: String) -> float:
@@ -2624,9 +2644,24 @@ func title_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	rows.append({"id": "new", "label": "New game", "enabled": true})
 	rows.append({"id": "continue", "label": "Continue", "enabled": has_auto, "why": "no autosave yet"})
-	rows.append({"id": "load", "label": "Load", "enabled": any_slot, "why": "no saves yet"})
+	var iron_underway := account != null and account.iron_active
+	rows.append({"id": "load", "label": "Load", "enabled": any_slot and not iron_underway, "why": "Iron Weave: no reloads while the run stands" if iron_underway else "no saves yet"})
 	rows.append({"id": "settings", "label": "Settings", "enabled": true})
 	rows.append({"id": "quit", "label": "Quit", "enabled": true})
+	return rows
+
+
+## The difficulty page with the cursor on the pending choice (the default on a fresh New game).
+func show_difficulty_page() -> void:
+	title_menu.show_rows(TitleMenu.PAGE_DIFFICULTY, difficulty_rows())
+	title_menu.select_id("diff_" + pending_difficulty)
+
+
+func difficulty_rows() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	for d: Dictionary in difficulties():
+		rows.append({"id": "diff_" + String(d["id"]), "label": String(d.get("name", d["id"])), "enabled": true, "blurb": String(d.get("summary", ""))})
+	rows.append({"id": "back", "label": "Back", "enabled": true})
 	return rows
 
 
@@ -2634,6 +2669,8 @@ func stakes_rows() -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
 	rows.append({"id": "story", "label": "Story-Protected", "enabled": true, "blurb": "Companions fall and get back up. The story never loses anyone it did not mean to."})
 	rows.append({"id": "mortal", "label": "Mortal", "enabled": true, "blurb": "The dead stay dead. Companion quests carry on without them. A dead leader ends the expedition."})
+	var iron_underway := account != null and account.iron_active
+	rows.append({"id": "iron", "label": "Iron Weave", "enabled": not iron_underway, "why": "a run is underway: Continue it, or start another game to give it up", "blurb": "Mortal, with one save and no reloads. A wipe ends the run and its save with it. Starting any other game gives it up. The account remembers every attempt."})
 	rows.append({"id": "back", "label": "Back", "enabled": true})
 	return rows
 
@@ -2650,24 +2687,37 @@ func in_title() -> bool:
 	return title_menu != null and title_menu.visible
 
 
-## Enter / A on the title screen.
+## Enter / A on the title screen. New game asks the difficulty, then the
+## death-stakes (S50).
 func activate_title() -> bool:
 	if not in_title():
 		return false
 	var id := title_menu.selected_id()
+	if title_menu.page == TitleMenu.PAGE_DIFFICULTY:
+		if id == "back":
+			title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
+			return true
+		if id.begins_with("diff_"):
+			pending_difficulty = id.trim_prefix("diff_")
+			title_menu.show_rows(TitleMenu.PAGE_STAKES, stakes_rows())
+			return true
+		return false
 	if title_menu.page == TitleMenu.PAGE_STAKES:
 		match id:
 			"story":
-				return new_game(false)
+				return new_game(false, pending_difficulty)
 			"mortal":
-				return new_game(true)
+				return new_game(true, pending_difficulty)
+			"iron":
+				return new_game(true, pending_difficulty, true)
 			"back":
-				title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
+				show_difficulty_page()
 				return true
 		return false
 	match id:
 		"new":
-			title_menu.show_rows(TitleMenu.PAGE_STAKES, stakes_rows())
+			pending_difficulty = default_difficulty()
+			show_difficulty_page()
 			return true
 		"continue":
 			return continue_game()
@@ -2684,12 +2734,18 @@ func activate_title() -> bool:
 
 
 ## A fresh story: narrative, protagonist and party reset, the books wiped,
-## death-stakes chosen. The old autosave is overwritten by the first one.
-func new_game(mortal: bool) -> bool:
+## the difficulty and death-stakes chosen. The old autosave is overwritten
+## by the first one. Iron Weave (S50) is Mortal with one save and no
+## reloads, recorded on the account; any new game gives up a run underway.
+func new_game(mortal: bool, difficulty: String = "", iron: bool = false) -> bool:
 	if title_menu != null:
 		title_menu.close()
+	if account != null and account.iron_active:
+		account.end_iron() # the one save is about to be overwritten
 	narrative = NarrativeState.new()
-	narrative.set_flag("mortal_mode", mortal)
+	narrative.difficulty = difficulty if registry.has_entry("difficulties", difficulty) else default_difficulty()
+	narrative.set_flag("mortal_mode", mortal or iron)
+	narrative.set_flag("iron_weave", iron)
 	protagonist = {}
 	ledger = Ledger.new()
 	ledger.path = ledger_path
@@ -2702,7 +2758,10 @@ func new_game(mortal: bool) -> bool:
 	auto_start_quests()
 	spawn_npcs()
 	autosave()
-	overlay.toast("Mortal mode: the dead stay dead." if mortal else "Story-Protected: the story keeps its people.", 3.0)
+	if iron and account != null:
+		account.begin_iron(narrative.difficulty)
+	var stakes := "Iron Weave: one save, no reloads, the dead stay dead." if iron else ("Mortal mode: the dead stay dead." if mortal else "Story-Protected: the story keeps its people.")
+	overlay.toast("%s · %s" % [String(difficulty_entry().get("name", "Balanced")), stakes], 3.0)
 	return true
 
 
@@ -2714,13 +2773,98 @@ func continue_game() -> bool:
 	return load_from(SaveSystem.AUTOSAVE).is_empty()
 
 
-## The death-stakes rule follows the story: saved as a narrative flag.
+## The death-stakes rule and the difficulty follow the story (S50): the
+## combat rules are rebuilt from `rules/combat` under the story's
+## difficulty overlay, then the mode goes on top. Saved as narrative state.
 func apply_death_stakes() -> void:
+	rules = CombatRules.from_entry(rules_entry("combat"))
 	rules.story_protected = not narrative.flag("mortal_mode")
 
 
 func is_mortal_mode() -> bool:
 	return narrative.flag("mortal_mode")
+
+
+# --- difficulty and Iron Weave (S50, D-105) ----------------------------------
+
+## Every `difficulties` entry, by `order`: a name, a summary and a `rules`
+## overlay ({rules entry id: {field: value}}). A mod adds one by adding a file.
+func difficulties() -> Array[Dictionary]:
+	var rows: Array[Dictionary] = []
+	rows.assign(registry.get_all("difficulties"))
+	rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return int(a.get("order", 0)) < int(b.get("order", 0)))
+	return rows
+
+
+## The entry marked `default`, else the first by order, else "".
+func default_difficulty() -> String:
+	var rows := difficulties()
+	for d: Dictionary in rows:
+		if bool(d.get("default", false)):
+			return String(d["id"])
+	return String(rows[0]["id"]) if not rows.is_empty() else ""
+
+
+## The story's difficulty id: what it was started on, or the default when
+## the save predates difficulties or names one that no longer loads.
+func difficulty_id() -> String:
+	if registry.has_entry("difficulties", narrative.difficulty):
+		return narrative.difficulty
+	return default_difficulty()
+
+
+func difficulty_entry() -> Dictionary:
+	var id := difficulty_id()
+	return registry.get_entry("difficulties", id) if not id.is_empty() else {}
+
+
+## A rules entry under the difficulty's overlay: the base entry with the
+## overlay's fields written over it. The registry's own dictionary when the
+## difficulty has nothing to say about that entry.
+func rules_entry(rule_id: String) -> Dictionary:
+	var base: Dictionary = registry.get_entry("rules", rule_id)
+	var overlays: Dictionary = difficulty_entry().get("rules", {})
+	var overlay: Variant = overlays.get(rule_id, {})
+	if not overlay is Dictionary or (overlay as Dictionary).is_empty():
+		return base
+	var merged := base.duplicate(true)
+	for k: String in overlay:
+		merged[k] = overlay[k]
+	return merged
+
+
+## Iron Weave: one save, Mortal, no reloads. The save carries the flag (so
+## the menus know) and the account carries the run (so a swapped save
+## cannot restart it).
+func is_iron_weave() -> bool:
+	return narrative.flag("iron_weave")
+
+
+func reload_allowed() -> bool:
+	return not is_iron_weave()
+
+
+## The Iron Weave run is lost: the one save is removed, the account is
+## told, and the only way on is the title screen.
+func iron_run_lost() -> void:
+	if not is_iron_weave():
+		return
+	var auto := ProjectSettings.globalize_path(save_path(SaveSystem.AUTOSAVE))
+	if FileAccess.file_exists(auto):
+		DirAccess.remove_absolute(auto)
+	if account != null:
+		account.end_iron()
+	if overlay != null:
+		overlay.toast("The Iron Weave run is over. There is no save to return to.", 5.0)
+
+
+## An Iron Weave run reached an ending: the account keeps it as a key.
+func iron_run_complete(ending_id: String) -> void:
+	if not is_iron_weave():
+		return
+	narrative.set_flag("iron_weave_complete", true)
+	if account != null:
+		account.end_iron(ending_id)
 
 
 func open_settings() -> bool:
@@ -3612,6 +3756,7 @@ func show_ending() -> bool:
 		return false
 	narrative.set_flag("ending_%s" % String(ending["id"]), true)
 	narrative.set_flag("ending_seen", true)
+	iron_run_complete(String(ending["id"]))
 	if playtest != null:
 		playtest.ending(String(ending["id"]))
 	var credits: Array[String] = []

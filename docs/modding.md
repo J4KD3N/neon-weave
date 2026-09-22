@@ -86,6 +86,7 @@ Every kind's required and optional keys are in [content schemas](content-schemas
 | An achievement | `achievements` | `content/achievements/warlord.json` | `steam_id` ACH_UPPER_CASE, `when` conditions |
 | Lore | `lore` | `content/lore/` | `order` sorts the Archive; a `lore_fragment` pickup finds the next unfound one; a `lore` effect names one |
 | Rules | `rules` | `content/rules/` | Override `combat`, `progression`, `loot`, `attributes`, `audio`, `demo`, `credits` whole |
+| A difficulty | `difficulties` | `content/difficulties/tactician.json` | `rules` is an overlay {rules entry id: {field: value}} written over that entry when the story is on this difficulty; `order` sorts the title screen; only the base game marks a `default` |
 
 Conditions (`requires`, `when`, `done_when`, `start_when`) and effects are listed at the bottom of [content schemas](content-schemas.md); the validator rejects any key outside them.
 

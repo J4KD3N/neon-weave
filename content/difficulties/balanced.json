@@ -1,0 +1,7 @@
+{
+  "name": "Balanced",
+  "summary": "The game as tuned: the harness bands, the depth curve and the boss levers exactly as content/rules/combat.json says.",
+  "order": 1,
+  "default": true,
+  "rules": {}
+}

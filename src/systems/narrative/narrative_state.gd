@@ -22,6 +22,8 @@ var romance: String = ""
 ## Recruited companions waiting at the Bastion (S38, D-093): the party holds
 ## three, the rest wait and swap in from the Roster at home.
 var benched: Array[String] = []
+## The difficulty this story was started on (a `difficulties` entry id, S50); empty means the default.
+var difficulty: String = ""
 
 
 func flag(name: String) -> bool:
@@ -93,7 +95,7 @@ func unbench(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "romance": romance, "benched": benched.duplicate()}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "romance": romance, "benched": benched.duplicate(), "difficulty": difficulty}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -116,6 +118,7 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	n.map_edits = Dictionary(d.get("map_edits", {})).duplicate(true)
 	n.romance = String(d.get("romance", ""))
 	n.benched.assign(d.get("benched", []))
+	n.difficulty = String(d.get("difficulty", ""))
 	return n
 
 

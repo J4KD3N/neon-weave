@@ -32,12 +32,12 @@ planned in `docs/m4-plan.md`.
 
 ## Systems (M4)
 
-- **Combat texture is shallow**: cover, elevation, surfaces and resources exist and the AI weighs them (D-067); no movement cost for elevation, no hackable turrets or doors, no difficulty settings or Iron Weave; enemies never move in exploration; awareness is a radius, not a cone; no attack of opportunity.
+- **Combat texture is shallow**: cover, elevation, surfaces and resources exist and the AI weighs them (D-067); no movement cost for elevation, no hackable turrets or doors; difficulties overlay the rules (S50) but nobody has played Tactician; enemies never move in exploration; awareness is a radius, not a cone; no attack of opportunity.
 - **Five AI archetypes** share one texture score with focus fire and a once-per-fight retreat (S28); hidden combatants are drawn faint for both sides; no true fog or detection roll.
 - **Progression v2 leftovers** (S31, D-086): the second class of a multiclass has no subclass and no resource loop of its own; the Weave is the only place levels move and there is no preview of what a level would give; talents are still flat stat bumps; capstones are one ability each with no story of their own.
 - **Pad support is functional, not native**: the combat cursor steps one cell per press, no analog glide, no rumble; mouse is still the fastest way to target.
 - **Creator is a text screen**: no appearance beyond the race overlay, no portrait, not part of New game (C at home); origins gate lines and unlocks but nothing mechanical; the Swarmborn disguise is an arcane check, not a roll; Synth still cannot repair with parts; Skyborn knowledge is a tag.
-- **Saves**: F5/F9 still mean slot 1; no confirmation on overwrite; content mismatches are refused (D-080); a save inside a Shard is refused when `ShardGenerator.LAYOUT_VERSION` moves, which is by hand.
+- **Saves**: F5/F9 still mean slot 1; Iron Weave (S50) has no mid-combat save, so a fight walked out of restarts from its checkpoint rather than counting as a loss, and the finished run's autosave stays as a record; no confirmation on overwrite; content mismatches are refused (D-080); a save inside a Shard is refused when `ShardGenerator.LAYOUT_VERSION` moves, which is by hand.
 - **Movement is placeholder-simple**: followers pass through each other, no actor collision, WASD lets you stand visually behind a tall wall; party settling snaps with no animation.
 - **Map format is ASCII-only** for handcrafted maps by design (D-028).
 - **The campaign test wins its fights by fiat** and pins the global RNG; it proves wiring, not balance, and runs in its own CI job under a twenty-minute budget.

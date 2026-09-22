@@ -286,11 +286,13 @@ static func summarize(data: Dictionary, registry: ContentRegistry = null) -> Str
 	var ledger := Ledger.new()
 	ledger.apply(Ledger.migrate(data.get("ledger", {})))
 	var note := ""
+	if bool(Dictionary(Dictionary(data.get("narrative", {})).get("flags", {})).get("iron_weave", false)):
+		note += " · Iron Weave"
 	if registry != null:
 		if not content_check(migrate(data), registry).is_empty():
-			note = " · ✗ content changed, needs a new game"
+			note += " · ✗ content changed, needs a new game"
 		elif content_changed(data, registry):
-			note = " · content changed"
+			note += " · content changed"
 	return "%s — %s — %s%s" % [data.get("map_name", "?"), data.get("saved_at", "?"), ledger.summary(), note]
 
 
