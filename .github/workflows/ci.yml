@@ -55,6 +55,9 @@ jobs:
       - name: Art status (every race and enemy has a sheet or a documented placeholder, S56)
         run: godot --headless --path . -s tools/art_status.gd -- --out=build/art-status.md
 
+      - name: Audio status (every audio entry: a file beside its sidecar or the synth placeholder, S57)
+        run: godot --headless --path . -s tools/audio_status.gd -- --out=build/audio-status.md
+
       # --- security: nothing to resolve, so scan the source tree ---
       - name: Trivy scan (secrets, misconfig; fail on HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@v0.36.0

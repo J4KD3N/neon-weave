@@ -1,15 +1,15 @@
 {
   "name": "Audio events",
-  "summary": "Event names the code fires, mapped to `audio` entries. Abilities and tiles carry their own `sound`; everything else is looked up here.",
+  "summary": "Event names the code fires, mapped to `audio` entries. Abilities and tiles carry their own `sound`; everything else is looked up here. `music` maps a state to a track id or to a table read in order: a variant (combat: boss), act<n>, the biome, default (S57).",
   "crossfade_seconds": 1.5,
   "ui": { "confirm": "ui_confirm", "cancel": "ui_cancel", "move": "ui_tick", "toast": "ui_toast" },
   "combat": { "hit": "sfx_hit", "miss": "sfx_miss", "death": "sfx_death", "turn": "sfx_turn", "summon": "sfx_summon", "stealth": "sfx_stealth", "vent": "sfx_vent" },
   "explore": { "footstep": "sfx_step_concrete", "pickup": "sfx_pickup", "door": "sfx_door", "extract": "sfx_extract", "level_up": "sfx_level_up" },
   "music": {
     "title": "music_title",
-    "bastion": "music_bastion",
-    "combat": "music_combat",
-    "explore": { "default": "music_undercity", "rusted_undercity": "music_undercity", "verdant_datacore": "music_datacore", "ghost_markets": "music_markets", "null_cathedral": "music_cathedral" }
+    "bastion": { "default": "music_bastion", "act3": "music_bastion_dusk" },
+    "combat": { "default": "music_combat", "boss": "music_combat_boss" },
+    "explore": { "default": "music_undercity", "rusted_undercity": "music_undercity", "verdant_datacore": "music_datacore", "ghost_markets": "music_markets", "null_cathedral": "music_cathedral", "loom_approach": "music_loom" }
   },
   "milestone": "M2"
 }

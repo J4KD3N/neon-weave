@@ -669,6 +669,15 @@ func _misc() -> void:
 	for a: Dictionary in _registry.get_all("audio"):
 		if not ["sfx", "music"].has(String(a.get("kind", ""))):
 			_flag(a, "kind must be sfx or music")
+		var file := String(a.get("file", ""))
+		if not file.is_empty():
+			var path := String(a.get("_path", "")).get_base_dir().path_join(file)
+			if not FileAccess.file_exists(path) and not ResourceLoader.exists(path):
+				_flag(a, "file '%s' is not beside the sidecar (the synth would play instead)" % file)
+			elif not ["wav", "ogg", "mp3"].has(file.get_extension().to_lower()):
+				_flag(a, "file '%s' must be .wav, .ogg or .mp3" % file)
+		if a.has("loop") and not (a["loop"] is bool):
+			_flag(a, "loop must be true or false")
 	for o: Dictionary in _registry.get_all("origins"):
 		if String(o.get("dialogue_tag", "")).is_empty():
 			_flag(o, "dialogue_tag is empty")

@@ -14,6 +14,7 @@ const BUS_SFX := "SFX"
 var registry: ContentRegistry
 var rules: Dictionary = {}
 var streams: Dictionary = {} # audio id -> AudioStream
+var sources: Dictionary = {} # audio id -> "file" or "synth" (S57): what actually plays
 var log: Array[String] = [] # sound ids played, in order (music as "music:<id>")
 var current_track: String = ""
 var crossfade_seconds: float = 1.5
@@ -65,13 +66,46 @@ func stream_for(id: String) -> AudioStream:
 	var stream: AudioStream = null
 	var file := String(entry.get("file", ""))
 	if not file.is_empty():
-		var path := String(entry["_path"]).get_base_dir().path_join(file)
-		if ResourceLoader.exists(path):
-			stream = load(path)
+		stream = load_file(String(entry.get("_path", "")).get_base_dir().path_join(file), bool(entry.get("loop", String(entry.get("kind", "")) == "music")))
+	sources[id] = "file" if stream != null else "synth"
 	if stream == null:
 		stream = SynthWave.build(entry.get("synth", {}))
 	streams[id] = stream
 	return stream
+
+
+## A recorded file beside its sidecar (S57): an imported resource when the
+## project imported it, else read straight from disk by extension (.wav,
+## .ogg, .mp3), which is how a mod's files arrive. Music loops. Null when
+## the file is missing or unreadable.
+static func load_file(path: String, loop: bool) -> AudioStream:
+	var stream: AudioStream = null
+	if ResourceLoader.exists(path):
+		stream = load(path) as AudioStream
+	elif FileAccess.file_exists(path):
+		match path.get_extension().to_lower():
+			"wav":
+				stream = AudioStreamWAV.load_from_file(path)
+			"ogg":
+				stream = AudioStreamOggVorbis.load_from_file(path)
+			"mp3":
+				stream = AudioStreamMP3.load_from_file(path)
+	if stream == null:
+		return null
+	if loop:
+		if stream is AudioStreamWAV:
+			(stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+		elif stream is AudioStreamOggVorbis:
+			(stream as AudioStreamOggVorbis).loop = true
+		elif stream is AudioStreamMP3:
+			(stream as AudioStreamMP3).loop = true
+	return stream
+
+
+## True while an entry still plays the synthesised placeholder.
+func is_placeholder(id: String) -> bool:
+	stream_for(id)
+	return String(sources.get(id, "synth")) == "synth"
 
 
 ## Plays a one-shot sound by audio id. Unknown ids are ignored (logged as "?id").
@@ -102,19 +136,27 @@ func event(path: String) -> bool:
 
 
 ## The music track for a state ("title", "bastion", "combat", or "explore"
-## with a biome), from rules/audio.music. Pure; "" when none is mapped.
-static func pick_music(p_rules: Dictionary, state: String, biome: String = "") -> String:
+## with a biome), from rules/audio.music. A state maps to a track id or to
+## a table: the first of `variant` (a fight with a boss: "boss"), "act<n>",
+## the biome, then "default" that names a track wins (S57). Pure; "" when
+## none is mapped.
+static func pick_music(p_rules: Dictionary, state: String, biome: String = "", act: int = 1, variant: String = "") -> String:
 	var music: Dictionary = p_rules.get("music", {})
-	if state == "explore":
-		var per_biome: Dictionary = music.get("explore", {})
-		return String(per_biome.get(biome, per_biome.get("default", "")))
 	var v: Variant = music.get(state, "")
-	return String(v) if v is String else ""
+	if v is String:
+		return String(v)
+	if not v is Dictionary:
+		return ""
+	var table: Dictionary = v
+	for key: String in [variant, "act%d" % act, biome, "default"]:
+		if not key.is_empty() and table.has(key) and table[key] is String and not String(table[key]).is_empty():
+			return String(table[key])
+	return ""
 
 
 ## Switches music to the track for a state, crossfading when it changes.
-func set_state(state: String, biome: String = "") -> String:
-	var track := pick_music(rules, state, biome)
+func set_state(state: String, biome: String = "", act: int = 1, variant: String = "") -> String:
+	var track := pick_music(rules, state, biome, act, variant)
 	if track == current_track:
 		return track
 	current_track = track

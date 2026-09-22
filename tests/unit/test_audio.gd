@@ -77,7 +77,11 @@ func test_every_ability_and_walkable_tile_has_a_resolving_sound() -> void:
 			assert_true(registry.has_entry("audio", String(rules[group][key])), "rules/audio %s.%s" % [group, key])
 	var music: Dictionary = rules["music"]
 	for state: String in ["title", "bastion", "combat"]:
-		assert_true(registry.has_entry("audio", String(music[state])), "music %s" % state)
+		assert_true(registry.has_entry("audio", AudioDirector.pick_music(rules, state)), "music %s" % state)
+		var v: Variant = music[state]
+		if v is Dictionary: # every variant a table names is a track that exists (S57)
+			for key: String in (v as Dictionary):
+				assert_true(registry.has_entry("audio", String((v as Dictionary)[key])), "music %s.%s" % [state, key])
 	for biome: Dictionary in registry.get_all("biomes"):
 		assert_true(Dictionary(music["explore"]).has(String(biome["id"])), "biome %s has explore music" % biome["id"])
 	for e: Dictionary in registry.get_all("audio"):
