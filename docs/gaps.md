@@ -1,10 +1,20 @@
 # Gaps & assumptions
 
 Updated every session. Remove items when closed; note the closing commit.
-Triaged at the end of M3 (S46, 2026-09-21): closed items from M0–M3 are
-gone (see `docs/decisions.md` and git history); what is left is grouped
-by who can close it and ordered by how much it hurts a player. M4 is
-planned in `docs/m4-plan.md`.
+Triaged at the end of M4 (S60, 2026-09-22, `v1.0.0`): closed items are gone
+(see `docs/decisions.md` and git history); what is left is grouped by who
+can close it and ordered by how much it hurts a player.
+
+**The 1.0 verdict.** The code and the content are complete and gated: the
+campaign test plays every path on every difficulty in both modes and under
+Iron Weave, every lever is data, and three status tools (`art_status`,
+`audio_status`, `steam_check` with `apple_check`) say exactly what is still
+generated or unverified. What 1.0 does not have is anything that needs a
+person other than a session: a playtester, an artist, a composer, a
+Steamworks account, an Apple membership. Each has a hand-off doc, a
+checklist and a gate that stays red until it lands; the first section below
+is that list. Nothing in the other sections blocks a player from finishing
+the game.
 
 ## Needs a person (not a session)
 

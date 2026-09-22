@@ -16,7 +16,7 @@ what this repo can already supply. Nothing on this list ships in a build.
 | Trailer | 1920×1080, 30–90 s | Capture a run: title → yard → gate road fight → Shard → relay → throat | not made |
 | Store description | text | `docs/store-page.md` below | draft below |
 
-Download the current screenshots with `gh run download <run-id> -n screenshot`.
+Download the current screenshots with `gh run download <run-id> -n screenshot`. Since S56 the job also renders `screenshot-crt.png` and `screenshot-flat.png`. The page goes live with the app id: `steam/CHECKLIST.md` steps 2 and 8.
 
 ## Short description (draft)
 
