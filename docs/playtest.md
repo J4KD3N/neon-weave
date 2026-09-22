@@ -20,7 +20,7 @@ Nobody outside the author has played Neon Weave. This is everything needed to ch
 
 Play Act 1 to first contact with the Choir without reading anything else about the game. In order, and without help unless stuck for five minutes:
 
-1. New game. Pick Balanced, then Story-Protected unless you like losing people (Iron Weave is one save and no reloads: not for a first run). The creator comes next: name, race, origin, class, a tone and an accent, and six attribute points; note what you did not understand.
+1. New game. Pick Balanced, then Story-Protected unless you like losing people (Iron Weave is one save and no reloads: not for a first run). The creator comes next: name, race, origin, class, a tone and an accent, and six attribute points; note what you did not understand. In every talk, the face and the last lines sit beside the text; J opens the journal with the history and ←→ picks which quest the HUD tracks.
 2. Leave the plaza through the yard gate. Talk to whoever you meet. Recruit or refuse as you like.
 3. Follow the road east. Fight what fights you. Note the first fight you found hard and the first you found boring.
 4. The relay station: find out what happened to the crew, do what the survivor asks.

@@ -24,6 +24,11 @@ var romance: String = ""
 var benched: Array[String] = []
 ## The difficulty this story was started on (a `difficulties` entry id, S50); empty means the default.
 var difficulty: String = ""
+## The history (S52): the last lines said and done, [{"who", "text"}], oldest first, capped.
+var log: Array[Dictionary] = []
+const LOG_MAX := 120
+## The quest whose stage the HUD tracks (S52); empty means the first active main quest.
+var tracked_quest: String = ""
 
 
 func flag(name: String) -> bool:
@@ -95,7 +100,7 @@ func unbench(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "romance": romance, "benched": benched.duplicate(), "difficulty": difficulty}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "romance": romance, "benched": benched.duplicate(), "difficulty": difficulty, "log": log.duplicate(true), "tracked_quest": tracked_quest}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -119,6 +124,10 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	n.romance = String(d.get("romance", ""))
 	n.benched.assign(d.get("benched", []))
 	n.difficulty = String(d.get("difficulty", ""))
+	for entry: Variant in d.get("log", []):
+		if entry is Dictionary:
+			n.log.append({"who": String((entry as Dictionary).get("who", "")), "text": String((entry as Dictionary).get("text", ""))})
+	n.tracked_quest = String(d.get("tracked_quest", ""))
 	return n
 
 
@@ -167,3 +176,12 @@ func lose_romance(companion: String) -> bool:
 	set_flag("romance_%s_lost" % companion, true)
 	romance = ""
 	return true
+
+
+## Appends a line to the history, dropping the oldest past LOG_MAX.
+func log_line(who: String, text: String) -> void:
+	if text.strip_edges().is_empty():
+		return
+	log.append({"who": who, "text": text})
+	while log.size() > LOG_MAX:
+		log.pop_front()

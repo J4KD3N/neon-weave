@@ -24,7 +24,7 @@ without a schema; keep the two in step.
 | affixes | name, slots (["any"] or slot names), weight | prefix (false = suffix), stat_mods, damage_bonus, min_rarity, summary |
 | maps | name, biome, spawn_marker, legend, rows | npcs (companion / merchant / npc, each with an optional `when`; a companion placement also waits on the flag and never stands in once dead, S38), pickups, enemies, transitions, triggers, doors, buildings |
 | merchants | name, stock [{id,label,cost,effect}] | art; effect keys heal_fraction, grant, item (a common instance into the pack) |
-| npcs | name, dialogue | short_name, faction, art |
+| npcs | name, dialogue | art.color (also the portrait's colour, S52), race (optional: its overlay on the portrait), short_name, faction, art |
 | origins | name, dialogue_tag | stat_mods, traits, unlock_flag (earned for the account when a playthrough sets it), unlock_blurb (shown on the creator while the origin is locked, S51) |
 | parties | name, members | summary |
 | pickups | name, grants or dialogue, art | rarity (placement-side); grants.item = true drops an item of the pickup rarity; grants.lore = true finds the next fragment |
