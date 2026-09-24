@@ -100,6 +100,7 @@ var _world_effects_seen: int = 0 # dialogue effect blocks already applied to the
 var _talk_log_start: int = 0 # where this talk's lines begin in the history (S52)
 var _portraits: Dictionary = {} # speaker id -> ImageTexture, built once per world (S52)
 var perf_hud: bool = false # `--perf`: fps and frame time on the status line (S53)
+var crashed_last_run: String = "" # the crash report the last run left, shown once on the title (D-116)
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
@@ -183,7 +184,18 @@ func _ready() -> void:
 	sequence_focus.name = "SequenceFocus"
 	add_child(sequence_focus)
 	instant_sequences = Engine.has_meta("neon_weave_tests")
+	if Engine.has_meta("neon_weave_tests"): # a test that set no path of its own never touches the player's files (D-116)
+		if account_path == Account.DEFAULT_PATH:
+			account_path = "user://test_account_default.json"
+		if ledger_path == "user://ledger.json":
+			ledger_path = "user://test_ledger_default.json"
+			ledger = Ledger.load_or_new(ledger_path)
+			bastion.setup(registry.get_all("buildings"), ledger.buildings)
+		if saves_dir == "user://saves":
+			saves_dir = "user://test_saves_default"
 	account = Account.load_or_new(account_path)
+	if not Engine.has_meta("neon_weave_tests") and CrashReport.begin(): # the last run died (D-116)
+		crashed_last_run = CrashReport.last_report
 	merchant_menu = MerchantMenu.new()
 	merchant_menu.name = "MerchantMenu"
 	add_child(merchant_menu)
@@ -1654,6 +1666,12 @@ func _unhandled_input(event: InputEvent) -> void:
 				load_from(SaveSystem.AUTOSAVE)
 
 
+## The window's close button is a clean exit too (D-116).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and not Engine.has_meta("neon_weave_tests"):
+		CrashReport.end()
+
+
 func _process(delta: float) -> void:
 	if mode == "explore" and not in_dialogue():
 		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -2807,6 +2825,9 @@ func show_title() -> void:
 		return
 	party.stop()
 	title_menu.show_rows(TitleMenu.PAGE_MAIN, title_rows())
+	if not crashed_last_run.is_empty() and overlay != null:
+		overlay.toast(Loc.t("The last run ended badly. A report is at %s; send it with your playtest log.") % crashed_last_run, 8.0)
+		crashed_last_run = ""
 	refresh_music()
 
 
@@ -2855,6 +2876,7 @@ func activate_title() -> bool:
 		"settings":
 			return open_settings()
 		"quit":
+			CrashReport.end()
 			get_tree().quit()
 			return true
 	return false

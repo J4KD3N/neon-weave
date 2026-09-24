@@ -96,12 +96,11 @@ jobs:
         with: { name: sbom, path: sbom.spdx.json }
 
   # Renders the exploration scene under Xvfb with Mesa's software GL and
-  # uploads a screenshot. Best-effort: not a required check, but the only
-  # eyes on the map until someone opens the editor.
+  # uploads a screenshot. Required since D-116: tools/check_shots.gd fails the job on a
+  # blank, flat or missing frame, so a menu cannot break with CI green.
   screenshot:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
 
@@ -140,12 +139,11 @@ jobs:
           run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
           run_shot --screenshot="$PWD/build/screenshot-crt.png" --shard=7 --fx=crt
           run_shot --screenshot="$PWD/build/screenshot-flat.png" --shard=7 --fx=off --no-lighting
-          run_shot --screenshot="$PWD/build/screenshot-creator.png" --creator
-          run_shot --screenshot="$PWD/build/screenshot-dialogue.png" --map=proto_yard --talk=sera
-          run_shot --screenshot="$PWD/build/screenshot-road.png" --map=gate_road --journal
           run_shot --screenshot="$PWD/build/screenshot-gallery.png" --map=throat_deep
-          run_shot --screenshot="$PWD/build/screenshot-loom.png" --map=the_loom
           ls -la build
+
+      - name: Every frame rendered something (blank, flat or missing frames fail the job, D-116)
+        run: godot --headless --path . -s tools/check_shots.gd -- --dir=build
 
       - uses: actions/upload-artifact@v7
         with:

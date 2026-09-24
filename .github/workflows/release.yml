@@ -135,8 +135,72 @@ jobs:
             build/*.zip
             build/*.tar.gz
 
+  # The Windows and macOS binaries are executed, not only exported (D-116):
+  # a headless boot runs the autoloads and the main scene and quits clean;
+  # Windows also tries a rendered title frame through ANGLE.
+  smoke-windows:
+    needs: export
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: builds
+          path: builds
+      - name: Boot the Windows build headless and quit clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p win && unzip -q builds/neon-weave-*-windows.zip -d win
+          ls win
+          ./win/neon-weave.exe --headless --quit-after 3 -- --title
+          echo "windows: booted and quit clean"
+      - name: Render the title through ANGLE (best-effort)
+        shell: bash
+        run: |
+          timeout 120 ./win/neon-weave.exe --rendering-method gl_compatibility --rendering-driver opengl3_angle --resolution 1280x720 --audio-driver Dummy -- --screenshot="$PWD/win/smoke-title-windows.png" --title || echo "angle render did not complete (best-effort)"
+          ls -la win/smoke-title-windows.png || true
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: smoke-title-windows
+          path: win/smoke-title-windows.png
+          if-no-files-found: ignore
+
+  smoke-macos:
+    needs: export
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: builds
+          path: builds
+      - name: Boot the macOS build headless and quit clean
+        run: |
+          set -euo pipefail
+          mkdir -p mac && unzip -q builds/neon-weave-*-macos.zip -d mac
+          app=$(find mac -maxdepth 1 -name "*.app" | head -n 1)
+          test -n "$app"
+          codesign --verify --deep --strict "$app" 2>&1 || codesign --force --deep --sign - "$app"
+          bin=$(find "$app/Contents/MacOS" -maxdepth 1 -type f | head -n 1)
+          lipo -info "$bin"
+          chmod +x "$bin"
+          "$bin" --headless --quit-after 3 -- --title
+          echo "macos: booted and quit clean"
+
+  publish:
+    needs: [export, smoke-windows, smoke-macos]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: builds
+          path: build
       - name: GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true

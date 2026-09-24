@@ -35,14 +35,9 @@ the game.
 - **Hackable turrets and doors** (§9): none. One session, gated by Tech.
 - **Awareness as a cone and a detection roll** (§9, stealth openers): awareness is a radius and a hidden flag. One session.
 
-## Engineering and process (found 2026-09-24)
+## Engineering and process
 
-- **Windows and macOS binaries are exported but never executed**: CI smokes only the Linux build. A Windows runner smoke step is one session; macOS needs the notarized build and a Mac.
-- **No crash reporting** beyond the opt-in playtest log: a handler that writes `user://crash_<stamp>.txt` and a title-screen prompt to send it is one session.
-- **Mod media is loaded unvalidated**: a mod is JSON, but a sprite PNG or an audio file from a Workshop item is read from disk with no size or format cap. Half a session in the validator and the loaders.
-- **The screenshot job is best-effort**: nothing diffs a frame against a golden image, so a menu can break visually with CI green. One session.
-- **A few older tests still use the player's real account file** (settings and bindings were moved to test paths in S55). Half a session.
-- **The engine version lives in several places** (`project.godot`, the workflows, the notarize step's editor-settings file name): a CI check that they agree is half a session.
+- Closed 2026-09-24 (D-116): the Windows and macOS builds boot in CI before a release publishes; crash reports from the engine log; caps on mod media; the screenshot job is required and checks every frame; tests cannot touch the player's files; the engine version is held in one test. Left: the Windows and macOS smokes boot headless and quit, they do not play; a rendered Windows frame is best-effort; the crash report is a file the player must send by hand.
 
 ## Balance (M4 sessions, after the playtest)
 

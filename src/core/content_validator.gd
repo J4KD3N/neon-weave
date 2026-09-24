@@ -645,6 +645,14 @@ func _check_art(e: Dictionary) -> void:
 
 
 func _misc() -> void:
+	for s: Dictionary in _registry.get_all("sprites"):
+		var image := String(s.get("image", ""))
+		if image.is_empty():
+			continue
+		var image_path := String(s.get("_path", "")).get_base_dir().path_join(image)
+		var why := MediaLimits.check_image(image_path)
+		if not why.is_empty():
+			_flag(s, "image '%s' %s" % [image, why])
 	for t: Dictionary in _registry.get_all("tiles"):
 		var glow := String(Dictionary(t.get("art", {})).get("glow", ""))
 		if glow.is_empty():
@@ -676,6 +684,8 @@ func _misc() -> void:
 				_flag(a, "file '%s' is not beside the sidecar (the synth would play instead)" % file)
 			elif not ["wav", "ogg", "mp3"].has(file.get_extension().to_lower()):
 				_flag(a, "file '%s' must be .wav, .ogg or .mp3" % file)
+			elif FileAccess.file_exists(path) and not MediaLimits.check_audio(path).is_empty():
+				_flag(a, "file '%s' %s" % [file, MediaLimits.check_audio(path)])
 		if a.has("loop") and not (a["loop"] is bool):
 			_flag(a, "loop must be true or false")
 	for o: Dictionary in _registry.get_all("origins"):
