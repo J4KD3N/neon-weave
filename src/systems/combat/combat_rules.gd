@@ -72,6 +72,14 @@ var ai_mana_pool_weight: int = 3
 ## A rusher at or under this fraction of its HP breaks off once toward its
 ## allies while any are still up (S28).
 var ai_retreat_hp_fraction: float = 0.3
+## Positioning (S65, D-121): a step up in height costs this much extra Move;
+## leaving a cell beside a hostile melee fighter draws its free strike; the
+## AI counts each strike a path would draw as this much lost texture; and
+## each archetype scales the texture weights its own way.
+var climb_move_cost: int = 1
+var opportunity_attacks: bool = true
+var ai_opportunity_penalty: int = 6
+var ai_archetype_weights: Dictionary = {}
 
 
 static func from_entry(entry: Dictionary) -> CombatRules:
@@ -139,4 +147,14 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.ai_corrosive_penalty = int(entry.get("ai_corrosive_penalty", r.ai_corrosive_penalty))
 	r.ai_mana_pool_weight = int(entry.get("ai_mana_pool_weight", r.ai_mana_pool_weight))
 	r.ai_retreat_hp_fraction = float(entry.get("ai_retreat_hp_fraction", r.ai_retreat_hp_fraction))
+	r.climb_move_cost = int(entry.get("climb_move_cost", r.climb_move_cost))
+	r.opportunity_attacks = bool(entry.get("opportunity_attacks", r.opportunity_attacks))
+	r.ai_opportunity_penalty = int(entry.get("ai_opportunity_penalty", r.ai_opportunity_penalty))
+	r.ai_archetype_weights = {}
+	var aw: Dictionary = entry.get("ai_archetype_weights", {})
+	for archetype: String in aw:
+		var scales: Dictionary = {}
+		for key: String in aw[archetype]:
+			scales[key] = float(Dictionary(aw[archetype])[key])
+		r.ai_archetype_weights[archetype] = scales
 	return r

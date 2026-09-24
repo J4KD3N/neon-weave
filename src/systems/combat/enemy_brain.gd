@@ -92,6 +92,9 @@ static func _control_is_fresh(ability: Dictionary, target: Combatant) -> bool:
 # --- archetypes -------------------------------------------------------------
 
 static func _rusher(state: CombatState, actor: Combatant, target: Combatant) -> Dictionary:
+	var pinned := _pinned_action(state, actor)
+	if not pinned.is_empty():
+		return pinned
 	var id := usable_ability(state, actor, target)
 	if not id.is_empty():
 		return {"type": "ability", "id": id, "target": target.cell}
@@ -103,6 +106,7 @@ static func _rusher(state: CombatState, actor: Combatant, target: Combatant) -> 
 
 
 static func _ranged(state: CombatState, actor: Combatant, target: Combatant) -> Dictionary:
+	# A caster beside a fighter still steps away (S65): one free strike is the price of shooting from the band again, and a clean path is preferred.
 	var dist := LineOfSight.distance(actor.cell, target.cell)
 	var id := usable_ability(state, actor, target)
 	if dist >= KITE_MIN and not id.is_empty() and not _better_kite_cell_exists(state, actor, target):
@@ -114,6 +118,26 @@ static func _ranged(state: CombatState, actor: Combatant, target: Combatant) -> 
 	if not id.is_empty():
 		return {"type": "ability", "id": id, "target": target.cell}
 	return {"type": "end"}
+
+
+## Pinned (S65): a fighter beside this melee actor would strike it for
+## walking off, so if it can hit that fighter from where it stands, it does
+## (the weakest such fighter first) rather than walk past into a free
+## strike. Rushers only: a caster steps away and pays. Empty when nobody
+## pins it, it is hidden, or it cannot hit any pinner.
+static func _pinned_action(state: CombatState, actor: Combatant) -> Dictionary:
+	if actor.hidden or not state.rules.opportunity_attacks:
+		return {}
+	var pinners: Array[Combatant] = []
+	for h: Combatant in state.active():
+		if h.is_hostile_to(actor) and not h.hidden and LineOfSight.distance(h.cell, actor.cell) == 1 and not state.melee_ability(h).is_empty():
+			pinners.append(h)
+	pinners.sort_custom(func(a: Combatant, b: Combatant) -> bool: return a.hp < b.hp or (a.hp == b.hp and a.id < b.id))
+	for h: Combatant in pinners:
+		var id := usable_ability(state, actor, h)
+		if not id.is_empty():
+			return {"type": "ability", "id": id, "target": h.cell}
+	return {}
 
 
 ## Stealther: hide when nothing is in reach, close in unseen, strike from
@@ -201,22 +225,27 @@ static func position_score(state: CombatState, actor: Combatant, cell: Vector2i,
 	var rules := state.rules
 	var map := state.map
 	var score := 0
+	var scales: Dictionary = rules.ai_archetype_weights.get(actor.archetype, {}) # S65: each archetype weighs the ground its own way
 	var d := target.cell - cell
 	if d != Vector2i.ZERO:
-		score += map.cover_at(cell + Vector2i(signi(d.x), signi(d.y))) * rules.ai_cover_weight
+		score += map.cover_at(cell + Vector2i(signi(d.x), signi(d.y))) * _scaled(rules.ai_cover_weight, scales, "cover")
 	var h := map.height_at(cell)
 	var th := map.height_at(target.cell)
 	if h > th:
-		score += rules.ai_elevation_weight
+		score += _scaled(rules.ai_elevation_weight, scales, "elevation")
 	elif h < th:
-		score -= rules.ai_elevation_weight
+		score -= _scaled(rules.ai_elevation_weight, scales, "elevation")
 	var surface := map.surface_at(cell)
 	if surface == "corrosive":
-		score -= rules.ai_corrosive_penalty
+		score -= _scaled(rules.ai_corrosive_penalty, scales, "corrosive")
 	elif surface == "mana_pool" and _casts_arcane(state, actor):
-		score += rules.ai_mana_pool_weight
+		score += _scaled(rules.ai_mana_pool_weight, scales, "mana_pool")
 	score += int(rules.surface_evasion.get(surface, 0)) / 2 # spores: harder to hit here
 	return score
+
+
+static func _scaled(weight: int, scales: Dictionary, key: String) -> int:
+	return int(round(float(weight) * float(scales.get(key, 1.0))))
 
 
 static func _casts_arcane(state: CombatState, actor: Combatant) -> bool:
@@ -248,7 +277,8 @@ static func _closest_reachable(state: CombatState, actor: Combatant, goal: Vecto
 ## Lower is better: walking distance dominates, then texture, then cost.
 static func _approach_key(state: CombatState, actor: Combatant, field: Dictionary, cell: Vector2i, goal: Vector2i, target: Combatant, cost: int) -> Array:
 	var texture := position_score(state, actor, cell, target) if target != null else 0
-	return [_walk_distance(field, cell, goal), -texture, cost]
+	var drawn := state.provokers_along(actor, state.move_path(actor, cell)).size() * state.rules.ai_opportunity_penalty # S65: a path that draws free strikes reads as worse ground
+	return [_walk_distance(field, cell, goal), drawn - texture, cost]
 
 
 static func _walk_distance(field: Dictionary, cell: Vector2i, goal: Vector2i) -> int:
@@ -273,8 +303,12 @@ static func kite_key(state: CombatState, actor: Combatant, cell: Vector2i, targe
 	var max_range := _max_range(state, actor)
 	var d := LineOfSight.distance(cell, target.cell)
 	var texture := position_score(state, actor, cell, target)
+	var drawn := 0
+	if cell != actor.cell: # S65: a kite that walks out of a fighter's reach pays for it, and a clean firing cell beats one that draws a strike
+		drawn = state.provokers_along(actor, state.move_path(actor, cell)).size()
+		texture -= drawn * state.rules.ai_opportunity_penalty
 	var in_band := d >= KITE_MIN and d <= max_range and LineOfSight.clear(state.map, cell, target.cell)
-	return [1 if in_band else 0, texture, d if in_band else -d]
+	return [(2 if drawn == 0 else 1) if in_band else 0, texture, d if in_band else -d]
 
 
 ## A reachable cell with the best kite key; the current cell competes.
@@ -289,7 +323,7 @@ static func _kite_cell(state: CombatState, actor: Combatant, target: Combatant) 
 		if key > best_key:
 			best = cell
 			best_key = key
-	if int(best_key[0]) == 1:
+	if int(best_key[0]) >= 1: # in band (2 when the walk draws no strike, S65)
 		return best
 	return _closest_reachable(state, actor, target.cell)
 
