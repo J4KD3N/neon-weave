@@ -13,7 +13,7 @@
 class_name SaveSystem
 extends RefCounted
 
-const VERSION := 2
+const VERSION := 3 # v3 (S68): may carry a fight in progress (`combat`, `enemy_roster`)
 const SLOTS := 3
 const AUTOSAVE := "autosave"
 ## Older autosaves kept beside the newest (S54): autosave_1 is the one before, autosave_2 the one before that.
@@ -42,6 +42,16 @@ static func thumbnail_path(save_path: String) -> String:
 # --- capture ---------------------------------------------------------------
 
 static func capture(world: ExploreWorld) -> Dictionary:
+	var out := _capture_body(world)
+	if world.mode == "combat" and world.combat != null and world.combat.state != null: # S68: the fight rides along
+		var block := world.combat.to_dict()
+		block["seed"] = world.combat.state.rng.seed
+		out["combat"] = block
+		out["enemy_roster"] = world.enemy_roster()
+	return out
+
+
+static func _capture_body(world: ExploreWorld) -> Dictionary:
 	var members: Array = []
 	for m: PartyMember in world.party.members:
 		var cell := world.member_cell(m)
@@ -244,6 +254,14 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 			p.collected = true
 			p.queue_free()
 
+	if data.has("combat"): # S68: the save was written mid-fight; the fight resumes where it stood
+		world.respawn_roster(Array(data.get("enemy_roster", [])))
+		world.mode = "combat"
+		world.party.active = false
+		if not world.combat.resume(Dictionary(data["combat"])):
+			errors.append("the saved fight could not be put back")
+			world.mode = "explore"
+			world.party.active = true
 	if world.camera != null:
 		world.camera.snap()
 	return errors
@@ -295,9 +313,10 @@ static func move(from_path: String, to_path: String) -> void:
 
 ## Before a new autosave: the newest becomes autosave_1, that one
 ## autosave_2, and the oldest past AUTOSAVE_KEEP is dropped (S54).
-static func rotate_autosaves(dir: String) -> void:
-	for age: int in range(AUTOSAVE_KEEP - 1, 0, -1):
+static func rotate_autosaves(dir: String, keep: int = AUTOSAVE_KEEP) -> void:
+	for age: int in range(keep - 1, 0, -1):
 		move(path_for(dir, autosave_name(age - 1)), path_for(dir, autosave_name(age)))
+	remove(path_for(dir, autosave_name(keep))) # one past the setting, when it was lowered (S68)
 
 
 ## Reads a save. On failure the result is {"_error": "<reason>"}.
@@ -327,6 +346,9 @@ static func migrate(data: Dictionary) -> Dictionary:
 		# given one after the fact: content_check refuses it.
 		d["content"] = d.get("content", {})
 		d["version"] = 2
+	if version < 3:
+		# v3 (S68) may carry a fight in progress; a v2 save simply has none.
+		d["version"] = 3
 	if d.has("ledger"):
 		d["ledger"] = Ledger.migrate(d["ledger"])
 	return d
@@ -351,13 +373,13 @@ static func summarize(data: Dictionary, registry: ContentRegistry = null) -> Str
 
 
 ## One line per slot plus the autosave: {"name", "path", "exists", "summary", "loadable"}.
-static func list_saves(dir: String, registry: ContentRegistry = null, older_autosaves: bool = false) -> Array[Dictionary]:
+static func list_saves(dir: String, registry: ContentRegistry = null, older_autosaves: bool = false, keep: int = AUTOSAVE_KEEP) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var names: Array[String] = []
 	for n: int in range(1, SLOTS + 1):
 		names.append(slot_name(n))
 	names.append(AUTOSAVE)
-	for age: int in range(1, AUTOSAVE_KEEP if older_autosaves else 1):
+	for age: int in range(1, keep if older_autosaves else 1):
 		names.append(autosave_name(age))
 	for save_name: String in names:
 		var path := path_for(dir, save_name)

@@ -149,3 +149,53 @@ func tick_statuses() -> void:
 		poison = {}
 	if not statuses.has("counter"):
 		counter_damage = []
+
+
+## Everything a fight in progress needs to put this combatant back (S68,
+## D-124): the resource by id (the definition is content), cells as pairs.
+func to_dict() -> Dictionary:
+	return {
+		"id": id, "display_name": display_name, "team": team, "archetype": archetype, "tier": tier, "cell": [cell.x, cell.y],
+		"max_hp": max_hp, "hp": hp, "ap_max": ap_max, "ap": ap, "move_max": move_max, "move_left": move_left,
+		"evasion": evasion, "initiative_bonus": initiative_bonus, "initiative": initiative, "abilities": abilities.duplicate(),
+		"damage_bonus": damage_bonus, "resource_id": resource_id, "resource": resource, "marks": marks.duplicate(true),
+		"downed": downed, "hidden": hidden, "hacked": hacked, "statuses": statuses.duplicate(true), "summoned_by": summoned_by,
+		"retreated": retreated, "traits": traits.duplicate(true), "taunted_by": taunted_by, "poison": poison.duplicate(true), "counter_damage": counter_damage.duplicate(),
+	}
+
+
+## The combatant a `to_dict` described; `resource_def` is looked up by the caller.
+static func from_dict(d: Dictionary) -> Combatant:
+	var c := Combatant.new()
+	c.id = String(d.get("id", ""))
+	c.display_name = String(d.get("display_name", c.id))
+	c.team = String(d.get("team", TEAM_ENEMY))
+	c.archetype = String(d.get("archetype", "rusher"))
+	c.tier = String(d.get("tier", ""))
+	var raw: Array = d.get("cell", [0, 0])
+	c.cell = Vector2i(int(raw[0]), int(raw[1])) if raw.size() == 2 else Vector2i.ZERO
+	c.max_hp = int(d.get("max_hp", 1))
+	c.hp = int(d.get("hp", c.max_hp))
+	c.ap_max = int(d.get("ap_max", 4))
+	c.ap = int(d.get("ap", c.ap_max))
+	c.move_max = int(d.get("move_max", 6))
+	c.move_left = int(d.get("move_left", c.move_max))
+	c.evasion = int(d.get("evasion", 0))
+	c.initiative_bonus = int(d.get("initiative_bonus", 0))
+	c.initiative = int(d.get("initiative", 0))
+	c.abilities.assign(d.get("abilities", []))
+	c.damage_bonus = int(d.get("damage_bonus", 0))
+	c.resource_id = String(d.get("resource_id", ""))
+	c.resource = int(d.get("resource", 0))
+	c.marks = Dictionary(d.get("marks", {})).duplicate(true)
+	c.downed = bool(d.get("downed", false))
+	c.hidden = bool(d.get("hidden", false))
+	c.hacked = bool(d.get("hacked", false))
+	c.statuses = Dictionary(d.get("statuses", {})).duplicate(true)
+	c.summoned_by = String(d.get("summoned_by", ""))
+	c.retreated = bool(d.get("retreated", false))
+	c.traits = Dictionary(d.get("traits", {})).duplicate(true)
+	c.taunted_by = String(d.get("taunted_by", ""))
+	c.poison = Dictionary(d.get("poison", {})).duplicate(true)
+	c.counter_damage = Array(d.get("counter_damage", [])).duplicate()
+	return c

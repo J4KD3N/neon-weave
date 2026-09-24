@@ -75,6 +75,7 @@ static func build_rows(settings: Settings) -> Array[Dictionary]:
 	out.append({"id": "sfx", "kind": "value", "section": "Audio", "label": Loc.t("Sound effects: %d%%") % Settings.percent_of(settings.sfx_db), "hint": Loc.t("Hits, steps, pickups and the menus on their own.")})
 	out.append({"id": "glyphs", "kind": "value", "section": "Pad", "label": Loc.t("Pad glyphs: %s%s") % [Loc.t(settings.glyphs), "" if settings.glyphs != "auto" else Loc.t(" (%s)") % Loc.t(Glyphs.resolved_style())], "hint": Loc.t("Which button names the hints use. Auto follows the pad plugged in.")})
 	out.append({"id": "rumble", "kind": "toggle", "section": "Pad", "label": Loc.t("Pad rumble: %s") % (Loc.t("on") if settings.rumble else Loc.t("off")), "hint": Loc.t("Hits, downs, wins and wipes in the pad. Enter or A switches it and gives one pulse.")})
+	out.append({"id": "autosaves_kept", "kind": "value", "section": "Saves", "label": Loc.t("Autosaves kept: %d") % settings.autosaves_kept, "hint": Loc.t("How many older autosaves stay beside the newest, one to five. Iron Weave keeps one whatever this says.")})
 	for action: String in REBINDABLE:
 		out.append({"id": "rebind:" + action, "kind": "rebind", "section": "Bindings", "label": Loc.t("%s: %s") % [Loc.t(action.replace("_", " ")), InputActions.describe(action)], "hint": Loc.t("Enter or A, then press the new key or button. Esc keeps the old one.")})
 	out.append({"id": "reset", "kind": "action", "section": "Bindings", "label": Loc.t("Reset all bindings to default"), "hint": Loc.t("Every binding back to how the game shipped.")})

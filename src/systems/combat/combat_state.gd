@@ -365,6 +365,52 @@ func party_can_sense(c: Combatant) -> bool:
 	return false
 
 
+## The fight as data (S68, D-124): every combatant, the order and the
+## group by id, the turn, the round, the RNG's state so the next roll is
+## the roll it would have been, and the log's tail. The map, the rules and
+## the abilities are content and are not written.
+func to_dict() -> Dictionary:
+	var cs: Array = []
+	for c: Combatant in combatants:
+		cs.append(c.to_dict())
+	return {
+		"combatants": cs, "order": _ids(order), "group": _ids(group), "done": _done.keys(), "begun": _begun.keys(),
+		"round": round_number, "turn_index": turn_index, "finished": finished, "result": result,
+		"rng_state": rng.state, "summon_count": _summon_count, "history": history.slice(maxi(history.size() - 60, 0)),
+	}
+
+
+## Puts a fight back after `setup` (which seeded the RNG); the combatants
+## are those `setup` was given, matched to the saved order by id.
+func restore_from(d: Dictionary) -> void:
+	var by_id: Dictionary = {}
+	for c: Combatant in combatants:
+		by_id[c.id] = c
+	order.clear()
+	for id: Variant in d.get("order", []):
+		if by_id.has(String(id)):
+			order.append(by_id[String(id)])
+	group.clear()
+	for id: Variant in d.get("group", []):
+		if by_id.has(String(id)):
+			group.append(by_id[String(id)])
+	_done.clear()
+	for id: Variant in d.get("done", []):
+		_done[String(id)] = true
+	_begun.clear()
+	for id: Variant in d.get("begun", []):
+		_begun[String(id)] = true
+	round_number = int(d.get("round", 1))
+	turn_index = clampi(int(d.get("turn_index", 0)), 0, maxi(order.size() - 1, 0))
+	finished = bool(d.get("finished", false))
+	result = String(d.get("result", ""))
+	rng.state = int(d.get("rng_state", rng.state))
+	_summon_count = int(d.get("summon_count", 0))
+	history.assign(d.get("history", []))
+	_undo = {}
+	_emit({"type": "resumed", "round": round_number, "actor": current().id if current() != null else ""})
+
+
 ## Positioning modifiers for an attack: elevation, cover, mana pool.
 ## {"hit": int, "damage": int, "cover": int, "elevated": bool, "uphill": bool, "amplified": bool}
 func attack_modifiers(actor: Combatant, ability: Dictionary, target: Combatant) -> Dictionary:
@@ -1073,6 +1119,8 @@ func describe(e: Dictionary) -> String:
 			elif bool(e["downed"]):
 				line += Loc.t(" %s goes down.") % _name(e["target"])
 			return line
+		"resumed":
+			return Loc.t("— The fight resumes (round %d, %s to act) —") % [int(e["round"]), _name(String(e["actor"])) if not String(e["actor"]).is_empty() else Loc.t("nobody")]
 		"opener":
 			return Loc.t("The party strikes from cover: nobody saw them coming.")
 		"hack":

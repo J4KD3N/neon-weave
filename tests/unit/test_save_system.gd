@@ -141,7 +141,7 @@ func test_saves_carry_content_fingerprints_and_a_changed_map_is_refused() -> voi
 	Dictionary(legacy["location"]).erase("fingerprint")
 	legacy.erase("content")
 	var migrated := SaveSystem.migrate(legacy)
-	assert_eq(int(migrated["version"]), 2)
+	assert_eq(int(migrated["version"]), SaveSystem.VERSION, "a legacy save is brought all the way up (v3 since S68)")
 	assert_contains(SaveSystem.content_check(migrated, w.registry), "predates content checks")
 	assert_contains(SaveSystem.restore(w, legacy)[0], "predates content checks")
 	# Other content changing (a balance number) still loads, and the list says so.
