@@ -1,0 +1,9 @@
+{
+  "name": "Sure Hand",
+  "branch": "body",
+  "tier": 3,
+  "cost": { "aether": 6 },
+  "effects": { "traits": { "ability_damage_bonus": { "heavy_swing": 2 } } },
+  "summary": "Heavy Swing lands two harder. Needs Iron Skin.",
+  "requires": ["iron_skin"]
+}

@@ -12,6 +12,7 @@
   "abilities": ["strike", "scrap_shot", "overcharge"],
   "subclass_level": 3,
   "capstone": "overclock_swarm",
+  "capstone_line": "Overclock Swarm: the swarm stops waiting for orders. It knows what you want the moment you want it, and it gets there first.",
   "subclasses": ["swarmlord", "artificer"],
   "milestone": "M1"
 }

@@ -56,7 +56,7 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 	var combatants: Array[Combatant] = []
 	for i: int in party.size():
 		var m := party[i]
-		var c := Combatant.make("p:" + m.member_id, m.display_name, Combatant.TEAM_PARTY, party_cells[i], m.stats, m.abilities, world.rules.ap_per_turn)
+		var c := Combatant.make("p:" + m.member_id, m.display_name, Combatant.TEAM_PARTY, party_cells[i], m.stats, m.abilities, world.rules.ap_per_turn + int(m.traits.get("ap_bonus", 0))) # a talent may add AP (S66)
 		c.hp = m.hp
 		c.downed = m.downed
 		c.damage_bonus = world.bastion.damage_bonus() + m.damage_bonus

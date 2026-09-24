@@ -12,6 +12,7 @@
   "abilities": ["strike", "hex_bolt", "detonate"],
   "subclass_level": 3,
   "capstone": "cascade_hex",
+  "capstone_line": "Cascade Hex: every hex you ever laid was a wire, and today you found the switch that lights them all at once.",
   "subclasses": ["glitchbinder", "plaguecoder"],
   "milestone": "M1"
 }

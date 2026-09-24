@@ -212,6 +212,19 @@ func _talents() -> void:
 					_flag(t, "cost key '%s' unknown" % key)
 		elif int(cost) < 0:
 			_flag(t, "cost must not be negative")
+		var fx: Dictionary = t.get("effects", {}) # S66: stats, damage_bonus, or traits the combat reads
+		for key: String in fx:
+			if Progression.STAT_KEYS.has(key) or key == "damage_bonus":
+				continue
+			if key != "traits":
+				_flag(t, "effects.%s is not a stat, damage_bonus or traits" % key)
+				continue
+			for trait_key: String in Dictionary(fx[key]):
+				if not Progression.TALENT_TRAIT_KEYS.has(trait_key):
+					_flag(t, "effects.traits.%s is not a trait a talent may carry" % trait_key)
+				elif trait_key.begins_with("ability_"):
+					for ability_id: String in Dictionary(Dictionary(fx[key])[trait_key]):
+						_ref(t, "abilities", ability_id, "effects.traits.%s" % trait_key)
 
 
 func _enemies() -> void:

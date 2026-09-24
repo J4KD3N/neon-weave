@@ -12,6 +12,7 @@
   "abilities": ["strike", "arc_bolt"],
   "subclass_level": 3,
   "capstone": "weft_storm",
+  "capstone_line": "Weft Storm: the Weft answers before you finish asking. What you pull down now was never meant for one pair of hands.",
   "subclasses": ["stormcaller", "wardweaver"],
   "milestone": "M0"
 }

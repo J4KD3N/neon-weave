@@ -30,7 +30,7 @@ const TEXT_FIELDS: Dictionary = {
 	"biomes": ["name"],
 	"branches": ["name"],
 	"buildings": ["name", "levels[].blurb"],
-	"classes": ["name", "summary", "resource.name", "resource.summary"],
+	"classes": ["name", "summary", "resource.name", "resource.summary", "capstone_line"],
 	"companions": ["name", "short_name", "summary", "scenes[].label"],
 	"difficulties": ["name", "summary"],
 	"dialogue": ["name", "nodes.*.text", "nodes.*.choices[].text", "lines[].text"],

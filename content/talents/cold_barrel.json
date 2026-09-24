@@ -1,0 +1,9 @@
+{
+  "name": "Cold Barrel",
+  "branch": "tech",
+  "tier": 2,
+  "cost": { "aether": 4 },
+  "effects": { "traits": { "ability_cooldown_bonus": { "deploy_turret": 1 } } },
+  "summary": "Deploy Turret cools a turn sooner. Needs Circuit Sense.",
+  "requires": ["circuit_sense"]
+}
