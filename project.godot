@@ -24,6 +24,11 @@ Platform="*res://src/core/platform/platform_service.gd"
 
 [debug]
 
+; The engine log on disk (crash reports read its tail; D-116).
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/godot.log"
+file_logging/max_log_files=5
+
 ; Static typing everywhere (GDD §4): an untyped declaration is a compile error.
 gdscript/warnings/untyped_declaration=2
 gdscript/warnings/unsafe_method_access=1

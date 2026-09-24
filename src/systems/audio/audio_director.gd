@@ -80,6 +80,8 @@ func stream_for(id: String) -> AudioStream:
 ## the file is missing or unreadable.
 static func load_file(path: String, loop: bool) -> AudioStream:
 	var stream: AudioStream = null
+	if not ResourceLoader.exists(path) and not MediaLimits.check_audio(path).is_empty():
+		return null # a file past the caps, or not audio (D-116)
 	if ResourceLoader.exists(path):
 		stream = load(path) as AudioStream
 	elif FileAccess.file_exists(path):

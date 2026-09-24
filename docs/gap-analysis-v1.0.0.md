@@ -93,6 +93,8 @@ All measured under the harness's naive policy; none met a person.
 
 ## 7. Engineering and process gaps
 
+Closed on 2026-09-24 (D-116); the table stands as the record of what was found.
+
 | Gap | Severity | Owner | Closing action |
 |---|---|---|---|
 | **The campaign test wins fights by fiat** and pins the RNG: it proves wiring, not play. | S2 | Session | Keep it; add a second job that plays a subset with the naive policy and a wide tolerance, so a balance regression trips something. One session. |

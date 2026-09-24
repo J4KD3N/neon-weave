@@ -30,11 +30,16 @@ static func load_entry(entry: Dictionary) -> SpriteSheet:
 	var image_path := dir.path_join(String(entry.get("image", "")))
 	var img := Image.new()
 	var err := ERR_FILE_NOT_FOUND
-	if FileAccess.file_exists(image_path):
+	var refused := MediaLimits.check_image(image_path) # size and format caps before decoding (D-116)
+	if refused.is_empty():
 		err = img.load_png_from_buffer(FileAccess.get_file_as_bytes(image_path))
+		if err == OK:
+			refused = MediaLimits.check_image_size(img)
+			if not refused.is_empty():
+				err = ERR_INVALID_DATA
 	var sheet := from_entry(entry, img if err == OK else null)
 	if err != OK:
-		sheet.errors.append("cannot load image %s: %s" % [image_path, error_string(err)])
+		sheet.errors.append("cannot load image %s: %s" % [image_path, refused if not refused.is_empty() else error_string(err)])
 	return sheet
 
 
