@@ -4,6 +4,8 @@ Updated every session. Remove items when closed; note the closing commit.
 Triaged at the end of M4 (S60, 2026-09-22, `v1.0.0`): closed items are gone
 (see `docs/decisions.md` and git history); what is left is grouped by who
 can close it and ordered by how much it hurts a player.
+The full analysis with severities, owners, an order of attack and a risk
+table is `docs/gap-analysis-v1.0.0.md` (2026-09-24).
 
 **The 1.0 verdict.** The code and the content are complete and gated: the
 campaign test plays every path on every difficulty in both modes and under
@@ -24,6 +26,23 @@ the game.
 - **Steam is wired but unverified** (S25, D-078; S58: `steam/READINESS.md` names the three blockers, GodotSteam, the app id and the depot ids, and `steam/CHECKLIST.md` is the ten live steps): no GodotSteam binaries, app id or Steamworks definitions here; achievements (twelve, five for the endings), cloud sync, the Steam Input template and the Workshop upload have never touched a live client; the demo depot must launch with `--demo`.
 - **macOS is ad-hoc signed, not notarized** (D-079; S59: the release workflow notarizes with rcodesign the moment the five `APPLE_*` secrets exist, `apple/READINESS.md` says the checkout is ready, and `apple/CHECKLIST.md` is the nine live steps): Gatekeeper warns; no Apple account. Only the Linux binary is exercised by CI; the signed build has never been run on a Mac.
 - **Modding is unproven by a stranger** (S45): nobody outside the repo has written a mod; the validator checks what the tests knew to check and nothing about balance, art sheets or audio files; Workshop upload is M4.
+
+## Promised by the GDD, never started (found 2026-09-24)
+
+- **A 30+ hour handcrafted campaign** (GDD §1, §11): the game plays four to six hours on a first run; Act 1 is two to three of them. The store pitch must say what exists, or the writing pass comes first. Owner: a writer, or sessions through the same data (`docs/content-schemas.md`).
+- **Gore slider** (§9) and the mature environment layer (§5: blood decals, corpse tiles, grime): no setting, no decals, no corpse tiles; `blood` exists only as a palette colour. One session for the setting and a decal layer on death; the rest is art.
+- **Account unlocks beyond origins** (§12: loadouts, cosmetics): the account and the creator take keys, but only origins are granted. One session.
+- **Hackable turrets and doors** (§9): none. One session, gated by Tech.
+- **Awareness as a cone and a detection roll** (§9, stealth openers): awareness is a radius and a hidden flag. One session.
+
+## Engineering and process (found 2026-09-24)
+
+- **Windows and macOS binaries are exported but never executed**: CI smokes only the Linux build. A Windows runner smoke step is one session; macOS needs the notarized build and a Mac.
+- **No crash reporting** beyond the opt-in playtest log: a handler that writes `user://crash_<stamp>.txt` and a title-screen prompt to send it is one session.
+- **Mod media is loaded unvalidated**: a mod is JSON, but a sprite PNG or an audio file from a Workshop item is read from disk with no size or format cap. Half a session in the validator and the loaders.
+- **The screenshot job is best-effort**: nothing diffs a frame against a golden image, so a menu can break visually with CI green. One session.
+- **A few older tests still use the player's real account file** (settings and bindings were moved to test paths in S55). Half a session.
+- **The engine version lives in several places** (`project.godot`, the workflows, the notarize step's editor-settings file name): a CI check that they agree is half a session.
 
 ## Balance (M4 sessions, after the playtest)
 
