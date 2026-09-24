@@ -10,7 +10,7 @@
 class_name CheckShots
 extends SceneTree
 
-const DEFAULT_EXPECTED: Array[String] = ["screenshot.png", "screenshot-title.png", "screenshot-combat.png", "screenshot-shard.png", "screenshot-datacore.png", "screenshot-markets.png", "screenshot-cathedral.png", "screenshot-loom.png", "screenshot-road.png", "screenshot-dialogue.png", "screenshot-creator.png", "screenshot-crt.png", "screenshot-flat.png", "screenshot-gallery.png"]
+const DEFAULT_EXPECTED: Array[String] = ["screenshot.png", "screenshot-title.png", "screenshot-combat.png", "screenshot-shard.png", "screenshot-datacore.png", "screenshot-markets.png", "screenshot-cathedral.png", "screenshot-loom.png", "screenshot-road.png", "screenshot-dialogue.png", "screenshot-creator.png", "screenshot-crt.png", "screenshot-flat.png", "screenshot-gallery.png", "screenshot-gore.png"]
 const MIN_WIDTH := 1280
 const MIN_HEIGHT := 720
 const MIN_INK := 0.02

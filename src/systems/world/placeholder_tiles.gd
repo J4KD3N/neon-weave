@@ -88,6 +88,8 @@ static func _draw_floor(img: Image, art: Dictionary, palette: Dictionary) -> voi
 				c = line
 			elif pattern == "cracked" and (x * 7 + y * 13) % 29 == 0:
 				c = edge
+			elif pattern == "grime" and (x * 31 + y * 17) % 11 < 3 and (x + y * 3) % 7 < 4:
+				c = edge.darkened(0.3) # soot and old oil in blotches (S61)
 			elif pattern == "ripple" and y % 4 == 0 and x > x0 + 2 and x < x1 - 2:
 				c = line
 			elif pattern == "pad" and (absi(x - FLOOR_CENTER.x) == half / 2 or (half > 0 and half / 2 == 0)):

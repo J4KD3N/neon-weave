@@ -13,6 +13,9 @@ const DEFAULT_AMBIENT := "#8c85a3"
 var ambient_node: CanvasModulate
 var party_light: PointLight2D
 var lights: Array[PointLight2D] = []
+## Lights on tiles whose art says `flicker` (S61): failing lights that gutter.
+var flickering: Array[PointLight2D] = []
+var _time: float = 0.0
 var rules: Dictionary = {}
 var ambient: Color = Color.WHITE
 var _texture: GradientTexture2D
@@ -47,6 +50,7 @@ func rebuild(map: MapData, palette: Dictionary, p_rules: Dictionary, cell_to_wor
 	for l: PointLight2D in lights:
 		l.queue_free()
 	lights.clear()
+	flickering.clear()
 	ambient = Color.html(String(palette.get("ambient", rules.get("ambient", DEFAULT_AMBIENT))))
 	var energy := float(rules.get("glow_energy", 0.9))
 	var radius := float(rules.get("glow_radius", 96.0))
@@ -69,8 +73,28 @@ func rebuild(map: MapData, palette: Dictionary, p_rules: Dictionary, cell_to_wor
 			light.position = cell_to_world.call(cell)
 			add_child(light)
 			lights.append(light)
+			if bool(art.get("flicker", false)):
+				light.set_meta("base_energy", energy)
+				light.set_meta("phase", float(hash(cell) % 1000) / 100.0)
+				flickering.append(light)
 	apply_enabled()
 	return lights.size()
+
+
+## A failing light gutters: its energy wanders between a quarter and full
+## on two beats that never line up, so no two flicker together.
+func _process(delta: float) -> void:
+	if flickering.is_empty() or not enabled:
+		return
+	_time += delta
+	for l: PointLight2D in flickering:
+		l.energy = flicker_energy(float(l.get_meta("base_energy", 0.9)), _time + float(l.get_meta("phase", 0.0)))
+
+
+static func flicker_energy(base: float, t: float) -> float:
+	var wave := 0.5 + 0.25 * sin(t * 7.3) + 0.25 * sin(t * 23.1 + 1.7)
+	var drop := 0.25 if fmod(t, 3.7) < 0.12 else 1.0 # the stutter
+	return base * clampf(wave * drop, 0.15, 1.0)
 
 
 ## The leader's light walks with the leader.

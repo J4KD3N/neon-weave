@@ -22,11 +22,12 @@ var palette: String = "normal"
 var locale: String = Loc.DEFAULT
 var lighting: bool = true
 var screen_fx: String = "glow"
+var gore: String = "full"
 var load_error: String = ""
 
 
 func to_dict() -> Dictionary:
-	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette, "locale": locale, "lighting": lighting, "screen_fx": screen_fx}
+	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette, "locale": locale, "lighting": lighting, "screen_fx": screen_fx, "gore": gore}
 
 
 static func from_dict(d: Dictionary) -> Settings:
@@ -45,6 +46,8 @@ static func from_dict(d: Dictionary) -> Settings:
 	s.lighting = bool(d.get("lighting", true))
 	var fx := String(d.get("screen_fx", "glow"))
 	s.screen_fx = fx if ScreenFx.MODES.has(fx) else "glow"
+	var g2 := String(d.get("gore", "full"))
+	s.gore = g2 if DecalLayer.MODES.has(g2) else "full"
 	return s
 
 
@@ -88,6 +91,7 @@ func apply() -> void:
 	UiScale.text_scale = text_scale
 	locale = Loc.set_locale(locale)
 	LightingRig.enabled = lighting
+	DecalLayer.level = gore
 
 
 func volume_percent() -> int:
@@ -120,6 +124,10 @@ func cycle_palette(direction: int) -> void:
 
 func cycle_screen_fx(direction: int) -> void:
 	screen_fx = ScreenFx.cycle(screen_fx, direction)
+
+
+func cycle_gore(direction: int) -> void:
+	gore = DecalLayer.cycle(gore, direction)
 
 
 func cycle_locale(direction: int) -> void:

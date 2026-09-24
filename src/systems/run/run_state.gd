@@ -20,6 +20,8 @@ var items: Array = []
 ## relay waypoints already used ([x, y]).
 var opened: Array = []
 var waypoints_used: Array = []
+## The marks fights left in this Shard (S61): DecalLayer.make dictionaries.
+var marks: Array = []
 var rng := RandomNumberGenerator.new()
 
 
@@ -39,6 +41,7 @@ func clear() -> void:
 	pickups = 0
 	opened = []
 	waypoints_used = []
+	marks = []
 
 
 ## Empties the haul and XP after a relay bank; kills, pickups and the

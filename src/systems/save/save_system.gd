@@ -75,7 +75,7 @@ static func capture(world: ExploreWorld) -> Dictionary:
 		},
 		"ledger": world.ledger.to_dict(),
 		"location": location,
-		"run": {"haul": world.run.haul.duplicate(), "xp": world.run.xp, "kills": world.run.kills, "pickups": world.run.pickups, "opened": world.run.opened.duplicate(true), "waypoints_used": world.run.waypoints_used.duplicate(true)},
+		"run": {"haul": world.run.haul.duplicate(), "xp": world.run.xp, "kills": world.run.kills, "pickups": world.run.pickups, "opened": world.run.opened.duplicate(true), "waypoints_used": world.run.waypoints_used.duplicate(true), "marks": world.run.marks.duplicate(true)},
 		"party": members,
 		"protagonist": world.protagonist.duplicate(true),
 		"narrative": world.narrative.to_dict(),
@@ -196,6 +196,8 @@ static func restore(world: ExploreWorld, raw: Dictionary) -> Array[String]:
 		var o: Array = raw_o
 		if o.size() == 2 and not world.open_door(Vector2i(int(o[0]), int(o[1])), true):
 			errors.append("saved door at %s is not a door" % [o])
+	world.run.marks = Array(run.get("marks", [])).duplicate(true)
+	world.restore_marks()
 
 	world.apply_bastion_bonuses()
 	var by_id: Dictionary = {}

@@ -140,6 +140,7 @@ jobs:
           run_shot --screenshot="$PWD/build/screenshot-crt.png" --shard=7 --fx=crt
           run_shot --screenshot="$PWD/build/screenshot-flat.png" --shard=7 --fx=off --no-lighting
           run_shot --screenshot="$PWD/build/screenshot-gallery.png" --map=throat_deep
+          run_shot --screenshot="$PWD/build/screenshot-gore.png" --map=proto_yard --screenshot-gore
           ls -la build
 
       - name: Every frame rendered something (blank, flat or missing frames fail the job, D-116)

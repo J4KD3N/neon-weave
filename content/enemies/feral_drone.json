@@ -1,4 +1,5 @@
 {
+  "traits": { "fluid": "oil" },
   "name": "Feral Drone",
   "family": "rusted_undercity",
   "archetype": "ranged",

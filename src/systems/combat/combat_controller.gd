@@ -409,6 +409,7 @@ func _sync_actor(id: String) -> void:
 		node.modulate.a = 0.45 if c.hidden else 1.0 # hidden: faint, for both sides
 	if c.hp <= 0 and not c.downed and not node.dead:
 		node.dead = true
+		world.leave_mark(c.cell, "corpse", String(c.traits.get("fluid", "blood")), node.tint.to_html(false)) # the body stays (S61)
 		var enemy := node as EnemyActor
 		if enemy != null and world.enemies.has(enemy):
 			world.on_enemy_killed(enemy) # party summons drop nothing
@@ -424,6 +425,7 @@ func _on_event(e: Dictionary) -> void:
 	hud.set_log(state.history)
 	_sound_for_event(e)
 	_rumble_for_event(e)
+	_mark_for_event(e)
 	match String(e["type"]):
 		"summon":
 			var minion := world.spawn_summoned(String(e["kind"]), e["cell"], String(e.get("team", Combatant.TEAM_ENEMY)))
@@ -440,6 +442,22 @@ func _on_event(e: Dictionary) -> void:
 		"chain", "surface", "overload", "vent":
 			if not animate:
 				_sync_actor(String(e.get("target", e.get("actor", ""))))
+
+
+## Blood for combat events (S61): a splat where a hit landed, a pool where
+## it put someone down. The victim's fluid trait picks blood, oil or none.
+func _mark_for_event(e: Dictionary) -> void:
+	var kind := String(e["type"])
+	if not ["ability", "arc", "counter", "chain", "surface", "poison", "overload"].has(kind):
+		return
+	if not bool(e.get("hit", true)) or int(e.get("damage", 0)) <= 0:
+		return
+	var victim := state.by_id(String(e.get("target", e.get("actor", ""))))
+	if victim == null:
+		return
+	var fluid := String(victim.traits.get("fluid", "blood"))
+	var fell := bool(e.get("killed", false)) or bool(e.get("downed", false))
+	world.leave_mark(victim.cell, "pool" if fell else "splat", fluid)
 
 
 ## Rumble for combat events (S53): a party member hit, downed or killed; a
