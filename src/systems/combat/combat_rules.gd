@@ -20,6 +20,15 @@ var first_strike_initiative_bonus: int = 10
 ## Hacking (S63): the protagonist needs this much Tech for the Hack action, and each point above it adds this to the roll.
 var hack_tech_min: int = 2
 var hack_tech_bonus: int = 15
+## Awareness (S64): a placed facing sees a cone this wide, hears this far behind it, notices at once this close, and past that fills a meter over `notice_seconds` (emptying over `notice_decay_seconds`) then rolls detect_base + per awareness point over the default - per point of party stealth.
+var vision_cone_degrees: float = 180.0
+var hearing_radius: int = 2
+var notice_instant_radius: int = 2
+var notice_seconds: float = 1.2
+var notice_decay_seconds: float = 2.0
+var detect_base: float = 0.7
+var detect_per_awareness: float = 0.05
+var detect_per_stealth: float = 0.15
 var initiative_die: int = 20
 ## Ranged hit penalty when a cover tile sits between attacker and target.
 var cover_hit_penalty: int = 20
@@ -81,6 +90,14 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.first_strike_initiative_bonus = int(entry.get("first_strike_initiative_bonus", r.first_strike_initiative_bonus))
 	r.hack_tech_min = int(entry.get("hack_tech_min", r.hack_tech_min))
 	r.hack_tech_bonus = int(entry.get("hack_tech_bonus", r.hack_tech_bonus))
+	r.vision_cone_degrees = float(entry.get("vision_cone_degrees", r.vision_cone_degrees))
+	r.hearing_radius = int(entry.get("hearing_radius", r.hearing_radius))
+	r.notice_instant_radius = int(entry.get("notice_instant_radius", r.notice_instant_radius))
+	r.notice_seconds = float(entry.get("notice_seconds", r.notice_seconds))
+	r.notice_decay_seconds = float(entry.get("notice_decay_seconds", r.notice_decay_seconds))
+	r.detect_base = float(entry.get("detect_base", r.detect_base))
+	r.detect_per_awareness = float(entry.get("detect_per_awareness", r.detect_per_awareness))
+	r.detect_per_stealth = float(entry.get("detect_per_stealth", r.detect_per_stealth))
 	r.initiative_die = int(entry.get("initiative_die", r.initiative_die))
 	r.cover_hit_penalty = int(entry.get("cover_hit_penalty", r.cover_hit_penalty))
 	r.elevation_hit_bonus = int(entry.get("elevation_hit_bonus", r.elevation_hit_bonus))

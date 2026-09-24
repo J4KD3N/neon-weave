@@ -261,6 +261,15 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 	return ""
 
 
+## A stealth opener (S64): the party struck an enemy that had not noticed
+## it, so every standing party member begins hidden for one turn and the
+## first blow each lands is an ambush.
+func open_from_cover() -> void:
+	for c: Combatant in active(Combatant.TEAM_PARTY):
+		c.hide(1)
+	_emit({"type": "opener", "team": Combatant.TEAM_PARTY})
+
+
 ## Positioning modifiers for an attack: elevation, cover, mana pool.
 ## {"hit": int, "damage": int, "cover": int, "elevated": bool, "uphill": bool, "amplified": bool}
 func attack_modifiers(actor: Combatant, ability: Dictionary, target: Combatant) -> Dictionary:
@@ -940,6 +949,8 @@ func describe(e: Dictionary) -> String:
 			return Loc.t("%s takes a %s stance (%d).") % [_name(e["actor"]), Loc.t(String(e["stance"])), int(e["turns"])]
 		"detect":
 			return Loc.t("%s senses %s hiding.") % [_name(e["actor"]), _name(e["target"])]
+		"opener":
+			return Loc.t("The party strikes from cover: nobody saw them coming.")
 		"hack":
 			if bool(e["hit"]):
 				return Loc.t("%s hacks %s: it is ours now.") % [_name(e["actor"]), _name(e["target"])]
