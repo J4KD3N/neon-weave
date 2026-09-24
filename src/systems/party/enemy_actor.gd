@@ -19,6 +19,17 @@ var sweep: float = 0.0
 var sweep_period: float = 4.0
 var noticed: float = 0.0
 var _sweep_time: float = 0.0
+## A patrol (S65, D-121): cells walked in a loop from the placed cell, at
+## `patrol_speed` cells a second with `patrol_wait` seconds at each point.
+## The facing follows the walk, so the cone looks where the enemy goes; an
+## enemy whose meter is up stops and turns toward what it saw.
+var patrol: Array[Vector2i] = []
+var patrol_index: int = 0
+var patrol_speed: float = 1.0
+var patrol_wait: float = 0.8
+var _wait_left: float = 0.0
+var _step_left: float = 0.0
+var walk_target: Vector2 = Vector2.INF # where the node walks to between cells
 var stats: Dictionary = {}
 var abilities: Array[String] = []
 ## Tier ("", "elite", "boss") and the flat bonuses it and depth grant (StatBlock.for_enemy).
@@ -85,6 +96,79 @@ func in_cone(target: Vector2i, cone_degrees: float) -> bool:
 	if not has_facing or target == cell:
 		return true
 	return cone_contains(look_dir(), cell, target, cone_degrees)
+
+
+func set_patrol(points: Array, speed: float = 1.0, wait: float = 0.8) -> void:
+	patrol.clear()
+	for p: Variant in points:
+		var raw: Array = p
+		if raw.size() == 2:
+			patrol.append(Vector2i(int(raw[0]), int(raw[1])))
+	patrol_index = 0
+	patrol_speed = maxf(speed, 0.05)
+	patrol_wait = maxf(wait, 0.0)
+	_wait_left = 0.0
+	_step_left = 1.0 / patrol_speed
+
+
+## Faces a cell (a name from FACINGS when the direction has one).
+func face_toward(target: Vector2i) -> void:
+	var d := Vector2i(signi(target.x - cell.x), signi(target.y - cell.y))
+	if d == Vector2i.ZERO:
+		return
+	for name: String in FACINGS:
+		if FACINGS[name] == d:
+			has_facing = true
+			facing_dir = d
+			return
+
+
+## One tick of the patrol: waits at a point, else steps one cell toward
+## the next point when the step timer runs out and the cell is free
+## (`blocked` says whether a cell holds someone). Returns true on a step.
+func tick_patrol(delta: float, map: MapData, cell_to_world: Callable, blocked: Callable) -> bool:
+	if patrol.is_empty() or noticed > 0.0:
+		return false
+	var goal: Vector2i = patrol[patrol_index]
+	if cell == goal:
+		_wait_left += delta
+		if _wait_left < patrol_wait:
+			return false
+		_wait_left = 0.0
+		patrol_index = (patrol_index + 1) % patrol.size()
+		goal = patrol[patrol_index]
+		if cell == goal:
+			return false
+	_step_left -= delta
+	if _step_left > 0.0:
+		return false
+	_step_left = 1.0 / patrol_speed
+	var d := Vector2i(signi(goal.x - cell.x), signi(goal.y - cell.y))
+	var options: Array[Vector2i] = [cell + d, cell + Vector2i(d.x, 0), cell + Vector2i(0, d.y)]
+	for next: Vector2i in options:
+		if next == cell or not map.is_walkable(next) or bool(blocked.call(next)):
+			continue
+		if next.x != cell.x and next.y != cell.y and not (map.is_walkable(Vector2i(next.x, cell.y)) and map.is_walkable(Vector2i(cell.x, next.y))):
+			continue
+		face_toward(next)
+		cell = next
+		walk_target = cell_to_world.call(cell)
+		name = "%s_%d_%d" % [enemy_id, cell.x, cell.y]
+		return true
+	return false
+
+
+## Walks the node toward the cell it stepped to (a patrol step is a cell
+## at a time; the sprite catches up between frames).
+func _process(delta: float) -> void:
+	if walk_target == Vector2.INF:
+		return
+	var before := position
+	position = position.move_toward(walk_target, 64.0 * patrol_speed * delta * 1.5)
+	set_motion(position != before, (walk_target - before).normalized() if walk_target != before else facing)
+	if position == walk_target:
+		walk_target = Vector2.INF
+		set_motion(false, facing)
 
 
 ## Pure: is `to` within `cone_degrees` (whole width) of `dir` seen from `from`.

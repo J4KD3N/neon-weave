@@ -977,6 +977,8 @@ func spawn_enemies() -> void:
 			placed.set_facing_name(String(p["facing"]), float(p.get("sweep", 0.0)), float(p.get("sweep_period", 4.0)))
 			var screen_dir := map_view.cell_to_world(cell + placed.facing_dir) - map_view.cell_to_world(cell)
 			placed.set_motion(false, screen_dir.normalized())
+		if p.has("patrol"): # S65: a route walked in a loop
+			placed.set_patrol(Array(p["patrol"]), float(p.get("patrol_speed", 1.0)), float(p.get("patrol_wait", 0.8)))
 		enemies.append(placed)
 
 
@@ -1304,6 +1306,7 @@ func check_encounters(delta: float = -1.0) -> bool:
 	for e: EnemyActor in living_enemies():
 		if delta > 0.0:
 			e.tick_sweep(delta)
+			e.tick_patrol(delta, map_data, Callable(map_view, "cell_to_world"), Callable(self, "cell_holds_someone"))
 		var seen_at := -1
 		for m: PartyMember in party.members:
 			if m.downed:
@@ -1314,6 +1317,8 @@ func check_encounters(delta: float = -1.0) -> bool:
 				continue
 			if not e.in_cone(mc, rules.vision_cone_degrees) and d > rules.hearing_radius:
 				continue # behind it, and too far to hear
+				if delta > 0.0 and not e.patrol.is_empty():
+					e.face_toward(mc) # a patrol that sees something turns to it
 			if seen_at < 0 or d < seen_at:
 				seen_at = d
 		if seen_at < 0:
@@ -1331,6 +1336,16 @@ func check_encounters(delta: float = -1.0) -> bool:
 				start_combat(false)
 				return true
 			e.noticed = 0.5 # a second look
+	return false
+
+
+## Whether a cell holds a living enemy, a party member or an NPC (a patrol waits rather than walk into anyone).
+func cell_holds_someone(cell: Vector2i) -> bool:
+	if enemy_at(cell) != null or npc_at(cell) != null:
+		return true
+	for m: PartyMember in party.members:
+		if member_cell(m) == cell:
+			return true
 	return false
 
 

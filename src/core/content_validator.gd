@@ -464,6 +464,12 @@ func _maps() -> void:
 				_flag(m, "enemy at %s faces '%s'; use e, se, s, sw, w, nw, n or ne" % [cell, p["facing"]])
 			if p.has("sweep") and (not (p["sweep"] is float or p["sweep"] is int) or float(p["sweep"]) < 0.0 or float(p["sweep"]) > 180.0):
 				_flag(m, "enemy at %s sweep must be 0 to 180 degrees" % cell)
+			for raw_pt: Variant in p.get("patrol", []): # S65: every patrol point is a walkable cell
+				var pt: Array = raw_pt if raw_pt is Array else []
+				if pt.size() != 2 or not map.is_walkable(Vector2i(int(pt[0]), int(pt[1]))):
+					_flag(m, "enemy at %s patrol point %s is not a walkable cell" % [cell, raw_pt])
+			if p.has("patrol_speed") and float(p["patrol_speed"]) <= 0.0:
+				_flag(m, "enemy at %s patrol_speed must be above 0" % cell)
 		for p: Dictionary in m.get("npcs", []):
 			var cell := _cell(p)
 			if not map.is_walkable(cell):

@@ -26,6 +26,7 @@ var hovered := Vector2i(-1, -1)
 ## (through `world.hover_override`); any mouse motion releases it.
 var cursor := Vector2i(-1, -1)
 var cursor_active: bool = false
+var _last_walk: Array[Vector2i] = [] # the cells the last move event walked (S65)
 var actors: Dictionary = {} # combatant id -> WorldActor
 
 var _enemy_loop_running := false
@@ -174,7 +175,14 @@ func hover(cell: Vector2i) -> void:
 		var path := state.move_path(actor, cell)
 		if not path.is_empty():
 			highlighter.set_layer("c_path", path, COLOR_PATH)
-			hud.set_hint(Loc.t("Move %d → %d Move left") % [path.size(), actor.move_left - path.size()], CombatHud.HINT_PREVIEW)
+			var cost := int(state.reachable_cells(actor).get(cell, path.size()))
+			var drawn := state.provokers_along(actor, path).size()
+			var hint := Loc.t("Move %d → %d Move left") % [cost, actor.move_left - cost]
+			if cost > path.size():
+				hint += Loc.t(" · a climb")
+			if drawn > 0:
+				hint += Loc.t(" · draws %d free strike%s") % [drawn, "" if drawn == 1 else "s"]
+			hud.set_hint(hint, CombatHud.HINT_PREVIEW)
 			return
 	if world.map_data.is_walkable(cell):
 		highlighter.set_layer("d_hover", [cell], COLOR_HOVER)
@@ -338,9 +346,9 @@ func end_player_turn() -> void:
 
 
 func _do_move(actor: Combatant, cell: Vector2i) -> void:
-	var path := state.move_path(actor, cell)
 	if not state.move(actor, cell):
 		return
+	var path := _walked_path()
 	var node: WorldActor = actors[actor.id]
 	if animate and path.size() > 0:
 		busy = true
@@ -350,10 +358,19 @@ func _do_move(actor: Combatant, cell: Vector2i) -> void:
 			tween.tween_property(node, "position", world.map_view.cell_to_world(step), 0.12)
 		tween.finished.connect(func() -> void:
 			busy = false
+			_sync_all()
 			_after_state_change())
 	else:
-		node.position = world.map_view.cell_to_world(cell)
+		node.position = world.map_view.cell_to_world(actor.cell)
+		_sync_all() # a free strike on the way may have put the mover down (S65)
 		_after_state_change()
+
+
+## The cells the last move actually walked (a free strike can stop it short).
+func _walked_path() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	out.assign(_last_walk)
+	return out
 
 
 func _do_ability(actor: Combatant, id: String, cell: Vector2i) -> void:
@@ -409,8 +426,13 @@ func _sync_actor(id: String) -> void:
 		return
 	node.hp = c.hp
 	node.downed = c.downed
-	if c.is_active():
-		node.modulate.a = 0.45 if c.hidden else 1.0 # hidden: faint, for both sides
+	if c.is_active(): # S65: a hidden party member is faint to the player; a hidden enemy is unseen unless someone can sense it
+		if not c.hidden:
+			node.modulate.a = 1.0
+		elif c.team == Combatant.TEAM_PARTY or state.party_can_sense(c):
+			node.modulate.a = 0.45
+		else:
+			node.modulate.a = 0.0
 	if c.hp <= 0 and not c.downed and not node.dead:
 		node.dead = true
 		world.leave_mark(c.cell, "corpse", String(c.traits.get("fluid", "blood")), node.tint.to_html(false)) # the body stays (S61)
@@ -437,6 +459,7 @@ func _on_event(e: Dictionary) -> void:
 				actors[String(e["summoned"])] = minion
 				minion.show_hp = true
 		"move":
+			_last_walk.assign(e["path"])
 			if not animate:
 				var node: WorldActor = actors[e["actor"]]
 				node.position = world.map_view.cell_to_world(e["to"])
@@ -446,6 +469,9 @@ func _on_event(e: Dictionary) -> void:
 		"chain", "surface", "overload", "vent":
 			if not animate:
 				_sync_actor(String(e.get("target", e.get("actor", ""))))
+		"opportunity":
+			if not animate:
+				_sync_actor(String(e["target"]))
 		"hack":
 			if bool(e.get("hit", false)):
 				var turned: Variant = actors.get(String(e["target"]))
@@ -457,7 +483,7 @@ func _on_event(e: Dictionary) -> void:
 ## it put someone down. The victim's fluid trait picks blood, oil or none.
 func _mark_for_event(e: Dictionary) -> void:
 	var kind := String(e["type"])
-	if not ["ability", "arc", "counter", "chain", "surface", "poison", "overload"].has(kind):
+	if not ["ability", "arc", "counter", "chain", "surface", "poison", "overload", "opportunity"].has(kind):
 		return
 	if not bool(e.get("hit", true)) or int(e.get("damage", 0)) <= 0:
 		return
@@ -473,7 +499,7 @@ func _mark_for_event(e: Dictionary) -> void:
 ## boss winding up on its first turn.
 func _rumble_for_event(e: Dictionary) -> void:
 	match String(e["type"]):
-		"ability", "chain", "surface", "overload", "counter", "arc":
+		"ability", "chain", "surface", "overload", "counter", "arc", "opportunity":
 			var target := String(e.get("target", ""))
 			if not target.begins_with("p:"):
 				return
@@ -511,6 +537,10 @@ func _sound_for_event(e: Dictionary) -> void:
 			audio.event("combat.vent")
 		"hack":
 			audio.event("combat.hit" if bool(e.get("hit", false)) else "combat.miss")
+		"opportunity":
+			audio.event("combat.hit" if bool(e.get("hit", false)) else "combat.miss")
+			if bool(e.get("killed", false)) or bool(e.get("downed", false)):
+				audio.event("combat.death")
 		"chain", "surface", "overload":
 			audio.event("combat.hit")
 			if bool(e.get("killed", false)) or bool(e.get("downed", false)):
@@ -544,15 +574,16 @@ func _run_enemy_turns() -> void:
 		match String(action["type"]):
 			"move":
 				var node: WorldActor = actors[actor.id]
-				var path := state.move_path(actor, action["to"])
 				state.move(actor, action["to"])
+				var path := _walked_path()
 				if animate:
 					var tween := create_tween()
 					for step: Vector2i in path:
 						tween.tween_property(node, "position", world.map_view.cell_to_world(step), 0.1)
 					await tween.finished
 				else:
-					node.position = world.map_view.cell_to_world(action["to"])
+					node.position = world.map_view.cell_to_world(actor.cell)
+				_sync_all() # the party's free strikes on the way (S65)
 			"ability":
 				var e := state.use_ability(actor, action["id"], action["target"])
 				_sync_all()

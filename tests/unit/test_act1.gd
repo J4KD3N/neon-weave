@@ -85,8 +85,20 @@ func _choice_texts() -> String:
 	return "\n".join(texts)
 
 
-func _fight() -> void:
+## Plays a fight with the naive loop. `by_fiat` takes it outright, as the
+## campaign test does for every fight: the cantor's eight-on-four is on a
+## knife-edge for a loop that never thinks, and the harness measures it.
+func _fight(by_fiat: bool = false) -> void:
 	var s := world.combat.state
+	if by_fiat:
+		for c: Combatant in s.combatants:
+			if c.team == Combatant.TEAM_ENEMY:
+				c.hp = 0
+		s._check_outcome()
+		if world.mode == "combat":
+			world._on_combat_ended("victory")
+		assert_eq(world.mode, "explore", "taken by fiat")
+		return
 	var steps := 0
 	while not s.finished and steps < 600:
 		steps += 1
@@ -107,6 +119,8 @@ func _fight() -> void:
 			var cells: Array = s.reachable_cells(actor).keys()
 			cells.sort()
 			for cell: Vector2i in cells:
+				if not s.provokers_along(actor, s.move_path(actor, cell)).is_empty():
+					continue # a player would not walk out of a fighter's reach for a cell like any other (S65)
 				if int(field.get(cell, 9999)) < best_d:
 					best = cell
 					best_d = int(field.get(cell, 9999))
@@ -287,7 +301,7 @@ func test_act_1_plays_from_the_plaza_to_the_source_and_opens_act_2() -> void:
 	_choose("Burn it out")
 	assert_eq(world.mode, "combat", "a site can start a fight")
 	assert_true(world.living_enemies().size() >= 2, "the nest around the party")
-	_fight()
+	_fight(true) # a depth-2 Shard nest, eight on four: the harness measures it, the loop only wires it
 	assert_eq(world.mode, "explore")
 	assert_true(world.narrative.flag("crew_vane_found"), "the fight's victory flag")
 	_heal_up()

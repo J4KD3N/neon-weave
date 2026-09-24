@@ -76,7 +76,7 @@ func test_ranged_shoots_at_distance() -> void:
 
 func test_ranged_kites_away_when_adjacent() -> void:
 	var d := _c("d", "enemy", Vector2i(1, 0), "ranged", ["zap"])
-	var p := _c("p", "party", Vector2i(0, 0))
+	var p := _c("p", "party", Vector2i(0, 0), "ranged", ["zap"]) # no reach to pin it with: a fighter beside it would be shot instead (S65)
 	var s := _state(["P......", ".......", "......."], [p, d], "enemy")
 	var a := EnemyBrain.next_action(s, d)
 	assert_eq(a["type"], "move")
@@ -180,7 +180,7 @@ func test_ranged_in_a_good_spot_shoots_instead_of_wandering() -> void:
 func test_rusher_avoids_biogrowth_and_takes_high_ground() -> void:
 	# Two ways to reach the target: over biogrowth (1,0) or high ground (1,2).
 	var p := _tc("p", "party", Vector2i(2, 1), "rusher", ["strike"])
-	var e := _tc("e", "enemy", Vector2i(0, 1), "rusher", ["strike"], 10, 1)
+	var e := _tc("e", "enemy", Vector2i(0, 1), "rusher", ["strike"], 10, 2) # Move 2: the climb costs one more (S65)
 	var s := _tstate([".b..", "....", ".^.."], [p, e], "enemy")
 	var a := EnemyBrain.next_action(s, e)
 	assert_eq(a["type"], "move")

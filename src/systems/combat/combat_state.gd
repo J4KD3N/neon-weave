@@ -142,14 +142,17 @@ func reachable_cells(actor: Combatant) -> Dictionary:
 
 ## Cell path (excluding the start) to `to`, or empty if unreachable this turn.
 func move_path(actor: Combatant, to: Vector2i) -> Array[Vector2i]:
+	return _path_from(_flood(actor), actor.cell, to)
+
+
+func _path_from(flood: Dictionary, start: Vector2i, to: Vector2i) -> Array[Vector2i]:
 	var path: Array[Vector2i] = []
-	var flood := _flood(actor)
 	var costs: Dictionary = flood["costs"]
 	if not costs.has(to):
 		return path
 	var parents: Dictionary = flood["parents"]
 	var cur := to
-	while cur != actor.cell:
+	while cur != start:
 		path.push_front(cur)
 		cur = parents[cur]
 	return path
@@ -167,17 +170,97 @@ func can_move(actor: Combatant, to: Vector2i) -> String:
 	return ""
 
 
+## Walks the actor to `to` a cell at a time (S65, D-121): each cell left
+## beside a hostile melee fighter that the next cell is not beside draws
+## that fighter's free strike, once per fighter per move; a mover put down
+## on the way stops where it fell. The move can still be undone; the
+## strike it drew stands. The cost is the flood's (a climb costs more).
+
 func move(actor: Combatant, to: Vector2i) -> bool:
 	var why := can_move(actor, to)
 	if not why.is_empty():
 		return false
-	var path := move_path(actor, to)
-	actor.move_left -= path.size()
+	var flood := _flood(actor)
+	var path := _path_from(flood, actor.cell, to)
+	var cost := int(Dictionary(flood["costs"]).get(to, path.size()))
+	actor.move_left -= cost
 	var from := actor.cell
-	actor.cell = to
-	_undo = {"actor": actor.id, "from": from, "cost": path.size()}
-	_emit({"type": "move", "actor": actor.id, "from": from, "to": to, "path": path, "move_left": actor.move_left})
+	var struck: Dictionary = {}
+	var provoked := false
+	var walked: Array[Vector2i] = []
+	for step: Vector2i in path:
+		for h: Combatant in _provokers(actor, actor.cell, step):
+			if struck.has(h.id):
+				continue
+			struck[h.id] = true
+			provoked = true
+			_opportunity(h, actor)
+			if not actor.is_active():
+				break
+		if not actor.is_active():
+			break
+		actor.cell = step
+		walked.append(step)
+	_undo = {"actor": actor.id, "from": from, "cost": cost}
+	_emit({"type": "move", "actor": actor.id, "from": from, "to": actor.cell, "path": walked, "move_left": actor.move_left, "provoked": provoked})
+	if provoked:
+		_check_outcome()
+		if not finished and not actor.is_active() and actor == current():
+			end_turn()
 	return true
+
+
+## Hostile melee fighters whose free strike a step from `from` to `to`
+## would draw: active, not hidden, beside `from`, not beside `to`, with a
+## reach-1 damaging ability. Nothing while the mover is hidden or the
+## rules have the strikes off.
+func _provokers(mover: Combatant, from: Vector2i, to: Vector2i) -> Array[Combatant]:
+	var out: Array[Combatant] = []
+	if not rules.opportunity_attacks or mover.hidden:
+		return out
+	for h: Combatant in active():
+		if h == mover or not h.is_hostile_to(mover) or h.hidden:
+			continue
+		if LineOfSight.distance(h.cell, from) != 1 or LineOfSight.distance(h.cell, to) <= 1:
+			continue
+		if melee_ability(h).is_empty():
+			continue
+		out.append(h)
+	return out
+
+
+## The strikes a whole path would draw, each fighter once (the hover hint
+## and the AI read this before moving).
+func provokers_along(mover: Combatant, path: Array[Vector2i]) -> Array[Combatant]:
+	var out: Array[Combatant] = []
+	var at := mover.cell
+	for step: Vector2i in path:
+		for h: Combatant in _provokers(mover, at, step):
+			if not out.has(h):
+				out.append(h)
+		at = step
+	return out
+
+
+## The first reach-1 ability with damage a combatant carries, or "".
+func melee_ability(c: Combatant) -> String:
+	for id: String in c.abilities:
+		var ability: Dictionary = abilities.get(id, {})
+		if int(ability.get("range", 1)) > 1 or String(ability.get("targets", "other")) == "self":
+			continue
+		var span: Array = ability.get("damage", [0, 0])
+		if int(span[span.size() - 1]) > 0:
+			return id
+	return ""
+
+
+## One free strike as the mover passes: a plain roll with the fighter's
+## melee ability, no AP, no resource, no chain, no counter.
+func _opportunity(fighter: Combatant, mover: Combatant) -> void:
+	var id := melee_ability(fighter)
+	var e := _strike(fighter, abilities[id], id, mover, false, false)
+	e["type"] = "opportunity"
+	_emit(e)
 
 
 ## True while the current combatant's last move can still be taken back:
@@ -268,6 +351,18 @@ func open_from_cover() -> void:
 	for c: Combatant in active(Combatant.TEAM_PARTY):
 		c.hide(1)
 	_emit({"type": "opener", "team": Combatant.TEAM_PARTY})
+
+
+## Whether the party can see a hidden combatant (S65): a standing member
+## with `detect_hidden` within that many cells and a clear line. Hidden
+## party members are always drawn to the player; hidden enemies only when
+## someone could sense them.
+func party_can_sense(c: Combatant) -> bool:
+	for m: Combatant in active(Combatant.TEAM_PARTY):
+		var sight := int(m.traits.get("detect_hidden", 0))
+		if sight > 0 and LineOfSight.distance(m.cell, c.cell) <= sight and LineOfSight.clear(map, m.cell, c.cell):
+			return true
+	return false
 
 
 ## Positioning modifiers for an attack: elevation, cover, mana pool.
@@ -845,25 +940,43 @@ func _finish(p_result: String) -> void:
 	_emit({"type": "end", "result": p_result, "round": round_number})
 
 
+## Cheapest cost to every cell within the actor's Move (S65: a step up in
+## height costs `climb_move_cost` more, so this is a shortest-path search,
+## not a breadth-first one). Diagonals need both side cells walkable.
 func _flood(actor: Combatant) -> Dictionary:
 	var costs: Dictionary = {}
 	var parents: Dictionary = {}
-	var seen: Dictionary = {actor.cell: 0}
+	var best: Dictionary = {actor.cell: 0}
+	var settled: Dictionary = {}
 	var frontier: Array[Vector2i] = [actor.cell]
 	while not frontier.is_empty():
-		var cur: Vector2i = frontier.pop_front()
-		var c: int = seen[cur]
+		var cur: Vector2i = frontier[0]
+		var cur_i := 0
+		for i: int in range(1, frontier.size()):
+			if int(best[frontier[i]]) < int(best[cur]):
+				cur = frontier[i]
+				cur_i = i
+		frontier.remove_at(cur_i)
+		if settled.has(cur):
+			continue
+		settled[cur] = true
+		var c: int = best[cur]
 		if c >= actor.move_left:
 			continue
 		for d: Vector2i in DIRS8:
 			var n := cur + d
-			if seen.has(n) or not _passable(n):
+			if settled.has(n) or not _passable(n):
 				continue
 			if d.x != 0 and d.y != 0:
 				if not (map.is_walkable(cur + Vector2i(d.x, 0)) and map.is_walkable(cur + Vector2i(0, d.y))):
 					continue
-			seen[n] = c + 1
-			costs[n] = c + 1
+			var step := 1 + (rules.climb_move_cost if map.height_at(n) > map.height_at(cur) else 0)
+			if c + step > actor.move_left:
+				continue
+			if best.has(n) and int(best[n]) <= c + step:
+				continue
+			best[n] = c + step
+			costs[n] = c + step
 			parents[n] = cur
 			frontier.append(n)
 	return {"costs": costs, "parents": parents}
@@ -949,6 +1062,16 @@ func describe(e: Dictionary) -> String:
 			return Loc.t("%s takes a %s stance (%d).") % [_name(e["actor"]), Loc.t(String(e["stance"])), int(e["turns"])]
 		"detect":
 			return Loc.t("%s senses %s hiding.") % [_name(e["actor"]), _name(e["target"])]
+		"opportunity":
+			var ab_name: String = String(Dictionary(abilities.get(e["ability"], {})).get("name", e["ability"]))
+			if not bool(e["hit"]):
+				return Loc.t("%s swings at %s passing — miss (%d vs %d%%).") % [_name(e["actor"]), _name(e["target"]), int(e["roll"]), int(e["chance"])]
+			var line := Loc.t("%s: %s catches %s passing for %d.") % [_name(e["actor"]), ab_name, _name(e["target"]), int(e["damage"])]
+			if bool(e["killed"]):
+				line += Loc.t(" %s dies.") % _name(e["target"])
+			elif bool(e["downed"]):
+				line += Loc.t(" %s goes down.") % _name(e["target"])
+			return line
 		"opener":
 			return Loc.t("The party strikes from cover: nobody saw them coming.")
 		"hack":
