@@ -2,7 +2,7 @@
   "name": "Synth",
   "analog": "Warforged",
   "identity": "Awakened machines. Nothing organic to poison; nothing arcane healing can find.",
-  "traits": { "resist": { "corrosive": 1.0 }, "heal_immune_types": ["arcane"] },
+  "traits": { "resist": { "corrosive": 1.0 }, "heal_immune_types": ["arcane"], "repair_with_parts": { "salvage": 3, "heal": 0.3 } },
   "stat_mods": { "hp": 4, "evasion": -5 },
   "faction_lean": "lattice",
   "overlay": { "kind": "plating", "color": "#9aa3ad" },
