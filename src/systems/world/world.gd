@@ -103,6 +103,8 @@ var perf_hud: bool = false # `--perf`: fps and frame time on the status line (S5
 var crashed_last_run: String = "" # the crash report the last run left, shown once on the title (D-116)
 var last_hack_note: String = "" # the toast a hacked gate leaves for interact() (S63)
 var detect_rng := RandomNumberGenerator.new() # the detection roll (S64), seeded with the combat seed
+var disguise_holds: bool = false # the disguise roll for the open talk (S67)
+var _opening_talk: bool = false
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
@@ -757,10 +759,39 @@ func dialogue_ctx() -> Dictionary:
 			if not party_tags.has(String(t)):
 				party_tags.append(String(t))
 	var attributes: Dictionary = protagonist.get("attributes", {})
-	# A disguise holds when the leader's race can reshape and their arcane control clears the bar (rules/attributes).
-	var disguise_min := int(registry.get_entry("rules", "attributes").get("disguise_arcane_min", 2))
-	var disguised := Array(tags).has("disguise") and int(attributes.get("arcane", 0)) >= disguise_min
+	# A disguise (S67, D-123): the leader's race can reshape, their arcane control clears the bar, and the roll made when the talk began held.
+	var disguised := Array(tags).has("disguise") and int(attributes.get("arcane", 0)) >= disguise_min() and (disguise_holds if (in_dialogue() or _opening_talk) else true)
 	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "race_tags": tags, "class": l.class_id if l != null else "", "party_races": party_races, "party_race_tags": party_tags, "attributes": attributes, "disguised": disguised}
+
+
+func disguise_min() -> int:
+	return int(registry.get_entry("rules", "attributes").get("disguise_arcane_min", 2))
+
+
+## The chance a disguise holds for one talk (S67): the base at the minimum
+## arcane, more per point above it, never past 1.
+static func disguise_chance(attr_rules: Dictionary, arcane: int) -> float:
+	var minimum := int(attr_rules.get("disguise_arcane_min", 2))
+	if arcane < minimum:
+		return 0.0
+	return clampf(float(attr_rules.get("disguise_base_chance", 0.5)) + float(arcane - minimum) * float(attr_rules.get("disguise_per_arcane", 0.2)), 0.0, 1.0)
+
+
+## Rolls the disguise for the talk about to open (S67): once per talk, with
+## the seeded world RNG, and says whether the face held.
+func roll_disguise() -> void:
+	var l := party.leader()
+	if l == null:
+		return
+	var tags: Array = Dictionary(registry.get_entry("races", l.race_id).get("traits", {})).get("tags", [])
+	if not tags.has("disguise"):
+		disguise_holds = false
+		return
+	var arcane := int(Dictionary(protagonist.get("attributes", {})).get("arcane", 0))
+	var chance := disguise_chance(registry.get_entry("rules", "attributes"), arcane)
+	disguise_holds = chance > 0.0 and detect_rng.randf() < chance
+	if arcane >= disguise_min() and overlay != null:
+		overlay.toast(Loc.t("The face holds.") if disguise_holds else Loc.t("The face slips: something in the colony forgets the shape."), 2.5)
 
 
 func speaker_names() -> Dictionary:
@@ -781,7 +812,11 @@ func open_dialogue(dialogue_id: String) -> bool:
 		push_warning("unknown dialogue '%s'" % dialogue_id)
 		return false
 	var runner := DialogueRunner.new()
-	if not runner.start(entry, dialogue_ctx()):
+	roll_disguise() # S67: one roll per talk, before the first node reads it
+	_opening_talk = true
+	var started := runner.start(entry, dialogue_ctx())
+	_opening_talk = false
+	if not started:
 		return false
 	dialogue = runner
 	_world_effects_seen = 0
@@ -1871,6 +1906,12 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "weave", "label": Loc.t("The Weave (level %d · %s)") % [party_level(), xp_line()], "enabled": home, "why": Loc.t("only at home")})
 	items.append({"id": "inventory", "label": Loc.t("The pack (%d banked item%s)") % [ledger.items.size(), "" if ledger.items.size() == 1 else Loc.t("s")], "enabled": home, "why": Loc.t("only at home")})
 	items.append({"id": "journal", "label": Loc.t("Journal (%d quests)") % narrative.quests.size(), "enabled": true})
+	for m: PartyMember in party.members: # S67: a Synth repairs with parts, anywhere out of a fight
+		var parts: Dictionary = m.traits.get("repair_with_parts", {})
+		if parts.is_empty():
+			continue
+		var why := repair_reason(m)
+		items.append({"id": "repair_" + m.member_id, "label": Loc.t("Repair %s with parts (%d salvage): +%d%% HP") % [m.display_name, int(parts.get("salvage", 1)), int(round(float(parts.get("heal", 0.25)) * 100.0))], "enabled": why.is_empty(), "why": why})
 	items.append({"id": "roster", "label": Loc.t("Roster & Quarters (%d with you, %d waiting)") % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and roster_rows().size() > 1, "why": Loc.t("only at home") if not home else Loc.t("nobody recruited")})
 	items.append({"id": "save_game", "label": Loc.t("Save game…"), "enabled": mode != "combat" and reload_allowed(), "why": Loc.t("Iron Weave: one save") if not reload_allowed() else Loc.t("in combat")})
 	var any_loadable := false
@@ -1948,6 +1989,8 @@ func activate_system_item(id: String) -> bool:
 			autosave()
 			show_title()
 			return true
+	if id.begins_with("repair_"):
+		return repair_member(id.trim_prefix("repair_")).is_empty()
 	if id.begins_with("shard_"):
 		return launch_shard(id.trim_prefix("shard_"))
 	if id.begins_with("scene_"):
@@ -2442,13 +2485,59 @@ func check_secrets() -> int:
 	if doors.is_empty():
 		return 0
 	var opened_now := 0
+	var sight := maxi(int(party_trait_max("secret_sight")), 1) # S67: a Skyborn reads the ruin from farther
 	for m: PartyMember in party.members:
 		var here := member_cell(m)
 		for door: Vector2i in doors:
-			if LineOfSight.distance(here, door) == 1 and map_data.door_kind(door) == "secret":
+			if LineOfSight.distance(here, door) <= sight and map_data.door_kind(door) == "secret" and LineOfSight.clear(map_data, here, door):
 				if open_door(door):
 					opened_now += 1
 	return opened_now
+
+
+## Why a member cannot be repaired now; "" when they can (S67).
+func repair_reason(m: PartyMember) -> String:
+	var parts: Dictionary = m.traits.get("repair_with_parts", {})
+	if parts.is_empty():
+		return Loc.t("nothing to repair with parts")
+	if mode != "explore":
+		return Loc.t("not in a fight")
+	if m.hp >= m.max_hp and not m.downed:
+		return Loc.t("nothing to mend")
+	var cost := {"salvage": int(parts.get("salvage", 1))}
+	if not ledger.can_afford(cost):
+		return Loc.t("needs %d salvage") % int(parts.get("salvage", 1))
+	return ""
+
+
+## A Synth mends with parts (S67, D-123): salvage from the ledger for a
+## fraction of max HP, out of combat, anywhere. Empty string on success.
+func repair_member(member_id: String) -> String:
+	var m := member_by_id(member_id)
+	if m == null:
+		return Loc.t("no such member")
+	var why := repair_reason(m)
+	if not why.is_empty():
+		return why
+	var parts: Dictionary = m.traits.get("repair_with_parts", {})
+	if not ledger.spend({"salvage": int(parts.get("salvage", 1))}):
+		return Loc.t("needs %d salvage") % int(parts.get("salvage", 1))
+	ledger.save()
+	var amount := int(ceil(m.max_hp * float(parts.get("heal", 0.25))))
+	m.downed = false
+	m.hp = mini(m.max_hp, maxi(m.hp, 0) + amount)
+	overlay.toast(Loc.t("%s: plates riveted, %d salvage of parts, +%d HP.") % [m.display_name, int(parts.get("salvage", 1)), amount], 2.5)
+	play_event("ui.confirm")
+	return ""
+
+
+## The best value of a trait among standing members (S67).
+func party_trait_max(key: String) -> float:
+	var best := 0.0
+	for m: PartyMember in party.members:
+		if not m.downed:
+			best = maxf(best, float(m.traits.get(key, 0.0)))
+	return best
 
 
 ## The vault entry whose door is `cell`, or {}.
@@ -3912,6 +4001,16 @@ func find_lore() -> String:
 	if insight > 0:
 		ledger.bank({"aether": insight})
 		ledger.save()
+	if party_trait_max("read_lore") > 0.0: # S67: a Skyborn reads it where it lies
+		var lore := registry.get_entry("lore", id)
+		var text := Loc.text(lore, "text", "")
+		var reader := ""
+		for m: PartyMember in party.members:
+			if not m.downed and float(m.traits.get("read_lore", 0.0)) > 0.0:
+				reader = m.display_name
+				break
+		narrative.log_line(reader, Loc.t("reads the fragment: %s") % text)
+		overlay.toast(Loc.t("%s reads it: %s") % [reader, text.left(90) + ("…" if text.length() > 90 else "")], 5.0)
 	overlay.toast(Loc.t("Fragment: %s") % Loc.text(registry.get_entry("lore", id), "name", id), 3.0)
 	return id
 
@@ -3940,6 +4039,8 @@ func tend_garden() -> bool:
 	var fraction := float(garden.get("heal_fraction", 0.0))
 	for m: PartyMember in party.members:
 		var f := fraction * (2.0 if m.traits.has("regen_on_surface") else 1.0)
+		if Array(m.traits.get("heal_immune_types", [])).has("arcane"):
+			continue # nothing arcane healing can find (S67): a Synth mends with parts
 		if not m.downed and m.hp < m.max_hp:
 			m.hp = mini(m.max_hp, m.hp + int(ceil(m.max_hp * f)))
 	overlay.toast(Loc.t("The Garden closes what it can."), 2.0)

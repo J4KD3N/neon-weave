@@ -5,6 +5,8 @@
   "points": 6,
   "max_per_attribute": 4,
   "disguise_arcane_min": 2,
+  "disguise_base_chance": 0.5,
+  "disguise_per_arcane": 0.2,
   "effects": {
     "body": { "hp": 2 },
     "arcane": { "initiative": 1 },

@@ -729,6 +729,15 @@ func _misc() -> void:
 	for o: Dictionary in _registry.get_all("origins"):
 		if String(o.get("dialogue_tag", "")).is_empty():
 			_flag(o, "dialogue_tag is empty")
+	for kind: String in ["races", "origins"]: # S67: the mechanical traits have shapes
+		for e: Dictionary in _registry.get_all(kind):
+			var tr: Dictionary = e.get("traits", {})
+			if tr.has("repair_with_parts"):
+				var parts: Dictionary = tr["repair_with_parts"] if tr["repair_with_parts"] is Dictionary else {}
+				if int(parts.get("salvage", 0)) < 1 or float(parts.get("heal", 0.0)) <= 0.0 or float(parts.get("heal", 0.0)) > 1.0:
+					_flag(e, "traits.repair_with_parts needs salvage of at least 1 and a heal fraction in (0, 1]")
+			if tr.has("secret_sight") and int(tr["secret_sight"]) < 1:
+				_flag(e, "traits.secret_sight must be at least 1")
 	var defaults: Array[Dictionary] = []
 	for l: Dictionary in _registry.get_all("loadouts"):
 		for item_id: Variant in l.get("items", []):

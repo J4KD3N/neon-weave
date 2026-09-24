@@ -85,7 +85,7 @@ func test_all_ten_races_are_playable_content_with_overlays() -> void:
 		var kind := String(Dictionary(race.get("overlay", {})).get("kind", ""))
 		assert_true(PlaceholderActorArt.OVERLAY_KINDS.has(kind), "%s overlay kind %s is drawable" % [race["id"], kind])
 		for key: String in race.get("traits", {}):
-			assert_true(["resist", "regen_on_surface", "detect_hidden", "salvage_bonus", "mend_after_combat", "bonus_abilities", "ability_damage_bonus", "heal_immune_types", "talent_cost_mod", "tags"].has(key), "%s trait %s is in the vocabulary" % [race["id"], key])
+			assert_true(["resist", "regen_on_surface", "detect_hidden", "salvage_bonus", "mend_after_combat", "bonus_abilities", "ability_damage_bonus", "heal_immune_types", "talent_cost_mod", "tags", "stealth", "repair_with_parts", "secret_sight", "read_lore"].has(key), "%s trait %s is in the vocabulary" % [race["id"], key])
 	for want: String in ["trueborn", "chromed", "aetherborn", "synth", "rootkin", "hollow", "splicekin", "vaultkin", "skyborn", "swarmborn"]:
 		assert_true(ids.has(want), "race %s" % want)
 	assert_true(ids.size() >= 10)

@@ -793,7 +793,7 @@ func test_system_menu_routes_every_keyboard_only_action() -> void:
 	assert_true(world.system_menu.visible)
 	var ids: PackedStringArray = []
 	for item: Dictionary in world.system_items():
-		if not String(item["id"]).begins_with("shard_"):
+		if not String(item["id"]).begins_with("shard_") and not String(item["id"]).begins_with("repair_"): # per-Shard and per-Synth rows (S67)
 			ids.append(String(item["id"]))
 	assert_eq(ids, PackedStringArray(ExploreWorld.SYSTEM_ITEM_IDS))
 	assert_contains(world.system_menu.label.text, "▶ Resume")
