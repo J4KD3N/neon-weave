@@ -32,7 +32,7 @@ the game.
 - **A 30+ hour handcrafted campaign** (GDD §1, §11): the game plays four to six hours on a first run; Act 1 is two to three of them. The store pitch must say what exists, or the writing pass comes first. Owner: a writer, or sessions through the same data (`docs/content-schemas.md`).
 - Closed 2026-09-24 (S61, D-117): a Gore setting (off / low / full), blood where a hit lands, a pool where someone goes down, a body where someone dies, kept with the save; machines leak oil; grime and failing lights dress the yard and every Shard. Left for art: real decal sprites and corpse poses in place of the placeholder shapes.
 - Closed 2026-09-24 (S62, D-118): `loadouts` as a content kind (three free kits, two earned) chosen on the creator and worn from the first step; tones and accents with an `unlock_flag` are cosmetics the account earns; every unlock kind goes through the same grant path and toast; the creator shows the account's playthroughs and unlock count.
-- **Hackable turrets and doors** (§9): none. One session, gated by Tech.
+- Closed 2026-09-24 (S63, D-119): a Hack action (2 AP, adjacent) for the protagonist at Tech 2+ and every Tech-branch class, +15 to the roll per Tech point past the minimum, turning a `hackable` machine (turrets, feral drones, warden constructs) to the party's side until the fight ends; locked gates with `hack_tech` open to that much Tech without their key.
 - **Awareness as a cone and a detection roll** (§9, stealth openers): awareness is a radius and a hidden flag. One session.
 
 ## Engineering and process

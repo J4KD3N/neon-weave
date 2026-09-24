@@ -38,6 +38,8 @@ var downed: bool = false
 ## Stealth: hostile abilities cannot target a hidden combatant; attacking
 ## from hiding is an ambush and reveals; taking damage reveals.
 var hidden: bool = false
+## Hacked (S63): a machine turned to the other side for the fight.
+var hacked: bool = false
 ## Timed statuses: name -> turns left, counted down when this combatant's turn ends.
 var statuses: Dictionary = {}
 ## Id of the summoner that called this combatant in, if any.

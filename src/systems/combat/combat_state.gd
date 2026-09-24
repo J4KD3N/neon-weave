@@ -244,6 +244,11 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 		return ""
 	if target == actor:
 		return Loc.t("cannot target self")
+	if String(ability.get("effect", "")) == "hack": # S63: only a hackable machine on the other side
+		if not bool(target.traits.get("hackable", false)):
+			return Loc.t("not a machine you can hack")
+		if not actor.is_hostile_to(target):
+			return Loc.t("already on your side")
 	if not actor.is_hostile_to(target) and not rules.friendly_fire:
 		return Loc.t("friendly fire is off")
 	if target.hidden and actor.is_hostile_to(target):
@@ -369,6 +374,20 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		var cs: Dictionary = {"type": "stance", "actor": actor.id, "ability": ability_id, "stance": "counter", "turns": int(ability.get("duration", 1)), "ap_left": actor.ap}
 		_emit(cs)
 		return cs
+
+	if effect == "hack": # S63: a Tech roll; on a hit the machine changes sides
+		var chance := clampi(int(ability.get("accuracy", 60)) + int(actor.traits.get("hack_bonus", 0)), rules.min_hit_chance, rules.max_hit_chance)
+		var roll := rng.randi_range(1, 100)
+		var h: Dictionary = {"type": "hack", "actor": actor.id, "ability": ability_id, "target": target.id, "chance": chance, "roll": roll, "hit": roll <= chance, "ap_left": actor.ap}
+		if bool(h["hit"]):
+			target.team = actor.team
+			target.hacked = true
+			target.taunted_by = ""
+			target.statuses.erase("taunted")
+			target.hidden = false
+		_emit(h)
+		_check_outcome()
+		return h
 
 	var ambush := actor.hidden
 	actor.reveal() # striking from hiding reveals, hit or miss
@@ -921,6 +940,10 @@ func describe(e: Dictionary) -> String:
 			return Loc.t("%s takes a %s stance (%d).") % [_name(e["actor"]), Loc.t(String(e["stance"])), int(e["turns"])]
 		"detect":
 			return Loc.t("%s senses %s hiding.") % [_name(e["actor"]), _name(e["target"])]
+		"hack":
+			if bool(e["hit"]):
+				return Loc.t("%s hacks %s: it is ours now.") % [_name(e["actor"]), _name(e["target"])]
+			return Loc.t("%s: the hack on %s fails (%d vs %d%%).") % [_name(e["actor"]), _name(e["target"]), int(e["roll"]), int(e["chance"])]
 		"turn_begin":
 			return Loc.t("%s's turn.") % _name(e["actor"])
 		"move":

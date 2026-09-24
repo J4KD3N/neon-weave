@@ -219,6 +219,9 @@ func _enemies() -> void:
 		var e_fluid := String(Dictionary(e.get("traits", {})).get("fluid", "blood"))
 		if not DecalLayer.FLUIDS.has(e_fluid):
 			_flag(e, "traits.fluid must be blood, oil or none (S61)")
+		var e_traits: Dictionary = e.get("traits", {})
+		if e_traits.has("hackable") and not (e_traits["hackable"] is bool):
+			_flag(e, "traits.hackable must be true or false (S63)")
 		_check_art(e)
 		var family := String(e.get("family", ""))
 		if not _has("biomes", family) and family != "bastion":
@@ -445,6 +448,9 @@ func _maps() -> void:
 		for cell: Vector2i in map.spawn_cells():
 			if not map.is_walkable(cell):
 				_flag(m, "spawn cell %s is not walkable" % cell)
+		for d: Dictionary in m.get("doors", []): # S63: a hackable gate names the Tech it takes
+			if d.has("hack_tech") and (not (d["hack_tech"] is float or d["hack_tech"] is int) or int(d["hack_tech"]) < 1):
+				_flag(m, "doors[%s].hack_tech must be a whole number of at least 1" % [d.get("cell", [])])
 		var seen: Array[Vector2i] = []
 		for p: Dictionary in m.get("enemies", []):
 			_ref(m, "enemies", String(p.get("type", "")), "enemies")
