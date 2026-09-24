@@ -1,0 +1,5 @@
+{
+  "name": "Scav kit",
+  "summary": "A strut with tape for a grip and hull panels over a jacket. The Undercity standard.",
+  "items": ["strut_blade", "scrap_plating"]
+}

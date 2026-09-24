@@ -1,0 +1,8 @@
+{
+  "name": "Loom-walker's kit",
+  "summary": "A shock maul, heavy plate and tuned servos, carried back by someone who put a hand on the Loom and walked away.",
+  "items": ["shock_maul", "heavy_plate", "tuned_servos"],
+  "resources": { "aether": 2 },
+  "unlock_flag": "ending_seen",
+  "unlock_blurb": "Unlocked by reaching any ending in an earlier playthrough."
+}

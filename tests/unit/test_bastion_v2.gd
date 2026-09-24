@@ -193,7 +193,7 @@ func test_an_origin_earned_once_is_on_the_creator_next_time() -> void:
 	world.close_creator()
 	assert_eq(world.account.unlocked, [])
 	world.narrative.set_flag("choir_contact", true)
-	assert_eq(world.grant_account_unlocks(), ["origin:beacon_keeper"])
+	assert_eq(world.grant_account_unlocks(), ["origin:beacon_keeper", "loadout:keepers_cache", "accent:choir_silver"], "first contact earns an origin, a kit and a look (S62)")
 	assert_eq(world.grant_account_unlocks(), [], "once")
 	assert_true(FileAccess.file_exists(ACCOUNT))
 	# A second playthrough on the same account.

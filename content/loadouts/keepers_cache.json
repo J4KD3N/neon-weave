@@ -1,0 +1,8 @@
+{
+  "name": "Keeper's cache",
+  "summary": "What a Beacon keeper leaves for the next one: a charm against the singing, a lucky bolt, and ten salvage in a tin.",
+  "items": ["weft_charm", "lucky_bolt"],
+  "resources": { "salvage": 10 },
+  "unlock_flag": "choir_contact",
+  "unlock_blurb": "Unlocked by reaching first contact with the Choir in an earlier playthrough."
+}

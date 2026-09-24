@@ -31,7 +31,7 @@ the game.
 
 - **A 30+ hour handcrafted campaign** (GDD §1, §11): the game plays four to six hours on a first run; Act 1 is two to three of them. The store pitch must say what exists, or the writing pass comes first. Owner: a writer, or sessions through the same data (`docs/content-schemas.md`).
 - Closed 2026-09-24 (S61, D-117): a Gore setting (off / low / full), blood where a hit lands, a pool where someone goes down, a body where someone dies, kept with the save; machines leak oil; grime and failing lights dress the yard and every Shard. Left for art: real decal sprites and corpse poses in place of the placeholder shapes.
-- **Account unlocks beyond origins** (§12: loadouts, cosmetics): the account and the creator take keys, but only origins are granted. One session.
+- Closed 2026-09-24 (S62, D-118): `loadouts` as a content kind (three free kits, two earned) chosen on the creator and worn from the first step; tones and accents with an `unlock_flag` are cosmetics the account earns; every unlock kind goes through the same grant path and toast; the creator shows the account's playthroughs and unlock count.
 - **Hackable turrets and doors** (§9): none. One session, gated by Tech.
 - **Awareness as a cone and a detection roll** (§9, stealth openers): awareness is a radius and a hidden flag. One session.
 

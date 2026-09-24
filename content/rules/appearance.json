@@ -1,13 +1,14 @@
 {
   "name": "Appearance",
-  "summary": "Creator appearance choices (S51): a tone for the head (skin, shell, bark or plating) and an accent (hair, visor, glow). Each is an id list; the placeholder rig paints them and a sprite sheet swaps its `skin` and `accent` palette roles when it has them. Empty means the race's default look.",
+  "summary": "Creator appearance choices (S51): a tone for the head (skin, shell, bark or plating) and an accent (hair, visor, glow). Each is an id list; the placeholder rig paints them and a sprite sheet swaps its `skin` and `accent` palette roles when it has them. Empty means the race's default look. An option with `unlock_flag` is a cosmetic the account earns when a playthrough sets that flag (S62); `unlock_blurb` is shown on the creator while it is locked.",
   "tones": [
     { "id": "pale", "name": "Pale", "color": "#f1d9c6" },
     { "id": "warm", "name": "Warm", "color": "#d9a679" },
     { "id": "umber", "name": "Umber", "color": "#8a5a3a" },
     { "id": "deep", "name": "Deep", "color": "#4a3126" },
     { "id": "ashen", "name": "Ashen", "color": "#b9b6c4" },
-    { "id": "verdigris", "name": "Verdigris", "color": "#7fb59a" }
+    { "id": "verdigris", "name": "Verdigris", "color": "#7fb59a" },
+    { "id": "loom_lit", "name": "Loom-lit", "color": "#ffd27a", "unlock_flag": "ending_seen", "unlock_blurb": "Unlocked by reaching any ending in an earlier playthrough." }
   ],
   "accents": [
     { "id": "ink", "name": "Ink", "color": "#1c1a2b" },
@@ -15,6 +16,7 @@
     { "id": "rust", "name": "Rust", "color": "#c2542c" },
     { "id": "neon_violet", "name": "Neon violet", "color": "#b58cff" },
     { "id": "neon_teal", "name": "Neon teal", "color": "#4fe3d2" },
-    { "id": "ember", "name": "Ember", "color": "#ff8a5b" }
+    { "id": "ember", "name": "Ember", "color": "#ff8a5b" },
+    { "id": "choir_silver", "name": "Choir silver", "color": "#dfe6ff", "unlock_flag": "choir_contact", "unlock_blurb": "Unlocked by reaching first contact with the Choir in an earlier playthrough." }
   ]
 }

@@ -24,6 +24,7 @@ const SCHEMAS: Dictionary = {
 	"enemies": ["name", "family", "archetype", "stats", "abilities", "art"],
 	"factions": ["name", "color", "rivals", "joinable_act"],
 	"items": ["name", "slot", "art"],
+	"loadouts": ["name", "items"],
 	"locales": ["name"],
 	"lore": ["name", "text", "order"],
 	"endings": ["name", "summary", "when"],
@@ -699,6 +700,34 @@ func _misc() -> void:
 	for o: Dictionary in _registry.get_all("origins"):
 		if String(o.get("dialogue_tag", "")).is_empty():
 			_flag(o, "dialogue_tag is empty")
+	var defaults: Array[Dictionary] = []
+	for l: Dictionary in _registry.get_all("loadouts"):
+		for item_id: Variant in l.get("items", []):
+			_ref(l, "items", String(item_id), "items")
+		var res: Dictionary = l.get("resources", {})
+		for key: String in res:
+			if not Ledger.RESOURCES.has(key):
+				_flag(l, "resources.%s is not a resource" % key)
+		if l.has("unlock_flag") and String(l.get("unlock_flag", "")).is_empty():
+			_flag(l, "unlock_flag is empty")
+		if bool(l.get("default", false)):
+			defaults.append(l)
+	if defaults.size() > 1:
+		for l: Dictionary in defaults:
+			_flag(l, "%d loadouts say default; one may" % defaults.size())
+	var look: Dictionary = _registry.get_entry("rules", "appearance")
+	for part: String in ["tones", "accents"]:
+		for o: Variant in look.get(part, []):
+			if not (o is Dictionary):
+				_flag(look, "%s entries must be objects" % part)
+				continue
+			var opt: Dictionary = o
+			if String(opt.get("id", "")).is_empty() or String(opt.get("name", "")).is_empty():
+				_flag(look, "%s entry needs an id and a name" % part)
+			if not Color.html_is_valid(String(opt.get("color", ""))):
+				_flag(look, "%s '%s' color is not an html colour" % [part, String(opt.get("id", ""))])
+			if opt.has("unlock_flag") and String(opt.get("unlock_flag", "")).is_empty():
+				_flag(look, "%s '%s' unlock_flag is empty" % [part, String(opt.get("id", ""))])
 	for l: Dictionary in _registry.get_all("lore"):
 		if int(l.get("order", 0)) < 1:
 			_flag(l, "order must be at least 1")

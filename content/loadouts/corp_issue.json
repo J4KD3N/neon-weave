@@ -1,0 +1,5 @@
+{
+  "name": "Corp issue",
+  "summary": "A bolt pistol and a mesh weave, both still stamped with a logo nobody trades under any more.",
+  "items": ["bolt_pistol", "mesh_weave"]
+}
