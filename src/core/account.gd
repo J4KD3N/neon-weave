@@ -62,19 +62,72 @@ func unlock(key: String) -> bool:
 	return true
 
 
-## Keys a narrative state has earned: every origin whose `unlock_flag` is
-## set. Returns the new ones (already saved when any).
+## Keys a narrative state has earned: every origin, loadout, tone and accent
+## whose `unlock_flag` is set (S62: loadouts and cosmetics beside origins,
+## GDD §12). Returns the new ones (already saved when any).
 func grant_from(narrative: NarrativeState, registry: ContentRegistry) -> Array[String]:
 	var fresh: Array[String] = []
-	for o: Dictionary in registry.get_all("origins"):
-		var flag := String(o.get("unlock_flag", ""))
-		if flag.is_empty() or not narrative.flag(flag):
-			continue
-		if unlock("origin:%s" % String(o["id"])):
-			fresh.append("origin:%s" % String(o["id"]))
+	for key: String in earnable(narrative, registry):
+		if unlock(key):
+			fresh.append(key)
 	if not fresh.is_empty():
 		save()
 	return fresh
+
+
+## Every unlock key the content offers whose flag the story has set:
+## "origin:<id>", "loadout:<id>", "tone:<id>", "accent:<id>".
+static func earnable(narrative: NarrativeState, registry: ContentRegistry) -> Array[String]:
+	var out: Array[String] = []
+	for kind: String in ["origins", "loadouts"]:
+		for e: Dictionary in registry.get_all(kind):
+			var flag := String(e.get("unlock_flag", ""))
+			if not flag.is_empty() and narrative.flag(flag):
+				out.append("%s:%s" % [kind.trim_suffix("s"), String(e["id"])])
+	var look: Dictionary = registry.get_entry("rules", "appearance")
+	for part: String in ["tone", "accent"]:
+		for o: Variant in look.get(part + "s", []):
+			if not (o is Dictionary):
+				continue
+			var flag := String((o as Dictionary).get("unlock_flag", ""))
+			if not flag.is_empty() and narrative.flag(flag):
+				out.append("%s:%s" % [part, String((o as Dictionary).get("id", ""))])
+	return out
+
+
+## Every key the content could ever grant, earned or not (the creator
+## counts them against the account).
+static func offered(registry: ContentRegistry) -> Array[String]:
+	var out: Array[String] = []
+	for kind: String in ["origins", "loadouts"]:
+		for e: Dictionary in registry.get_all(kind):
+			if not String(e.get("unlock_flag", "")).is_empty():
+				out.append("%s:%s" % [kind.trim_suffix("s"), String(e["id"])])
+	var look: Dictionary = registry.get_entry("rules", "appearance")
+	for part: String in ["tone", "accent"]:
+		for o: Variant in look.get(part + "s", []):
+			if o is Dictionary and not String((o as Dictionary).get("unlock_flag", "")).is_empty():
+				out.append("%s:%s" % [part, String((o as Dictionary).get("id", ""))])
+	return out
+
+
+## The name behind a key, for a toast: the entry's name, or the key.
+static func key_name(registry: ContentRegistry, key: String) -> String:
+	var kind := key.get_slice(":", 0)
+	var id := key.get_slice(":", 1)
+	match kind:
+		"origin", "loadout":
+			return Loc.text(registry.get_entry(kind + "s", id), "name", key)
+		"tone", "accent":
+			var o := CharacterSheet.appearance_option(registry.get_entry("rules", "appearance"), kind, id)
+			return Loc.any(String(o.get("name", key)))
+	return key
+
+
+## A playthrough began (S62): counted on the account, saved.
+func begin_playthrough() -> void:
+	playthroughs += 1
+	save()
 
 
 ## An Iron Weave run begins: counted and marked underway (saved).

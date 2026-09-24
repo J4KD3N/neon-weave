@@ -907,6 +907,7 @@ func open_new_game_creator(mortal: bool, iron: bool) -> bool:
 	pending_new_game = {"mortal": mortal, "iron": iron, "difficulty": pending_difficulty}
 	creator_state = CreatorState.new()
 	creator_state.setup(registry, rules, {}, account.unlocked if account != null else [])
+	creator_state.playthroughs = account.playthroughs if account != null else 0
 	creator_state.for_new_game = true
 	creator_menu.open(creator_state)
 	return true
@@ -920,6 +921,7 @@ func open_creator() -> bool:
 		bastion_menu.visible = false
 	creator_state = CreatorState.new()
 	creator_state.setup(registry, rules, protagonist, account.unlocked if account != null else [])
+	creator_state.playthroughs = account.playthroughs if account != null else 0
 	creator_menu.open(creator_state)
 	return true
 
@@ -2918,6 +2920,9 @@ func new_game(mortal: bool, difficulty: String = "", iron: bool = false, sheet: 
 	ledger.save()
 	bastion.setup(registry.get_all("buildings"), ledger.buildings)
 	selected_shard = DEFAULT_SHARD
+	apply_loadout(String(protagonist.get("loadout_id", ""))) # the starting kit (S62)
+	if account != null:
+		account.begin_playthrough()
 	apply_death_stakes()
 	respawn_party()
 	enter_map(home_map)
@@ -2928,6 +2933,43 @@ func new_game(mortal: bool, difficulty: String = "", iron: bool = false, sheet: 
 		account.begin_iron(narrative.difficulty)
 	var stakes := Loc.t("Iron Weave: one save, no reloads, the dead stay dead.") if iron else (Loc.t("Mortal mode: the dead stay dead.") if mortal else Loc.t("Story-Protected: the story keeps its people."))
 	overlay.toast(Loc.t("%s · %s") % [String(difficulty_entry().get("name", "Balanced")), stakes], 3.0)
+	return true
+
+
+## The starting kit (S62, D-118): the loadout's items go to the pack and
+## are worn where they fit the protagonist's slots, its resources are
+## banked. "" means the default loadout; a locked one is refused unless
+## the account has earned it.
+func apply_loadout(loadout_id: String) -> bool:
+	var id := loadout_id if not loadout_id.is_empty() else CharacterSheet.default_loadout(registry)
+	var l := registry.get_entry("loadouts", id)
+	if l.is_empty():
+		return false
+	if l.has("unlock_flag") and (account == null or not account.has("loadout:%s" % id)):
+		return false
+	var race := registry.get_entry("races", String(protagonist.get("race_id", "trueborn")))
+	var slots := ItemSystem.slot_keys(registry, race)
+	var equipment: Dictionary = {}
+	for item_id: String in l.get("items", []):
+		if not registry.has_entry("items", item_id):
+			continue
+		var inst := ItemSystem.make(item_id, [], "common", int(randi() % 1000000000))
+		var worn := false
+		for slot: String in slots:
+			if not equipment.has(slot) and ItemSystem.fits(registry, inst, slot):
+				equipment[slot] = inst
+				worn = true
+				break
+		if not worn:
+			ledger.items.append(inst)
+	if not equipment.is_empty():
+		var b := build_for(PartyBuilder.PROTAGONIST_ID)
+		b["equipment"] = equipment
+		ledger.builds[PartyBuilder.PROTAGONIST_ID] = b
+	var res: Dictionary = l.get("resources", {})
+	if not res.is_empty():
+		ledger.bank(res)
+	ledger.save()
 	return true
 
 
@@ -4083,8 +4125,7 @@ func grant_account_unlocks() -> Array[String]:
 		return []
 	var fresh := account.grant_from(narrative, registry)
 	for key: String in fresh:
-		var origin := registry.get_entry("origins", key.get_slice(":", 1))
-		overlay.toast(Loc.t("Unlocked for every playthrough: %s") % origin.get("name", key), 4.0)
+		overlay.toast(Loc.t("Unlocked for every playthrough: %s") % Account.key_name(registry, key), 4.0)
 	return fresh
 
 

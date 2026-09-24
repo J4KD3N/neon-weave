@@ -11,11 +11,21 @@ extends RefCounted
 const ROW_NAME := "name"
 const ROW_TONE := "tone"
 const ROW_ACCENT := "accent"
+const ROW_LOADOUT := "loadout"
 
 var sheet := CharacterSheet.new()
 var races: Array[String] = []
 var origins: Array[String] = []
 var locked_origins: Array[Dictionary] = [] # {name, blurb}: earned by a later playthrough
+## Loadouts the account may pick, and the ones still locked (S62).
+var loadouts: Array[String] = []
+var locked_loadouts: Array[Dictionary] = []
+## Tones and accents still locked: {part, name, blurb} (S62).
+var locked_looks: Array[Dictionary] = []
+## The account's keys and how many the content offers, for the header (S62).
+var unlocked_count: int = 0
+var offered_count: int = 0
+var playthroughs: int = 0
 var classes: Array[String] = []
 var tones: Array[String] = []
 var accents: Array[String] = []
@@ -51,19 +61,32 @@ func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary =
 	classes.clear()
 	for c: Dictionary in registry.get_all("classes"):
 		classes.append(c["id"])
+	loadouts.clear()
+	locked_loadouts.clear()
+	for l: Dictionary in registry.get_all("loadouts"):
+		if l.has("unlock_flag") and not unlocked.has("loadout:%s" % String(l["id"])):
+			locked_loadouts.append({"name": Loc.text(l, "name", String(l["id"])), "blurb": Loc.text(l, "unlock_blurb", Loc.t("Earned by an earlier playthrough."))})
+			continue
+		loadouts.append(l["id"])
+	locked_looks.clear()
+	unlocked_count = 0
+	offered_count = Account.offered(registry).size()
+	for key: String in unlocked:
+		if Account.offered(registry).has(key):
+			unlocked_count += 1
 	tones.clear()
 	tones.append("")
 	for t: Variant in look.get("tones", []):
 		if t is Dictionary:
-			tones.append(String((t as Dictionary).get("id", "")))
+			_offer_look("tone", t, unlocked, tones)
 	accents.clear()
 	accents.append("")
 	for a: Variant in look.get("accents", []):
 		if a is Dictionary:
-			accents.append(String((a as Dictionary).get("id", "")))
+			_offer_look("accent", a, unlocked, accents)
 	attr_names.clear()
 	attr_names.assign(attr_rules.get("names", []))
-	rows = [ROW_NAME, "race", "origin", "class", ROW_TONE, ROW_ACCENT]
+	rows = [ROW_NAME, "race", "origin", "class", ROW_LOADOUT, ROW_TONE, ROW_ACCENT]
 	rows.append_array(attr_names)
 	sheet = CharacterSheet.from_dict(existing) if not existing.is_empty() else CharacterSheet.new()
 	if existing.is_empty():
@@ -74,6 +97,9 @@ func setup(registry: ContentRegistry, rules: CombatRules, existing: Dictionary =
 		sheet.origin_id = origins[0]
 	if not classes.has(sheet.class_id) and not classes.is_empty():
 		sheet.class_id = classes[0]
+	if not loadouts.has(sheet.loadout_id):
+		var fallback := CharacterSheet.default_loadout(registry)
+		sheet.loadout_id = fallback if loadouts.has(fallback) else (loadouts[0] if not loadouts.is_empty() else "")
 	if not tones.has(String(sheet.appearance.get("tone", ""))):
 		sheet.appearance["tone"] = ""
 	if not accents.has(String(sheet.appearance.get("accent", ""))):
@@ -104,6 +130,8 @@ func adjust(delta: int) -> bool:
 			sheet.origin_id = _cycle(origins, sheet.origin_id, delta)
 		"class":
 			sheet.class_id = _cycle(classes, sheet.class_id, delta)
+		ROW_LOADOUT:
+			sheet.loadout_id = _cycle(loadouts, sheet.loadout_id, delta)
 		ROW_TONE:
 			sheet.appearance["tone"] = _cycle(tones, String(sheet.appearance.get("tone", "")), delta)
 		ROW_ACCENT:
@@ -176,10 +204,33 @@ func appearance_name(part: String) -> String:
 	return Loc.any(String(CharacterSheet.appearance_option(look, part, id).get("name", id)))
 
 
+## Offers a tone or accent unless it names an `unlock_flag` the account has
+## not earned; the locked ones are listed under their row (S62).
+func _offer_look(part: String, option: Dictionary, unlocked: Array[String], into: Array[String]) -> void:
+	var id := String(option.get("id", ""))
+	if option.has("unlock_flag") and not unlocked.has("%s:%s" % [part, id]):
+		locked_looks.append({"part": part, "name": Loc.any(String(option.get("name", id))), "blurb": Loc.any(String(option.get("unlock_blurb", Loc.t("Earned by an earlier playthrough."))))})
+		return
+	into.append(id)
+
+
+## "Strut blade, Scrap plating, +10 salvage", or "nothing".
+func loadout_kit_text(id: String) -> String:
+	var l := _registry.get_entry("loadouts", id)
+	var parts: PackedStringArray = []
+	for item_id: String in l.get("items", []):
+		parts.append(Loc.text(_registry.get_entry("items", item_id), "name", item_id))
+	var res: Dictionary = l.get("resources", {})
+	for key: String in res:
+		parts.append("%+d %s" % [int(res[key]), Loc.t(key)])
+	return ", ".join(parts) if not parts.is_empty() else Loc.t("nothing")
+
+
 func render() -> String:
 	var lines: PackedStringArray = []
 	lines.append(Loc.t("NEW WEAVER"))
 	lines.append(Loc.t("↑↓ row · ←→ change · Enter confirm · %s") % (Loc.t("Esc back to the death-stakes") if for_new_game else Loc.t("Esc cancel")))
+	lines.append(Loc.t("Account: %d playthroughs · %d of %d unlocks earned") % [playthroughs, unlocked_count, offered_count])
 	lines.append("")
 	for i: int in rows.size():
 		var key := rows[i]
@@ -205,10 +256,22 @@ func render() -> String:
 				for ability_id: String in c.get("abilities", []):
 					ability_names.append(Loc.text(_registry.get_entry("abilities", ability_id), "name", ability_id))
 				lines.append(Loc.t("      abilities: %s") % ", ".join(ability_names))
+			ROW_LOADOUT:
+				var l := _registry.get_entry("loadouts", sheet.loadout_id)
+				lines.append(Loc.t("%sLoadout: %s — %s") % [marker, Loc.text(l, "name", sheet.loadout_id), Loc.text(l, "summary")])
+				lines.append(Loc.t("      kit: %s") % loadout_kit_text(sheet.loadout_id))
+				for locked: Dictionary in locked_loadouts:
+					lines.append(Loc.t("      locked: %s — %s") % [locked["name"], locked["blurb"]])
 			ROW_TONE:
 				lines.append(Loc.t("%sTone: %s") % [marker, appearance_name("tone")])
+				for locked: Dictionary in locked_looks:
+					if String(locked["part"]) == "tone":
+						lines.append(Loc.t("      locked: %s — %s") % [locked["name"], locked["blurb"]])
 			ROW_ACCENT:
 				lines.append(Loc.t("%sAccent: %s") % [marker, appearance_name("accent")])
+				for locked: Dictionary in locked_looks:
+					if String(locked["part"]) == "accent":
+						lines.append(Loc.t("      locked: %s — %s") % [locked["name"], locked["blurb"]])
 			_:
 				var fx: Dictionary = Dictionary(attr_rules.get("effects", {})).get(key, {})
 				lines.append(Loc.t("%s%s: %s%s  (%s per point · %s)") % [marker, Loc.t(key.capitalize()), "●".repeat(sheet.attribute(key)), "○".repeat(maxi(int(attr_rules.get("max_per_attribute", 4)) - sheet.attribute(key), 0)), _mods_text(fx), next_point_text(key)])

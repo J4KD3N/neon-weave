@@ -38,6 +38,7 @@ const TEXT_FIELDS: Dictionary = {
 	"enemies": ["name"],
 	"factions": ["name"],
 	"items": ["name", "summary"],
+	"loadouts": ["name", "summary", "unlock_blurb"],
 	"lore": ["name", "text", "source"],
 	"maps": ["name"],
 	"merchants": ["name"],

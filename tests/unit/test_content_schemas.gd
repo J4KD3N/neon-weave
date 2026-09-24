@@ -22,6 +22,7 @@ const SCHEMAS: Dictionary = {
 	"endings": ["name", "summary", "when"],
 	"affixes": ["name", "slots", "weight"],
 	"maps": ["name", "biome", "spawn_marker", "legend", "rows"],
+	"loadouts": ["name", "items"],
 	"merchants": ["name", "stock"],
 	"npcs": ["name", "dialogue"],
 	"origins": ["name", "dialogue_tag"],

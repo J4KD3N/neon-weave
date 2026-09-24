@@ -14,6 +14,8 @@ var origin_id: String = "scav_runner"
 var class_id: String = "scrap_knight"
 var attributes: Dictionary = {"body": 2, "arcane": 2, "tech": 2}
 var appearance: Dictionary = {"tone": "", "accent": ""}
+## The starting kit (S62): a `loadouts` id; "" means the default one.
+var loadout_id: String = ""
 
 
 static func from_dict(d: Dictionary) -> CharacterSheet:
@@ -22,6 +24,7 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 	s.race_id = String(d.get("race_id", s.race_id))
 	s.origin_id = String(d.get("origin_id", s.origin_id))
 	s.class_id = String(d.get("class_id", s.class_id))
+	s.loadout_id = String(d.get("loadout_id", ""))
 	var look: Dictionary = d.get("appearance", {})
 	s.appearance = {"tone": String(look.get("tone", "")), "accent": String(look.get("accent", ""))}
 	var attrs: Dictionary = d.get("attributes", {})
@@ -33,7 +36,7 @@ static func from_dict(d: Dictionary) -> CharacterSheet:
 
 
 func to_dict() -> Dictionary:
-	return {"name": name, "race_id": race_id, "origin_id": origin_id, "class_id": class_id, "attributes": attributes.duplicate(), "appearance": appearance.duplicate()}
+	return {"name": name, "race_id": race_id, "origin_id": origin_id, "class_id": class_id, "attributes": attributes.duplicate(), "appearance": appearance.duplicate(), "loadout_id": loadout_id}
 
 
 func attribute(key: String) -> int:
@@ -60,6 +63,8 @@ func validate(registry: ContentRegistry, attr_rules: Dictionary) -> Array[String
 		errors.append(Loc.t("unknown origin '%s'") % origin_id)
 	if not registry.has_entry("classes", class_id):
 		errors.append(Loc.t("unknown class '%s'") % class_id)
+	if not loadout_id.is_empty() and not registry.has_entry("loadouts", loadout_id):
+		errors.append(Loc.t("unknown loadout '%s'") % loadout_id)
 	var look: Dictionary = registry.get_entry("rules", "appearance")
 	for part: String in ["tone", "accent"]:
 		var id := String(appearance.get(part, ""))
@@ -78,6 +83,18 @@ func validate(registry: ContentRegistry, attr_rules: Dictionary) -> Array[String
 	if points_spent() != points:
 		errors.append(Loc.t("attributes spend %d of %d points") % [points_spent(), points])
 	return errors
+
+
+## The loadout every new game starts with unless the creator picks another:
+## the one flagged `default`, else the first by id, else "".
+static func default_loadout(registry: ContentRegistry) -> String:
+	var first := ""
+	for l: Dictionary in registry.get_all("loadouts"):
+		if bool(l.get("default", false)):
+			return String(l["id"])
+		if first.is_empty():
+			first = String(l["id"])
+	return first
 
 
 ## One option of `rules/appearance` ({id, name, color}) by part ("tone" or

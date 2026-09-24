@@ -49,7 +49,7 @@ func test_creator_state_lists_options_and_cycles() -> void:
 	assert_eq(st.races.size(), 10, "all ten GDD races are playable (S30)")
 	assert_eq(st.origins.size(), 4)
 	assert_eq(st.classes.size(), 6)
-	assert_eq(st.rows, ["name", "race", "origin", "class", "tone", "accent", "body", "arcane", "tech"], "appearance rows since S51")
+	assert_eq(st.rows, ["name", "race", "origin", "class", "loadout", "tone", "accent", "body", "arcane", "tech"], "appearance rows since S51, the loadout since S62")
 	assert_eq(st.current_row(), "race")
 	var first := st.sheet.race_id
 	assert_true(st.adjust(1))
@@ -59,7 +59,7 @@ func test_creator_state_lists_options_and_cycles() -> void:
 	assert_eq(st.sheet.race_id, first, "wraps around")
 	st.move_row(-2)
 	assert_eq(st.current_row(), "tech", "wraps upward past the name row")
-	st.move_row(-10)
+	st.move_row(-11)
 	assert_eq(st.current_row(), "arcane")
 
 
@@ -165,7 +165,7 @@ func test_next_point_preview_and_locked_origins() -> void:
 	assert_eq(st.locked_origins[0]["name"], "Beacon Keeper")
 	assert_contains(st.render(), "locked: Beacon Keeper — Unlocked by reaching first contact")
 	var st2 := CreatorState.new()
-	st2.setup(registry, rules, {}, ["origin:beacon_keeper"])
+	st2.setup(registry, rules, {}, Account.offered(registry)) # every key, the kits and looks too (S62)
 	assert_true(st2.origins.has("beacon_keeper"))
 	assert_eq(st2.locked_origins, [])
 	assert_false(st2.render().contains("locked:"))
