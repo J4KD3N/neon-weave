@@ -12,6 +12,7 @@
   "abilities": ["strike", "wire_cut", "shadow_step", "cool_down"],
   "subclass_level": 3,
   "capstone": "phantom_blades",
+  "capstone_line": "Phantom Blades: you were the shadow. Now the shadow has edges, and it does not need you to hold them.",
   "subclasses": ["razor", "phantom"],
   "milestone": "M2"
 }

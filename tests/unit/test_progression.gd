@@ -120,7 +120,7 @@ func test_base_content_subclasses_and_talents_resolve() -> void:
 		for req: String in t.get("requires", []):
 			assert_true(registry.has_entry("talents", req), "talent %s requires %s" % [t["id"], req])
 		for key: String in t.get("effects", {}):
-			assert_true(Progression.STAT_KEYS.has(key) or key == "damage_bonus", "talent %s effect %s" % [t["id"], key])
+			assert_true(Progression.STAT_KEYS.has(key) or key == "damage_bonus" or key == "traits", "talent %s effect %s" % [t["id"], key])
 
 
 

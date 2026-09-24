@@ -336,7 +336,7 @@ func can_use(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Str
 		return Loc.t("friendly fire is off")
 	if target.hidden and actor.is_hostile_to(target):
 		return Loc.t("target is hidden")
-	var range_cells := int(ability.get("range", 1))
+	var range_cells := int(ability.get("range", 1)) + int(Dictionary(actor.traits.get("ability_range_bonus", {})).get(ability_id, 0)) # a talent may lengthen it (S66)
 	if LineOfSight.distance(actor.cell, target_cell) > range_cells:
 		return Loc.t("out of range")
 	if bool(ability.get("requires_los", range_cells > 1)) and not LineOfSight.clear(map, actor.cell, target_cell):
@@ -408,8 +408,9 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 	var target := occupant(target_cell)
 	actor.ap -= int(ability.get("ap", 1))
 	_undo = {}
-	if int(ability.get("cooldown", 0)) > 0:
-		actor.statuses["cd:" + ability_id] = int(ability["cooldown"])
+	var cooldown := maxi(int(ability.get("cooldown", 0)) - int(Dictionary(actor.traits.get("ability_cooldown_bonus", {})).get(ability_id, 0)), 0) # a talent may shorten it (S66)
+	if cooldown > 0:
+		actor.statuses["cd:" + ability_id] = cooldown
 	var resource_cost := int(ability.get("resource_cost", 0))
 	if resource_cost > 0:
 		actor.resource = maxi(actor.resource - resource_cost, 0)

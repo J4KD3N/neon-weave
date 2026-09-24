@@ -1,0 +1,9 @@
+{
+  "name": "Long Arc",
+  "branch": "arcane",
+  "tier": 2,
+  "cost": { "aether": 4 },
+  "effects": { "traits": { "ability_range_bonus": { "arc_bolt": 1 } } },
+  "summary": "Arc Bolt reaches one cell further. Needs Weft Sense.",
+  "requires": ["weft_sense"]
+}

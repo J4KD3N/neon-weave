@@ -12,7 +12,7 @@ without a schema; keep the two in step.
 | biomes | name, palette (16 roles) | recolors |
 | branches | name, color | summary |
 | buildings | name, order, levels [{cost, effects, blurb}] | levels[].unlocks; effect keys read: depth, heal_fraction, hp_bonus, damage_bonus, respec, respec_refund, archive, aether_per_fragment, garden, aether_on_return, quarters |
-| classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level, capstone (ability at `capstone_level` levels in the class) |
+| classes | name, branches, resource {id,name}, stats, abilities, subclasses | growth, unlocks, subclass_level, capstone (ability at `capstone_level` levels in the class), capstone_line (S66: toasted and logged when it unlocks) |
 | companions | name, race, class, dialogue {recruit,talk,banter}, quest | short_name, faction ("" for none), romanceable, approval_start, scenes [{id, label, dialogue, requires, quarters (level), once (default true), romance (only on a romanceable companion; hidden while `NarrativeState.romance` names someone else), dead (offered for a companion with `<id>_dead` instead of one in the party)}] (S35, S37 D-092) |
 | locales | name | ui {English source: text}, content {kind.id.path: text} (S55; see docs/localization.md); pseudo: true makes the entry a transform instead of a table |
 | lore | name, text, order | source; found ids live in the narrative state and read in the Archive |
@@ -37,7 +37,7 @@ without a schema; keep the two in step.
 | shards | name, biome, tiles, rooms, enemies | corridors, surfaces, pickups, features, requires_unlock (Beacon), requires_flag (story), remix {families, templates} (pools filled by rule, D-089), grate_patch_chance, debris_density, size  enemies.extra_groups_max caps the groups depth adds (S48) |; grime_density (0.06) and light_density (0.015) scatter grimed floor and failing lights over plain floor last, with their own RNG; tiles.grime and tiles.light name the tiles (S61)
 | sprites | image or sheet, frame | see docs/art-pipeline.md |
 | subclasses | name, class, abilities | stat_mods, damage_bonus, summary |
-| talents | name, branch, tier, cost, effects | requires, summary |
+| talents | name, branch, tier, cost, effects | requires, summary. effects: a stat, damage_bonus, or traits {ability_range_bonus {id: n}, ability_cooldown_bonus {id: n}, ability_damage_bonus {id: n}, ap_bonus, resist, stealth, detect_hidden, salvage_bonus, mend_after_combat} (S66: the combat reads them like race traits) |
 | tiles | name, layer, walkable, art | art.glow (a palette role: the tile gets a point light of that colour, S56), art.flicker (true: that light gutters, S61), art.pattern grate / cracked / ripple / pad / grime (S61), blocks_sight, cover, height, surface (mana_pool / conduit / corrosive / spore / echo / null), door, waypoint, sound | height N (S65: stepping up onto a taller tile costs rules/combat.climb_move_cost extra Move).
 | achievements | name, steam_id, when (conditions) | summary |
 | audio | name, kind (sfx or music), synth or file | volume_db, loop, summary | file (a .wav/.ogg/.mp3 beside the sidecar, S57: read from disk when not imported; the validator refuses a missing one), loop (music loops by default)

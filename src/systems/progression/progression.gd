@@ -7,12 +7,16 @@
 ## Class: {"growth": {stat: per level}, "unlocks": {"<level>": [ability]},
 ## "subclass_level"?, "subclasses": [ids]}.
 ## Subclass: {"class", "abilities", "stat_mods", "damage_bonus"}.
-## Talent: {"branch", "tier", "cost": {aether}, "effects": {stat|damage_bonus}, "requires": [ids]}.
-## A member's build (Ledger.builds[member_id]): {"subclass": id, "talents": [ids]}.
+## Talent: {"branch", "tier", "cost": {aether}, "effects": {stat|damage_bonus|traits: {...}}, "requires": [ids]}.
+## A member's build (Ledger.builds[member_id]): {"subclass": id, "talents": [ids],
+## "multiclass": {"class", "levels", "subclass"}} (S66: the second class has its own subclass).
 class_name Progression
 extends RefCounted
 
 const STAT_KEYS: Array[String] = ["hp", "move", "evasion", "initiative"]
+## Trait keys a talent may carry under `effects.traits` (S66, D-122): read by
+## the combat state and the controller like race traits.
+const TALENT_TRAIT_KEYS: Array[String] = ["ap_bonus", "ability_range_bonus", "ability_cooldown_bonus", "ability_damage_bonus", "resist", "stealth", "detect_hidden", "salvage_bonus", "mend_after_combat"]
 
 
 static func level_for_xp(xp: int, rules: Dictionary) -> int:
@@ -68,19 +72,23 @@ static func talent_tier_at(level: int, rules: Dictionary) -> int:
 
 
 ## Stat deltas and extras a build adds on top of StatBlock: returns
-## {"stats": {key: delta}, "abilities": [extra ids], "damage_bonus": int}.
+## {"stats": {key: delta}, "abilities": [extra ids], "damage_bonus": int,
+## "traits": {talent traits merged}, "capstones": [ids granted]}.
 static func build_effects(registry: ContentRegistry, class_entry: Dictionary, party_level: int, build: Dictionary, rules: Dictionary) -> Dictionary:
 	var stats: Dictionary = {}
 	for key: String in STAT_KEYS:
 		stats[key] = 0
 	var abilities: Array[String] = []
 	var damage_bonus := 0
+	var traits: Dictionary = {}
+	var capstones: Array[String] = []
 	var split := class_levels(party_level, build, rules)
 	var level := int(split["main"])
 	_grow(class_entry, level - 1, stats)
 	_unlock(class_entry, level, abilities)
 	if level >= capstone_level(rules) and class_entry.has("capstone") and not abilities.has(String(class_entry["capstone"])):
 		abilities.append(String(class_entry["capstone"]))
+		capstones.append(String(class_entry["capstone"]))
 	var second := int(split["second"])
 	if second > 0:
 		var other := registry.get_entry("classes", String(split["class"]))
@@ -91,17 +99,16 @@ static func build_effects(registry: ContentRegistry, class_entry: Dictionary, pa
 		_unlock(other, second, abilities)
 		if second >= capstone_level(rules) and other.has("capstone") and not abilities.has(String(other["capstone"])):
 			abilities.append(String(other["capstone"]))
+			capstones.append(String(other["capstone"]))
+		var mc_sub := String(Dictionary(build.get("multiclass", {})).get("subclass", "")) # S66: the second class's own subclass
+		if not mc_sub.is_empty() and second >= subclass_level(other, rules) and Array(other.get("subclasses", [])).has(mc_sub):
+			_apply_subclass(registry.get_entry("subclasses", mc_sub), stats, abilities)
+			damage_bonus += int(registry.get_entry("subclasses", mc_sub).get("damage_bonus", 0))
 	var sub_id := String(build.get("subclass", ""))
 	if not sub_id.is_empty() and level >= subclass_level(class_entry, rules):
 		var sub := registry.get_entry("subclasses", sub_id)
 		if not sub.is_empty() and Array(class_entry.get("subclasses", [])).has(sub_id):
-			for id: String in sub.get("abilities", []):
-				if not abilities.has(id):
-					abilities.append(id)
-			var mods: Dictionary = sub.get("stat_mods", {})
-			for key: String in mods:
-				if stats.has(key):
-					stats[key] = int(stats[key]) + int(mods[key])
+			_apply_subclass(sub, stats, abilities)
 			damage_bonus += int(sub.get("damage_bonus", 0))
 	for id: String in build.get("talents", []):
 		var talent := registry.get_entry("talents", id)
@@ -111,7 +118,80 @@ static func build_effects(registry: ContentRegistry, class_entry: Dictionary, pa
 				stats[key] = int(stats[key]) + int(fx[key])
 			elif key == "damage_bonus":
 				damage_bonus += int(fx[key])
-	return {"stats": stats, "abilities": abilities, "damage_bonus": damage_bonus}
+			elif key == "traits": # S66: a talent that changes what abilities do
+				traits = PartyBuilder.merge_traits([traits, Dictionary(fx[key])])
+	return {"stats": stats, "abilities": abilities, "damage_bonus": damage_bonus, "traits": traits, "capstones": capstones}
+
+
+static func _apply_subclass(sub: Dictionary, stats: Dictionary, abilities: Array[String]) -> void:
+	for id: String in sub.get("abilities", []):
+		if not abilities.has(id):
+			abilities.append(id)
+	var mods: Dictionary = sub.get("stat_mods", {})
+	for key: String in mods:
+		if stats.has(key):
+			stats[key] = int(stats[key]) + int(mods[key])
+
+
+## The class whose resource loop the member runs (S66, D-122): the second
+## class once it holds at least as many levels as the main, else the main.
+## A build decides its loop by where its levels go.
+static func resource_class(registry: ContentRegistry, class_entry: Dictionary, party_level: int, build: Dictionary, rules: Dictionary) -> Dictionary:
+	var split := class_levels(party_level, build, rules)
+	if int(split["second"]) > 0 and int(split["second"]) >= int(split["main"]):
+		var other := registry.get_entry("classes", String(split["class"]))
+		if other.has("resource"):
+			return other
+	return class_entry
+
+
+## What the next party level would bring this build, the level going to
+## the main class: {"level": next or -1 at the cap, "stats": {key: delta},
+## "abilities": [new ids], "talent_tier": the tier that opens or 0,
+## "subclass_opens": bool, "capstone": id or ""} (S66).
+static func preview(registry: ContentRegistry, class_entry: Dictionary, party_level: int, build: Dictionary, rules: Dictionary) -> Dictionary:
+	var curve: Array = rules.get("xp_curve", [0])
+	var cap := maxi(int(rules.get("level_cap", curve.size())), 1)
+	if party_level >= cap:
+		return {"level": -1, "stats": {}, "abilities": [], "talent_tier": 0, "subclass_opens": false, "capstone": ""}
+	var now := build_effects(registry, class_entry, party_level, build, rules)
+	var then := build_effects(registry, class_entry, party_level + 1, build, rules)
+	var deltas: Dictionary = {}
+	for key: String in STAT_KEYS:
+		var d := int(then["stats"][key]) - int(now["stats"][key])
+		if d != 0:
+			deltas[key] = d
+	var fresh: Array[String] = []
+	for id: String in then["abilities"]:
+		if not Array(now["abilities"]).has(id):
+			fresh.append(id)
+	var tier_now := talent_tier_at(party_level, rules)
+	var tier_then := talent_tier_at(party_level + 1, rules)
+	var sub_lv := subclass_level(class_entry, rules)
+	var capstone := ""
+	for id: String in then["capstones"]:
+		if not Array(now["capstones"]).has(id):
+			capstone = id
+	return {"level": party_level + 1, "stats": deltas, "abilities": fresh, "talent_tier": tier_then if tier_then > tier_now else 0, "subclass_opens": party_level < sub_lv and party_level + 1 >= sub_lv, "capstone": capstone}
+
+
+## Why a subclass of the second class cannot be chosen now; empty when it can (S66).
+static func can_choose_second_subclass(registry: ContentRegistry, party_level: int, build: Dictionary, sub_id: String, rules: Dictionary, respec: bool) -> String:
+	var mc: Dictionary = build.get("multiclass", {})
+	var other := registry.get_entry("classes", String(mc.get("class", "")))
+	if other.is_empty():
+		return Loc.t("no second class yet")
+	if not Array(other.get("subclasses", [])).has(sub_id) or not registry.has_entry("subclasses", sub_id):
+		return Loc.t("not a subclass of the second class")
+	var second := int(class_levels(party_level, build, rules)["second"])
+	if second < subclass_level(other, rules):
+		return Loc.t("needs %d levels there") % subclass_level(other, rules)
+	var current := String(mc.get("subclass", ""))
+	if current == sub_id:
+		return Loc.t("already chosen")
+	if not current.is_empty() and not respec:
+		return Loc.t("needs the Arcanum to change")
+	return ""
 
 
 ## Why a subclass cannot be chosen now; empty when it can.

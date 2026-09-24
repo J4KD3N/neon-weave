@@ -12,6 +12,7 @@
   "abilities": ["strike", "null_cut", "void_lash", "null_pulse"],
   "subclass_level": 3,
   "capstone": "null_dominion",
+  "capstone_line": "Null Dominion: silence is no longer something you carry. It is something the room agrees to when you walk in.",
   "subclasses": ["voidfencer", "suppressor"],
   "milestone": "M2"
 }

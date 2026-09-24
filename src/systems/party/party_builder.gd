@@ -39,9 +39,9 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 			}
 		var cls: Dictionary = registry.get_entry("classes", String(data.get("class", "")))
 		var race: Dictionary = registry.get_entry("races", String(data.get("race", "")))
-		var resource: Dictionary = cls.get("resource", {})
-		data["resource_id"] = String(resource.get("id", ""))
 		var build: Dictionary = builds.get(String(data.get("id", "")), {})
+		var resource: Dictionary = Progression.resource_class(registry, cls, level, build, prog_rules).get("resource", {}) # S66: the loop follows the levels
+		data["resource_id"] = String(resource.get("id", ""))
 		var fx := Progression.build_effects(registry, cls, level, build, prog_rules)
 		var stats := StatBlock.for_member(cls, race, rules, extras)
 		var deltas: Dictionary = fx["stats"]
@@ -52,13 +52,14 @@ static func member_specs(registry: ContentRegistry, preset: Dictionary, protagon
 		for id: String in fx["abilities"]:
 			if not abilities.has(id):
 				abilities.append(id)
-		var traits := merge_traits([race.get("traits", {}), Dictionary(extras.get("origin", {})).get("traits", {})])
+		var traits := merge_traits([race.get("traits", {}), Dictionary(extras.get("origin", {})).get("traits", {}), fx.get("traits", {})]) # talents too (S66)
 		for id: String in traits.get("bonus_abilities", []):
 			if not abilities.has(id):
 				abilities.append(id)
 		data["traits"] = traits
 		data["level"] = level
 		data["subclass"] = String(build.get("subclass", "")) if level >= Progression.subclass_level(cls, prog_rules) else ""
+		data["capstones"] = fx.get("capstones", [])
 		var eq := ItemSystem.equipment_mods(registry, build.get("equipment", {}))
 		for key: String in eq["stats"]:
 			if stats.has(key):

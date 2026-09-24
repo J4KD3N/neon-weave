@@ -1,0 +1,9 @@
+{
+  "name": "Second Wind",
+  "branch": "body",
+  "tier": 4,
+  "cost": { "aether": 10 },
+  "effects": { "traits": { "ap_bonus": 1 } },
+  "summary": "One more action point every turn. Needs Iron Will.",
+  "requires": ["iron_will"]
+}

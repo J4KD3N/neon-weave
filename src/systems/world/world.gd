@@ -2075,13 +2075,30 @@ func refresh_progression() -> void:
 		for m: PartyMember in party.members:
 			if m.member_id != String(data.get("id", "")):
 				continue
+			var had: Array[String] = m.abilities.duplicate()
 			m.stats = spec["stats"]
 			m.abilities.assign(spec["abilities"])
+			m.resource_id = String(data.get("resource_id", m.resource_id)) # the loop follows the levels (S66)
+			for cap_id: String in data.get("capstones", []):
+				if not had.has(cap_id) and not had.is_empty():
+					_capstone_reached(m, cap_id)
 			m.level = int(data.get("level", 1))
 			m.subclass_id = String(data.get("subclass", ""))
 			m.damage_bonus = int(data.get("damage_bonus", 0))
 			m.traits = Dictionary(data.get("traits", {})).duplicate(true)
 			m.set_hp_bonus(bastion.hp_bonus())
+
+
+## A capstone just unlocked (S66): the class line, toasted and logged.
+func _capstone_reached(m: PartyMember, ability_id: String) -> void:
+	for cls: Dictionary in registry.get_all("classes"):
+		if String(cls.get("capstone", "")) != ability_id:
+			continue
+		var line := Loc.text(cls, "capstone_line", Loc.t("%s reaches the top of the %s.") % [m.display_name, Loc.text(cls, "name", String(cls["id"]))])
+		if overlay != null:
+			overlay.toast(Loc.t("%s: %s") % [m.display_name, line], 5.0)
+		narrative.log_line(m.display_name, line)
+		return
 
 
 func _on_level_up(from_level: int, to_level: int) -> void:
@@ -2101,10 +2118,22 @@ func choose_subclass(member_id: String, sub_id: String) -> String:
 	if m == null:
 		return Loc.t("no such member")
 	var cls: Dictionary = registry.get_entry("classes", m.class_id)
-	var why := Progression.can_choose_subclass(registry, cls, party_level(), build_for(member_id), sub_id, progression_rules(), can_respec())
+	var b := build_for(member_id)
+	var mc_class := String(Dictionary(b.get("multiclass", {})).get("class", ""))
+	if not mc_class.is_empty() and String(registry.get_entry("subclasses", sub_id).get("class", "")) == mc_class: # S66: the second class's subclass
+		var why2 := Progression.can_choose_second_subclass(registry, party_level(), b, sub_id, progression_rules(), can_respec())
+		if not why2.is_empty():
+			return why2
+		var mc: Dictionary = b["multiclass"]
+		mc["subclass"] = sub_id
+		b["multiclass"] = mc
+		ledger.builds[member_id] = b
+		ledger.save()
+		refresh_progression()
+		return ""
+	var why := Progression.can_choose_subclass(registry, cls, party_level(), b, sub_id, progression_rules(), can_respec())
 	if not why.is_empty():
 		return why
-	var b := build_for(member_id)
 	b["subclass"] = sub_id
 	ledger.builds[member_id] = b
 	ledger.save()
@@ -2173,6 +2202,16 @@ func weave_rows(member_id: String) -> Array[Dictionary]:
 			label = "✓ " + label
 		rows.append({"kind": "subclass", "id": sub_id, "label": label, "enabled": why.is_empty(), "why": why})
 	rows.append_array(multiclass_rows(member_id))
+	var mc_class := String(Dictionary(build.get("multiclass", {})).get("class", "")) # S66: the second class's subclasses
+	if not mc_class.is_empty():
+		var other := registry.get_entry("classes", mc_class)
+		for sub_id: String in other.get("subclasses", []):
+			var sub := registry.get_entry("subclasses", sub_id)
+			var why := Progression.can_choose_second_subclass(registry, level, build, sub_id, prules, can_respec())
+			var label := Loc.t("%s subclass: %s — %s") % [Loc.text(other, "name", mc_class), Loc.text(sub, "name", sub_id), Loc.text(sub, "summary")]
+			if String(Dictionary(build["multiclass"]).get("subclass", "")) == sub_id:
+				label = "✓ " + label
+			rows.append({"kind": "subclass", "id": sub_id, "label": label, "enabled": why.is_empty(), "why": why})
 	var talents := registry.get_all("talents")
 	talents.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
 		if int(a.get("tier", 1)) != int(b.get("tier", 1)):
@@ -2223,10 +2262,51 @@ func refresh_weave() -> void:
 	var m := party.members[clampi(weave_menu.member_index, 0, party.members.size() - 1)]
 	var sub := String(build_for(m.member_id)["subclass"])
 	var sub_name := Loc.t("no subclass") if sub.is_empty() else Loc.text(registry.get_entry("subclasses", sub), "name", sub)
-	var header := Loc.t("Party level %d · %s · Aether %d\n%s — %s %s (%s) · HP %d/%d · abilities: %s") % [
+	var header := Loc.t("Party level %d · %s · Aether %d\n%s — %s %s (%s) · HP %d/%d · abilities: %s\n%s\n%s") % [
 		party_level(), xp_line(), ledger.total("aether"), m.display_name, Loc.text(registry.get_entry("races", m.race_id), "name", m.race_id),
-		Loc.text(registry.get_entry("classes", m.class_id), "name", m.class_id), sub_name, m.hp, m.max_hp, ability_names(m.abilities)]
+		Loc.text(registry.get_entry("classes", m.class_id), "name", m.class_id), sub_name, m.hp, m.max_hp, ability_names(m.abilities), loop_line(m.member_id), preview_line(m.member_id)]
 	weave_menu.show_rows(header, weave_rows(m.member_id))
+
+
+## "Levels: Scrap-Knight 6 / Aetherbinder 6 · loop: Surge (Aetherbinder)" (S66).
+func loop_line(member_id: String) -> String:
+	var m := member_by_id(member_id)
+	if m == null:
+		return ""
+	var cls := Progression.resource_class(registry, registry.get_entry("classes", m.class_id), party_level(), build_for(member_id), progression_rules())
+	var res: Dictionary = cls.get("resource", {})
+	var loop := Loc.t("no loop") if res.is_empty() else Loc.t("%s (%s)") % [Loc.content("classes", String(cls["id"]), "resource.name", String(res.get("name", ""))), Loc.text(cls, "name", String(cls["id"]))]
+	return Loc.t("Levels: %s · loop: %s") % [class_levels_text(member_id), loop]
+
+
+## What the next level buys this member, before it is bought (S66):
+## "Next level 5: +2 HP, +1 evasion · opens Arc Bolt · talent tier 2 · capstone Line Breaker".
+func preview_line(member_id: String) -> String:
+	var m := member_by_id(member_id)
+	if m == null:
+		return ""
+	var p := Progression.preview(registry, registry.get_entry("classes", m.class_id), party_level(), build_for(member_id), progression_rules())
+	if int(p["level"]) < 0:
+		return Loc.t("At the cap: every level is bought.")
+	var parts: PackedStringArray = []
+	var stat_parts: PackedStringArray = []
+	var labels := {"hp": Loc.t("HP"), "move": Loc.t("Move"), "evasion": Loc.t("evasion"), "initiative": Loc.t("initiative")}
+	for key: String in Progression.STAT_KEYS:
+		if Dictionary(p["stats"]).has(key):
+			stat_parts.append("%+d %s" % [int(p["stats"][key]), labels[key]])
+	if not stat_parts.is_empty():
+		parts.append(", ".join(stat_parts))
+	if not Array(p["abilities"]).is_empty():
+		parts.append(Loc.t("opens %s") % ability_names(Array(p["abilities"], TYPE_STRING, "", null)))
+	if int(p["talent_tier"]) > 0:
+		parts.append(Loc.t("talent tier %d") % int(p["talent_tier"]))
+	if bool(p["subclass_opens"]):
+		parts.append(Loc.t("the subclass"))
+	if not String(p["capstone"]).is_empty():
+		parts.append(Loc.t("capstone %s") % Loc.text(registry.get_entry("abilities", String(p["capstone"])), "name", String(p["capstone"])))
+	if parts.is_empty():
+		parts.append(Loc.t("nothing new for this class"))
+	return Loc.t("Next level %d: %s") % [int(p["level"]), " · ".join(parts)]
 
 
 ## Enter / A on the Weave screen: runs the selected row for the shown member.
@@ -3725,9 +3805,9 @@ func class_levels_text(member_id: String) -> String:
 	if m == null:
 		return ""
 	var split := Progression.class_levels(party_level(), build_for(member_id), progression_rules())
-	var text := Loc.t("%s %d") % [registry.get_entry("classes", m.class_id).get("name", m.class_id), int(split["main"])]
+	var text := Loc.t("%s %d") % [Loc.text(registry.get_entry("classes", m.class_id), "name", m.class_id), int(split["main"])]
 	if int(split["second"]) > 0:
-		text += Loc.t(" / %s %d") % [registry.get_entry("classes", String(split["class"])).get("name", split["class"]), int(split["second"])]
+		text += Loc.t(" / %s %d") % [Loc.text(registry.get_entry("classes", String(split["class"])), "name", String(split["class"])), int(split["second"])]
 	return text
 
 
