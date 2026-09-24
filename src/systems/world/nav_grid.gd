@@ -24,9 +24,20 @@ func build(map: MapData) -> void:
 
 
 ## Cells from `from` to `to` inclusive, or empty when either end is blocked
-## or no route exists. A zero-length move returns `[from]`.
-func find_path(from: Vector2i, to: Vector2i) -> Array[Vector2i]:
+## or no route exists. A zero-length move returns `[from]`. `blocked` cells
+## (S69: someone standing there) are walls for this search only.
+func find_path(from: Vector2i, to: Vector2i, blocked: Array[Vector2i] = []) -> Array[Vector2i]:
 	var empty: Array[Vector2i] = []
 	if _map == null or not (_map.is_walkable(from) and _map.is_walkable(to)):
 		return empty
-	return _astar.get_id_path(from, to)
+	if blocked.has(to):
+		return empty
+	var closed: Array[Vector2i] = []
+	for cell: Vector2i in blocked:
+		if cell != from and _map.in_bounds(cell) and _map.is_walkable(cell):
+			_astar.set_point_solid(cell, true)
+			closed.append(cell)
+	var path: Array[Vector2i] = _astar.get_id_path(from, to)
+	for cell: Vector2i in closed:
+		_astar.set_point_solid(cell, false)
+	return path

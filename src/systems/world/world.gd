@@ -156,6 +156,7 @@ func _ready() -> void:
 	spawn_party(party_id)
 	apply_bastion_bonuses()
 	spawn_enemies()
+	party.can_stand = Callable(self, "follower_can_stand") # followers hold rather than walk into anyone (S69)
 	spawn_pickups()
 	hud = CombatHud.new()
 	hud.name = "CombatHud"
@@ -1215,13 +1216,50 @@ func enemy_at(cell: Vector2i) -> EnemyActor:
 ## Path the leader to `cell`. False when the cell is blocked or unreachable.
 func command_move(cell: Vector2i) -> bool:
 	var l := party.leader()
-	if l == null or not map_data.is_walkable(cell):
+	if l == null or not map_data.is_walkable(cell) or cell_holds_someone(cell):
 		return false
-	var points := map_view.path_to(l.position, cell)
+	var points := map_view.path_to(l.position, cell, occupied_cells()) # round whoever stands in the way (S69)
 	if points.is_empty() and map_view.world_to_cell(l.position) != cell:
 		return false
 	party.set_path(points)
 	return true
+
+
+## Whether a world position is a cell the leader may step into (S69): walkable,
+## and nobody but the party standing there.
+func can_stand_world(pos: Vector2) -> bool:
+	var cell := map_view.world_to_cell(pos)
+	return map_data.is_walkable(cell) and enemy_at(cell) == null and npc_at(cell) == null
+
+
+## Whether a follower may step to a world position (S69): walls, enemies and NPCs say no; the party does not.
+func follower_can_stand(pos: Vector2) -> bool:
+	return can_stand_world(pos)
+
+
+## Cells with a living enemy or an NPC on them.
+func occupied_cells() -> Array[Vector2i]:
+	var out: Array[Vector2i] = []
+	for e: EnemyActor in living_enemies():
+		out.append(e.cell)
+	for n: NpcActor in npcs:
+		if is_instance_valid(n) and n.visible:
+			out.append(n.cell)
+	return out
+
+
+## Moves the members onto their combat cells (S69): a short step when the
+## fight animates, a snap when it does not (tests, screenshots).
+func settle_members(cells: Array[Vector2i]) -> void:
+	var animate := combat != null and combat.animate and not Engine.has_meta("neon_weave_tests")
+	for i: int in party.members.size():
+		var target := map_view.cell_to_world(cells[i])
+		var m := party.members[i]
+		if animate and m.position.distance_to(target) > 0.5:
+			var tween := create_tween()
+			tween.tween_property(m, "position", target, 0.15)
+		else:
+			m.position = target
 
 
 func leader_cell() -> Vector2i:
@@ -1515,8 +1553,7 @@ func start_combat(first_strike: bool, opener: bool = false) -> void:
 	for e: EnemyActor in living_enemies():
 		blocked.append(e.cell)
 	var cells := CellSettler.settle(map_data, preferred, blocked)
-	for i: int in party.members.size():
-		party.members[i].position = map_view.cell_to_world(cells[i])
+	settle_members(cells) # a step into place, not a snap (S69)
 	# Combat checkpoint (GDD §13): the state just before the fight.
 	mode = "explore"
 	autosave()
@@ -1882,7 +1919,7 @@ func _process(delta: float) -> void:
 	if mode == "explore" and not in_dialogue():
 		var dir := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		if dir != Vector2.ZERO:
-			party.steer_leader(dir, delta, map_view.is_walkable_world)
+			party.steer_leader(dir, delta, Callable(self, "can_stand_world")) # walls, enemies and NPCs alike (S69)
 		var step := leader_cell()
 		if step != _last_step_cell:
 			if _last_step_cell.x >= 0 and audio != null:

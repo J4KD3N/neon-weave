@@ -51,10 +51,10 @@ func is_walkable_world(world_pos: Vector2) -> bool:
 
 ## World-space waypoints from the cell under `from_world` to `to_cell`,
 ## excluding the starting cell. Empty when unreachable.
-func path_to(from_world: Vector2, to_cell: Vector2i) -> Array[Vector2]:
+func path_to(from_world: Vector2, to_cell: Vector2i, blocked: Array[Vector2i] = []) -> Array[Vector2]:
 	var points: Array[Vector2] = []
 	var from := world_to_cell(from_world)
-	for cell: Vector2i in nav.find_path(from, to_cell):
+	for cell: Vector2i in nav.find_path(from, to_cell, blocked):
 		if cell == from:
 			continue
 		points.append(cell_to_world(cell))

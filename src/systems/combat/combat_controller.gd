@@ -345,6 +345,7 @@ func move_cursor(dir: Vector2) -> Vector2i:
 	hovered = Vector2i(-1, -1)
 	hover(cursor)
 	highlighter.set_layer("e_cursor", [cursor], COLOR_CURSOR)
+	highlighter.glide_cursor_to(cursor) # slides there rather than jumps (S69)
 	return cursor
 
 
@@ -361,6 +362,7 @@ func release_cursor() -> void:
 	cursor_active = false
 	world.hover_override = Vector2i(-1, -1)
 	highlighter.clear_layer("e_cursor")
+	highlighter.clear_glide()
 
 
 func select_ability(index: int) -> void:

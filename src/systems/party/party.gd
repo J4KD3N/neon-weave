@@ -15,6 +15,12 @@ var trail := FormationTrail.new()
 
 var _waypoints: Array[Vector2] = []
 var _steered := false
+## Followers keep this far from anyone ahead of them in the line (S69):
+## nobody stands in anybody.
+const MIN_GAP := 14.0
+## The world's answer to "can someone stand here" for followers (S69): a
+## wall, an enemy or an NPC in the way holds the follower where it is.
+var can_stand: Callable = Callable()
 
 
 ## Each spec: {"data": Dictionary, "color": Color, "position": Vector2,
@@ -121,11 +127,21 @@ func tick(delta: float) -> void:
 		var single: Array[Vector2] = [trail.point_behind(distance_back)]
 		var result: Dictionary = Mover.advance(m.position, single, speed * delta)
 		var next: Vector2 = result["position"]
+		if next != m.position and (_crowded(next, i) or (can_stand.is_valid() and not bool(can_stand.call(next)))):
+			next = m.position # hold: someone is there (S69)
 		var moved := next != m.position
 		if moved:
 			m.facing = (next - m.position).normalized()
 			m.position = next
 		m.set_motion(moved, m.facing)
+
+
+## Whether a spot is within MIN_GAP of any member ahead of `index` in the line.
+func _crowded(spot: Vector2, index: int) -> bool:
+	for j: int in index:
+		if members[j].position.distance_to(spot) < MIN_GAP:
+			return true
+	return false
 
 
 func _process(delta: float) -> void:

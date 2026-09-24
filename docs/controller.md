@@ -30,7 +30,8 @@ After a wipe, A returns to the yard (R) and B reloads the checkpoint (Esc).
 
 The cursor appears at the acting member on the first stick or D-pad tap
 and then steps one cell in the **screen** direction pressed (up on the
-stick is up on screen, which is the (-1,-1) grid diagonal). WASD and the
+stick is up on screen, which is the (-1,-1) grid diagonal); the drawn
+cursor glides to the new cell rather than jumping (S69). WASD and the
 arrow keys drive it too. It hovers exactly like the mouse: path preview
 for a move, hit chance and damage for an attack, swap hint on an ally. A
 confirms; any mouse movement hands control back to the mouse.
