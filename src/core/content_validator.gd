@@ -460,6 +460,10 @@ func _maps() -> void:
 			if seen.has(cell) or map.spawn_cells().has(cell):
 				_flag(m, "enemy placement at %s overlaps another or a spawn" % cell)
 			seen.append(cell)
+			if p.has("facing") and not EnemyActor.FACINGS.has(String(p["facing"])): # S64
+				_flag(m, "enemy at %s faces '%s'; use e, se, s, sw, w, nw, n or ne" % [cell, p["facing"]])
+			if p.has("sweep") and (not (p["sweep"] is float or p["sweep"] is int) or float(p["sweep"]) < 0.0 or float(p["sweep"]) > 180.0):
+				_flag(m, "enemy at %s sweep must be 0 to 180 degrees" % cell)
 		for p: Dictionary in m.get("npcs", []):
 			var cell := _cell(p)
 			if not map.is_walkable(cell):

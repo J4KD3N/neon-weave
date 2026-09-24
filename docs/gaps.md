@@ -33,7 +33,7 @@ the game.
 - Closed 2026-09-24 (S61, D-117): a Gore setting (off / low / full), blood where a hit lands, a pool where someone goes down, a body where someone dies, kept with the save; machines leak oil; grime and failing lights dress the yard and every Shard. Left for art: real decal sprites and corpse poses in place of the placeholder shapes.
 - Closed 2026-09-24 (S62, D-118): `loadouts` as a content kind (three free kits, two earned) chosen on the creator and worn from the first step; tones and accents with an `unlock_flag` are cosmetics the account earns; every unlock kind goes through the same grant path and toast; the creator shows the account's playthroughs and unlock count.
 - Closed 2026-09-24 (S63, D-119): a Hack action (2 AP, adjacent) for the protagonist at Tech 2+ and every Tech-branch class, +15 to the roll per Tech point past the minimum, turning a `hackable` machine (turrets, feral drones, warden constructs) to the party's side until the fight ends; locked gates with `hack_tech` open to that much Tech without their key.
-- **Awareness as a cone and a detection roll** (§9, stealth openers): awareness is a radius and a hidden flag. One session.
+- Closed 2026-09-24 (S64, D-120): a placed `facing` gives an enemy a vision cone (180°, walls block) with hearing close behind, an optional sweep; a detection meter fills in view and empties out of it, notices at once up close, and rolls at the top against the party's `stealth` trait; striking an enemy that has not noticed the party opens the fight from cover (everyone hidden, first blows ambushes). Left: true fog of war (the map is drawn whole), and procgen Shards place no facings yet (every Shard enemy still looks all round).
 
 ## Engineering and process
 

@@ -102,6 +102,7 @@ var _portraits: Dictionary = {} # speaker id -> ImageTexture, built once per wor
 var perf_hud: bool = false # `--perf`: fps and frame time on the status line (S53)
 var crashed_last_run: String = "" # the crash report the last run left, shown once on the title (D-116)
 var last_hack_note: String = "" # the toast a hacked gate leaves for interact() (S63)
+var detect_rng := RandomNumberGenerator.new() # the detection roll (S64), seeded with the combat seed
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
@@ -197,6 +198,7 @@ func _ready() -> void:
 	account = Account.load_or_new(account_path)
 	if not Engine.has_meta("neon_weave_tests") and CrashReport.begin(): # the last run died (D-116)
 		crashed_last_run = CrashReport.last_report
+	detect_rng.seed = combat_seed if combat_seed != 0 else int(randi())
 	merchant_menu = MerchantMenu.new()
 	merchant_menu.name = "MerchantMenu"
 	add_child(merchant_menu)
@@ -970,7 +972,12 @@ func spawn_enemies() -> void:
 		if not map_data.is_walkable(cell):
 			push_warning("map %s places %s on blocked cell %s" % [map_data.id, type, cell])
 			continue
-		enemies.append(_make_enemy(type, enemy_entry, cell, String(p.get("tier", ""))))
+		var placed := _make_enemy(type, enemy_entry, cell, String(p.get("tier", "")))
+		if p.has("facing"): # S64: a placed facing makes awareness a cone
+			placed.set_facing_name(String(p["facing"]), float(p.get("sweep", 0.0)), float(p.get("sweep_period", 4.0)))
+			var screen_dir := map_view.cell_to_world(cell + placed.facing_dir) - map_view.cell_to_world(cell)
+			placed.set_motion(false, screen_dir.normalized())
+		enemies.append(placed)
 
 
 ## Builds and places one enemy actor, scaled for this map's depth and the
@@ -1249,6 +1256,9 @@ func status_line() -> String:
 	var line1 := Loc.t("%s  |  %s  |  leader %s  hover %s%s  |  enemies %d  pickups %d") % [
 		Loc.any(map_data.name), Loc.t(mode), leader_cell(), hovered_cell, exit_note, living_enemies().size(), remaining_pickups().size(),
 	]
+	var alert := most_noticed()
+	if mode == "explore" and alert > 0.0 and alert < 1.0:
+		line1 += Loc.t("  |  ⚠ noticed %d%%") % int(round(alert * 100.0))
 	if perf_hud:
 		line1 = "fps %d · %.1f ms  |  %s" % [Engine.get_frames_per_second(), Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, line1]
 	var line2 := Loc.t("%s  |  %s") % [run.summary() if run.in_shard else Loc.t("at home: loot banks on pickup"), ledger.summary()]
@@ -1279,18 +1289,72 @@ func status_line() -> String:
 # --- encounters ------------------------------------------------------------
 
 ## Starts combat when any enemy can see a party member within its awareness.
-func check_encounters() -> bool:
+## Awareness (S64, D-120). An enemy notices a party member it can see:
+## within its awareness, with a clear line, and inside its cone when it
+## has a facing (close behind it, it hears instead). With no `delta` (a
+## settled look: tests, and the moment after a teleport) seeing is
+## noticing, as before S64. With a frame's `delta`, seeing someone within
+## the instant radius starts the fight; farther, the enemy's meter fills
+## over `notice_seconds`, empties over `notice_decay_seconds` when nobody
+## is in view, and at the top rolls detection against the party's stealth:
+## a failed roll is a second look (the meter drops to half).
+func check_encounters(delta: float = -1.0) -> bool:
 	if mode != "explore":
 		return false
 	for e: EnemyActor in living_enemies():
+		if delta > 0.0:
+			e.tick_sweep(delta)
+		var seen_at := -1
 		for m: PartyMember in party.members:
 			if m.downed:
 				continue
 			var mc := member_cell(m)
-			if LineOfSight.distance(e.cell, mc) <= e.awareness and LineOfSight.clear(map_data, e.cell, mc):
+			var d := LineOfSight.distance(e.cell, mc)
+			if d > e.awareness or not LineOfSight.clear(map_data, e.cell, mc):
+				continue
+			if not e.in_cone(mc, rules.vision_cone_degrees) and d > rules.hearing_radius:
+				continue # behind it, and too far to hear
+			if seen_at < 0 or d < seen_at:
+				seen_at = d
+		if seen_at < 0:
+			if delta > 0.0 and e.noticed > 0.0:
+				e.noticed = maxf(e.noticed - delta / maxf(rules.notice_decay_seconds, 0.01), 0.0)
+			continue
+		if delta <= 0.0 or seen_at <= rules.notice_instant_radius:
+			e.noticed = 1.0
+			start_combat(false)
+			return true
+		var closeness := 1.0 + float(e.awareness - seen_at) / float(maxi(e.awareness, 1))
+		e.noticed += delta / maxf(rules.notice_seconds, 0.01) * closeness
+		if e.noticed >= 1.0:
+			if detect_rng.randf() < detection_chance(rules, e.awareness, party_stealth()):
 				start_combat(false)
 				return true
+			e.noticed = 0.5 # a second look
 	return false
+
+
+## The chance a full meter turns into a fight (S64): the base, more for a
+## sharper enemy, less for a stealthier party; never below 5%.
+static func detection_chance(r: CombatRules, awareness: int, stealth: int) -> float:
+	return clampf(r.detect_base + float(awareness - r.awareness_default) * r.detect_per_awareness - float(stealth) * r.detect_per_stealth, 0.05, 1.0)
+
+
+## The party's stealth: the best `stealth` trait among its standing members.
+func party_stealth() -> int:
+	var best := 0
+	for m: PartyMember in party.members:
+		if not m.downed:
+			best = maxi(best, int(m.traits.get("stealth", 0)))
+	return best
+
+
+## The fullest detection meter among living enemies, for the HUD.
+func most_noticed() -> float:
+	var best := 0.0
+	for e: EnemyActor in living_enemies():
+		best = maxf(best, e.noticed)
+	return best
 
 
 ## Living enemies within the rules' engage radius of any party member.
@@ -1304,7 +1368,9 @@ func engaged_enemies() -> Array[EnemyActor]:
 	return out
 
 
-func start_combat(first_strike: bool) -> void:
+## `opener` (S64): the party struck first at an enemy that had not noticed
+## it, so everyone starts hidden and the first blows are ambushes.
+func start_combat(first_strike: bool, opener: bool = false) -> void:
 	if mode != "explore":
 		return
 	var foes := engaged_enemies()
@@ -1329,6 +1395,8 @@ func start_combat(first_strike: bool) -> void:
 	mode = "combat"
 	var seed_value := combat_seed if combat_seed != 0 else int(randi())
 	combat.begin(party.members, cells, foes, first_strike, seed_value)
+	if opener and combat.state != null:
+		combat.state.open_from_cover()
 
 
 func _on_combat_ended(result: String) -> void:
@@ -1639,7 +1707,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				elif npc != null and LineOfSight.distance(leader_cell(), cell) <= 2:
 					talk_to(npc.npc_id if npc.is_story_npc() else npc.companion_id)
 				elif enemy != null and LineOfSight.distance(leader_cell(), cell) <= enemy.awareness:
-					start_combat(true)
+					start_combat(true, enemy.noticed < 1.0) # S64: striking the unaware is an opener
 				else:
 					command_move(cell)
 			elif event.is_action_pressed("extract"):
@@ -1694,7 +1762,7 @@ func _process(delta: float) -> void:
 		check_secrets()
 		check_triggers()
 		if mode == "explore" and not check_transitions():
-			check_encounters()
+			check_encounters(delta)
 	elif mode == "combat":
 		_tick_cursor(Input.get_vector("move_left", "move_right", "move_up", "move_down"), delta)
 	hovered_cell = hover_override if hover_override.x >= 0 else map_view.world_to_cell(get_global_mouse_position())

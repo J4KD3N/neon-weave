@@ -24,6 +24,8 @@ Owner is who can close it: **Person** (a role the project does not have), **Mone
 
 ## 1. Promises the GDD made that have nothing behind them
 
+Rows two to six closed on 2026-09-24 (S61 to S64, D-117 to D-120; `docs/m5-plan.md`); the table stands as the record of what was found. Row one, the 30-hour campaign, stays with a writer, and the store page now states the shipped length.
+
 These are the gaps that `docs/gaps.md` does not list because they were never started, found by reading the GDD against the code.
 
 | Gap | GDD source | Severity | Owner | Closing action |
