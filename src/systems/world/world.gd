@@ -101,6 +101,7 @@ var _talk_log_start: int = 0 # where this talk's lines begin in the history (S52
 var _portraits: Dictionary = {} # speaker id -> ImageTexture, built once per world (S52)
 var perf_hud: bool = false # `--perf`: fps and frame time on the status line (S53)
 var crashed_last_run: String = "" # the crash report the last run left, shown once on the title (D-116)
+var last_hack_note: String = "" # the toast a hacked gate leaves for interact() (S63)
 ## A once-trigger that started a fight is spent only when that fight is won,
 ## so a wipe lets the player come back and try the boss again.
 var pending_trigger_flag: String = ""
@@ -1263,6 +1264,8 @@ func status_line() -> String:
 		line3 = "▶ RELAY WAYPOINT — press E to bank the haul and keep going ◀"
 	elif mode == "explore" and adjacent_door().x >= 0 and map_data.door_kind(adjacent_door()) == "vault":
 		line3 = "▶ VAULT DOOR — Enter / A opens it for %s ◀" % BastionState.describe_cost(vault_at(adjacent_door()).get("cost", {"ciphers": 1}))
+	elif mode == "explore" and adjacent_door().x >= 0 and map_data.door_kind(adjacent_door()) == "locked":
+		line3 = locked_door_prompt(adjacent_door())
 	elif mode == "explore" and merchant_near() != null:
 		line3 = "▶ %s — Enter / A to trade ◀" % merchant_near().display_name
 	elif mode == "defeated" and is_iron_weave():
@@ -1892,6 +1895,9 @@ func interact() -> bool:
 		return why.is_empty()
 	if door.x >= 0 and map_data.door_kind(door) == "locked":
 		var why := open_locked(door)
+		if why.is_empty() and not last_hack_note.is_empty():
+			overlay.toast(last_hack_note, 2.5)
+			last_hack_note = ""
 		if not why.is_empty():
 			overlay.toast(Loc.t("Gate: %s") % why, 2.5)
 		return why.is_empty()
@@ -2513,12 +2519,53 @@ func open_locked(cell: Vector2i) -> String:
 	var entry := locked_door_at(cell)
 	var key := String(entry.get("key_flag", ""))
 	if not key.is_empty() and not narrative.flag(key):
-		return Loc.t("locked: %s") % String(entry.get("hint", "something on this map opens it"))
+		var need := int(entry.get("hack_tech", 0)) # S63: Tech opens what the key would
+		if need <= 0 or protagonist_tech() < need:
+			var why := Loc.t("locked: %s") % Loc.any(String(entry.get("hint", "something on this map opens it")))
+			if need > 0:
+				why += Loc.t(" · Tech %d would hack it (you have %d)") % [need, protagonist_tech()]
+			return why
+		last_hack_note = Loc.t("[Tech %d] Hacked: the lock gives.") % need
 	open_door(cell)
 	var opens := String(entry.get("opens_flag", ""))
 	if not opens.is_empty():
 		narrative.set_flag(opens, true)
 	return ""
+
+
+## The protagonist's Tech attribute (0 for a party with no protagonist).
+func protagonist_tech() -> int:
+	return int(Dictionary(protagonist.get("attributes", {})).get("tech", 0))
+
+
+## Who may Hack in combat (S63, D-119): the protagonist with Tech at the
+## rules' minimum, and any member whose class has the Tech branch.
+func can_hack(m: PartyMember) -> bool:
+	if m.member_id == PartyBuilder.PROTAGONIST_ID:
+		return protagonist_tech() >= rules.hack_tech_min
+	return Array(registry.get_entry("classes", m.class_id).get("branches", [])).has("tech")
+
+
+## The Hack roll bonus: every point of the protagonist's Tech past the minimum.
+func hack_bonus(m: PartyMember) -> int:
+	if m.member_id != PartyBuilder.PROTAGONIST_ID:
+		return 0
+	return maxi(protagonist_tech() - rules.hack_tech_min, 0) * rules.hack_tech_bonus
+
+
+## The HUD line for a locked gate beside the party (S63).
+func locked_door_prompt(cell: Vector2i) -> String:
+	var entry := locked_door_at(cell)
+	var key := String(entry.get("key_flag", ""))
+	var hint := Loc.any(String(entry.get("hint", "something on this map opens it")))
+	var need := int(entry.get("hack_tech", 0))
+	if key.is_empty() or narrative.flag(key):
+		return Loc.t("▶ LOCKED GATE — Enter / A opens it ◀")
+	if need > 0 and protagonist_tech() >= need:
+		return Loc.t("▶ LOCKED GATE — [Tech %d] Enter / A hacks it ◀") % need
+	if need > 0:
+		return Loc.t("▶ LOCKED GATE — %s · Tech %d would hack it (you have %d) ◀") % [hint, need, protagonist_tech()]
+	return Loc.t("▶ LOCKED GATE — %s ◀") % hint
 
 
 ## Transitions: the leader standing on a marked cell travels to another map.

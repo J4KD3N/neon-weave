@@ -17,6 +17,9 @@ var awareness_default: int = 5
 ## Enemies within this many cells of any party member join an encounter.
 var engage_radius: int = 7
 var first_strike_initiative_bonus: int = 10
+## Hacking (S63): the protagonist needs this much Tech for the Hack action, and each point above it adds this to the roll.
+var hack_tech_min: int = 2
+var hack_tech_bonus: int = 15
 var initiative_die: int = 20
 ## Ranged hit penalty when a cover tile sits between attacker and target.
 var cover_hit_penalty: int = 20
@@ -76,6 +79,8 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.awareness_default = int(entry.get("awareness_default", r.awareness_default))
 	r.engage_radius = int(entry.get("engage_radius", r.engage_radius))
 	r.first_strike_initiative_bonus = int(entry.get("first_strike_initiative_bonus", r.first_strike_initiative_bonus))
+	r.hack_tech_min = int(entry.get("hack_tech_min", r.hack_tech_min))
+	r.hack_tech_bonus = int(entry.get("hack_tech_bonus", r.hack_tech_bonus))
 	r.initiative_die = int(entry.get("initiative_die", r.initiative_die))
 	r.cover_hit_penalty = int(entry.get("cover_hit_penalty", r.cover_hit_penalty))
 	r.elevation_hit_bonus = int(entry.get("elevation_hit_bonus", r.elevation_hit_bonus))

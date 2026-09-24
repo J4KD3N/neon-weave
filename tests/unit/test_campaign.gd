@@ -111,7 +111,7 @@ func test_gate_road_plays_end_to_end() -> void:
 	# The gate refuses until the lever is pulled.
 	_stand_on(Vector2i(8, 4))
 	assert_eq(world.adjacent_door(), gate)
-	assert_eq(world.open_locked(gate), "locked: the relay lever on this road")
+	assert_eq(world.open_locked(gate), "locked: the relay lever on this road · Tech 3 would hack it (you have 0)")
 	assert_false(world.interact())
 	assert_eq(world.map_data.door_kind(gate), "locked")
 	# The lever trigger fires once.

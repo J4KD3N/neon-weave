@@ -24,7 +24,7 @@
     "########################"
   ],
   "doors": [
-    { "cell": [9, 4], "key_flag": "gate_lever_pulled", "opens_flag": "gate_open", "hint": "the relay lever on this road" }
+    { "cell": [9, 4], "key_flag": "gate_lever_pulled", "opens_flag": "gate_open", "hint": "the relay lever on this road", "hack_tech": 3 }
   ],
   "triggers": [
     { "id": "lever", "cell": [7, 1], "once": true, "effects": { "flags": { "gate_lever_pulled": true }, "toast": "You pull the relay lever. Something east of you grinds awake." } },

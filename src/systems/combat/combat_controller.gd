@@ -61,6 +61,10 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 		c.damage_bonus = world.bastion.damage_bonus() + m.damage_bonus
 		c.set_resource(world.resource_def_for(m))
 		c.traits = m.traits.duplicate(true)
+		if world.can_hack(m) and world.abilities_by_id().has("hack"): # S63: Tech hands the hack
+			if not c.abilities.has("hack"):
+				c.abilities.append("hack")
+			c.traits["hack_bonus"] = world.hack_bonus(m)
 		combatants.append(c)
 		actors[c.id] = m
 		m.show_hp = true
@@ -442,6 +446,11 @@ func _on_event(e: Dictionary) -> void:
 		"chain", "surface", "overload", "vent":
 			if not animate:
 				_sync_actor(String(e.get("target", e.get("actor", ""))))
+		"hack":
+			if bool(e.get("hit", false)):
+				var turned: Variant = actors.get(String(e["target"]))
+				if typeof(turned) == TYPE_OBJECT and is_instance_valid(turned):
+					(turned as WorldActor).modulate = Color(0.7, 1.0, 0.85) # ours now: a green cast
 
 
 ## Blood for combat events (S61): a splat where a hit landed, a pool where
@@ -500,6 +509,8 @@ func _sound_for_event(e: Dictionary) -> void:
 			audio.event("combat.stealth")
 		"vent":
 			audio.event("combat.vent")
+		"hack":
+			audio.event("combat.hit" if bool(e.get("hit", false)) else "combat.miss")
 		"chain", "surface", "overload":
 			audio.event("combat.hit")
 			if bool(e.get("killed", false)) or bool(e.get("downed", false)):
@@ -600,6 +611,8 @@ func _refresh_player_ui() -> void:
 			res += Loc.t(" · hidden")
 		if c.is_silenced():
 			res += Loc.t(" · silenced %d") % int(c.statuses["silenced"])
+		if c.hacked and c.is_active():
+			res += Loc.t(" · hacked")
 		order.append("%s%s (%s)%s" % [mark, c.display_name, hp, res])
 	hud.set_order_text("\n".join(order))
 	var abilities: Array[Dictionary] = []
@@ -616,6 +629,17 @@ func _refresh_player_ui() -> void:
 func _finish() -> void:
 	highlighter.clear_all()
 	hud.set_abilities([], "")
+	for id: String in actors.keys(): # S63: a hacked machine powers down when the fight ends, and drops nothing
+		var c := state.by_id(id)
+		if c == null or not c.hacked or not id.begins_with("e:"):
+			continue
+		var raw: Variant = actors[id]
+		if typeof(raw) != TYPE_OBJECT or not is_instance_valid(raw):
+			continue
+		var node: WorldActor = raw
+		node.dead = true
+		node.queue_free()
+		world.overlay.toast(Loc.t("%s powers down.") % c.display_name, 2.0)
 	if world.camera != null and world.party.leader() != null:
 		world.camera.target = world.party.leader()
 	if state.result == "victory":
