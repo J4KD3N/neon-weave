@@ -485,8 +485,9 @@ func save_path(save_name: String) -> String:
 
 
 ## Save anywhere out of combat. ERR_UNAVAILABLE during a fight.
-func save_to(save_name: String) -> Error:
-	if mode == "combat":
+## `in_combat` (S68): the autosave may carry a fight in progress; slots may not.
+func save_to(save_name: String, in_combat: bool = false) -> Error:
+	if mode == "combat" and not in_combat:
 		return ERR_UNAVAILABLE
 	var err := SaveSystem.write(save_path(save_name), SaveSystem.capture(self))
 	if err == OK:
@@ -512,8 +513,8 @@ func autosave() -> Error:
 	advance_quests() # the save carries any stage the last beat completed
 	grant_account_unlocks()
 	if not is_iron_weave(): # one save means one; otherwise the last few autosaves stay (S54)
-		SaveSystem.rotate_autosaves(saves_dir)
-		for age: int in range(1, SaveSystem.AUTOSAVE_KEEP):
+		SaveSystem.rotate_autosaves(saves_dir, settings.autosaves_kept) # as many as the setting says (S68)
+		for age: int in range(1, settings.autosaves_kept):
 			platform().push_save(save_path(SaveSystem.autosave_name(age))) # the rotated copies ride the cloud too (S58)
 	var err := save_to(SaveSystem.AUTOSAVE)
 	if err == OK:
@@ -551,6 +552,83 @@ func load_slot(n: int) -> Array[String]:
 			overlay.toast(Loc.t("Iron Weave: no reloads."), 2.5)
 		return ["Iron Weave: no reloads"]
 	return load_from(SaveSystem.slot_name(n))
+
+
+## The enemies as they stand, for a save written mid-fight (S68): type,
+## cell, tier and whether dead, in the world's own order so a fight's actor
+## references (indices) hold after a load.
+func enemy_roster() -> Array:
+	var out: Array = []
+	for e: EnemyActor in enemies:
+		if not is_instance_valid(e):
+			out.append({"type": "", "cell": [0, 0], "tier": "", "dead": true})
+			continue
+		out.append({"type": e.enemy_id, "cell": [e.cell.x, e.cell.y], "tier": e.tier, "dead": e.dead})
+	return out
+
+
+## Replaces the placed enemies with a saved roster (S68): trigger-spawned
+## enemies included, dead ones as gaps, so a fight's indices still point.
+func respawn_roster(roster: Array) -> void:
+	for e: EnemyActor in enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+	enemies.clear()
+	for raw: Variant in roster:
+		var r: Dictionary = raw
+		var type := String(r.get("type", ""))
+		var entry: Dictionary = registry.get_entry("enemies", type)
+		if type.is_empty() or entry.is_empty() or bool(r.get("dead", false)):
+			var gap := EnemyActor.new() # a dead index: never drawn, never a target
+			gap.dead = true
+			enemies.append(gap)
+			gap.queue_free()
+			continue
+		var raw_cell: Array = r.get("cell", [0, 0])
+		var actor := _make_enemy(type, entry, Vector2i(int(raw_cell[0]), int(raw_cell[1])), String(r.get("tier", "")))
+		enemies.append(actor)
+
+
+## Writes the autosave with the fight in it (S68, D-124): what the window's
+## close button does mid-fight, so a quit resumes where it stood, and the
+## one save an Iron Weave run has carries the fight instead of its start.
+func save_fight() -> Error:
+	if mode != "combat":
+		return ERR_UNAVAILABLE
+	return save_to(SaveSystem.AUTOSAVE, true)
+
+
+## F5 (S68): a first save goes straight to slot 1; over an existing one the
+## saves screen asks first, the cursor on the slot.
+func quick_save() -> bool:
+	if is_iron_weave() or not FileAccess.file_exists(save_path(SaveSystem.slot_name(1))):
+		return save_slot(1) == OK
+	if not open_saves(SavesMenu.PAGE_SAVE):
+		return false
+	_saves_cursor_to(SaveSystem.slot_name(1))
+	saves_menu.pending = SaveSystem.slot_name(1)
+	saves_menu.refresh()
+	return true
+
+
+## F9 (S68): the load page with the cursor on slot 1, one confirm away.
+func quick_load() -> bool:
+	if is_iron_weave():
+		return load_slot(1).is_empty()
+	if not FileAccess.file_exists(save_path(SaveSystem.slot_name(1))):
+		overlay.toast(Loc.t("Nothing in slot 1 yet. F5 saves there."), 2.0)
+		return false
+	if not open_saves(SavesMenu.PAGE_LOAD):
+		return false
+	_saves_cursor_to(SaveSystem.slot_name(1))
+	saves_menu.refresh()
+	return true
+
+
+func _saves_cursor_to(id: String) -> void:
+	for i: int in saves_menu.rows.size():
+		if String(saves_menu.rows[i].get("id", "")) == id:
+			saves_menu.cursor = i
 
 
 ## Moves the existing party (HP intact) onto a map's spawn cells.
@@ -1574,10 +1652,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		overlay.toggle_registry()
 		return
 	if event.is_action_pressed("quick_save"):
-		save_slot(1)
+		quick_save() # asks before it overwrites (S68)
 		return
 	if event.is_action_pressed("quick_load"):
-		load_slot(1)
+		quick_load()
 		return
 	if event.is_action_pressed("load_autosave"):
 		if reload_allowed():
@@ -1795,6 +1873,8 @@ func _unhandled_input(event: InputEvent) -> void:
 ## The window's close button is a clean exit too (D-116).
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and not Engine.has_meta("neon_weave_tests"):
+		if mode == "combat":
+			save_fight() # the fight rides the autosave (S68)
 		CrashReport.end()
 
 
@@ -1915,7 +1995,7 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "roster", "label": Loc.t("Roster & Quarters (%d with you, %d waiting)") % [narrative.active_companions().size(), narrative.benched.size()], "enabled": home and roster_rows().size() > 1, "why": Loc.t("only at home") if not home else Loc.t("nobody recruited")})
 	items.append({"id": "save_game", "label": Loc.t("Save game…"), "enabled": mode != "combat" and reload_allowed(), "why": Loc.t("Iron Weave: one save") if not reload_allowed() else Loc.t("in combat")})
 	var any_loadable := false
-	for row: Dictionary in SaveSystem.list_saves(saves_dir, registry, true):
+	for row: Dictionary in SaveSystem.list_saves(saves_dir, registry, true, settings.autosaves_kept):
 		if bool(row["loadable"]):
 			any_loadable = true
 	items.append({"id": "load_game", "label": Loc.t("Load game…"), "enabled": any_loadable and reload_allowed(), "why": Loc.t("Iron Weave: no reloads") if not reload_allowed() else Loc.t("no saves yet")})
@@ -3446,6 +3526,8 @@ func adjust_setting(direction: int) -> bool:
 			settings.cycle_screen_fx(direction)
 		"gore":
 			settings.cycle_gore(direction)
+		"autosaves_kept":
+			settings.cycle_autosaves(direction)
 		_:
 			return false
 	settings.apply()
@@ -3464,7 +3546,7 @@ func confirm_setting() -> bool:
 		settings_menu.refresh()
 		return true
 	match id:
-		"fullscreen", "glyphs", "rumble", "text_scale", "palette", "language", "lighting", "screen_fx", "gore":
+		"fullscreen", "glyphs", "rumble", "text_scale", "palette", "language", "lighting", "screen_fx", "gore", "autosaves_kept":
 			return adjust_setting(1)
 		"music", "sfx":
 			return adjust_setting(1)
@@ -4126,7 +4208,7 @@ func act_number() -> int:
 ## slots, the autosave and its older copies on the load page.
 func saves_rows(page: String) -> Array[Dictionary]:
 	var rows: Array[Dictionary] = []
-	var listing := SaveSystem.list_saves(saves_dir, registry, page == SavesMenu.PAGE_LOAD)
+	var listing := SaveSystem.list_saves(saves_dir, registry, page == SavesMenu.PAGE_LOAD, settings.autosaves_kept)
 	for row: Dictionary in listing:
 		var save_name := String(row["name"])
 		var is_slot := save_name.begins_with("slot_")

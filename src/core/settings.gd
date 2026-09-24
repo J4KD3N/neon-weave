@@ -10,6 +10,7 @@ const PATH := "user://settings.json"
 const VOLUME_MIN_DB := -30.0
 const VOLUME_STEP_DB := 3.0
 const GLYPH_STYLES: Array[String] = ["auto", "xbox", "playstation"]
+const AUTOSAVES_MAX := 5
 
 var fullscreen: bool = false
 var volume_db: float = 0.0
@@ -23,11 +24,13 @@ var locale: String = Loc.DEFAULT
 var lighting: bool = true
 var screen_fx: String = "glow"
 var gore: String = "full"
+## How many older autosaves stay beside the newest (S68): 1 to AUTOSAVES_MAX.
+var autosaves_kept: int = 3
 var load_error: String = ""
 
 
 func to_dict() -> Dictionary:
-	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette, "locale": locale, "lighting": lighting, "screen_fx": screen_fx, "gore": gore}
+	return {"version": 1, "fullscreen": fullscreen, "volume_db": volume_db, "glyphs": glyphs, "rumble": rumble, "text_scale": text_scale, "music_db": music_db, "sfx_db": sfx_db, "palette": palette, "locale": locale, "lighting": lighting, "screen_fx": screen_fx, "gore": gore, "autosaves_kept": autosaves_kept}
 
 
 static func from_dict(d: Dictionary) -> Settings:
@@ -48,6 +51,7 @@ static func from_dict(d: Dictionary) -> Settings:
 	s.screen_fx = fx if ScreenFx.MODES.has(fx) else "glow"
 	var g2 := String(d.get("gore", "full"))
 	s.gore = g2 if DecalLayer.MODES.has(g2) else "full"
+	s.autosaves_kept = clampi(int(d.get("autosaves_kept", 3)), 1, AUTOSAVES_MAX)
 	return s
 
 
@@ -128,6 +132,10 @@ func cycle_screen_fx(direction: int) -> void:
 
 func cycle_gore(direction: int) -> void:
 	gore = DecalLayer.cycle(gore, direction)
+
+
+func cycle_autosaves(direction: int) -> void:
+	autosaves_kept = clampi(autosaves_kept + direction, 1, AUTOSAVES_MAX)
 
 
 func cycle_locale(direction: int) -> void:

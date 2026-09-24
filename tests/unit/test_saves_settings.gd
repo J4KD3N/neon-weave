@@ -255,7 +255,7 @@ func test_music_and_sfx_buses_and_the_colour_palette_are_settings() -> void:
 		if not section.is_empty() and not sections.has(section):
 			sections.append(section)
 		assert_false(String(r.get("hint", "")).is_empty() , "%s has a hint" % r["id"])
-	assert_eq(sections, ["Display", "Audio", "Pad", "Bindings"])
+	assert_eq(sections, ["Display", "Audio", "Pad", "Saves", "Bindings"])
 	var music_row := 0
 	for i: int in rows.size():
 		if String(rows[i]["id"]) == "music":

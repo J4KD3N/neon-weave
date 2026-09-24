@@ -92,6 +92,75 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 	_after_state_change()
 
 
+## The fight and who stands in it, for a save written mid-fight (S68,
+## D-124): the state as data and each combatant's actor as a party member
+## id or an index into the world's enemy roster.
+func to_dict() -> Dictionary:
+	if state == null:
+		return {}
+	var refs: Dictionary = {}
+	for id: String in actors.keys():
+		var raw: Variant = actors[id]
+		if typeof(raw) != TYPE_OBJECT or not is_instance_valid(raw):
+			continue
+		if raw is PartyMember:
+			refs[id] = {"kind": "party", "ref": (raw as PartyMember).member_id}
+		elif raw is EnemyActor:
+			var i := world.enemies.find(raw)
+			if i >= 0:
+				refs[id] = {"kind": "enemy", "ref": i}
+	return {"state": state.to_dict(), "actors": refs}
+
+
+## Puts a saved fight back on a world whose map, party and enemy roster are
+## already restored. The player's or the enemies' turn resumes where it was.
+func resume(d: Dictionary) -> bool:
+	var saved: Dictionary = d.get("state", {})
+	if saved.is_empty():
+		return false
+	actors.clear()
+	selected_ability = ""
+	busy = false
+	var refs: Dictionary = d.get("actors", {})
+	var combatants: Array[Combatant] = []
+	for raw_c: Variant in saved.get("combatants", []):
+		var c := Combatant.from_dict(raw_c)
+		if not c.resource_id.is_empty():
+			c.set_resource(world.registry.get_entry("resources", c.resource_id))
+			c.resource = int(Dictionary(raw_c).get("resource", 0))
+		var ref: Dictionary = refs.get(c.id, {})
+		var node: WorldActor = null
+		if String(ref.get("kind", "")) == "party":
+			node = world.member_by_id(String(ref.get("ref", "")))
+		elif String(ref.get("kind", "")) == "enemy":
+			var i := int(ref.get("ref", -1))
+			if i >= 0 and i < world.enemies.size() and is_instance_valid(world.enemies[i]):
+				node = world.enemies[i]
+		if node == null:
+			continue # its actor is gone: the fight goes on without it
+		combatants.append(c)
+		actors[c.id] = node
+		node.show_hp = true
+		node.position = world.map_view.cell_to_world(c.cell)
+		if node is PartyMember:
+			(node as PartyMember).hp = c.hp
+			(node as PartyMember).downed = c.downed
+		elif node is EnemyActor:
+			(node as EnemyActor).cell = c.cell
+			(node as EnemyActor).hp = c.hp
+	state = CombatState.new()
+	state.enemy_entries = world.enemies_by_id()
+	state.depth = world.map_depth()
+	state.setup(world.map_data, world.rules, world.abilities_by_id(), combatants, int(d.get("seed", 0)))
+	state.event.connect(_on_event)
+	state.restore_from(saved)
+	hud.visible = true
+	hud.hide_message()
+	started.emit()
+	_after_state_change()
+	return true
+
+
 ## Left click during combat.
 func player_click(cell: Vector2i) -> void:
 	if busy or not is_active() or not current_is_player():
