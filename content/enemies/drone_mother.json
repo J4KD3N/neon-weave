@@ -1,4 +1,5 @@
 {
+  "traits": { "fluid": "oil" },
   "name": "Drone-Mother",
   "family": "rusted_undercity",
   "archetype": "summoner",

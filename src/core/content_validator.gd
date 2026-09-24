@@ -215,6 +215,9 @@ func _talents() -> void:
 
 func _enemies() -> void:
 	for e: Dictionary in _registry.get_all("enemies"):
+		var e_fluid := String(Dictionary(e.get("traits", {})).get("fluid", "blood"))
+		if not DecalLayer.FLUIDS.has(e_fluid):
+			_flag(e, "traits.fluid must be blood, oil or none (S61)")
 		_check_art(e)
 		var family := String(e.get("family", ""))
 		if not _has("biomes", family) and family != "bastion":
@@ -655,6 +658,11 @@ func _misc() -> void:
 			_flag(s, "image '%s' %s" % [image, why])
 	for t: Dictionary in _registry.get_all("tiles"):
 		var glow := String(Dictionary(t.get("art", {})).get("glow", ""))
+		var t_art: Dictionary = t.get("art", {})
+		if t_art.has("flicker") and not (t_art["flicker"] is bool):
+			_flag(t, "art.flicker must be true or false")
+		if bool(t_art.get("flicker", false)) and glow.is_empty():
+			_flag(t, "art.flicker needs an art.glow to flicker")
 		if glow.is_empty():
 			continue
 		for b: Dictionary in _registry.get_all("biomes"):

@@ -1,0 +1,8 @@
+{
+  "name": "Grimed floor",
+  "sound": "sfx_step_concrete",
+  "summary": "Concrete under centuries of soot, oil and worse; nobody has swept here since the Sundering.",
+  "layer": "ground",
+  "walkable": true,
+  "art": { "shape": "floor", "fill": "floor", "edge": "floor_edge", "pattern": "grime" }
+}

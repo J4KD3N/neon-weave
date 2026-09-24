@@ -22,6 +22,8 @@ Download the current screenshots with `gh run download <run-id> -n screenshot`. 
 
 Neon Weave is an open-source, party-based, isometric CRPG in an arcane-cyberpunk ruin. Lead a party of Weavers, scavenger-mages, into procedurally generated Shards, bank what you bring back, and follow a handcrafted story to the thing that woke the Shards. Turn-based combat with four action points and free movement, six classes with resource loops, three companions who disagree with each other, and a Bastion that grows with your books.
 
+What exists today (2026-09-24, so the page never promises more than the build): three acts, five endings, six companions, four romances, three factions, ten races, four biomes, seven buildings; a first run is four to six hours, Act 1 two to three of them. The GDD's 30-hour campaign is the writing target, not the shipped length, until the writing pass lands.
+
 ## Long description (draft)
 
 Centuries after a hyper-advanced civilisation tore open the Weft to drown its own machine mind, magic and technology have fused and the fusion has never stopped deepening. You run the Beacon: the only link to the Shards, the stirring ruins where the loot and the answers are.

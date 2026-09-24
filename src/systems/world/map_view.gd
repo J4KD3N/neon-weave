@@ -10,6 +10,7 @@ var map: MapData
 var nav := NavGrid.new()
 var atlas_coords: Dictionary = {}
 var lighting: LightingRig
+var decals: DecalLayer
 
 
 func build(map_data: MapData, biome: Dictionary, lighting_rules: Dictionary = {}) -> void:
@@ -32,6 +33,7 @@ func build(map_data: MapData, biome: Dictionary, lighting_rules: Dictionary = {}
 			layer.set_cell(cell, PlaceholderTiles.SOURCE_ID, atlas_coords[map.tile_id_at(cell)])
 	nav.build(map)
 	lighting.rebuild(map, biome.get("palette", {}), lighting_rules, Callable(self, "cell_to_world")) # the lighting pass (S56)
+	decals.set_palette(biome.get("palette", {})) # the marks a fight leaves (S61)
 
 
 ## Centre of `cell` in global coordinates.
@@ -69,6 +71,10 @@ func _ensure_layers() -> void:
 	ground.name = "Ground"
 	ground.z_index = -1 # always beneath walls and actors, whatever Y-sort decides
 	add_child(ground)
+	decals = DecalLayer.new()
+	decals.name = "Decals"
+	decals.map_view = self
+	add_child(decals) # above the ground, under walls and actors
 	walls = TileMapLayer.new()
 	walls.name = "Walls"
 	walls.y_sort_enabled = true

@@ -244,6 +244,7 @@ func _ready() -> void:
 	auto_start_quests()
 	restore_map_doors()
 	restore_map_edits()
+	restore_marks()
 	combat = CombatController.new()
 	combat.name = "Combat"
 	add_child(combat)
@@ -428,6 +429,7 @@ func _enter(entry: Dictionary) -> bool:
 	mode = "explore"
 	restore_map_doors()
 	restore_map_edits()
+	restore_marks()
 	_last_step_cell = Vector2i(-1, -1)
 	if audio != null:
 		refresh_music()
@@ -1346,6 +1348,7 @@ func _on_combat_ended(result: String) -> void:
 				narrative.set_flag("%s_dead" % m.member_id, true)
 				narrative.lose_romance(m.member_id) # a dead partner ends the romance (D-092)
 				overlay.toast(Loc.t("%s is dead.") % m.display_name, 4.0)
+			leave_mark(member_cell(m), "corpse", String(m.traits.get("fluid", "blood")), m.tint.to_html(false)) # the body stays (S61)
 			party.remove_member(m)
 		for m: PartyMember in party.members:
 			if m.downed:
@@ -1717,6 +1720,18 @@ func _maybe_screenshot() -> void:
 	if _screenshot_path.is_empty():
 		return
 	_frames += 1
+	if _frames == 2 and OS.get_cmdline_user_args().has("--screenshot-gore"): # a fight's marks around the party (S61)
+		teleport_party(Vector2i(13, 4))
+		var shot_rng := RandomNumberGenerator.new()
+		shot_rng.seed = 61
+		for i: int in 14:
+			var cell := Vector2i(11 + shot_rng.randi_range(0, 6), 2 + shot_rng.randi_range(0, 4))
+			if map_data.is_walkable(cell):
+				leave_mark(cell, "splat", "blood")
+		leave_mark(Vector2i(14, 2), "corpse", "blood", "#c94b3a")
+		leave_mark(Vector2i(16, 4), "corpse", "oil", "#7f8c99")
+		leave_mark(Vector2i(12, 5), "pool", "blood")
+		camera.snap()
 	var combat_shot := OS.get_cmdline_user_args().has("--screenshot-combat")
 	if _frames == 2 and combat_shot:
 		# Staged: everyone rolls 1 and the party strikes first, so the whole
@@ -3054,6 +3069,8 @@ func apply_visual_settings() -> void:
 		screen_fx.set_mode(settings.screen_fx)
 	if map_view != null and map_view.lighting != null:
 		map_view.lighting.set_enabled(settings.lighting)
+	if map_view != null and map_view.decals != null:
+		map_view.decals.set_level(settings.gore) # the marks a fight leaves (S61)
 
 
 ## Left / right on a settings row.
@@ -3086,6 +3103,8 @@ func adjust_setting(direction: int) -> bool:
 			settings.lighting = not settings.lighting
 		"screen_fx":
 			settings.cycle_screen_fx(direction)
+		"gore":
+			settings.cycle_gore(direction)
 		_:
 			return false
 	settings.apply()
@@ -3104,7 +3123,7 @@ func confirm_setting() -> bool:
 		settings_menu.refresh()
 		return true
 	match id:
-		"fullscreen", "glyphs", "rumble", "text_scale", "palette", "language", "lighting", "screen_fx":
+		"fullscreen", "glyphs", "rumble", "text_scale", "palette", "language", "lighting", "screen_fx", "gore":
 			return adjust_setting(1)
 		"music", "sfx":
 			return adjust_setting(1)
@@ -4256,6 +4275,36 @@ func restore_map_edits() -> void:
 		var edit: Array = e
 		if edit.size() == 3:
 			_set_map_tile(Vector2i(int(edit[0]), int(edit[1])), String(edit[2]))
+
+
+## The marks a fight leaves (S61, D-117): blood where an actor was hit, a
+## pool where one went down, a body where one died. Handcrafted maps keep
+## theirs in the story (narrative.marks), Shards in the run, both capped at
+## DecalLayer.MARKS_MAX; the decal layer draws them at the gore setting.
+func leave_mark(cell: Vector2i, kind: String, fluid: String = "blood", color: String = "#888888") -> Dictionary:
+	var mark := DecalLayer.make(cell, kind, int(randi() % 1000000), fluid, color)
+	if map_entry.has("generation"):
+		DecalLayer.push(run.marks, mark)
+	else:
+		var list: Array = narrative.marks.get(map_id, [])
+		DecalLayer.push(list, mark)
+		narrative.marks[map_id] = list
+	if map_view != null and map_view.decals != null:
+		map_view.decals.add(mark)
+	return mark
+
+
+## The marks this map holds, from wherever they live.
+func marks_here() -> Array:
+	if map_entry.has("generation"):
+		return run.marks
+	return narrative.marks.get(map_id, [])
+
+
+## Hands the map's marks to the decal layer on entry and after a load.
+func restore_marks() -> void:
+	if map_view != null and map_view.decals != null:
+		map_view.decals.set_marks(marks_here())
 
 
 ## The ending the state machine resolves for the current story.

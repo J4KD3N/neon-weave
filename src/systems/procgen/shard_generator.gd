@@ -24,6 +24,8 @@ const SECRET := "?"
 const VAULT := "V"
 const WAYPOINT := "W"
 const MERCHANT := "M" # floor under the merchant; kept out of the placement pools
+const GRIME := "g" # dressing (S61): grimed floor and failing lights, scattered last with their own RNG
+const LIGHT := "l"
 
 const N4: Array[Vector2i] = [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 const RING: Array[Vector2i] = [
@@ -127,6 +129,7 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 			p["rarity"] = r
 	pickups.append_array(features["pickups"])
 
+	_scatter_dressing(float(template.get("grime_density", 0.06)), float(template.get("light_density", 0.015)), seed_value)
 	var tiles: Dictionary = template.get("tiles", {})
 	var template_id := String(template.get("id", "shard"))
 	var room_list: Array = []
@@ -143,6 +146,8 @@ func _run(template: Dictionary, seed_value: int, depth: int, extra_pickups: Arra
 		VAULT: String(tiles.get("vault_door", "vault_door")),
 		WAYPOINT: String(tiles.get("waypoint", "waypoint")),
 		MERCHANT: String(tiles.get("floor", "floor_concrete")),
+		GRIME: String(tiles.get("grime", "floor_grime")),
+		LIGHT: String(tiles.get("light", "dead_light")),
 	}
 	for ch: String in surface_legend:
 		legend[ch] = surface_legend[ch]
@@ -272,6 +277,27 @@ func _scatter_debris(density: float) -> void:
 				continue
 			if _is_simple_point(p):
 				_put(p, DEBRIS)
+
+
+## Dressing (S61, GDD §5 grime and failing lights): plain floor cells become
+## grimed floor or a failing light at the densities given. Last, with its own
+## RNG seeded from the Shard's, so the layout and every placement before it
+## are what they were; both tiles walk like floor.
+func _scatter_dressing(grime: float, light: float, seed_value: int) -> void:
+	if grime <= 0.0 and light <= 0.0:
+		return
+	var dressing := RandomNumberGenerator.new()
+	dressing.seed = hash("dressing:%d" % seed_value)
+	for y: int in range(1, height - 1):
+		for x: int in range(1, width - 1):
+			var p := Vector2i(x, y)
+			if _cell_at(p) != FLOOR:
+				continue
+			var roll := dressing.randf()
+			if roll < light:
+				_put(p, LIGHT)
+			elif roll < light + grime:
+				_put(p, GRIME)
 
 
 ## True when removing `p` from the walkable set cannot disconnect anything:
