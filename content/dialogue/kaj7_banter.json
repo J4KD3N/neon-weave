@@ -2,6 +2,9 @@
   "name": "Kaj-7 — banter",
   "kind": "banter",
   "lines": [
+    { "trigger": "arrive", "text": "The signal is not louder here. It is closer. Those are different things. Logged.", "requires": { "map": "the_loom" }, "once": "kaj7_banter_loom" },
+    { "trigger": "arrive", "text": "Relay Station Nine. My maker's handwriting is on the routing table. I did not expect that.", "requires": { "map": "relay_station" }, "once": "kaj7_banter_relay" },
+    { "trigger": "arrive", "text": "The Beacon housing is warm. I put my hand on it. Nothing answered. Logged, with relief.", "requires": { "map": "bastion", "flags": { "catastrophe_seen": true } }, "once": "kaj7_banter_plaza" },
     { "trigger": "enter_shard", "text": "The signal is louder here. I am logging that as weather.", "once": "kaj7_banter_first_shard" },
     { "trigger": "enter_shard", "text": "Sera, you walk in front of the drones every time. I have noticed. I have not decided how I feel about it.", "requires": { "recruited": "sera" }, "once": "kaj7_banter_sera" },
     { "trigger": "victory", "text": "Dax, you cut the last one without looking. Was that skill or the absence of interest?", "requires": { "recruited": "dax" }, "once": "kaj7_banter_dax" },

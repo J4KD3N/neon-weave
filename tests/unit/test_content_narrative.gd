@@ -2,7 +2,7 @@
 ## NPC placements. Every graph must be reachable and never dead-end.
 extends TestCase
 
-const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
+const KNOWN_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract", "arrive"]
 const EFFECT_KEYS: Array[String] = ContentValidator.EFFECT_KEYS
 const REQUIRES_KEYS: Array[String] = ContentValidator.REQUIRES_KEYS # one vocabulary (S45)
 

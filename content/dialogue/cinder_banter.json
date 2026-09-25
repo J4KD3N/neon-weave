@@ -2,6 +2,9 @@
   "name": "Cinder — banter",
   "kind": "banter",
   "lines": [
+    { "trigger": "arrive", "text": "I was here for the first singing. It was smaller then. Everything was.", "requires": { "map": "the_loom" }, "once": "cinder_banter_loom" },
+    { "trigger": "arrive", "text": "Relays like this one carried the order to drown the seed. This one kept the light instead. Good.", "requires": { "map": "relay_station" }, "once": "cinder_banter_relay" },
+    { "trigger": "arrive", "text": "Two singings now. I have a thread through both. It has not broken. I checked.", "requires": { "map": "bastion", "flags": { "catastrophe_seen": true } }, "once": "cinder_banter_plaza" },
     { "trigger": "enter_shard", "text": "The Weft is thin here. I can hear the floor.", "once": "cinder_banter_first_shard" },
     { "trigger": "enter_shard", "text": "The vault man keeps a hand on his blade near me. He is right to. I would.", "requires": { "recruited": "dax" }, "once": "cinder_banter_dax" },
     { "trigger": "victory", "text": "Kaj-7. You and I are the only ones here who were made twice.", "requires": { "recruited": "kaj7" }, "effects": { "approval": { "kaj7": 1 } }, "once": "cinder_banter_kaj7" },

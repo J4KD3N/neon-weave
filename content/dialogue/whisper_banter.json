@@ -2,6 +2,9 @@
   "name": "Whisper — banter",
   "kind": "banter",
   "lines": [
+    { "trigger": "arrive", "text": "No handler could see this far in. That is the first thing about it I like.", "requires": { "map": "the_loom" }, "once": "whisper_banter_loom" },
+    { "trigger": "arrive", "text": "The rafters here are honest. You can see the whole room and nobody sees you. I stayed for that.", "requires": { "map": "relay_station" }, "once": "whisper_banter_relay" },
+    { "trigger": "arrive", "text": "Somebody used the Beacon as a line. I cut it. If it rings again, tell me first.", "requires": { "map": "bastion", "flags": { "catastrophe_seen": true } }, "once": "whisper_banter_plaza" },
     { "trigger": "enter_shard", "text": "Cameras. There are always cameras. Smile, or don't; they log both.", "once": "whisper_banter_first_shard" },
     { "trigger": "victory", "text": "Clean. Nobody saw. Nobody ever sees.", "once": "whisper_banter_first_win" },
     { "trigger": "extract", "text": "Home. I keep saying it to see if it sticks." }
