@@ -18,6 +18,8 @@ var lore: Array[String] = []
 var map_edits: Dictionary = {}
 ## The marks fights left on handcrafted maps (S61): map id -> [DecalLayer.make dictionaries].
 var marks: Dictionary = {}
+## The placed enemies a handcrafted map has lost for good (S71): map id -> [placement indices].
+var map_kills: Dictionary = {}
 ## The companion the leader is committed to (S37, D-092); "" for nobody.
 ## One at a time: a second commitment is refused until this one ends.
 var romance: String = ""
@@ -102,7 +104,7 @@ func unbench(companion: String) -> void:
 
 
 func to_dict() -> Dictionary:
-	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "marks": marks.duplicate(true), "romance": romance, "benched": benched.duplicate(), "difficulty": difficulty, "log": log.duplicate(true), "tracked_quest": tracked_quest}
+	return {"flags": flags.duplicate(), "approval": approval.duplicate(), "reputation": reputation.duplicate(), "quests": quests.duplicate(), "recruited": recruited.duplicate(), "faction": faction, "lore": lore.duplicate(), "map_edits": map_edits.duplicate(true), "marks": marks.duplicate(true), "map_kills": map_kills.duplicate(true), "romance": romance, "benched": benched.duplicate(), "difficulty": difficulty, "log": log.duplicate(true), "tracked_quest": tracked_quest}
 
 
 static func from_dict(d: Dictionary) -> NarrativeState:
@@ -124,6 +126,7 @@ static func from_dict(d: Dictionary) -> NarrativeState:
 	n.lore.assign(d.get("lore", []))
 	n.map_edits = Dictionary(d.get("map_edits", {})).duplicate(true)
 	n.marks = Dictionary(d.get("marks", {})).duplicate(true)
+	n.map_kills = Dictionary(d.get("map_kills", {})).duplicate(true)
 	n.romance = String(d.get("romance", ""))
 	n.benched.assign(d.get("benched", []))
 	n.difficulty = String(d.get("difficulty", ""))

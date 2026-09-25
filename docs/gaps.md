@@ -53,8 +53,8 @@ the game.
 - **Length**: Act 1 is nine beats, four handcrafted fights and four Shard runs, two to three hours against the GDD's eight; Act 2 is the oath, one site and one report per path, one site per loyalty, three voices, three delves and the catastrophe; Act 3 is one Shard and one hall. No writing pass has happened; the relay hub has one fight, the loyalty and Key sites are one dialogue each, and the Loom's hall has one lore fragment and no companion lines of its own.
 - **Consequences past the door**: joining opens a path quest, an area and a vendor, but the areas never change and nothing past the Key is written per faction; a benched companion still counts as recruited for scenes, loyalty and endings; no ending has a line for a companion who resisted the catastrophe beyond the alive one.
 - **Items are thin** (S29, D-084): twelve bases and eight affixes plus the example mod's lamp, one crate pickup type, no consumables or resource costs on gear, no item art beyond a colour, no family-specific drop tables, no sell-back.
-- **Enemies on a previous map are forgotten** when you leave it (map-placed enemies respawn on re-entry); transitions fire on step-on with no confirmation.
-- **The credits** name an artist, a composer and a first playtester who do not exist yet.
+- **Maps remember and gates ask** (S71, D-127): a placed enemy killed on a handcrafted map stays dead when you come back (`narrative.map_kills`, saved with the story; Shards keep their run deltas); a gate walked onto shows its label and waits for Enter / A, a click on it or a confirm goes through. Trigger-spawned fights are already once-only by their flags.
+- **The credits** say what is true: placeholders, no artist or composer yet, nobody outside the author has played; they change when someone has.
 
 ## Systems (M4)
 

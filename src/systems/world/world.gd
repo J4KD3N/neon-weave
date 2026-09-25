@@ -102,6 +102,7 @@ var _portraits: Dictionary = {} # speaker id -> ImageTexture, built once per wor
 var perf_hud: bool = false # `--perf`: fps and frame time on the status line (S53)
 var crashed_last_run: String = "" # the crash report the last run left, shown once on the title (D-116)
 var last_hack_note: String = "" # the toast a hacked gate leaves for interact() (S63)
+var gate_intent: Vector2i = Vector2i(-1, -1) # the gate a click or a confirm meant to take (S71)
 var detect_rng := RandomNumberGenerator.new() # the detection roll (S64), seeded with the combat seed
 var disguise_holds: bool = false # the disguise roll for the open talk (S67)
 var _opening_talk: bool = false
@@ -1094,6 +1095,12 @@ func spawn_enemies() -> void:
 		if p.has("patrol"): # S65: a route walked in a loop
 			placed.set_patrol(Array(p["patrol"]), float(p.get("patrol_speed", 1.0)), float(p.get("patrol_wait", 0.8)))
 		enemies.append(placed)
+	if not map_entry.has("generation"): # S71: a map remembers who died on it
+		for raw_i: Variant in narrative.map_kills.get(map_id, []):
+			var i := int(raw_i)
+			if i >= 0 and i < enemies.size() and is_instance_valid(enemies[i]) and not enemies[i].dead:
+				enemies[i].dead = true
+				enemies[i].queue_free()
 
 
 ## Builds and places one enemy actor, scaled for this map's depth and the
@@ -1221,6 +1228,7 @@ func command_move(cell: Vector2i) -> bool:
 	var points := map_view.path_to(l.position, cell, occupied_cells()) # round whoever stands in the way (S69)
 	if points.is_empty() and map_view.world_to_cell(l.position) != cell:
 		return false
+	gate_intent = cell if not transition_at(cell).is_empty() else Vector2i(-1, -1) # a click on a gate means it (S71)
 	party.set_path(points)
 	return true
 
@@ -1345,6 +1353,21 @@ func on_enemy_killed(enemy: EnemyActor) -> Dictionary:
 	return got
 
 
+## Writes the dead placed enemies of a handcrafted map into the story (S71,
+## D-127), so leaving and coming back does not raise them.
+func remember_dead() -> void:
+	if map_entry.has("generation"):
+		return
+	var placements := Array(map_entry.get("enemies", [])).size()
+	var dead: Array = Array(narrative.map_kills.get(map_id, [])).duplicate()
+	for i: int in mini(enemies.size(), placements):
+		var e := enemies[i]
+		if (not is_instance_valid(e) or e.dead) and not dead.has(i):
+			dead.append(i)
+	dead.sort()
+	narrative.map_kills[map_id] = dead
+
+
 ## Rolls a grant block into the run haul; banks straight away off-Shard.
 func _gain(grants: Dictionary) -> Dictionary:
 	var got := run.collect(grants)
@@ -1427,6 +1450,8 @@ func status_line() -> String:
 		line3 = "▶ RELAY WAYPOINT — press E to bank the haul and keep going ◀"
 	elif mode == "explore" and adjacent_door().x >= 0 and map_data.door_kind(adjacent_door()) == "vault":
 		line3 = "▶ VAULT DOOR — Enter / A opens it for %s ◀" % BastionState.describe_cost(vault_at(adjacent_door()).get("cost", {"ciphers": 1}))
+	elif mode == "explore" and not transition_at(leader_cell()).is_empty() and Conditions.passes(Dictionary(transition_at(leader_cell())).get("when", {}), dialogue_ctx()):
+		line3 = Loc.t("▶ %s — Enter / A to go ◀") % Loc.any(String(transition_at(leader_cell()).get("label", "onward")))
 	elif mode == "explore" and adjacent_door().x >= 0 and map_data.door_kind(adjacent_door()) == "locked":
 		line3 = locked_door_prompt(adjacent_door())
 	elif mode == "explore" and merchant_near() != null:
@@ -1609,6 +1634,7 @@ func _on_combat_ended(result: String) -> void:
 		pending_victory_flags = []
 		pending_victory_flag = ""
 		spawn_npcs() # placements that wait on a victory flag appear now, not on re-entry (S39)
+		remember_dead() # the fallen stay fallen when you come back (S71)
 		if not pending_trigger_flag.is_empty():
 			narrative.set_flag(pending_trigger_flag, true)
 			pending_trigger_flag = ""
@@ -1928,7 +1954,7 @@ func _process(delta: float) -> void:
 		check_pickups()
 		check_secrets()
 		check_triggers()
-		if mode == "explore" and not check_transitions():
+		if mode == "explore" and not check_transitions(false):
 			check_encounters(delta)
 	elif mode == "combat":
 		_tick_cursor(Input.get_vector("move_left", "move_right", "move_up", "move_down"), delta)
@@ -2126,6 +2152,8 @@ func activate_system_item(id: String) -> bool:
 func interact() -> bool:
 	if mode != "explore" or in_dialogue():
 		return false
+	if not transition_at(leader_cell()).is_empty() and check_transitions(true): # the gate under your feet (S71)
+		return true
 	if can_extract():
 		return extract()
 	if on_waypoint().x >= 0:
@@ -2946,12 +2974,21 @@ func transition_at(cell: Vector2i) -> Dictionary:
 	return {}
 
 
-func check_transitions() -> bool:
+## A gate asks (S71, D-127): walked onto with the keys, it shows its label
+## and waits for Enter / A; clicked on, or confirmed, it takes you. Tests
+## and scripts call it confirmed.
+func check_transitions(confirmed: bool = true) -> bool:
 	if mode != "explore" or in_dialogue() or map_entry.has("generation"):
 		return false
-	var t := transition_at(leader_cell())
+	var here := leader_cell()
+	var t := transition_at(here)
 	if t.is_empty() or not Conditions.passes(t.get("when", {}), dialogue_ctx()):
+		if gate_intent.x >= 0 and not party.is_moving() and here != gate_intent:
+			gate_intent = Vector2i(-1, -1) # walked off without taking it
 		return false
+	if not confirmed and gate_intent != here:
+		return false # standing on it: the HUD says what it is; Enter / A goes
+	gate_intent = Vector2i(-1, -1)
 	var raw: Array = t.get("arrive", [])
 	var arrive := Vector2i(int(raw[0]), int(raw[1])) if raw.size() == 2 else Vector2i(-1, -1)
 	return travel(String(t.get("to", "")), arrive, String(t.get("label", "")))
