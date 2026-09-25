@@ -31,6 +31,8 @@
   "corrosive_damage": 2,
   "ambush_hit_bonus": 20,
   "ambush_damage_mult": 1.5,
+  "enemy_hp_mult": 1.0,
+  "enemy_damage_bonus": 0,
   "elite_hp_mult": 1.5,
   "elite_damage_bonus": 1,
   "boss_hp_mult": 2.5,

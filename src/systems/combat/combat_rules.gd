@@ -44,6 +44,11 @@ var corrosive_damage: int = 2
 ## Attacking from hiding: hit bonus and damage multiplier, then revealed.
 var ambush_hit_bonus: int = 20
 var ambush_damage_mult: float = 1.5
+## Every enemy (S70, D-126): a difficulty overlay's general knobs, applied
+## before tier and depth, so Story and Tactician bite on fights with no
+## elite or boss in them.
+var enemy_hp_mult: float = 1.0
+var enemy_damage_bonus: int = 0
 ## Enemy tiers (entry or placement `tier`): elite and boss multipliers.
 var elite_hp_mult: float = 1.5
 var elite_damage_bonus: int = 1
@@ -115,6 +120,8 @@ static func from_entry(entry: Dictionary) -> CombatRules:
 	r.corrosive_damage = int(entry.get("corrosive_damage", r.corrosive_damage))
 	r.ambush_hit_bonus = int(entry.get("ambush_hit_bonus", r.ambush_hit_bonus))
 	r.ambush_damage_mult = float(entry.get("ambush_damage_mult", r.ambush_damage_mult))
+	r.enemy_hp_mult = float(entry.get("enemy_hp_mult", r.enemy_hp_mult))
+	r.enemy_damage_bonus = int(entry.get("enemy_damage_bonus", r.enemy_damage_bonus))
 	r.elite_hp_mult = float(entry.get("elite_hp_mult", r.elite_hp_mult))
 	r.elite_damage_bonus = int(entry.get("elite_damage_bonus", r.elite_damage_bonus))
 	r.boss_hp_mult = float(entry.get("boss_hp_mult", r.boss_hp_mult))

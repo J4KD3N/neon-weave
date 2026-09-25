@@ -65,6 +65,8 @@ The biggest category. Everything here is a claim the code makes about itself tha
 
 All measured under the harness's naive policy; none met a person.
 
+On 2026-09-24 (S70, D-126) the harness gained the rows a session could add: the three Key keepers, and every story row on Story and Tactician with two general difficulty knobs so those modes bite on ordinary fights; the depth numbers were re-read after positioning. The playtest row stays with a person.
+
 | Gap | Numbers | Severity | Owner |
 |---|---|---|---|
 | Depth-3 extraction: Undercity 45%, Cathedral 40%, Markets 30%, Loom Approach 30% naive. The Markets stay low because a naive party chases kiting cantors. | S48, D-103 | S2 | Person (playtest), then Session |
