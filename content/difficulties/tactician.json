@@ -4,6 +4,8 @@
   "order": 2,
   "rules": {
     "combat": {
+      "enemy_hp_mult": 1.2,
+      "enemy_damage_bonus": 1,
       "depth_hp_per_level": 0.15,
       "depth_damage_every": 1,
       "elite_hp_mult": 1.75,

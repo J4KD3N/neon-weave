@@ -37,8 +37,8 @@ static func for_member(class_entry: Dictionary, race_entry: Dictionary, rules: C
 static func for_enemy(enemy_entry: Dictionary, rules: CombatRules, depth: int = 1, tier: String = "") -> Dictionary:
 	var base: Dictionary = enemy_entry.get("stats", {})
 	var t := tier if not tier.is_empty() else String(enemy_entry.get("tier", ""))
-	var hp := float(maxi(int(base.get("hp", 5)), 1))
-	var damage_bonus := 0
+	var hp := float(maxi(int(base.get("hp", 5)), 1)) * rules.enemy_hp_mult # the difficulty's general knobs (S70)
+	var damage_bonus := rules.enemy_damage_bonus
 	var ap_bonus := 0
 	match t:
 		"elite":

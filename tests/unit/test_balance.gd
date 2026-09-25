@@ -26,6 +26,19 @@ const BEATS: Array[Dictionary] = [
 	{"id": "the loom: the guard", "map": "the_loom", "cell": Vector2i(25, 6), "flags": {}, "companions": ["sera", "dax", "kaj7"], "xp": 900, "min_win": 0.2, "max_win": 0.95}, # the last door: the hardest fight in the game by design (S42)
 ]
 
+## The Key keepers (S70): each fights inside its biome's Shard from the site
+## dialogue, at the level the campaign reaches the Keys, geared for the depth.
+const KEEPERS: Array[Dictionary] = [
+	{"id": "the Quiet Key (lvl 9)", "template": "null_cathedral", "site": "key_ashfound_site", "xp": 530, "depth": 2, "min_win": 0.35, "max_win": 0.95},
+	{"id": "the Ledgers Key (lvl 9)", "template": "ghost_markets", "site": "key_lattice_site", "xp": 530, "depth": 2, "min_win": 0.35, "max_win": 0.95},
+	{"id": "the Heart Key (lvl 9)", "template": "verdant_datacore", "site": "key_rootched_site", "xp": 530, "depth": 2, "min_win": 0.4, "max_win": 0.95},
+]
+## Difficulty (S70): the story rows again on Story and Tactician, fewer
+## seeds. Story must never be harder than Balanced, Tactician never easier,
+## and Tactician keeps a floor of its own so a naive party can still win.
+const DIFFICULTY_SEEDS := 10
+const TACTICIAN_FLOOR: Dictionary = {"gate ambush": 0.5, "relay hive": 0.4, "the warlord (lvl 2)": 0.1, "the warlord (lvl 3)": 0.2, "the gallery (lvl 3)": 0.2, "the loom: ashfound strike": 0.2, "the loom: the guard": 0.05}
+
 var world: ExploreWorld
 var rows: PackedStringArray = []
 
@@ -124,9 +137,13 @@ static func _hp_fraction(w: ExploreWorld) -> float:
 
 
 ## Stages one beat on a fresh world: party, level, flags, then the trigger.
-func _stage(beat: Dictionary, seed_value: int) -> ExploreWorld:
+## `difficulty` (S70) overlays the rules before anything spawns.
+func _stage(beat: Dictionary, seed_value: int, difficulty: String = "") -> ExploreWorld:
 	var w := _fresh()
 	w.combat_seed = seed_value
+	if not difficulty.is_empty():
+		w.narrative.difficulty = difficulty
+		w.apply_death_stakes()
 	for id: String in beat["companions"]:
 		assert_true(w.add_companion(id), "recruit %s" % id)
 	w.ledger.xp = int(beat["xp"])
@@ -171,6 +188,85 @@ func test_every_story_fight_sits_in_its_band() -> void:
 		_report(String(beat["id"]), wins, SEEDS, float(rounds) / SEEDS, hp_left / maxi(wins, 1), float(downed) / maxi(wins, 1), "  lvl %d" % Progression.level_for_xp(int(beat["xp"]), rules))
 		assert_true(rate >= float(beat["min_win"]), "%s: naive win rate %.2f under the floor %.2f" % [beat["id"], rate, beat["min_win"]])
 		assert_true(rate <= float(beat["max_win"]), "%s: naive win rate %.2f over the ceiling %.2f (a walkover)" % [beat["id"], rate, beat["max_win"]])
+	world = _fresh()
+
+
+## Plays one story row over `seeds` seeds on a difficulty: the naive win rate.
+func _rate(beat: Dictionary, seeds: int, base_seed: int, difficulty: String = "") -> float:
+	var wins := 0
+	for i: int in seeds:
+		var w := _stage(beat, base_seed + i, difficulty)
+		assert_eq(w.mode, "combat", "%s seed %d starts a fight" % [beat["id"], i])
+		_fight(w)
+		if w.combat.state.result == "victory":
+			wins += 1
+		_drop(w)
+	return float(wins) / seeds
+
+
+## Story is never harder than Balanced and Tactician never easier, row by
+## row, and Tactician keeps a floor a naive party can still clear (S70).
+func test_story_and_tactician_bracket_balanced_on_every_story_row() -> void:
+	_drop(world)
+	for beat: Dictionary in BEATS:
+		var balanced := _rate(beat, DIFFICULTY_SEEDS, 7000)
+		var story := _rate(beat, DIFFICULTY_SEEDS, 7000, "story")
+		var tactician := _rate(beat, DIFFICULTY_SEEDS, 7000, "tactician")
+		print("  balance %-26s story %3d%%  balanced %3d%%  tactician %3d%%" % [String(beat["id"]), int(round(story * 100.0)), int(round(balanced * 100.0)), int(round(tactician * 100.0))])
+		assert_true(story >= balanced - 0.1, "%s: Story (%.2f) is not softer than Balanced (%.2f)" % [beat["id"], story, balanced])
+		assert_true(tactician <= balanced + 0.1, "%s: Tactician (%.2f) is not harder than Balanced (%.2f)" % [beat["id"], tactician, balanced])
+		assert_true(tactician >= float(TACTICIAN_FLOOR.get(beat["id"], 0.0)), "%s: Tactician naive win rate %.2f under its floor %.2f" % [beat["id"], tactician, TACTICIAN_FLOOR.get(beat["id"], 0.0)])
+	world = _fresh()
+
+
+## The Key keepers, rowed (S70): the site dialogue starts the fight inside
+## the Shard, so the harness enters the Shard with the site, walks to it,
+## takes the Key whole and fights the keeper.
+func test_every_key_keeper_sits_in_its_band() -> void:
+	var prules: Dictionary = world.progression_rules()
+	_drop(world)
+	for row: Dictionary in KEEPERS:
+		var wins := 0
+		var rounds := 0
+		var hp_left := 0.0
+		var fights := 0
+		for i: int in SEEDS:
+			var w := _fresh()
+			w.combat_seed = 6000 + i
+			for id: String in ["sera", "dax", "kaj7"]:
+				w.add_companion(id)
+			w.ledger.xp = int(row["xp"])
+			w.refresh_progression()
+			_gear_up(w, int(row["depth"]))
+			_heal_up(w)
+			var entry := w.enter_shard(String(row["template"]), 700 + i, int(row["depth"]), [String(row["site"])])
+			var site := Vector2i(-1, -1)
+			for p: Dictionary in entry.get("pickups", []):
+				if String(p["type"]) == String(row["site"]):
+					site = Vector2i(int(p["cell"][0]), int(p["cell"][1]))
+			assert_true(site.x >= 0, "%s seed %d places the site" % [row["id"], i])
+			for _try: int in 4:
+				if not w.in_dialogue():
+					w.teleport_party(site)
+					w.check_pickups()
+			assert_true(w.in_dialogue(), "%s seed %d opens the site" % [row["id"], i])
+			var options := w.dialogue.available_choices()
+			for j: int in options.size():
+				if String(Dictionary(options[j]).get("text", "")).begins_with("Take it whole"):
+					w.choose(j)
+					break
+			assert_eq(w.mode, "combat", "%s seed %d: the keeper fights" % [row["id"], i])
+			fights += 1
+			_fight(w)
+			rounds += w.combat.state.round_number
+			if w.combat.state.result == "victory":
+				wins += 1
+				hp_left += _hp_fraction(w)
+			_drop(w)
+		var rate := float(wins) / maxi(fights, 1)
+		_report(String(row["id"]), wins, maxi(fights, 1), float(rounds) / maxi(fights, 1), hp_left / maxi(wins, 1), 0.0, "  lvl %d d%d" % [Progression.level_for_xp(int(row["xp"]), prules), int(row["depth"])])
+		assert_true(rate >= float(row["min_win"]), "%s: naive win rate %.2f under the floor %.2f" % [row["id"], rate, row["min_win"]])
+		assert_true(rate <= float(row["max_win"]), "%s: naive win rate %.2f over the ceiling %.2f (a walkover)" % [row["id"], rate, row["max_win"]])
 	world = _fresh()
 
 
