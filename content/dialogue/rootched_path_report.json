@@ -2,6 +2,8 @@
   "name": "Speaker Oriel — the grove",
   "act": 2,
   "start": [
+    { "node": "loom", "requires": { "flags": { "catastrophe_seen": true } } },
+    { "node": "keys", "requires": { "flags": { "key_rootched_resolved": true, "catastrophe_seen": false } } },
     { "node": "done", "requires": { "quest": { "id": "rootched_path", "stage": "done" } } },
     { "node": "report", "requires": { "quest": { "id": "rootched_path", "stage": "report" } } },
     { "node": "early", "requires": { "quest": { "id": "rootched_path", "stage": "graft" } } },
@@ -33,6 +35,8 @@
     },
     "done": { "speaker": "rootched_speaker", "text": "The Datacore, Weaver. Go slowly; the grove did.", "choices": [ { "text": "Slowly.", "end": true } ] },
     "early": { "speaker": "rootched_speaker", "text": "The seed first. Nothing grows from a report.", "choices": [ { "text": "The seed.", "end": true } ] },
+    "keys": { "speaker": "rootched_speaker", "text": "The Key of the Heart is out of the ground, and the ground knows it. The grove has started growing toward the Loom without being asked.", "choices": [ { "text": "Then we follow the growth.", "effects": { "flags": { "rootched_keys_reported": true } }, "end": true } ] },
+    "loom": { "speaker": "rootched_speaker", "text": "The plaza sang, and the grove sang back. Whatever the Loom is, it is listening now. Go and be listened to.", "choices": [ { "text": "I will.", "effects": { "flags": { "rootched_loom_blessed": true } }, "end": true } ] },
     "idle": { "speaker": "rootched_speaker", "text": "The current is with you. Go well.", "choices": [ { "text": "Go well.", "end": true } ] }
   }
 }

@@ -14,6 +14,10 @@
     "##############"
   ],
   "transitions": [ { "cell": [1, 3], "to": "bastion", "arrive": [2, 2], "label": "Back to the plaza" } ],
+  "triggers": [
+    { "id": "after_keys", "cells": [[2, 2], [3, 2], [2, 3], [3, 3]], "once": true, "when": { "flags": { "key_lattice_resolved": true, "catastrophe_seen": false } }, "effects": { "toast": "The enclave has been re-indexed: the shelves are white with new tags, and one reads THE LOOM in a hand that shook." } },
+    { "id": "after_catastrophe", "cells": [[2, 2], [3, 2], [2, 3], [3, 3]], "once": true, "when": { "flags": { "catastrophe_seen": true } }, "effects": { "toast": "The enclave's light is dimmer. Half the shelves are bare; the Index took what it could carry when the plaza sang." } }
+  ],
   "npcs": [ { "merchant": "lattice_quartermaster", "cell": [10, 2] }, { "npc": "lattice_archivist", "cell": [6, 5] } ],
   "pickups": [],
   "enemies": []

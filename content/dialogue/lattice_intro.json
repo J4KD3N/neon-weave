@@ -2,12 +2,14 @@
   "name": "Envoy Calder — the plaza",
   "act": 2,
   "start": [
+    { "node": "late", "requires": { "faction": "lattice", "flags": { "catastrophe_seen": true } } },
     { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "lattice" } },
     { "node": "joined_greet", "requires": { "faction": "lattice" } },
     { "node": "answered", "requires": { "flags": { "lattice_answered": true } } },
     { "node": "greet" }
   ],
   "nodes": {
+    "late": { "speaker": "lattice_envoy", "text": "The Beacon has done a thing the Index has no category for. The Lattice would like the category to be you. Go down.", "choices": [ { "text": "I know.", "end": true } ] },
     "greet": {
       "speaker": "lattice_envoy",
       "text": "You opened the gate road. We noticed; we notice most things. I am Calder, of the Lattice. We restore what the Sundering broke: order, indexing, machines that remember what they are for. We would like to know what the Beacon is for.",

@@ -126,7 +126,7 @@ func test_achievements_are_content_with_conditions_that_resolve() -> void:
 		assert_false(steam_ids.has(sid), "steam ids are unique")
 		steam_ids.append(sid)
 		for k: String in a.get("when", {}):
-			assert_true(["flags", "origin_tag", "race", "class", "approval", "reputation", "recruited", "not_recruited", "quest"].has(k), "achievement %s when.%s" % [a["id"], k])
+			assert_true(["flags", "origin_tag", "race", "class", "approval", "reputation", "recruited", "not_recruited", "quest", "walking", "benched"].has(k), "achievement %s when.%s" % [a["id"], k])
 	var b := NullPlatformBackend.new()
 	var n := NarrativeState.new()
 	assert_eq(PlatformService.due_achievements(entries, {"narrative": n}, b), [], "nothing earned yet")

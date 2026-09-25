@@ -2,6 +2,8 @@
   "name": "Archivist Tal — the enclave",
   "act": 2,
   "start": [
+    { "node": "loom", "requires": { "flags": { "catastrophe_seen": true } } },
+    { "node": "keys", "requires": { "flags": { "key_lattice_resolved": true, "catastrophe_seen": false } } },
     { "node": "unnerved", "requires": { "party_race_tag": "unnerving", "flags": { "tal_unnerved": false } } },
     { "node": "done", "requires": { "quest": { "id": "lattice_path", "stage": "done" } } },
     { "node": "report", "requires": { "quest": { "id": "lattice_path", "stage": "report" } } },
@@ -36,6 +38,8 @@
     },
     "done": { "speaker": "lattice_archivist", "text": "Filed. The Markets, Weaver. Do not lose the Key in the noise.", "choices": [ { "text": "Filed.", "end": true } ] },
     "early": { "speaker": "lattice_archivist", "text": "The leak first. The Index does not skip lines.", "choices": [ { "text": "The leak.", "end": true } ] },
+    "keys": { "speaker": "lattice_archivist", "text": "The Key of the Ledgers is filed as resolved. The Index has moved the Loom from rumour to location. I do not like where the location is.", "choices": [ { "text": "Then file where we go next.", "effects": { "flags": { "lattice_keys_reported": true } }, "end": true } ] },
+    "loom": { "speaker": "lattice_archivist", "text": "The Beacon on the plaza did what the Index said it could not. I have amended the Index. Go down, Weaver; the enclave will keep the shelves.", "choices": [ { "text": "Keep them.", "effects": { "flags": { "lattice_loom_blessed": true } }, "end": true } ] },
     "idle": { "speaker": "lattice_archivist", "text": "Logged. Was there something else?", "choices": [ { "text": "No.", "end": true } ] }
   }
 }

@@ -27,7 +27,9 @@ static func resolve(registry: ContentRegistry, ctx: Dictionary) -> Dictionary:
 
 ## The epilogue key a companion's story resolves to: dead (or `lost` for a
 ## dead partner), taken by the Choir (`<id>_taken`), or alive as a partner
-## (`romanced`), loyal (`loyal`) or simply alive; else absent. A key the
+## (`romanced`), loyal (`loyal`) or simply alive; else absent. Resisted (S72:
+## `<id>_resisted`, stood against the Choir) sits above romanced; benched
+## (S72: waiting at the Bastion at the end) sits above alive. A key the
 ## ending does not write falls back along the same ladder.
 static func fate_key(id: String, lines: Dictionary, narrative: NarrativeState) -> String:
 	var ladder: Array[String] = []
@@ -39,10 +41,14 @@ static func fate_key(id: String, lines: Dictionary, narrative: NarrativeState) -
 		ladder.append("taken")
 		ladder.append("absent")
 	elif narrative.is_recruited(id):
+		if narrative.flag("%s_resisted" % id): # S72: stood against the Choir on the plaza
+			ladder.append("resisted")
 		if narrative.romance == id:
 			ladder.append("romanced")
 		if narrative.flag("%s_loyal" % id):
 			ladder.append("loyal")
+		if narrative.is_benched(id): # S72: waited at the Bastion through the end
+			ladder.append("benched")
 		ladder.append("alive")
 	else:
 		ladder.append("absent")
