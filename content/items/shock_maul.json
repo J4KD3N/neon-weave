@@ -7,5 +7,6 @@
   "weight": 2,
   "min_rarity": "rare",
   "price": 18,
+  "families": ["null_cathedral", "ghost_markets"],
   "art": { "color": "#7fd6ff" }
 }

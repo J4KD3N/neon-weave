@@ -83,7 +83,13 @@ func begin(party: Array[PartyMember], party_cells: Array[Vector2i], enemies: Arr
 	state = CombatState.new()
 	state.enemy_entries = world.enemies_by_id()
 	state.depth = world.map_depth()
-	state.setup(world.map_data, world.rules, world.abilities_by_id(), combatants, seed_value)
+	var table := world.abilities_by_id()
+	for item_id: String in world.consumables_in_the_pack(): # S73: every consumable in the pack is an action for the party
+		table["use_" + item_id] = ItemSystem.consume_ability(item_id, world.registry.get_entry("items", item_id))
+		for c: Combatant in combatants:
+			if c.team == Combatant.TEAM_PARTY and not c.abilities.has("use_" + item_id):
+				c.abilities.append("use_" + item_id)
+	state.setup(world.map_data, world.rules, table, combatants, seed_value)
 	state.event.connect(_on_event)
 	hud.visible = true
 	hud.hide_message()
@@ -540,6 +546,12 @@ func _on_event(e: Dictionary) -> void:
 		"chain", "surface", "overload", "vent":
 			if not animate:
 				_sync_actor(String(e.get("target", e.get("actor", ""))))
+		"consume":
+			world.consume_item(String(e["item"])) # spent from the pack (S73)
+			if world.consumables_in_the_pack().count(String(e["item"])) == 0:
+				for c: Combatant in state.combatants:
+					c.abilities.erase("use_" + String(e["item"]))
+			_sync_actor(String(e["actor"]))
 		"opportunity":
 			if not animate:
 				_sync_actor(String(e["target"]))

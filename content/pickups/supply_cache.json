@@ -1,0 +1,6 @@
+{
+  "name": "Supply cache",
+  "summary": "A strapped crate with a red cross scratched into the lid. One trauma kit, still sealed, into the pack (S73).",
+  "grants": { "item": "trauma_kit" },
+  "art": { "color": "#9aff6b" }
+}

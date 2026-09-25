@@ -497,6 +497,18 @@ func use_ability(actor: Combatant, ability_id: String, target_cell: Vector2i) ->
 		_emit(st)
 		return st
 
+	if effect == "consume": # S73: a consumable from the pack, spent by the world on the event
+		var use: Dictionary = ability.get("use", {})
+		var healed := 0
+		if float(use.get("heal", 0.0)) > 0.0:
+			healed = mini(actor.max_hp - actor.hp, int(ceil(actor.max_hp * float(use["heal"]))))
+			actor.hp += healed
+		var extra_ap := int(use.get("ap", 0))
+		actor.ap += extra_ap
+		var ce: Dictionary = {"type": "consume", "actor": actor.id, "ability": ability_id, "item": String(ability.get("item", "")), "heal": healed, "extra_ap": extra_ap, "actor_hp": actor.hp, "ap_left": actor.ap}
+		_emit(ce)
+		return ce
+
 	if effect == "vent":
 		var heal := int(ability.get("heal", 0))
 		if Array(actor.traits.get("heal_immune_types", [])).has(String(ability.get("damage_type", ""))):
@@ -710,6 +722,9 @@ func preview(actor: Combatant, ability_id: String, target_cell: Vector2i) -> Dic
 	out["ap"] = int(ability.get("ap", 1))
 	if String(ability.get("effect", "")) == "vent":
 		out["heal"] = int(ability.get("heal", 0))
+		return out
+	if String(ability.get("effect", "")) == "consume": # S73
+		out["heal"] = int(ceil(actor.max_hp * float(Dictionary(ability.get("use", {})).get("heal", 0.0))))
 		return out
 	var target := occupant(target_cell)
 	if target == null or target == actor:
@@ -1123,6 +1138,14 @@ func describe(e: Dictionary) -> String:
 			return Loc.t("— The fight resumes (round %d, %s to act) —") % [int(e["round"]), _name(String(e["actor"])) if not String(e["actor"]).is_empty() else Loc.t("nobody")]
 		"opener":
 			return Loc.t("The party strikes from cover: nobody saw them coming.")
+		"consume":
+			var what := String(Dictionary(abilities.get(e["ability"], {})).get("name", e["item"]))
+			var bits: PackedStringArray = []
+			if int(e["heal"]) > 0:
+				bits.append(Loc.t("mends %d") % int(e["heal"]))
+			if int(e["extra_ap"]) > 0:
+				bits.append(Loc.t("+%d AP") % int(e["extra_ap"]))
+			return Loc.t("%s uses %s: %s.") % [_name(e["actor"]), what, ", ".join(bits) if not bits.is_empty() else Loc.t("nothing happens")]
 		"hack":
 			if bool(e["hit"]):
 				return Loc.t("%s hacks %s: it is ours now.") % [_name(e["actor"]), _name(e["target"])]

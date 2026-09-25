@@ -1325,7 +1325,8 @@ func check_pickups() -> Array[Dictionary]:
 		if heal > 0.0:
 			got["heal"] = heal
 		if p.grants().has("item"):
-			var inst := drop_item(p.rarity)
+			var named: Variant = p.grants()["item"]
+			var inst := drop_item(p.rarity, map_data.biome_id) if not (named is String) else give_item(String(named)) # a crate drops what its biome has; a named grant is that item (S73)
 			if not inst.is_empty():
 				got["item"] = inst
 		if p.grants().has("lore"):
@@ -2049,6 +2050,15 @@ func system_items() -> Array[Dictionary]:
 	items.append({"id": "weave", "label": Loc.t("The Weave (level %d · %s)") % [party_level(), xp_line()], "enabled": home, "why": Loc.t("only at home")})
 	items.append({"id": "inventory", "label": Loc.t("The pack (%d banked item%s)") % [ledger.items.size(), "" if ledger.items.size() == 1 else Loc.t("s")], "enabled": home, "why": Loc.t("only at home")})
 	items.append({"id": "journal", "label": Loc.t("Journal (%d quests)") % narrative.quests.size(), "enabled": true})
+	var seen_use: Array[String] = [] # S73: a consumable is a menu action anywhere out of a fight
+	for item_id: String in consumables_in_the_pack():
+		if seen_use.has(item_id):
+			continue
+		seen_use.append(item_id)
+		var item := registry.get_entry("items", item_id)
+		var count := consumables_in_the_pack().count(item_id)
+		var why := "" if float(Dictionary(item.get("use", {})).get("heal", 0.0)) > 0.0 else Loc.t("only in a fight")
+		items.append({"id": "use_" + item_id, "label": Loc.t("Use %s (%d): %s") % [Loc.text(item, "name", item_id), count, ItemSystem.describe_use(item.get("use", {}))], "enabled": why.is_empty() and mode == "explore", "why": why if not why.is_empty() else Loc.t("not in a fight")})
 	for m: PartyMember in party.members: # S67: a Synth repairs with parts, anywhere out of a fight
 		var parts: Dictionary = m.traits.get("repair_with_parts", {})
 		if parts.is_empty():
@@ -2132,6 +2142,8 @@ func activate_system_item(id: String) -> bool:
 			autosave()
 			show_title()
 			return true
+	if id.begins_with("use_"):
+		return use_item(id.trim_prefix("use_")).is_empty()
 	if id.begins_with("repair_"):
 		return repair_member(id.trim_prefix("repair_")).is_empty()
 	if id.begins_with("shard_"):
@@ -2759,6 +2771,8 @@ func merchant_rows(merchant: Dictionary) -> Array[Dictionary]:
 		var cost: Dictionary = item.get("cost", {})
 		var why := "" if ledger.can_afford(cost) else Loc.t("needs %s") % BastionState.describe_cost(cost)
 		rows.append({"id": String(item.get("id", "")), "label": Loc.t("%s — %s") % [Loc.any(String(item.get("label", item.get("id", "?")))), BastionState.describe_cost(cost)], "enabled": why.is_empty(), "why": why})
+	for inst: Dictionary in ledger.items: # S73: the pack sells back
+		rows.append({"id": "sell:%d" % int(inst.get("uid", 0)), "label": Loc.t("Sell %s — %d salvage") % [ItemSystem.display_name(registry, inst), ItemSystem.sell_price(registry, inst)], "enabled": true, "why": ""})
 	return rows
 
 
@@ -2820,7 +2834,8 @@ func confirm_merchant() -> bool:
 	var row := merchant_menu.selected()
 	if row.is_empty():
 		return false
-	var why := buy(String(row["id"]))
+	var row_id := String(row["id"])
+	var why := sell(int(row_id.get_slice(":", 1))) if row_id.begins_with("sell:") else buy(row_id) # S73: the pack sells back
 	if not why.is_empty():
 		overlay.toast(Loc.t("%s: %s") % [row.get("label", row["id"]), why], 2.0)
 	refresh_merchant()
@@ -3820,6 +3835,11 @@ func equip(member_id: String, slot_key: String, uid: int) -> String:
 	var inst: Dictionary = ledger.items[i]
 	if not ItemSystem.fits(registry, inst, slot_key):
 		return Loc.t("does not fit the %s slot") % ItemSystem.slot_base(slot_key)
+	var install: Dictionary = registry.get_entry("items", String(inst.get("item", ""))).get("install", {}) # S73: cyberware costs parts to fit
+	if not install.is_empty():
+		if not ledger.can_afford(install):
+			return Loc.t("fitting it needs %s") % BastionState.describe_cost(install)
+		ledger.spend(install)
 	var b := build_for(member_id)
 	var equipment: Dictionary = Dictionary(b.get("equipment", {})).duplicate(true)
 	if equipment.has(slot_key):
@@ -3952,6 +3972,10 @@ func inventory_rows(member_id: String) -> Array[Dictionary]:
 			if ItemSystem.fits(registry, inst, slot_key):
 				fits = true
 		var slot_name := String(registry.get_entry("items", String(inst.get("item", ""))).get("slot", "?"))
+		if slot_name == ItemSystem.CONSUMABLE: # S73: a consumable is used, not worn
+			var item := registry.get_entry("items", String(inst.get("item", "")))
+			rows.append({"kind": "use", "id": String(inst.get("item", "")), "label": Loc.t("Use %s: %s") % [Loc.text(item, "name", String(inst.get("item", ""))), ItemSystem.describe_use(item.get("use", {}))], "enabled": true, "why": ""})
+			continue
 		rows.append({"kind": "item", "id": int(inst.get("uid", 0)), "label": ItemSystem.describe(registry, inst), "enabled": fits, "why": Loc.t("no %s slot") % slot_name})
 	for item: Dictionary in registry.get_all("items"):
 		if not item.has("craft"):
@@ -3960,6 +3984,86 @@ func inventory_rows(member_id: String) -> Array[Dictionary]:
 		var recipe: Dictionary = item["craft"]
 		rows.append({"kind": "craft", "id": String(item["id"]), "label": Loc.t("%s (%s): %s — %s") % [Loc.text(item, "name", String(item["id"])), Loc.t(String(item.get("slot", "?"))), ItemSystem.describe_mods(ItemSystem.mods(registry, ItemSystem.make(String(item["id"])))), BastionState.describe_cost(recipe.get("cost", {}))], "enabled": why.is_empty(), "why": why})
 	return rows
+
+
+## The consumable item ids in the pack, one entry per instance (S73): the
+## banked pack and the run's haul both count, so a medkit found on the
+## way down can be used on the way down.
+func consumables_in_the_pack() -> Array[String]:
+	var out: Array[String] = []
+	for list: Array in [ledger.items, run.items]:
+		for inst: Dictionary in list:
+			if ItemSystem.is_consumable(registry, inst):
+				out.append(String(inst["item"]))
+	return out
+
+
+## Removes one instance of a consumable from the pack (the run's haul first, then the ledger). False when there is none.
+func consume_item(item_id: String) -> bool:
+	for list: Array in [run.items, ledger.items]:
+		for i: int in list.size():
+			if String(Dictionary(list[i]).get("item", "")) == item_id and ItemSystem.is_consumable(registry, list[i]):
+				list.remove_at(i)
+				if list == ledger.items:
+					ledger.save()
+				return true
+	return false
+
+
+## A named item into the run's haul (banked at once off-Shard), as a pickup's `grants.item: "<id>"` asks (S73).
+func give_item(item_id: String) -> Dictionary:
+	if not registry.has_entry("items", item_id):
+		return {}
+	var inst := ItemSystem.make(item_id, [], "common", int(run.rng.randi()))
+	run.items.append(inst)
+	if not run.in_shard:
+		_bank(run.take(), false)
+		run.clear()
+	return inst
+
+
+## Uses a consumable out of a fight (S73): its heal goes to the whole
+## party at half strength (a medkit shared round); AP means nothing here.
+## Empty string on success, else the reason.
+func use_item(item_id: String) -> String:
+	if mode == "combat":
+		return Loc.t("in a fight: use it from the action bar")
+	var item := registry.get_entry("items", item_id)
+	if item.is_empty() or String(item.get("slot", "")) != ItemSystem.CONSUMABLE:
+		return Loc.t("not something you can use")
+	if not consumables_in_the_pack().has(item_id):
+		return Loc.t("none in the pack")
+	var use: Dictionary = item.get("use", {})
+	var heal := float(use.get("heal", 0.0))
+	if heal <= 0.0:
+		return Loc.t("only in a fight")
+	var hurt := false
+	for m: PartyMember in party.members:
+		if m.hp < m.max_hp or m.downed:
+			hurt = true
+	if not hurt:
+		return Loc.t("nobody is hurt")
+	consume_item(item_id)
+	heal_party(heal * 0.5)
+	overlay.toast(Loc.t("%s shared round: the party mends %d%%.") % [Loc.text(item, "name", item_id), int(round(heal * 50.0))], 2.5)
+	play_event("ui.confirm")
+	return ""
+
+
+## Sells one pack item to the open merchant (S73): gone from the pack, its sell price banked.
+func sell(uid: int) -> String:
+	if current_merchant.is_empty():
+		return Loc.t("no merchant")
+	var i := ItemSystem.find_uid(ledger.items, uid)
+	if i < 0:
+		return Loc.t("not in the pack")
+	var inst: Dictionary = ledger.items[i]
+	var price := ItemSystem.sell_price(registry, inst)
+	ledger.items.remove_at(i)
+	ledger.bank({"salvage": price})
+	ledger.save()
+	overlay.toast(Loc.t("Sold %s for %d salvage") % [ItemSystem.display_name(registry, inst), price], 2.0)
+	return ""
 
 
 ## Enter / A on the pack screen: unequip a slot, equip a pack item into an
@@ -3991,6 +4095,8 @@ func confirm_inventory() -> bool:
 				why = equip(m.member_id, target, uid) if not target.is_empty() else Loc.t("no slot fits")
 		"craft":
 			why = craft(String(row["id"]))
+		"use":
+			why = use_item(String(row["id"]))
 	if not why.is_empty():
 		overlay.toast(Loc.t("%s: %s") % [row.get("label", row.get("id", "")), why], 2.0)
 	refresh_inventory()
