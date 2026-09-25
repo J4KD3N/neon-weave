@@ -606,6 +606,20 @@ func _items() -> void:
 	for i: Dictionary in _registry.get_all("items"):
 		if String(i.get("slot", "")).is_empty():
 			_flag(i, "slot is empty")
+		if String(i.get("slot", "")) == ItemSystem.CONSUMABLE: # S73
+			var use: Dictionary = i.get("use", {})
+			if use.is_empty() or (float(use.get("heal", 0.0)) <= 0.0 and int(use.get("ap", 0)) <= 0):
+				_flag(i, "a consumable needs a use block with heal or ap")
+		for key: String in Dictionary(i.get("install", {})):
+			if not Ledger.RESOURCES.has(key):
+				_flag(i, "install.%s is not a resource" % key)
+		for fam: Variant in i.get("families", []):
+			var known := false
+			for e: Dictionary in _registry.get_all("enemies"):
+				if String(e.get("family", "")) == String(fam):
+					known = true
+			if not known:
+				_flag(i, "families names '%s', which no enemy belongs to" % String(fam))
 		if not Color.html_is_valid(String(Dictionary(i.get("art", {})).get("color", ""))):
 			_flag(i, "art.color must be an html colour")
 	for a: Dictionary in _registry.get_all("affixes"):

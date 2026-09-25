@@ -1,0 +1,9 @@
+{
+  "name": "Stim shot",
+  "slot": "consumable",
+  "summary": "A cold autoinjector from a Lattice clinic. Two more actions this turn, and a headache after. Fights only (S73).",
+  "use": { "ap": 2 },
+  "weight": 1,
+  "price": 5,
+  "art": { "color": "#ff9de2" }
+}

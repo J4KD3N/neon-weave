@@ -1,0 +1,9 @@
+{
+  "name": "Trauma kit",
+  "slot": "consumable",
+  "summary": "A sealed field kit: clotting foam, a stapler, one dose of something that stops the shaking. Carried, and opened when it counts (S73).",
+  "use": { "heal": 0.4 },
+  "weight": 1,
+  "price": 6,
+  "art": { "color": "#6bff9a" }
+}

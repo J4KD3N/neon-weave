@@ -46,7 +46,7 @@ func test_content_is_well_formed() -> void:
 	assert_true(r.count("items") >= 10)
 	assert_true(r.count("affixes") >= 6)
 	for item: Dictionary in r.get_all("items"):
-		assert_true(ItemSystem.SLOT_BASES.has(String(item["slot"])), "%s slot %s" % [item["id"], item["slot"]])
+		assert_true(ItemSystem.SLOT_BASES.has(String(item["slot"])) or String(item["slot"]) == ItemSystem.CONSUMABLE, "%s slot %s" % [item["id"], item["slot"]]) # a consumable is carried, not worn (S73)
 		for key: String in item.get("stat_mods", {}):
 			assert_true(ItemSystem.STAT_KEYS.has(key), "%s stat %s" % [item["id"], key])
 		if item.has("craft"):

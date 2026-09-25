@@ -14,6 +14,8 @@ extends RefCounted
 
 const STAT_KEYS: Array[String] = ["hp", "move", "evasion", "initiative"]
 const SLOT_BASES: Array[String] = ["weapon", "armour", "trinket", "cyberware"]
+## A consumable (S73, D-129): slot "consumable", a `use` block {heal: fraction | ap: n} spent from the pack.
+const CONSUMABLE := "consumable"
 
 
 static func loot_rules(registry: ContentRegistry) -> Dictionary:
@@ -59,6 +61,36 @@ static func fits(registry: ContentRegistry, inst: Dictionary, slot_key: String) 
 	return not item.is_empty() and String(item.get("slot", "")) == slot_base(slot_key)
 
 
+## Whether an instance is a consumable (S73).
+static func is_consumable(registry: ContentRegistry, inst: Dictionary) -> bool:
+	return String(registry.get_entry("items", String(inst.get("item", ""))).get("slot", "")) == CONSUMABLE
+
+
+## What a consumable does, as one line: "heals 40% of max HP" / "+2 AP this turn".
+static func describe_use(use: Dictionary) -> String:
+	var parts: PackedStringArray = []
+	if float(use.get("heal", 0.0)) > 0.0:
+		parts.append(Loc.t("heals %d%% of max HP") % int(round(float(use["heal"]) * 100.0)))
+	if int(use.get("ap", 0)) > 0:
+		parts.append(Loc.t("+%d AP this turn") % int(use["ap"]))
+	return ", ".join(parts) if not parts.is_empty() else Loc.t("does nothing")
+
+
+## The synthetic combat ability for a consumable item entry (S73): one AP,
+## self-target, effect consume; the state applies the `use` block.
+static func consume_ability(item_id: String, item: Dictionary) -> Dictionary:
+	return {"id": "use_" + item_id, "name": String(item.get("name", item_id)), "sound": "sfx_pickup", "ap": 1, "range": 0, "damage": [0, 0], "accuracy": 100, "targets": "self", "effect": "consume", "item": item_id, "use": Dictionary(item.get("use", {})).duplicate(), "summary": String(item.get("summary", ""))}
+
+
+## What a pack item sells for (S73): its price at the loot rules' sell fraction, more for a rarer one, never under one.
+static func sell_price(registry: ContentRegistry, inst: Dictionary) -> int:
+	var item := registry.get_entry("items", String(inst.get("item", "")))
+	var loot := loot_rules(registry)
+	var base := float(item.get("price", 0)) * float(loot.get("sell_fraction", 0.5))
+	var rank := rarity_rank(registry, String(inst.get("rarity", "common")))
+	return maxi(int(floor(base * (1.0 + float(loot.get("sell_rarity_bonus", 0.5)) * rank))), 1)
+
+
 # --- instances ----------------------------------------------------------------
 
 static func make(item_id: String, affixes: Array = [], rarity: String = "common", uid: int = 0) -> Dictionary:
@@ -78,6 +110,8 @@ static func roll_drop(registry: ContentRegistry, rng: RandomNumberGenerator, rar
 	for item: Dictionary in registry.get_all("items"):
 		if rarity_rank(registry, String(item.get("min_rarity", "common"))) > rank:
 			continue
+		if String(item.get("slot", "")) == CONSUMABLE:
+			continue # consumables are sold and cached, never rolled with affixes (S73)
 		var families: Array = item.get("families", [])
 		if not family.is_empty() and not families.is_empty() and not families.has(family):
 			continue

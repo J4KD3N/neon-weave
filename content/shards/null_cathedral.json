@@ -41,7 +41,7 @@
     "count": [3, 6],
     "pool": [
       { "type": "salvage_cache", "weight": 2 },
-      { "type": "medkit", "weight": 2 },
+      { "type": "medkit", "weight": 2 }, { "type": "supply_cache", "weight": 1 },
       { "type": "aether_shard", "weight": 4 },
       { "type": "loot_crate", "weight": 4 },
       { "type": "lore_fragment", "weight": 1 }

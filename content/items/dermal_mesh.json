@@ -5,6 +5,7 @@
   "stat_mods": { "hp": 4 },
   "weight": 3,
   "price": 16,
+  "install": { "salvage": 5 },
   "craft": { "cost": { "salvage": 20 }, "workshop": 2 },
   "art": { "color": "#c9ced6" }
 }

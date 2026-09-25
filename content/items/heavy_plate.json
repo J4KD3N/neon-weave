@@ -5,6 +5,7 @@
   "stat_mods": { "hp": 6, "evasion": -5, "move": -1 },
   "weight": 2,
   "price": 20,
+  "families": ["null_cathedral", "rusted_undercity"],
   "craft": { "cost": { "salvage": 25 }, "workshop": 2 },
   "art": { "color": "#9a9fa8" }
 }

@@ -6,5 +6,6 @@
   "stat_mods": { "initiative": 1 },
   "weight": 4,
   "price": 14,
+  "families": ["rusted_undercity", "verdant_datacore"],
   "art": { "color": "#8fb8b0" }
 }
