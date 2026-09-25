@@ -60,6 +60,10 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	for id: String in ["fx_choosing", "fx_split", "fx_bad"]: # the registry is the shared autoload: leave it as found
+		world.registry._entries["quests"].erase(id)
+	world.registry._entries["maps"].erase("fx_seq_map")
+	world.registry._fingerprint_cache = ""
 	(Engine.get_main_loop() as SceneTree).root.remove_child(world)
 	world.free()
 	_cleanup()
