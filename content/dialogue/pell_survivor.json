@@ -2,6 +2,7 @@
   "name": "Pell — the relay station",
   "act": 1,
   "start": [
+    { "node": "light", "requires": { "flags": { "choir_contact": true, "pell_light": false } } },
     { "node": "hub", "requires": { "flags": { "pell_hub": true } } },
     { "node": "crews", "requires": { "flags": { "log_recovered": true } } },
     { "node": "after", "requires": { "flags": { "pell_talked": true } } },
@@ -10,6 +11,7 @@
     { "node": "greet" }
   ],
   "nodes": {
+    "light": { "speaker": "pell", "text": "You went under the yard and came back. The whole station heard it, whatever it was. I kept the light on the entire time; it is what I do. Here. Salvage off the roof cache. Do not tell the crews.", "choices": [ { "text": "Keep it on, Pell.", "effects": { "flags": { "pell_light": true }, "grant": { "salvage": 5 } }, "end": true } ] },
     "colony": {
       "speaker": "pell",
       "text": "Your face just moved. Not the way faces move. What are you?",

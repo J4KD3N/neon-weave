@@ -2,6 +2,9 @@
   "name": "Yev — banter",
   "kind": "banter",
   "lines": [
+    { "trigger": "arrive", "text": "The roots know this room. They grow away from it. Listen to that before you touch anything.", "requires": { "map": "the_loom" }, "once": "yev_banter_loom" },
+    { "trigger": "arrive", "text": "There is a garden on the roof here. Three plants. Somebody waters them.", "requires": { "map": "relay_station" }, "once": "yev_banter_relay" },
+    { "trigger": "arrive", "text": "The ground under the plaza is quiet now. It was not before. I keep my hands in it.", "requires": { "map": "bastion", "flags": { "catastrophe_seen": true } }, "once": "yev_banter_plaza" },
     { "trigger": "enter_shard", "text": "The current runs strong here. Step where it pools; it will hold you up.", "once": "yev_banter_first_shard" },
     { "trigger": "victory", "text": "They are in the Weft now. Everything is, in the end.", "once": "yev_banter_first_win" },
     { "trigger": "extract", "text": "The Bastion has roots. Did you know? Under the plaza. They are very old." }

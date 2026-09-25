@@ -2,6 +2,9 @@
   "name": "Sera — banter",
   "kind": "banter",
   "lines": [
+    { "trigger": "arrive", "text": "So this is what the singing was for. Shields up, all of you. It is a room, and rooms have corners.", "requires": { "map": "the_loom" }, "once": "sera_banter_loom" },
+    { "trigger": "arrive", "text": "Pell keeps the light on with tape and spite. I have known worse commanders.", "requires": { "map": "relay_station" }, "once": "sera_banter_relay" },
+    { "trigger": "arrive", "text": "The plaza will not look right for a while. Neither will I. Keep walking.", "requires": { "map": "bastion", "flags": { "catastrophe_seen": true } }, "once": "sera_banter_plaza" },
     { "trigger": "enter_shard", "text": "Shields up. Corridors first, rooms second. I've buried people who did it the other way round.", "once": "sera_banter_first_shard" },
     { "trigger": "enter_shard", "text": "Third depth is where the village is. Deeper Beacon, deeper hole.", "requires": { "quest": { "id": "sera_purge_village", "stage": "start" } }, "once": "sera_banter_depth" },
     { "trigger": "enter_shard", "text": "Whisper. Front or back, pick one. Rafters are not a formation.", "requires": { "recruited": "whisper" }, "once": "sera_banter_whisper" },

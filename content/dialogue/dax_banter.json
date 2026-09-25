@@ -2,6 +2,9 @@
   "name": "Dax — banter",
   "kind": "banter",
   "lines": [
+    { "trigger": "arrive", "text": "The seal at home is a toy next to this. I am going to count the air anyway. Old habits.", "requires": { "map": "the_loom" }, "once": "dax_banter_loom" },
+    { "trigger": "arrive", "text": "A station that still routes. Somebody down here kept a promise for a hundred years.", "requires": { "map": "relay_station" }, "once": "dax_banter_relay" },
+    { "trigger": "arrive", "text": "I have sealed vaults against worse than that light. I have not sealed one against grief. Give me a minute.", "requires": { "map": "bastion", "flags": { "catastrophe_seen": true } }, "once": "dax_banter_plaza" },
     { "trigger": "enter_shard", "text": "Air's bad down here. Better than the vault's, which tells you something.", "once": "dax_banter_first_shard" },
     { "trigger": "enter_shard", "text": "Sera. Purge detail. I read the marks. Don't stand behind me.", "requires": { "recruited": "sera" }, "effects": { "approval": { "sera": -1 } }, "once": "dax_banter_sera" },
     { "trigger": "victory", "text": "The machine fights fine. I'll say that once.", "requires": { "recruited": "kaj7" }, "effects": { "approval": { "kaj7": 1 } }, "once": "dax_banter_kaj7" },

@@ -406,6 +406,7 @@ func enter_map(id: String) -> bool:
 	var previous := map_id
 	map_id = id # before _enter: door and trigger flags are keyed by map id
 	if _enter(entry):
+		banter("arrive") # the companions have something to say about the place (S74)
 		run.begin("", 0)
 		if playtest != null:
 			playtest.map(self)
@@ -841,7 +842,7 @@ func dialogue_ctx() -> Dictionary:
 	var attributes: Dictionary = protagonist.get("attributes", {})
 	# A disguise (S67, D-123): the leader's race can reshape, their arcane control clears the bar, and the roll made when the talk began held.
 	var disguised := Array(tags).has("disguise") and int(attributes.get("arcane", 0)) >= disguise_min() and (disguise_holds if (in_dialogue() or _opening_talk) else true)
-	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "race_tags": tags, "class": l.class_id if l != null else "", "party_races": party_races, "party_race_tags": party_tags, "attributes": attributes, "disguised": disguised}
+	return {"narrative": narrative, "origin_tag": origin_tag, "race": l.race_id if l != null else "", "race_tags": tags, "class": l.class_id if l != null else "", "party_races": party_races, "party_race_tags": party_tags, "attributes": attributes, "disguised": disguised, "map": map_id}
 
 
 func disguise_min() -> int:

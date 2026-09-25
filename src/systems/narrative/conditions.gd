@@ -88,6 +88,8 @@ static func passes(requires: Dictionary, ctx: Dictionary) -> bool:
 		return false
 	if requires.has("benched") and not (n.is_recruited(String(requires["benched"])) and n.is_benched(String(requires["benched"]))): # S72: recruited and waiting at the Bastion
 		return false
+	if requires.has("map") and String(ctx.get("map", "")) != String(requires["map"]): # S74: where the party stands
+		return false
 	if requires.has("quest"):
 		var q: Dictionary = requires["quest"]
 		if n.stage_of(String(q.get("id", ""))) != String(q.get("stage", "")):
