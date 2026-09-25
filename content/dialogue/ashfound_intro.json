@@ -2,12 +2,14 @@
   "name": "Marshal Kade — the plaza",
   "act": 2,
   "start": [
+    { "node": "late", "requires": { "faction": "ashfound", "flags": { "catastrophe_seen": true } } },
     { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "ashfound" } },
     { "node": "joined", "requires": { "faction": "ashfound" } },
     { "node": "answered", "requires": { "flags": { "ashfound_answered": true } } },
     { "node": "greet" }
   ],
   "nodes": {
+    "late": { "speaker": "ashfound_envoy", "text": "You saw the plaza. Now you know what we have known: it does not end until the Loom does. Go and end it.", "choices": [ { "text": "I know.", "end": true } ] },
     "greet": {
       "speaker": "ashfound_envoy",
       "text": "Marshal Kade, Ashfound. I counted four machines and a mage on my way across your plaza, so I will be brief. We burn both. Magic, machine, the thing they made together. What is left is people. Will you hear the case?",

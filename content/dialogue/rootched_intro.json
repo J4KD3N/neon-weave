@@ -2,12 +2,14 @@
   "name": "Speaker Ilex — the plaza",
   "act": 2,
   "start": [
+    { "node": "late", "requires": { "faction": "rootched", "flags": { "catastrophe_seen": true } } },
     { "node": "locked", "requires": { "flags": { "faction_locked": true }, "not_faction": "rootched" } },
     { "node": "joined", "requires": { "faction": "rootched" } },
     { "node": "answered", "requires": { "flags": { "rootched_answered": true } } },
     { "node": "greet" }
   ],
   "nodes": {
+    "late": { "speaker": "rootched_envoy", "text": "The plaza sang and the roots answered. Whatever you are about to do at the Loom, do it as one of us, and it will grow.", "choices": [ { "text": "I know.", "end": true } ] },
     "greet": {
       "speaker": "rootched_envoy",
       "text": "You keep opening the ground and bringing things up out of it. The Rootched approve of that, mostly. I am Ilex. We think the fusion is not a wound; we think it is a seed. Would you hear how a seed ends?",

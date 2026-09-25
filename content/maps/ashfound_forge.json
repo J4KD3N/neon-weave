@@ -14,6 +14,10 @@
     "##############"
   ],
   "transitions": [ { "cell": [1, 3], "to": "bastion", "arrive": [21, 2], "label": "Back to the plaza" } ],
+  "triggers": [
+    { "id": "after_keys", "cells": [[2, 2], [3, 2], [2, 3], [3, 3]], "once": true, "when": { "flags": { "key_ashfound_resolved": true, "catastrophe_seen": false } }, "effects": { "toast": "The forge is lit for the first time since you joined: the Marshal is making something with an edge on it." } },
+    { "id": "after_catastrophe", "cells": [[2, 2], [3, 2], [2, 3], [3, 3]], "once": true, "when": { "flags": { "catastrophe_seen": true } }, "effects": { "toast": "The forge is empty and warm. Everyone who could carry a torch is already on the road down." } }
+  ],
   "npcs": [ { "merchant": "ashfound_armoury", "cell": [10, 2] }, { "npc": "ashfound_marshal", "cell": [7, 5] } ],
   "pickups": [],
   "enemies": []

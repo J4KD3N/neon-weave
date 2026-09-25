@@ -2,6 +2,8 @@
   "name": "Forge-master Hesk — the forge",
   "act": 2,
   "start": [
+    { "node": "loom", "requires": { "flags": { "catastrophe_seen": true } } },
+    { "node": "keys", "requires": { "flags": { "key_ashfound_resolved": true, "catastrophe_seen": false } } },
     { "node": "colony", "requires": { "race": "swarmborn", "disguised": false, "flags": { "hesk_saw_swarm": false } } },
     { "node": "done", "requires": { "quest": { "id": "ashfound_path", "stage": "done" } } },
     { "node": "report", "requires": { "quest": { "id": "ashfound_path", "stage": "report" } } },
@@ -43,6 +45,8 @@
     "hesk_would": { "speaker": "ashfound_marshal", "text": "No. Now go and get the Key before I forget I said that.", "choices": [ { "text": "Cold. Understood.", "end": true } ] },
     "done": { "speaker": "ashfound_marshal", "text": "The Cathedral's fringe. Bring it out cold.", "choices": [ { "text": "Cold.", "end": true } ] },
     "early": { "speaker": "ashfound_marshal", "text": "The shrine first. I have a watcher on it.", "choices": [ { "text": "The shrine.", "end": true } ] },
+    "keys": { "speaker": "ashfound_marshal", "text": "The Quiet Key is cold and resolved, and the Marshal's word is this: the Loom is next, and it does not get to be quiet.", "choices": [ { "text": "Then it burns.", "effects": { "flags": { "ashfound_keys_reported": true } }, "end": true } ] },
+    "loom": { "speaker": "ashfound_marshal", "text": "The Beacon woke on the plaza. Good. Now it knows we are coming, and so do you. Go down.", "choices": [ { "text": "Going.", "effects": { "flags": { "ashfound_loom_blessed": true } }, "end": true } ] },
     "idle": { "speaker": "ashfound_marshal", "text": "Forge is hot. Say what you want.", "choices": [ { "text": "Nothing.", "end": true } ] }
   }
 }

@@ -231,7 +231,7 @@ func test_bound_sites_and_sequence_steps_are_well_formed() -> void:
 ## the known ladder, every companion has alive, dead and taken lines in
 ## every ending, and romanced/lost lines only belong to romanceable ones.
 func test_endings_write_every_companion() -> void:
-	var keys: Array[String] = ["alive", "dead", "absent", "taken", "loyal", "romanced", "lost"]
+	var keys: Array[String] = ["alive", "dead", "absent", "taken", "loyal", "romanced", "lost", "resisted", "benched"]
 	for e: Dictionary in registry.get_all("endings"):
 		for k: String in e.get("when", {}):
 			assert_true(REQUIRES_KEYS.has(k) or k == "party_approval_min", "ending %s when.%s" % [e["id"], k])

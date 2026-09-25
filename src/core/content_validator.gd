@@ -47,14 +47,14 @@ const SCHEMAS: Dictionary = {
 }
 
 ## The condition vocabulary (`requires`, `when`, `done_when`, `start_when`).
-const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction", "romance", "not_romance", "romance_open", "party_approval_min", "party_race", "party_race_tag", "attribute", "disguised"]
+const REQUIRES_KEYS: Array[String] = ["flags", "origin_tag", "race", "race_tag", "class", "approval", "recruited", "not_recruited", "quest", "reputation", "faction", "not_faction", "romance", "not_romance", "romance_open", "party_approval_min", "party_race", "party_race_tag", "attribute", "disguised", "walking", "benched"]
 ## The effect vocabulary (dialogue choices, triggers, sequence steps).
 const EFFECT_KEYS: Array[String] = ["approval", "flags", "recruit", "quest", "reputation", "join_faction", "romance", "dismiss", "lore", "toast", "grant", "enemies", "victory_flag", "open_doors", "dialogue", "transition", "map_edits", "sequence", "ending"]
 const BANTER_TRIGGERS: Array[String] = ["enter_shard", "victory", "extract"]
 const GRANT_KEYS: Array[String] = ["salvage", "aether", "ciphers", "cipher_chance", "xp", "item", "lore", "heal"]
 const ARCHETYPES: Array[String] = ["rusher", "ranged", "summoner", "stealther", "controller"]
 const BUILDING_EFFECTS: Array[String] = ["depth", "heal_fraction", "hp_bonus", "damage_bonus", "respec", "respec_refund", "archive", "aether_per_fragment", "garden", "aether_on_return", "quarters"]
-const EPILOGUE_KEYS: Array[String] = ["alive", "dead", "absent", "taken", "loyal", "romanced", "lost"]
+const EPILOGUE_KEYS: Array[String] = ["alive", "dead", "absent", "taken", "loyal", "romanced", "lost", "resisted", "benched"]
 const SCENE_KEYS: Array[String] = ["id", "label", "dialogue", "requires", "quarters", "once", "romance", "dead"]
 
 
@@ -303,7 +303,7 @@ func _companions() -> void:
 
 func _check_requires(e: Dictionary, block: Dictionary, what: String) -> void:
 	_keys_known(e, block, REQUIRES_KEYS, what)
-	for who: String in ["recruited", "not_recruited", "romance_open", "not_romance"]:
+	for who: String in ["recruited", "not_recruited", "romance_open", "not_romance", "walking", "benched"]:
 		if block.has(who) and not String(block[who]).is_empty():
 			_ref(e, "companions", String(block[who]), "%s.%s" % [what, who])
 	if block.has("race") and not String(block["race"]).is_empty():

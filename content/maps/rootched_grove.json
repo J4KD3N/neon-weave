@@ -14,6 +14,10 @@
     "##############"
   ],
   "transitions": [ { "cell": [1, 3], "to": "bastion", "arrive": [11, 2], "label": "Back to the plaza" } ],
+  "triggers": [
+    { "id": "after_keys", "cells": [[2, 2], [3, 2], [2, 3], [3, 3]], "once": true, "when": { "flags": { "key_rootched_resolved": true, "catastrophe_seen": false } }, "effects": { "toast": "The grove has grown a new ring since the Key came up; the path is narrower and the sap runs uphill." } },
+    { "id": "after_catastrophe", "cells": [[2, 2], [3, 2], [2, 3], [3, 3]], "once": true, "when": { "flags": { "catastrophe_seen": true } }, "effects": { "toast": "The grove is quiet from the ground up. Every root points the same way: down." } }
+  ],
   "npcs": [ { "merchant": "rootched_grove_keeper", "cell": [10, 2] }, { "npc": "rootched_speaker", "cell": [6, 5] } ],
   "pickups": [],
   "enemies": []
